@@ -1,2 +1,0 @@
-# INFANTIL
-EQUIPO
