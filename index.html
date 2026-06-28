@@ -201,7 +201,24 @@ filter:drop-shadow(0 0 6px #f4c430);
 
 </div>
 
-<button onclick="admin()"
+
+<div style="margin-top:24px;background:#000;border:2px solid #222;border-radius:24px;height:520px;display:flex;align-items:center;justify-content:center;color:#555;font-size:28px;">
+Pantalla desactivada
+</div>
+
+
+<div id="alineacion" class="screen"><div style="padding:30px;text-align:center;color:#aaa">La alineación ya se muestra en la pantalla principal.</div></div>
+
+<div id="clasificacion" class="screen"><div style="padding:30px;text-align:center;color:#aaa">La clasificación ya se muestra en la pantalla principal.</div></div>
+
+<div id="resultados" class="screen">
+
+<img id="imgResultadosPantalla" class="imageBox" style="object-fit:contain;background:#222" src="">
+
+</div>
+
+<button
+onclick="admin()"
 style="
 position:fixed;
 top:15px;
@@ -293,7 +310,14 @@ border:2px solid #d4af37;
 </div>
 </div>
 
-<nav><button onclick="mostrar('inicio')">🏠</button></nav>
+<nav>
+
+<button onclick="mostrar('inicio')">🏠</button>
+
+
+<button onclick="mostrar('resultados')">⚽</button>
+
+</nav>
 <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-app-compat.js"></script>
 
 <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-database-compat.js"></script>
@@ -314,42 +338,28 @@ const db = firebase.database();
 
 function guardarFirebase(){
 
-    firebase.database().ref("partido").set({
-
-        local:nombreLocal.innerHTML,
-
-        visitante:nombreVisitante.innerHTML,
-
-        golesLocal:l,
-
-        golesVisitante:v,
-
-        tiempo:s,
-
-        fase:fase,
-
-        estado:estadoCrono,
-
-        inicio:inicioCrono,
-
-        eventosLocal:eventosLocal.innerHTML,
-
-        eventosVisitante:eventosVisitante.innerHTML,
-
-        logoLocal:logoLocal.src,
-
-logoVisitante:logoVisitante.src,
-
-imgAlineacion:document.getElementById("imgAlineacion").src || "",
-
-imgClasificacion:document.getElementById("imgClasificacion").src || "",
-
-imgResultados:document.getElementById("imgResultados").src || "",
-
-fecha:fechaPartido.textContent,
-
-hora:horaPartido.textContent
-
+    const ref=firebase.database().ref("partido");
+    ref.once("value").then(snap=>{
+        const old=snap.val()||{};
+        ref.set({
+            local:nombreLocal.innerHTML,
+            visitante:nombreVisitante.innerHTML,
+            golesLocal:l,
+            golesVisitante:v,
+            tiempo:s,
+            fase:fase,
+            estado:estadoCrono,
+            inicio:inicioCrono,
+            eventosLocal:eventosLocal.innerHTML,
+            eventosVisitante:eventosVisitante.innerHTML,
+            logoLocal:logoLocal.src||old.logoLocal||"",
+            logoVisitante:logoVisitante.src||old.logoVisitante||"",
+            imgAlineacion:imgAlineacion.src||old.imgAlineacion||"",
+            imgClasificacion:imgClasificacion.src||old.imgClasificacion||"",
+            imgResultados:imgResultados.src||old.imgResultados||"",
+            fecha:fechaPartido.textContent,
+            hora:horaPartido.textContent
+        });
     });
 
 }
