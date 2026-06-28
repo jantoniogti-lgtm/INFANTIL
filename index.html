@@ -372,7 +372,17 @@ function guardarFirebase(){
 
         logoLocal:logoLocal.src,
 
-        logoVisitante:logoVisitante.src
+logoVisitante:logoVisitante.src,
+
+imgAlineacion:document.getElementById("imgAlineacion").src || "",
+
+imgClasificacion:document.getElementById("imgClasificacion").src || "",
+
+imgResultados:document.getElementById("imgResultados").src || "",
+
+fecha:fechaPartido.textContent,
+
+hora:horaPartido.textContent
 
     });
 
@@ -522,52 +532,52 @@ editHora.value=localStorage.getItem('horaPartido')||'';
 function cerrarAdmin(){
  document.getElementById('adminPanel').style.display='none';document.body.style.overflow='auto';
 }
-function guardarAdmin(){
+function leerImagen(inputId,imgId){
+
+    return new Promise(resolve=>{
+
+        const input=document.getElementById(inputId);
+
+        if(!input.files.length){
+            resolve();
+            return;
+        }
+
+        const r=new FileReader();
+
+        r.onload=e=>{
+
+            document.getElementById(imgId).src=e.target.result;
+
+            resolve();
+
+        };
+
+        r.readAsDataURL(input.files[0]);
+
+    });
+
+}
+async function guardarAdmin(){
  nombreLocal.innerHTML=editLocal.value;
  nombreVisitante.innerHTML=editVisitante.value;
 
- const fl=fileLocal.files[0];
- if(fl){
-   const r=new FileReader();
-   r.onload=e=>{
-      logoLocal.src=e.target.result;
-      localStorage.setItem('logoLocal',e.target.result);
-   };
-   r.readAsDataURL(fl);
- }
-
- const fv=fileVisitante.files[0];
- if(fv){
-   const r2=new FileReader();
-   r2.onload=e=>{
-      logoVisitante.src=e.target.result;
-      localStorage.setItem('logoVisitante',e.target.result);
-   };
-   r2.readAsDataURL(fv);
- }
-
  localStorage.setItem('nombreLocal',nombreLocal.innerHTML);
  localStorage.setItem('nombreVisitante',nombreVisitante.innerHTML);
-localStorage.setItem('fechaPartido',editFecha.value);
-localStorage.setItem('horaPartido',editHora.value);
-fechaPartido.textContent=editFecha.value||'Sin definir';
-horaPartido.textContent=editHora.value||'--:--';
- 
-['Alineacion','Clasificacion','Resultados'].forEach(n=>{
- const inp=document.getElementById('file'+n);
- if(inp && inp.files.length){
-   const r=new FileReader();
-   r.onload=e=>{
-      document.getElementById('img'+n).src=e.target.result;
-      localStorage.setItem('img'+n,e.target.result);
-   };
-   r.readAsDataURL(inp.files[0]);
- }
-});
+ localStorage.setItem('fechaPartido',editFecha.value);
+ localStorage.setItem('horaPartido',editHora.value);
 
-guardarFirebase();
+ fechaPartido.textContent=editFecha.value||'Sin definir';
+ horaPartido.textContent=editHora.value||'--:--';
 
-cerrarAdmin();
+ await leerImagen("fileLocal","logoLocal");
+ await leerImagen("fileVisitante","logoVisitante");
+ await leerImagen("fileAlineacion","imgAlineacion");
+ await leerImagen("fileClasificacion","imgClasificacion");
+ await leerImagen("fileResultados","imgResultados");
+
+ guardarFirebase();
+ cerrarAdmin();
 }
 
 
@@ -668,6 +678,20 @@ iniciarCronoSincronizado();
  if(d.eventosVisitante!==undefined) eventosVisitante.innerHTML=d.eventosVisitante;
  if(d.logoLocal) logoLocal.src=d.logoLocal;
  if(d.logoVisitante) logoVisitante.src=d.logoVisitante;
+ if(d.imgAlineacion)
+    document.getElementById("imgAlineacion").src=d.imgAlineacion;
+
+if(d.imgClasificacion)
+    document.getElementById("imgClasificacion").src=d.imgClasificacion;
+
+if(d.imgResultados)
+    document.getElementById("imgResultados").src=d.imgResultados;
+
+if(d.fecha)
+    fechaPartido.textContent=d.fecha;
+
+if(d.hora)
+    horaPartido.textContent=d.hora;
 });
 
 window.onload = () => {
