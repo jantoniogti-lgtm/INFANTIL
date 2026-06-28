@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Partido en Directo</title>
+
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;font-family:Oswald,sans-serif}
+body{background:radial-gradient(circle at top,#252525,#090909 60%,#000);color:#fff;padding-bottom:85px}
+header{background:linear-gradient(180deg,#1f1f1f,#090909)!important;border-bottom:4px solid #f4c430!important;box-shadow:0 8px 25px rgba(0,0,0,.6)}
+.screen{padding:18px}
+.score{
+display:grid!important;
+grid-template-columns:1fr auto 1fr;
+gap:18px;
+align-items:center;
+background:linear-gradient(180deg,#1a1a1a,#111);
+border:2px solid #f4c430;
+border-radius:26px;
+padding:24px;
+margin:20px 0;
+box-shadow:0 15px 35px rgba(0,0,0,.5)
+}
+.team{display:flex;flex-direction:column;align-items:center}
+.logo{width:110px!important;height:110px!important;border-radius:50%;border:4px solid #fff;background:#2d2d2d;box-shadow:0 0 30px rgba(244,196,48,.4)}
+#nombreLocal,#nombreVisitante{margin-top:10px;font-size:22px;font-weight:700}
+.result{font-size:84px!important;color:#f4c430;text-shadow:0 0 15px rgba(244,196,48,.5)}
+.timer{
+background:#000;
+border:2px solid #30ff75;
+border-radius:14px;
+width:140px;
+margin:8px auto 4px;
+padding:6px;
+font-size:34px!important;
+color:#30ff75;
+text-align:center;
+}
+.events,.sectionCard{background:#171717;border-radius:22px;border-left:6px solid #f4c430;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.imageBox{border-radius:18px!important;background:#0d0d0d!important}
+nav{background:#111!important;border-top:2px solid #f4c430}
+nav button{font-size:16px!important}
+
+.heroScore{
+margin:20px 0;
+padding:22px;
+border-radius:28px;
+background:linear-gradient(160deg,#262626,#0b0b0b);
+border:3px solid #f4c430;
+box-shadow:0 18px 40px rgba(0,0,0,.55);
+}
+.heroRow{
+display:grid;
+grid-template-columns:110px 1fr 110px;
+align-items:center;
+gap:12px;
+}
+.heroLogo{
+width:100px;height:100px;border-radius:50%;
+border:4px solid #f4c430;
+object-fit:cover;
+background:#222;
+}
+.heroCenter{text-align:center}
+.heroResult{font-size:72px;font-weight:700;color:#ffd54a;line-height:1}
+.livePill{
+display:inline-block;
+padding:7px 18px;
+margin:10px 0;
+border-radius:20px;
+background:#d00000;
+font-size:15px;
+font-weight:bold;
+}
+.heroTimer{
+font-size:34px;
+color:#52ff84;
+font-weight:700;
+}
+.sectionTitle{
+font-size:28px;
+text-align:center;
+color:#ffd54a;
+margin-bottom:14px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+
+<header style="background:linear-gradient(180deg,#202020,#111);border-bottom:3px solid #d4af37;color:white;padding:18px;text-align:center">
+<div style="font-size:18px;color:#f3c340;font-weight:bold">🏆 COSTA DAURADA CUP 2026</div>
+<div style="font-size:30px;font-weight:bold">PARTIDO EN DIRECTO</div>
+<div style="font-size:15px;color:#ccc">INFANTIL S14</div>
+</header>
+
+<div style="margin:15px;background:rgba(20,20,20,.92);border:2px solid #d4af37;border-radius:18px;padding:15px;text-align:center">
+<div style="font-size:18px">📅 <span id="fechaPartido">Sin definir</span></div>
+<div style="font-size:18px;margin-top:5px">🕒 <span id="horaPartido">--:--</span></div>
+<div style="margin-top:10px;color:#ffd54a;font-size:24px;font-weight:bold">⏳ <span id="cuentaAtras">Configura la fecha del partido</span></div>
+</div>
+
+
+<div id="inicio" class="screen active">
+
+
+<div class="heroScore">
+<div class="heroRow">
+<div style="text-align:center">
+<img id="logoLocal" class="heroLogo" src="">
+<div id="nombreLocal">RAMON SICART</div>
+</div>
+
+<div class="heroCenter">
+<div class="heroResult" id="resultado">0 - 0</div>
+<div class="livePill">🔴 EN DIRECTO</div>
+<div class="heroTimer" id="timer">00:00</div>
+<div style="color:#ddd;font-size:18px;">1ª PARTE</div>
+</div>
+
+<div style="text-align:center">
+<img id="logoVisitante" class="heroLogo" src="">
+<div id="nombreVisitante">RIVAL</div>
+</div>
+</div>
+</div>
+
+<div class="events">
+<h3 class="sectionTitle">⚽ EVENTOS DEL PARTIDO</h3>
+
+
+<h3>Eventos</h3>
+
+<div id="lista"></div>
+
+
+</div>
+
+<div style="margin-top:20px;background:linear-gradient(180deg,#202020,#141414);padding:18px;border-radius:24px;border:2px solid #d4af37;box-shadow:0 10px 30px rgba(0,0,0,.45)">
+<h3 style="color:#f3c340;font-size:28px;text-align:center;margin-bottom:15px;">📋 ALINEACIÓN TITULAR</h3>
+<img id="imgAlineacion" class="imageBox" style="display:block;width:100%;min-height:460px;max-height:72vh;object-fit:contain;background:#0b0b0b;border:3px solid #303030;border-radius:22px;padding:10px">
+</div>
+
+<div style="margin-top:20px;background:linear-gradient(180deg,#202020,#141414);padding:18px;border-radius:24px;border:2px solid #d4af37;box-shadow:0 10px 30px rgba(0,0,0,.45)">
+<h3 style="color:#f3c340;font-size:28px;text-align:center;margin-bottom:15px;">🏆 CLASIFICACIÓN</h3>
+<img id="imgClasificacion" class="imageBox" style="display:block;width:100%;min-height:460px;max-height:72vh;object-fit:contain;background:#0b0b0b;border:3px solid #303030;border-radius:22px;padding:10px">
+</div>
+
+</div>
+
+<div id="alineacion" class="screen"><div style="padding:30px;text-align:center;color:#aaa">La alineación ya se muestra en la pantalla principal.</div></div>
+
+<div id="clasificacion" class="screen"><div style="padding:30px;text-align:center;color:#aaa">La clasificación ya se muestra en la pantalla principal.</div></div>
+
+<div id="resultados" class="screen">
+
+<img id="imgResultados" class="imageBox" style="object-fit:contain;background:#222" src="">
+
+</div>
+
+<button
+onclick="admin()"
+style="
+position:fixed;
+top:15px;
+right:15px;
+width:45px;
+height:45px;
+border-radius:50%;
+background:#d4af37;
+font-size:22px;
+">
+⚙️
+</button>
+
+<!-- PANEL ADMIN -->
+<div id="adminPanel" style="
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.85);
+z-index:9999;
+overflow-y:auto;
+-webkit-overflow-scrolling:touch;
+padding:15px;
+">
+<div style="
+background:#222;
+max-width:430px;
+margin:20px auto;
+padding:20px;
+border-radius:16px;
+color:#fff;
+max-height:calc(100vh - 40px);
+overflow-y:auto;
+-webkit-overflow-scrolling:touch;
+border:2px solid #d4af37;
+">
+<h2 style="margin-bottom:15px;">⚙️ Administrador</h2>
+
+<label>Equipo local</label><br>
+<input id="editLocal" style="width:100%;padding:8px;margin:5px 0 10px"><br>
+
+<label>Equipo visitante</label><br>
+<input id="editVisitante" style="width:100%;padding:8px;margin:5px 0 10px"><br>
+
+<label>Escudo local</label><br>
+<input type="file" id="fileLocal" accept="image/*"><br><br>
+
+<label>Escudo visitante</label><br>
+<input type="file" id="fileVisitante" accept="image/*"><br><br>
+
+
+<hr style="margin:15px 0;border-color:#555">
+<h3>Control del partido</h3>
+<div style="text-align:center">
+<button class="green" onclick="primeraParte()">▶ 1ª Parte</button>
+<button class="green" onclick="segundaParte()">▶ 2ª Parte</button>
+<button class="orange" onclick="pause()">⏸ Pausa</button>
+<button class="red" onclick="terminarPartido()">🏁 Terminado</button>
+<button class="red" onclick="reset()">🔄 Reset</button><br>
+<button class="blue" onclick="golLocal()">+ Gol Local</button>
+<button class="red" onclick="golVisitante()">+ Gol Visitante</button>
+</div>
+<br>
+
+<hr>
+<h3>Imágenes</h3>
+
+<label>Alineación</label><br>
+<input type="file" id="fileAlineacion" accept="image/*"><br><br>
+
+<label>Clasificación</label><br>
+<input type="file" id="fileClasificacion" accept="image/*"><br><br>
+
+<label>Resultados</label><br>
+<input type="file" id="fileResultados" accept="image/*"><br><br>
+
+
+<label>Fecha del partido</label><br>
+<input type="date" id="editFecha" style="width:100%;padding:8px"><br><br>
+
+<label>Hora del partido</label><br>
+<input type="time" id="editHora" style="width:100%;padding:8px"><br><br>
+
+<button onclick="guardarAdmin()" style="background:#28a745;color:#fff;">Guardar</button>
+<button onclick="cerrarAdmin()" style="background:#dc3545;color:#fff;">Cerrar</button>
+</div>
+</div>
+
+<nav>
+
+<button onclick="mostrar('inicio')">🏠</button>
+
+
+<button onclick="mostrar('resultados')">⚽</button>
+
+</nav>
+
+<script>
+
+let s=0;
+let t=null;
+let l=0;
+let v=0;
+let fase=0;
+
+function mostrar(id){
+
+document.querySelectorAll(".screen").forEach(e=>e.classList.remove("active"));
+
+document.getElementById(id).classList.add("active");
+
+}
+
+function pintar(){
+
+let m=Math.floor(s/60).toString().padStart(2,"0");
+
+let ss=(s%60).toString().padStart(2,"0");
+
+timer.innerHTML=m+":"+ss;
+
+}
+
+function start(){
+
+if(t)return;
+
+t=setInterval(()=>{
+
+    s++;
+
+    // Fin 1ª parte
+    if(fase===1 && s>=25*60){
+        pause();
+        s=25*60;
+        timer.innerHTML="25:00<br><span style='font-size:24px;color:#d4af37;'>DESCANSO</span>";
+        return;
+    }
+
+    // Fin 2ª parte
+    if(fase===2 && s>=50*60){
+        pause();
+        s=50*60;
+        timer.innerHTML="50:00<br><span style='font-size:24px;color:#d4af37;'>TERMINADO</span>";
+        return;
+    }
+
+    ['Alineacion','Clasificacion','Resultados'].forEach(n=>{const v=localStorage.getItem('img'+n);if(v)document.getElementById('img'+n).src=v;});
+pintar();
+
+},1000);
+
+}
+
+function pause(){
+
+clearInterval(t);
+
+t=null;
+
+}
+
+function reset(){
+
+    if(!confirm("¿Seguro que quieres reiniciar el partido?")) return;
+
+    // Parar cronómetro
+    pause();
+
+    // Reiniciar tiempo
+    s = 0;
+    pintar();
+
+    // Reiniciar marcador
+    l = 0;
+    v = 0;
+    marcador();actualizarCuentaAtras();
+
+    // Borrar todos los eventos
+    lista.innerHTML = "";
+
+}
+
+function marcador(){
+
+resultado.innerHTML=l+" - "+v;
+
+}
+
+function golLocal(){
+
+    l++;
+    marcador();actualizarCuentaAtras();
+
+    let jugador = prompt("Nombre del goleador");
+
+    if(!jugador) jugador = "Jugador";
+
+    let minuto = prompt("¿En qué minuto ha sido el gol?");
+
+    if(!minuto) minuto = Math.floor(s/60);
+
+    lista.innerHTML += "<p>⚽ " + minuto + "' " + jugador + "</p>";
+
+}
+
+function golVisitante(){
+
+    v++;
+    marcador();actualizarCuentaAtras();
+
+    let minuto = prompt("¿En qué minuto ha sido el gol?");
+
+    if(!minuto) minuto = Math.floor(s/60);
+
+    lista.innerHTML += "<p>⚽ " + minuto + "' Gol visitante</p>";
+
+}
+
+function admin(){
+
+    const pass = prompt("Introduce la contraseña");
+
+    if(pass !== "2990"){
+        alert("Contraseña incorrecta");
+        return;
+    }
+
+    document.getElementById('adminPanel').style.display='block';document.body.style.overflow='hidden';
+    editLocal.value=nombreLocal.innerHTML;
+    editVisitante.value=nombreVisitante.innerHTML;
+editFecha.value=localStorage.getItem('fechaPartido')||'';
+editHora.value=localStorage.getItem('horaPartido')||'';
+
+}
+
+function cerrarAdmin(){
+ document.getElementById('adminPanel').style.display='none';document.body.style.overflow='auto';
+}
+function guardarAdmin(){
+ nombreLocal.innerHTML=editLocal.value;
+ nombreVisitante.innerHTML=editVisitante.value;
+
+ const fl=fileLocal.files[0];
+ if(fl){
+   const r=new FileReader();
+   r.onload=e=>{
+      logoLocal.src=e.target.result;
+      localStorage.setItem('logoLocal',e.target.result);
+   };
+   r.readAsDataURL(fl);
+ }
+
+ const fv=fileVisitante.files[0];
+ if(fv){
+   const r2=new FileReader();
+   r2.onload=e=>{
+      logoVisitante.src=e.target.result;
+      localStorage.setItem('logoVisitante',e.target.result);
+   };
+   r2.readAsDataURL(fv);
+ }
+
+ localStorage.setItem('nombreLocal',nombreLocal.innerHTML);
+ localStorage.setItem('nombreVisitante',nombreVisitante.innerHTML);
+localStorage.setItem('fechaPartido',editFecha.value);
+localStorage.setItem('horaPartido',editHora.value);
+fechaPartido.textContent=editFecha.value||'Sin definir';
+horaPartido.textContent=editHora.value||'--:--';
+ 
+['Alineacion','Clasificacion','Resultados'].forEach(n=>{
+ const inp=document.getElementById('file'+n);
+ if(inp && inp.files.length){
+   const r=new FileReader();
+   r.onload=e=>{
+      document.getElementById('img'+n).src=e.target.result;
+      localStorage.setItem('img'+n,e.target.result);
+   };
+   r.readAsDataURL(inp.files[0]);
+ }
+});
+
+cerrarAdmin();
+}
+
+
+function primeraParte(){
+    fase=1;
+    pause();
+    s=0;
+    pintar();
+    start();
+}
+function segundaParte(){
+    fase=2;
+    pause();
+    s=25*60;
+    pintar();
+    start();
+}
+function terminarPartido(){
+    pause();
+    s=50*60;
+    pintar();
+    document.getElementById('timer').innerHTML='50:00<br><span style="font-size:24px;color:#d4af37;">TERMINADO</span>';
+}
+
+
+function actualizarCuentaAtras(){
+ const f=localStorage.getItem('fechaPartido');
+ const h=localStorage.getItem('horaPartido');
+ if(!f||!h)return;
+ fechaPartido.textContent=f;
+ horaPartido.textContent=h;
+ const d=new Date(f+"T"+h+":00");
+ let ms=d-new Date();
+ if(ms<=0){cuentaAtras.textContent="¡ES LA HORA DEL PARTIDO!";return;}
+ const dd=Math.floor(ms/86400000);ms%=86400000;
+ const hh=Math.floor(ms/3600000);ms%=3600000;
+ const mm=Math.floor(ms/60000);ms%=60000;
+ const ss=Math.floor(ms/1000);
+ cuentaAtras.textContent=`${dd}d ${hh}h ${mm}m ${ss}s`;
+}
+setInterval(actualizarCuentaAtras,1000);
+
+window.onload=()=>{
+ if(localStorage.getItem('nombreLocal')) nombreLocal.innerHTML=localStorage.getItem('nombreLocal');
+ if(localStorage.getItem('nombreVisitante')) nombreVisitante.innerHTML=localStorage.getItem('nombreVisitante');
+ if(localStorage.getItem('logoLocal')) logoLocal.src=localStorage.getItem('logoLocal');
+ if(localStorage.getItem('logoVisitante')) logoVisitante.src=localStorage.getItem('logoVisitante');
+ pintar();
+ marcador();actualizarCuentaAtras();
+};
+
+</script>
+
+</body>
+</html>
