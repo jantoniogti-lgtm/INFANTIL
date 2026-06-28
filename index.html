@@ -25,7 +25,17 @@ margin:20px 0;
 box-shadow:0 15px 35px rgba(0,0,0,.5)
 }
 .team{display:flex;flex-direction:column;align-items:center}
-.logo{width:110px!important;height:110px!important;border-radius:50%;border:4px solid #fff;background:#2d2d2d;box-shadow:0 0 30px rgba(244,196,48,.4)}
+.logo{
+max-width:100%!important;
+max-height:100%!important;
+width:auto!important;
+height:auto!important;
+object-fit:contain!important;
+border:none!important;
+border-radius:0!important;
+background:transparent!important;
+display:block;
+}
 #nombreLocal,#nombreVisitante{margin-top:10px;font-size:22px;font-weight:700}
 .result{font-size:84px!important;color:#f4c430;text-shadow:0 0 15px rgba(244,196,48,.5)}
 .timer{
@@ -44,12 +54,87 @@ text-align:center;
 nav{background:#111!important;border-top:2px solid #f4c430}
 nav button{font-size:16px!important}
 
-.twoCols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px}
-@media(max-width:700px){.twoCols{grid-template-columns:1fr 1fr}}
-.cardDark{background:linear-gradient(180deg,#202020,#111);border:2px solid #d4af37;border-radius:20px;padding:14px;box-shadow:0 8px 20px rgba(0,0,0,.45)}
-.resultMini{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #333;font-size:15px}
-.resultMini:last-child{border-bottom:none}
+.heroScore{
+margin:20px 0;
+padding:22px;
+border-radius:28px;
+background:linear-gradient(160deg,#262626,#0b0b0b);
+border:3px solid #f4c430;
+box-shadow:0 18px 40px rgba(0,0,0,.55);
+}
+.heroRow{
+display:grid;
+grid-template-columns:110px 1fr 110px;
+align-items:center;
+gap:12px;
+}
+.heroLogo{
+width:100px;height:100px;border-radius:50%;
+border:4px solid #f4c430;
+object-fit:cover;
+background:#222;
+}
+.heroCenter{text-align:center}
+.heroResult{font-size:72px;font-weight:700;color:#ffd54a;line-height:1}
+.livePill{
+display:inline-block;
+padding:7px 18px;
+margin:10px 0;
+border-radius:20px;
+background:#d00000;
+font-size:15px;
+font-weight:bold;
+}
+.heroTimer{
+font-size:34px;
+color:#52ff84;
+font-weight:700;
+}
+.sectionTitle{
+font-size:28px;
+text-align:center;
+color:#ffd54a;
+margin-bottom:14px;
+}
 
+
+.logoBox{
+width:140px;
+height:140px;
+display:flex;
+align-items:center;
+justify-content:center;
+margin:0 auto 10px;
+padding:8px;
+background:linear-gradient(180deg,#242424,#111);
+border:2px solid #d4af37;
+border-radius:22px;
+box-shadow:0 8px 22px rgba(0,0,0,.45);
+}
+
+</style>
+
+
+<style id="v21extra">
+@keyframes scorePulse{
+0%{transform:scale(1)}
+50%{transform:scale(1.08)}
+100%{transform:scale(1)}
+}
+.scoreAnim{
+animation:scorePulse .45s ease;
+}
+.goalEvent{
+display:flex;
+align-items:center;
+gap:8px;
+padding:6px 0;
+border-bottom:1px solid rgba(255,255,255,.08);
+}
+.goalBall{
+font-size:18px;
+filter:drop-shadow(0 0 6px #f4c430);
+}
 </style>
 
 </head>
@@ -72,55 +157,62 @@ nav button{font-size:16px!important}
 
 <div id="inicio" class="screen active">
 
-<div class="score">
 
-<div class="team">
-    <img id="logoLocal" class="logo" src="" alt="Local">
-    <div id="nombreLocal">RAMON SICART</div>
+<div class="heroScore">
+<div class="heroRow">
+<div style="text-align:center">
+<img id="logoLocal" class="heroLogo" src="">
+<div id="nombreLocal">RAMON SICART</div>
 </div>
 
+<div class="heroCenter">
+<div class="heroResult" id="resultado">0 - 0</div>
+<div class="livePill">🔴 EN DIRECTO</div>
+<div class="heroTimer" id="timer">00:00</div>
+<div style="color:#ddd;font-size:18px;">1ª PARTE</div>
+</div>
 
 <div style="text-align:center">
-<div class="result" id="resultado">0 - 0</div>
-<div style="display:inline-block;background:#c62828;padding:5px 16px;border-radius:20px;font-size:15px;margin:8px 0;">🔴 EN DIRECTO</div>
-<div class="timer" id="timer">00:00</div>
-<div style="color:#cfcfcf;font-size:18px;font-weight:600;">1ª PARTE</div>
+<img id="logoVisitante" class="heroLogo" src="">
+<div id="nombreVisitante">RIVAL</div>
+</div>
+</div>
+</div>
+
+<div class="events">
+<h3 class="sectionTitle">⚽ EVENTOS DEL PARTIDO</h3>
+
+
+<h3>Eventos</h3>
+
+
+<div id="lista" style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+  <div style="border-right:1px solid #444;padding-right:10px;">
+    <div style="text-align:center;color:#f3c340;font-weight:bold;margin-bottom:10px;">LOCAL</div>
+    <div id="eventosLocal"></div>
+  </div>
+  <div style="padding-left:10px;">
+    <div style="text-align:center;color:#f3c340;font-weight:bold;margin-bottom:10px;">VISITANTE</div>
+    <div id="eventosVisitante"></div>
+  </div>
 </div>
 
 
-<div class="team">
-    <img id="logoVisitante" class="logo" src="" alt="Visitante">
-    <div id="nombreVisitante">RIVAL</div>
-</div>
-
-</div>
-
-
-<div class="twoCols">
-
-<div class="cardDark">
-<h3 style="color:#f3c340;font-size:24px;text-align:center;margin-bottom:12px;">⚽ EVENTOS DEL PARTIDO</h3>
-<div id="lista"></div>
-</div>
-
-<div class="cardDark">
-<h3 style="color:#f3c340;font-size:24px;text-align:center;margin-bottom:12px;">📊 RESULTADOS</h3>
-<div class="resultMini"><span>Partido 1</span><strong>-</strong></div>
-<div class="resultMini"><span>Partido 2</span><strong>-</strong></div>
-<div class="resultMini"><span>Partido 3</span><strong>-</strong></div>
-</div>
 
 </div>
 
 <div style="margin-top:20px;background:linear-gradient(180deg,#202020,#141414);padding:18px;border-radius:24px;border:2px solid #d4af37;box-shadow:0 10px 30px rgba(0,0,0,.45)">
 <h3 style="color:#f3c340;font-size:28px;text-align:center;margin-bottom:15px;">📋 ALINEACIÓN TITULAR</h3>
-
-<img id="imgAlineacion" class="imageBox" style="display:block;width:100%;min-height:220px;max-height:320px;object-fit:contain;background:#0b0b0b;border:3px solid #303030;border-radius:22px;padding:10px">
+<img id="imgAlineacion" class="imageBox" style="display:block;width:100%;height:520px;object-fit:contain;background:#0b0b0b;border:3px solid #303030;border-radius:22px;padding:10px">
 </div>
 
 <div style="margin-top:20px;background:linear-gradient(180deg,#202020,#141414);padding:18px;border-radius:24px;border:2px solid #d4af37;box-shadow:0 10px 30px rgba(0,0,0,.45)">
 <h3 style="color:#f3c340;font-size:28px;text-align:center;margin-bottom:15px;">🏆 CLASIFICACIÓN</h3>
-<img id="imgClasificacion" class="imageBox" style="display:block;width:100%;min-height:220px;max-height:320px;object-fit:contain;background:#0b0b0b;border:3px solid #303030;border-radius:22px;padding:10px">
+<img id="imgClasificacion" class="imageBox" style="display:block;width:100%;height:260px;object-fit:contain;background:#0b0b0b;border:3px solid #303030;border-radius:22px;padding:10px">
+
+<div style="margin-top:20px;background:linear-gradient(180deg,#202020,#141414);padding:18px;border-radius:24px;border:2px solid #d4af37;box-shadow:0 10px 30px rgba(0,0,0,.45)">
+<h3 style="color:#f3c340;font-size:28px;text-align:center;margin-bottom:15px;">⚽ RESULTADOS</h3>
+<img id="imgResultados" class="imageBox" style="display:block;width:100%;height:520px;object-fit:contain;background:#0b0b0b;border:3px solid #303030;border-radius:22px;padding:14px;box-shadow:inset 0 0 30px rgba(255,255,255,.04),0 8px 24px rgba(0,0,0,.5)">
 </div>
 
 </div>
@@ -204,14 +296,17 @@ border:2px solid #d4af37;
 <hr>
 <h3>Imágenes</h3>
 
-<label>Alineación</label><br>
-<input type="file" id="fileAlineacion" accept="image/*"><br><br>
+<label>Alineación (1200x900)</label><br>
+<input type="file" id="fileAlineacion" accept="image/*">
+<button type="button" onclick="borrarImagen('Alineacion')">🗑️ Quitar</button><br><br>
 
-<label>Clasificación</label><br>
-<input type="file" id="fileClasificacion" accept="image/*"><br><br>
+<label>Clasificación (1600x700)</label><br>
+<input type="file" id="fileClasificacion" accept="image/*">
+<button type="button" onclick="borrarImagen('Clasificacion')">🗑️ Quitar</button><br><br>
 
-<label>Resultados</label><br>
-<input type="file" id="fileResultados" accept="image/*"><br><br>
+<label>Resultados (1600x700)</label><br>
+<input type="file" id="fileResultados" accept="image/*">
+<button type="button" onclick="borrarImagen('Resultados')">🗑️ Quitar</button><br><br>
 
 
 <label>Fecha del partido</label><br>
@@ -313,10 +408,10 @@ function reset(){
     // Reiniciar marcador
     l = 0;
     v = 0;
-    marcador();actualizarCuentaAtras();
+    marcador();actualizarCuentaAtras();adaptarEscudos();
 
     // Borrar todos los eventos
-    lista.innerHTML = "";
+    eventosLocal.innerHTML=""; eventosVisitante.innerHTML="";
 
 }
 
@@ -329,7 +424,7 @@ resultado.innerHTML=l+" - "+v;
 function golLocal(){
 
     l++;
-    marcador();actualizarCuentaAtras();
+    marcador();actualizarCuentaAtras();adaptarEscudos();
 
     let jugador = prompt("Nombre del goleador");
 
@@ -339,20 +434,20 @@ function golLocal(){
 
     if(!minuto) minuto = Math.floor(s/60);
 
-    lista.innerHTML += "<p>⚽ " + minuto + "' " + jugador + "</p>";
+    eventosLocal.innerHTML += `<div class="goalEvent"><span class="goalBall">⚽</span><span>${minuto}\' ${jugador}</span></div>`;
 
 }
 
 function golVisitante(){
 
     v++;
-    marcador();actualizarCuentaAtras();
+    marcador();actualizarCuentaAtras();adaptarEscudos();
 
     let minuto = prompt("¿En qué minuto ha sido el gol?");
 
     if(!minuto) minuto = Math.floor(s/60);
 
-    lista.innerHTML += "<p>⚽ " + minuto + "' Gol visitante</p>";
+    eventosVisitante.innerHTML += `<div class="goalEvent"><span class="goalBall">⚽</span><span>${minuto}\' Gol</span></div>`;
 
 }
 
@@ -462,13 +557,45 @@ function actualizarCuentaAtras(){
 }
 setInterval(actualizarCuentaAtras,1000);
 
+
+function borrarImagen(tipo){
+ localStorage.removeItem('img'+tipo);
+ const img=document.getElementById('img'+tipo);
+ if(img) img.removeAttribute('src');
+}
+
+
+const _oldMarcador=marcador;
+marcador=function(){
+  _oldMarcador();
+  const r=document.getElementById('resultado');
+  if(r){
+    r.classList.remove('scoreAnim');
+    void r.offsetWidth;
+    r.classList.add('scoreAnim');
+  }
+}
+
+
+function adaptarEscudos(){
+ ['logoLocal','logoVisitante'].forEach(id=>{
+   const img=document.getElementById(id);
+   if(!img) return;
+   img.style.objectFit='contain';
+   img.style.width='auto';
+   img.style.height='auto';
+   img.style.maxWidth='100%';
+   img.style.maxHeight='100%';
+ });
+}
+
 window.onload=()=>{
  if(localStorage.getItem('nombreLocal')) nombreLocal.innerHTML=localStorage.getItem('nombreLocal');
  if(localStorage.getItem('nombreVisitante')) nombreVisitante.innerHTML=localStorage.getItem('nombreVisitante');
  if(localStorage.getItem('logoLocal')) logoLocal.src=localStorage.getItem('logoLocal');
  if(localStorage.getItem('logoVisitante')) logoVisitante.src=localStorage.getItem('logoVisitante');
  pintar();
- marcador();actualizarCuentaAtras();
+ marcador();actualizarCuentaAtras();adaptarEscudos();
 };
 
 </script>
