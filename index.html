@@ -348,12 +348,16 @@ const db = firebase.database();
 
 function guardarFirebase(){
     firebase.database().ref("partido").set({
-        local: nombreLocal.innerHTML,
-        visitante: nombreVisitante.innerHTML,
+        local:nombreLocal.innerHTML,
+        visitante:nombreVisitante.innerHTML,
         golesLocal:l,
         golesVisitante:v,
         tiempo:s,
-        fase:fase
+        fase:fase,
+        eventosLocal:eventosLocal.innerHTML,
+        eventosVisitante:eventosVisitante.innerHTML,
+        logoLocal:logoLocal.src,
+        logoVisitante:logoVisitante.src
     });
 }
 
@@ -469,6 +473,9 @@ function golLocal(){
 function golVisitante(){
 
     v++;
+    marcador();
+    guardarFirebase();
+
     
 
     let minuto = prompt("¿En qué minuto ha sido el gol?");
@@ -625,7 +632,13 @@ firebase.database().ref("partido").on("value",(snapshot)=>{
  if(!d) return;
  l=d.golesLocal||0;
  v=d.golesVisitante||0;
+ nombreLocal.innerHTML=d.local||nombreLocal.innerHTML;
+ nombreVisitante.innerHTML=d.visitante||nombreVisitante.innerHTML;
  resultado.innerHTML=l+" - "+v;
+ if(d.eventosLocal!==undefined) eventosLocal.innerHTML=d.eventosLocal;
+ if(d.eventosVisitante!==undefined) eventosVisitante.innerHTML=d.eventosVisitante;
+ if(d.logoLocal) logoLocal.src=d.logoLocal;
+ if(d.logoVisitante) logoVisitante.src=d.logoVisitante;
 });
 
 window.onload = () => {
