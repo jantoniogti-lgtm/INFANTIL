@@ -347,18 +347,35 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 function guardarFirebase(){
+
     firebase.database().ref("partido").set({
+
         local:nombreLocal.innerHTML,
+
         visitante:nombreVisitante.innerHTML,
+
         golesLocal:l,
+
         golesVisitante:v,
+
         tiempo:s,
+
         fase:fase,
+
+        estado:estadoCrono,
+
+        inicio:inicioCrono,
+
         eventosLocal:eventosLocal.innerHTML,
+
         eventosVisitante:eventosVisitante.innerHTML,
+
         logoLocal:logoLocal.src,
+
         logoVisitante:logoVisitante.src
+
     });
+
 }
 
 let s=0;
@@ -367,6 +384,8 @@ let l=0;
 let v=0;
 let fase=0;
 
+let estadoCrono="stop";
+let inicioCrono=0;
 function mostrar(id){
 
 document.querySelectorAll(".screen").forEach(e=>e.classList.remove("active"));
@@ -374,7 +393,34 @@ document.querySelectorAll(".screen").forEach(e=>e.classList.remove("active"));
 document.getElementById(id).classList.add("active");
 
 }
+function iniciarCronoSincronizado(){
 
+    if(t) clearInterval(t);
+
+    t = setInterval(()=>{
+
+        if(estadoCrono!="running") return;
+
+        s = Math.floor((Date.now()-inicioCrono)/1000);
+
+        if(fase==2)
+            s += 25*60;
+
+        if(fase==1 && s>=25*60){
+            s=25*60;
+            estadoCrono="pause";
+        }
+
+        if(fase==2 && s>=50*60){
+            s=50*60;
+            estadoCrono="finish";
+        }
+
+        pintar();
+
+    },1000);
+
+}
 function pintar(){
 
 let m=Math.floor(s/60).toString().padStart(2,"0");
@@ -385,30 +431,6 @@ timer.innerHTML=m+":"+ss;
 
 }
 
-function start(){
-
-if(t)return;
-
-t=setInterval(()=>{
-
-    s++;
-
-    // Fin 1ª parte
-    if(fase===1 && s>=25*60){
-        pause();
-        s=25*60;
-        timer.innerHTML="25:00<br><span style='font-size:24px;color:#d4af37;'>DESCANSO</span>";
-        return;
-    }
-
-    // Fin 2ª parte
-    if(fase===2 && s>=50*60){
-        pause();
-        s=50*60;
-        timer.innerHTML="50:00<br><span style='font-size:24px;color:#d4af37;'>TERMINADO</span>";
-        return;
-    }
-
     ['Alineacion','Clasificacion','Resultados'].forEach(n=>{const v=localStorage.getItem('img'+n);if(v)document.getElementById('img'+n).src=v;});
 pintar();
 
@@ -418,9 +440,9 @@ pintar();
 
 function pause(){
 
-clearInterval(t);
+    estadoCrono="pause";
 
-t=null;
+    guardarFirebase();
 
 }
 
@@ -556,18 +578,26 @@ cerrarAdmin();
 
 
 function primeraParte(){
+
     fase=1;
-    pause();
-    s=0;
-    pintar();
-    start();
+
+    estadoCrono="running";
+
+    inicioCrono=Date.now();
+
+    guardarFirebase();
+
 }
 function segundaParte(){
+
     fase=2;
-    pause();
-    s=25*60;
-    pintar();
-    start();
+
+    estadoCrono="running";
+
+    inicioCrono=Date.now()-25*60*1000;
+
+    guardarFirebase();
+
 }
 function terminarPartido(){
     pause();
@@ -630,6 +660,10 @@ function adaptarEscudos(){
 firebase.database().ref("partido").on("value",(snapshot)=>{
  const d=snapshot.val();
  if(!d) return;
+estadoCrono = d.estado || "stop";
+inicioCrono = d.inicio || 0;
+fase = d.fase || 0;
+iniciarCronoSincronizado();
  l=d.golesLocal||0;
  v=d.golesVisitante||0;
  nombreLocal.innerHTML=d.local||nombreLocal.innerHTML;
@@ -678,10 +712,11 @@ window.onload = () => {
 
         }
 
-        pintar();
-        marcador();
-        actualizarCuentaAtras();
-        adaptarEscudos();
+       pintar();
+marcador();
+iniciarCronoSincronizado();
+actualizarCuentaAtras();
+adaptarEscudos();
 
     });
 
