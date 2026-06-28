@@ -434,7 +434,9 @@ function reset(){
     // Reiniciar marcador
     l = 0;
     v = 0;
-    marcador();actualizarCuentaAtras();adaptarEscudos();
+    marcador();
+    guardarFirebase();
+    actualizarCuentaAtras();adaptarEscudos();
 
     // Borrar todos los eventos
     eventosLocal.innerHTML=""; eventosVisitante.innerHTML="";
@@ -442,14 +444,15 @@ function reset(){
 }
 
 function marcador(){
-    resultado.innerHTML=l+" - "+v;
-    guardarFirebase();
+    resultado.innerHTML = l + " - " + v;
 }
 
 function golLocal(){
 
     l++;
-    marcador();actualizarCuentaAtras();adaptarEscudos();
+    marcador();
+    guardarFirebase();
+    actualizarCuentaAtras();adaptarEscudos();
 
     let jugador = prompt("Nombre del goleador");
 
@@ -466,7 +469,7 @@ function golLocal(){
 function golVisitante(){
 
     v++;
-    marcador();actualizarCuentaAtras();adaptarEscudos();
+    
 
     let minuto = prompt("¿En qué minuto ha sido el gol?");
 
@@ -538,6 +541,8 @@ horaPartido.textContent=editHora.value||'--:--';
    r.readAsDataURL(inp.files[0]);
  }
 });
+
+guardarFirebase();
 
 cerrarAdmin();
 }
