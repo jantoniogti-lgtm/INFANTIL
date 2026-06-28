@@ -201,29 +201,99 @@ filter:drop-shadow(0 0 6px #f4c430);
 
 </div>
 
-
-<button
-onclick="admin()"
+<button onclick="admin()"
 style="
 position:fixed;
 top:15px;
 right:15px;
-width:48px;
-height:48px;
+width:45px;
+height:45px;
 border-radius:50%;
 background:#d4af37;
-color:#111;
-border:none;
 font-size:22px;
-font-weight:bold;
-z-index:99999;
-cursor:pointer;
-box-shadow:0 4px 12px rgba(0,0,0,.4);
-">⚙️</button>
+">
+⚙️
+</button>
 
-<nav>
-<button onclick="mostrar('inicio')">🏠</button>
-</nav>
+<!-- PANEL ADMIN -->
+<div id="adminPanel" style="
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.85);
+z-index:9999;
+overflow-y:auto;
+-webkit-overflow-scrolling:touch;
+padding:15px;
+">
+<div style="
+background:#222;
+max-width:430px;
+margin:20px auto;
+padding:20px;
+border-radius:16px;
+color:#fff;
+max-height:calc(100vh - 40px);
+overflow-y:auto;
+-webkit-overflow-scrolling:touch;
+border:2px solid #d4af37;
+">
+<h2 style="margin-bottom:12px;">⚙️ Administrador</h2>
+
+<label>Equipo local</label><br>
+<input id="editLocal" style="width:100%;padding:8px;margin:5px 0 10px"><br>
+
+<label>Equipo visitante</label><br>
+<input id="editVisitante" style="width:100%;padding:8px;margin:5px 0 10px"><br>
+
+<label>Escudo local</label><br>
+<input type="file" id="fileLocal" accept="image/*"><br><br>
+
+<label>Escudo visitante</label><br>
+<input type="file" id="fileVisitante" accept="image/*"><br><br>
+
+
+<hr style="margin:15px 0;border-color:#555">
+<h3>Control del partido</h3>
+<div style="text-align:center">
+<button class="green" onclick="primeraParte()">▶ 1ª Parte</button>
+<button class="green" onclick="segundaParte()">▶ 2ª Parte</button>
+<button class="orange" onclick="pause()">⏸ Pausa</button>
+<button class="red" onclick="terminarPartido()">🏁 Terminado</button>
+<button class="red" onclick="reset()">🔄 Reset</button><br>
+<button class="blue" onclick="golLocal()">+ Gol Local</button>
+<button class="red" onclick="golVisitante()">+ Gol Visitante</button>
+</div>
+<br>
+
+<hr>
+<h3>Imágenes</h3>
+
+<label>Alineación (1200x900)</label><br>
+<input type="file" id="fileAlineacion" accept="image/*">
+<button type="button" onclick="borrarImagen('Alineacion')">🗑️ Quitar</button><br><br>
+
+<label>Clasificación (1600x700)</label><br>
+<input type="file" id="fileClasificacion" accept="image/*">
+<button type="button" onclick="borrarImagen('Clasificacion')">🗑️ Quitar</button><br><br>
+
+<label>Resultados (1600x700)</label><br>
+<input type="file" id="fileResultados" accept="image/*">
+<button type="button" onclick="borrarImagen('Resultados')">🗑️ Quitar</button><br><br>
+
+
+<label>Fecha del partido</label><br>
+<input type="date" id="editFecha" style="width:100%;padding:8px"><br><br>
+
+<label>Hora del partido</label><br>
+<input type="time" id="editHora" style="width:100%;padding:8px"><br><br>
+
+<button onclick="guardarAdmin()" style="background:#28a745;color:#fff;">Guardar</button>
+<button onclick="cerrarAdmin()" style="background:#dc3545;color:#fff;">Cerrar</button>
+</div>
+</div>
+
+<nav><button onclick="mostrar('inicio')">🏠</button></nav>
 <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-app-compat.js"></script>
 
 <script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-database-compat.js"></script>
