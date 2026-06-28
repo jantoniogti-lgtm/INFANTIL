@@ -562,28 +562,22 @@ async function guardarAdmin(){
  nombreLocal.innerHTML=editLocal.value;
  nombreVisitante.innerHTML=editVisitante.value;
 
-
- }
-
  localStorage.setItem('nombreLocal',nombreLocal.innerHTML);
  localStorage.setItem('nombreVisitante',nombreVisitante.innerHTML);
-localStorage.setItem('fechaPartido',editFecha.value);
-localStorage.setItem('horaPartido',editHora.value);
-fechaPartido.textContent=editFecha.value||'Sin definir';
-horaPartido.textContent=editHora.value||'--:--';
- 
-await leerImagen("fileLocal","logoLocal");
+ localStorage.setItem('fechaPartido',editFecha.value);
+ localStorage.setItem('horaPartido',editHora.value);
 
-await leerImagen("fileVisitante","logoVisitante");
+ fechaPartido.textContent=editFecha.value||'Sin definir';
+ horaPartido.textContent=editHora.value||'--:--';
 
-await leerImagen("fileAlineacion","imgAlineacion");
+ await leerImagen("fileLocal","logoLocal");
+ await leerImagen("fileVisitante","logoVisitante");
+ await leerImagen("fileAlineacion","imgAlineacion");
+ await leerImagen("fileClasificacion","imgClasificacion");
+ await leerImagen("fileResultados","imgResultados");
 
-await leerImagen("fileClasificacion","imgClasificacion");
-
-await leerImagen("fileResultados","imgResultados");
-guardarFirebase();
-
-cerrarAdmin();
+ guardarFirebase();
+ cerrarAdmin();
 }
 
 
@@ -591,9 +585,8 @@ function primeraParte(){
 
     fase=1;
     estadoCrono="running";
-    textoParte.innerHTML="1ª PARTE";
     inicioCrono=Date.now();
-    s=0;
+    textoParte.textContent="1ª PARTE";
     guardarFirebase();
 
 }
@@ -601,18 +594,21 @@ function segundaParte(){
 
     fase=2;
     estadoCrono="running";
-    textoParte.innerHTML="2ª PARTE";
     inicioCrono=Date.now();
+    textoParte.textContent="2ª PARTE";
     s=25*60;
+    pintar();
     guardarFirebase();
 
 }
 function terminarPartido(){
+
     estadoCrono="finish";
     s=50*60;
     pintar();
-    textoParte.innerHTML="FINAL";
+    textoParte.textContent="FINAL";
     guardarFirebase();
+
 }
 
 
@@ -697,11 +693,10 @@ if(d.fecha)
 
 if(d.hora)
     horaPartido.textContent=d.hora;
-
-if(typeof textoParte!=="undefined"){
- if(estadoCrono==="finish") textoParte.innerHTML="FINAL";
- else if(fase===2) textoParte.innerHTML="2ª PARTE";
- else textoParte.innerHTML="1ª PARTE";
+if(window.textoParte){
+  if(estadoCrono==="finish") textoParte.textContent="FINAL";
+  else if(fase===2) textoParte.textContent="2ª PARTE";
+  else textoParte.textContent="1ª PARTE";
 }
 });
 
