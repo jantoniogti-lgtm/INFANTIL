@@ -598,7 +598,28 @@ window.onload=()=>{
  marcador();actualizarCuentaAtras();adaptarEscudos();
 };
 
-</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
+import {
+  getDatabase,
+  ref,
+  set,
+  onValue
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD3X8TTd9XPiFlByDxBxFBNqqjHuRxOkfU",
+  authDomain: "costa-daurada-cup.firebaseapp.com",
+  databaseURL: "https://costa-daurada-cup-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "costa-daurada-cup",
+  storageBucket: "costa-daurada-cup.firebasestorage.app",
+  messagingSenderId: "348811031231",
+  appId: "1:348811031231:web:8a65cccce4870abb968c0a"
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getDatabase(app);
 </body>
 </html>
