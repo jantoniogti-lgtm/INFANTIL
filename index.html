@@ -328,8 +328,34 @@ border:2px solid #d4af37;
 <button onclick="mostrar('resultados')">⚽</button>
 
 </nav>
+<script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-app-compat.js"></script>
 
+<script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-database-compat.js"></script>
 <script>
+const firebaseConfig = {
+  apiKey: "AIzaSyD3X8TTd9XPiFlByDxBxFBNqqjHuRxOkfU",
+  authDomain: "costa-daurada-cup.firebaseapp.com",
+  databaseURL: "https://costa-daurada-cup-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "costa-daurada-cup",
+  storageBucket: "costa-daurada-cup.firebasestorage.app",
+  messagingSenderId: "348811031231",
+  appId: "1:348811031231:web:8a65cccce4870abb968c0a"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.database();
+
+function guardarFirebase(){
+    firebase.database().ref("partido").set({
+        local: nombreLocal.innerHTML,
+        visitante: nombreVisitante.innerHTML,
+        golesLocal:l,
+        golesVisitante:v,
+        tiempo:s,
+        fase:fase
+    });
+}
 
 let s=0;
 let t=null;
@@ -416,9 +442,8 @@ function reset(){
 }
 
 function marcador(){
-
-resultado.innerHTML=l+" - "+v;
-
+    resultado.innerHTML=l+" - "+v;
+    guardarFirebase();
 }
 
 function golLocal(){
@@ -589,7 +614,17 @@ function adaptarEscudos(){
  });
 }
 
+
+firebase.database().ref("partido").on("value",(snapshot)=>{
+ const d=snapshot.val();
+ if(!d) return;
+ l=d.golesLocal||0;
+ v=d.golesVisitante||0;
+ resultado.innerHTML=l+" - "+v;
+});
+
 window.onload=()=>{
+
  if(localStorage.getItem('nombreLocal')) nombreLocal.innerHTML=localStorage.getItem('nombreLocal');
  if(localStorage.getItem('nombreVisitante')) nombreVisitante.innerHTML=localStorage.getItem('nombreVisitante');
  if(localStorage.getItem('logoLocal')) logoLocal.src=localStorage.getItem('logoLocal');
@@ -598,28 +633,7 @@ window.onload=()=>{
  marcador();actualizarCuentaAtras();adaptarEscudos();
 };
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+</script>
 
-import {
-  getDatabase,
-  ref,
-  set,
-  onValue
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyD3X8TTd9XPiFlByDxBxFBNqqjHuRxOkfU",
-  authDomain: "costa-daurada-cup.firebaseapp.com",
-  databaseURL: "https://costa-daurada-cup-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "costa-daurada-cup",
-  storageBucket: "costa-daurada-cup.firebasestorage.app",
-  messagingSenderId: "348811031231",
-  appId: "1:348811031231:web:8a65cccce4870abb968c0a"
-};
-
-const app = initializeApp(firebaseConfig);
-
-const db = getDatabase(app);
 </body>
 </html>
