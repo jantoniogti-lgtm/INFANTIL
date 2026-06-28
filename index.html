@@ -623,14 +623,50 @@ firebase.database().ref("partido").on("value",(snapshot)=>{
  resultado.innerHTML=l+" - "+v;
 });
 
-window.onload=()=>{
+window.onload = () => {
 
- if(localStorage.getItem('nombreLocal')) nombreLocal.innerHTML=localStorage.getItem('nombreLocal');
- if(localStorage.getItem('nombreVisitante')) nombreVisitante.innerHTML=localStorage.getItem('nombreVisitante');
- if(localStorage.getItem('logoLocal')) logoLocal.src=localStorage.getItem('logoLocal');
- if(localStorage.getItem('logoVisitante')) logoVisitante.src=localStorage.getItem('logoVisitante');
- pintar();
- marcador();actualizarCuentaAtras();adaptarEscudos();
+    firebase.database().ref("partido").once("value").then((snapshot) => {
+
+        const d = snapshot.val();
+
+        if (d) {
+
+            nombreLocal.innerHTML = d.local || "LOCAL";
+            nombreVisitante.innerHTML = d.visitante || "VISITANTE";
+
+            l = d.golesLocal || 0;
+            v = d.golesVisitante || 0;
+
+            s = d.tiempo || 0;
+            fase = d.fase || 0;
+
+            if (d.eventosLocal) eventosLocal.innerHTML = d.eventosLocal;
+            if (d.eventosVisitante) eventosVisitante.innerHTML = d.eventosVisitante;
+
+        } else {
+
+            // Primer uso: carga localStorage
+            if(localStorage.getItem('nombreLocal'))
+                nombreLocal.innerHTML = localStorage.getItem('nombreLocal');
+
+            if(localStorage.getItem('nombreVisitante'))
+                nombreVisitante.innerHTML = localStorage.getItem('nombreVisitante');
+
+            if(localStorage.getItem('logoLocal'))
+                logoLocal.src = localStorage.getItem('logoLocal');
+
+            if(localStorage.getItem('logoVisitante'))
+                logoVisitante.src = localStorage.getItem('logoVisitante');
+
+        }
+
+        pintar();
+        marcador();
+        actualizarCuentaAtras();
+        adaptarEscudos();
+
+    });
+
 };
 
 </script>
