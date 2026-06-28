@@ -169,7 +169,7 @@ filter:drop-shadow(0 0 6px #f4c430);
 <div class="heroResult" id="resultado">0 - 0</div>
 <div class="livePill">🔴 EN DIRECTO</div>
 <div class="heroTimer" id="timer">00:00</div>
-<div id="textoParte" style="color:#ddd;font-size:18px;">1ª PARTE</div>
+<div style="color:#ddd;font-size:18px;">1ª PARTE</div>
 </div>
 
 <div style="text-align:center">
@@ -201,18 +201,18 @@ filter:drop-shadow(0 0 6px #f4c430);
 
 </div>
 
-<div style="margin-top:20px;background:linear-gradient(180deg,#202020,#141414);padding:18px;border-radius:24px;border:2px solid #d4af37;box-shadow:0 10px 30px rgba(0,0,0,.45)">
-<h3 style="color:#f3c340;font-size:28px;text-align:center;margin-bottom:15px;">📋 ALINEACIÓN TITULAR</h3>
-<img id="imgAlineacion" class="imageBox" style="display:block;width:100%;height:520px;object-fit:contain;background:#0b0b0b;border:3px solid #303030;border-radius:22px;padding:10px">
+<div style="margin-top:24px;background:linear-gradient(180deg,#202020,#141414);padding:0;border-radius:24px;border:2px solid #d4af37;box-shadow:0 12px 30px rgba(0,0,0,.45)">
+<h3 style="color:#f3c340;font-size:28px;text-align:center;margin-bottom:12px;">📋 ALINEACIÓN TITULAR</h3>
+<img id="imgAlineacion" class="imageBox" style="display:block;width:100%;height:520px;object-fit:contain;background:#0b0b0b;border:3px solid #303030;border-radius:22px;padding:0">
 </div>
 
-<div style="margin-top:20px;background:linear-gradient(180deg,#202020,#141414);padding:18px;border-radius:24px;border:2px solid #d4af37;box-shadow:0 10px 30px rgba(0,0,0,.45)">
-<h3 style="color:#f3c340;font-size:28px;text-align:center;margin-bottom:15px;">🏆 CLASIFICACIÓN</h3>
-<img id="imgClasificacion" class="imageBox" style="display:block;width:100%;height:260px;object-fit:contain;background:#0b0b0b;border:3px solid #303030;border-radius:22px;padding:10px">
+<div style="margin-top:24px;background:linear-gradient(180deg,#202020,#141414);padding:0;border-radius:24px;border:2px solid #d4af37;box-shadow:0 12px 30px rgba(0,0,0,.45)">
+<h3 style="color:#f3c340;font-size:28px;text-align:center;margin-bottom:12px;">🏆 CLASIFICACIÓN</h3>
+<img id="imgClasificacion" class="imageBox" style="display:block;width:100%;height:260px;object-fit:contain;background:#0b0b0b;border:3px solid #303030;border-radius:22px;padding:0">
 
-<div style="margin-top:20px;background:linear-gradient(180deg,#202020,#141414);padding:18px;border-radius:24px;border:2px solid #d4af37;box-shadow:0 10px 30px rgba(0,0,0,.45)">
-<h3 style="color:#f3c340;font-size:28px;text-align:center;margin-bottom:15px;">⚽ RESULTADOS</h3>
-<img id="imgResultados" class="imageBox" style="display:block;width:100%;height:520px;object-fit:contain;background:#0b0b0b;border:3px solid #303030;border-radius:22px;padding:14px;box-shadow:inset 0 0 30px rgba(255,255,255,.04),0 8px 24px rgba(0,0,0,.5)">
+<div style="margin-top:24px;background:linear-gradient(180deg,#202020,#141414);padding:0;border-radius:24px;border:2px solid #d4af37;box-shadow:0 12px 30px rgba(0,0,0,.45)">
+<h3 style="color:#f3c340;font-size:28px;text-align:center;margin-bottom:12px;">⚽ RESULTADOS</h3>
+<img id="imgResultados" class="imageBox" style="display:block;width:100%;height:260px;object-fit:contain;background:#0b0b0b;border:3px solid #303030;border-radius:22px;padding:0;box-shadow:inset 0 0 30px rgba(255,255,255,.04),0 8px 24px rgba(0,0,0,.5)">
 </div>
 
 </div>
@@ -265,7 +265,7 @@ overflow-y:auto;
 -webkit-overflow-scrolling:touch;
 border:2px solid #d4af37;
 ">
-<h2 style="margin-bottom:15px;">⚙️ Administrador</h2>
+<h2 style="margin-bottom:12px;">⚙️ Administrador</h2>
 
 <label>Equipo local</label><br>
 <input id="editLocal" style="width:100%;padding:8px;margin:5px 0 10px"><br>
@@ -584,31 +584,30 @@ async function guardarAdmin(){
 function primeraParte(){
 
     fase=1;
+
     estadoCrono="running";
+
     inicioCrono=Date.now();
-    textoParte.textContent="1ª PARTE";
+
     guardarFirebase();
 
 }
 function segundaParte(){
 
     fase=2;
+
     estadoCrono="running";
-    inicioCrono=Date.now();
-    textoParte.textContent="2ª PARTE";
-    s=25*60;
-    pintar();
+
+    inicioCrono=Date.now()-25*60*1000;
+
     guardarFirebase();
 
 }
 function terminarPartido(){
-
-    estadoCrono="finish";
+    pause();
     s=50*60;
     pintar();
-    textoParte.textContent="FINAL";
-    guardarFirebase();
-
+    document.getElementById('timer').innerHTML='50:00<br><span style="font-size:24px;color:#d4af37;">TERMINADO</span>';
 }
 
 
@@ -693,11 +692,6 @@ if(d.fecha)
 
 if(d.hora)
     horaPartido.textContent=d.hora;
-if(window.textoParte){
-  if(estadoCrono==="finish") textoParte.textContent="FINAL";
-  else if(fase===2) textoParte.textContent="2ª PARTE";
-  else textoParte.textContent="1ª PARTE";
-}
 });
 
 window.onload = () => {
