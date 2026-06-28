@@ -431,12 +431,6 @@ timer.innerHTML=m+":"+ss;
 
 }
 
-    ['Alineacion','Clasificacion','Resultados'].forEach(n=>{const v=localStorage.getItem('img'+n);if(v)document.getElementById('img'+n).src=v;});
-pintar();
-
-},1000);
-
-}
 
 function pause(){
 
@@ -664,6 +658,7 @@ estadoCrono = d.estado || "stop";
 inicioCrono = d.inicio || 0;
 fase = d.fase || 0;
 iniciarCronoSincronizado();
+ pintar();
  l=d.golesLocal||0;
  v=d.golesVisitante||0;
  nombreLocal.innerHTML=d.local||nombreLocal.innerHTML;
@@ -689,7 +684,7 @@ window.onload = () => {
             l = d.golesLocal || 0;
             v = d.golesVisitante || 0;
 
-            s = d.tiempo || 0;
+            s = 0;
             fase = d.fase || 0;
 
             if (d.eventosLocal) eventosLocal.innerHTML = d.eventosLocal;
