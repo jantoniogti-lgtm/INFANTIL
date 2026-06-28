@@ -223,7 +223,7 @@ filter:drop-shadow(0 0 6px #f4c430);
 
 <div id="resultados" class="screen">
 
-<img id="imgResultados" class="imageBox" style="object-fit:contain;background:#222" src="">
+<img id="imgResultadosPantalla" class="imageBox" style="object-fit:contain;background:#222" src="">
 
 </div>
 
@@ -684,8 +684,11 @@ iniciarCronoSincronizado();
 if(d.imgClasificacion)
     document.getElementById("imgClasificacion").src=d.imgClasificacion;
 
-if(d.imgResultados)
+if(d.imgResultados){
     document.getElementById("imgResultados").src=d.imgResultados;
+    const dup=document.getElementById("imgResultadosPantalla");
+    if(dup) dup.src=d.imgResultados;
+}
 
 if(d.fecha)
     fechaPartido.textContent=d.fecha;
@@ -713,6 +716,18 @@ window.onload = () => {
 
             if (d.eventosLocal) eventosLocal.innerHTML = d.eventosLocal;
             if (d.eventosVisitante) eventosVisitante.innerHTML = d.eventosVisitante;
+
+            if (d.logoLocal) logoLocal.src = d.logoLocal;
+            if (d.logoVisitante) logoVisitante.src = d.logoVisitante;
+            if (d.imgAlineacion) document.getElementById('imgAlineacion').src = d.imgAlineacion;
+            if (d.imgClasificacion) document.getElementById('imgClasificacion').src = d.imgClasificacion;
+            if (d.imgResultados){
+                document.getElementById('imgResultados').src = d.imgResultados;
+                const dup=document.getElementById('imgResultadosPantalla');
+                if(dup) dup.src=d.imgResultados;
+            }
+            if (d.fecha) fechaPartido.textContent=d.fecha;
+            if (d.hora) horaPartido.textContent=d.hora;
 
         } else {
 
