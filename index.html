@@ -169,7 +169,7 @@ filter:drop-shadow(0 0 6px #f4c430);
 <div class="heroResult" id="resultado">0 - 0</div>
 <div class="livePill">🔴 EN DIRECTO</div>
 <div class="heroTimer" id="timer">00:00</div>
-<div style="color:#ddd;font-size:18px;">1ª PARTE</div>
+<div id="textoParte" style="color:#ddd;font-size:18px;">1ª PARTE</div>
 </div>
 
 <div style="text-align:center">
@@ -562,52 +562,57 @@ async function guardarAdmin(){
  nombreLocal.innerHTML=editLocal.value;
  nombreVisitante.innerHTML=editVisitante.value;
 
+
+ }
+
  localStorage.setItem('nombreLocal',nombreLocal.innerHTML);
  localStorage.setItem('nombreVisitante',nombreVisitante.innerHTML);
- localStorage.setItem('fechaPartido',editFecha.value);
- localStorage.setItem('horaPartido',editHora.value);
+localStorage.setItem('fechaPartido',editFecha.value);
+localStorage.setItem('horaPartido',editHora.value);
+fechaPartido.textContent=editFecha.value||'Sin definir';
+horaPartido.textContent=editHora.value||'--:--';
+ 
+await leerImagen("fileLocal","logoLocal");
 
- fechaPartido.textContent=editFecha.value||'Sin definir';
- horaPartido.textContent=editHora.value||'--:--';
+await leerImagen("fileVisitante","logoVisitante");
 
- await leerImagen("fileLocal","logoLocal");
- await leerImagen("fileVisitante","logoVisitante");
- await leerImagen("fileAlineacion","imgAlineacion");
- await leerImagen("fileClasificacion","imgClasificacion");
- await leerImagen("fileResultados","imgResultados");
+await leerImagen("fileAlineacion","imgAlineacion");
 
- guardarFirebase();
- cerrarAdmin();
+await leerImagen("fileClasificacion","imgClasificacion");
+
+await leerImagen("fileResultados","imgResultados");
+guardarFirebase();
+
+cerrarAdmin();
 }
 
 
 function primeraParte(){
 
     fase=1;
-
     estadoCrono="running";
-
+    textoParte.innerHTML="1ª PARTE";
     inicioCrono=Date.now();
-
+    s=0;
     guardarFirebase();
 
 }
 function segundaParte(){
 
     fase=2;
-
     estadoCrono="running";
-
-    inicioCrono=Date.now()-25*60*1000;
-
+    textoParte.innerHTML="2ª PARTE";
+    inicioCrono=Date.now();
+    s=25*60;
     guardarFirebase();
 
 }
 function terminarPartido(){
-    pause();
+    estadoCrono="finish";
     s=50*60;
     pintar();
-    document.getElementById('timer').innerHTML='50:00<br><span style="font-size:24px;color:#d4af37;">TERMINADO</span>';
+    textoParte.innerHTML="FINAL";
+    guardarFirebase();
 }
 
 
@@ -692,6 +697,12 @@ if(d.fecha)
 
 if(d.hora)
     horaPartido.textContent=d.hora;
+
+if(typeof textoParte!=="undefined"){
+ if(estadoCrono==="finish") textoParte.innerHTML="FINAL";
+ else if(fase===2) textoParte.innerHTML="2ª PARTE";
+ else textoParte.innerHTML="1ª PARTE";
+}
 });
 
 window.onload = () => {
