@@ -2,746 +2,1104 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Partido en Directo</title>
-
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Costa Daurada Cup Infantil</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&display=swap');
-*{margin:0;padding:0;box-sizing:border-box;font-family:Oswald,sans-serif}
-body{background:radial-gradient(circle at top,#252525,#090909 60%,#000);color:#fff;padding-bottom:85px}
-header{background:linear-gradient(180deg,#1f1f1f,#090909)!important;border-bottom:4px solid #f4c430!important;box-shadow:0 8px 25px rgba(0,0,0,.6)}
-.screen{padding:18px}
-.score{
-display:grid!important;
-grid-template-columns:1fr auto 1fr;
-gap:18px;
-align-items:center;
-background:linear-gradient(180deg,#1a1a1a,#111);
-border:2px solid #f4c430;
-border-radius:26px;
-padding:24px;
-margin:20px 0;
-box-shadow:0 15px 35px rgba(0,0,0,.5)
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{
+background:#06152b;
+color:white;
+overflow-x:hidden;
 }
-.team{display:flex;flex-direction:column;align-items:center}
-.logo{
-max-width:100%!important;
-max-height:100%!important;
-width:auto!important;
-height:auto!important;
-object-fit:contain!important;
-border:none!important;
-border-radius:0!important;
-background:transparent!important;
-display:block;
-}
-#nombreLocal,#nombreVisitante{margin-top:10px;font-size:22px;font-weight:700}
-.result{font-size:84px!important;color:#f4c430;text-shadow:0 0 15px rgba(244,196,48,.5)}
-.timer{
-background:#000;
-border:2px solid #30ff75;
-border-radius:14px;
-width:140px;
-margin:8px auto 4px;
-padding:6px;
-font-size:34px!important;
-color:#30ff75;
+header{
+background:linear-gradient(135deg,#002b5b,#001325);
+padding:30px 20px;
 text-align:center;
+border-bottom:4px solid #d6ff00;
 }
-.events,.sectionCard{background:#171717;border-radius:22px;border-left:6px solid #f4c430;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
-.imageBox{border-radius:18px!important;background:#0d0d0d!important}
-nav{background:#111!important;border-top:2px solid #f4c430}
-nav button{font-size:16px!important}
-
-.heroScore{
-margin:20px 0;
-padding:22px;
-border-radius:28px;
-background:linear-gradient(160deg,#262626,#0b0b0b);
-border:3px solid #f4c430;
-box-shadow:0 18px 40px rgba(0,0,0,.55);
+header h1{
+font-size:3rem;
+font-weight:900;
+text-transform:uppercase;
 }
-.heroRow{
-display:grid;
-grid-template-columns:110px 1fr 110px;
-align-items:center;
-gap:12px;
+header p{
+margin-top:10px;
+font-size:1.1rem;
+color:#d6ff00;
 }
-.heroLogo{
-width:100px;height:100px;border-radius:50%;
-border:4px solid #f4c430;
-object-fit:cover;
-background:#222;
+.container{
+max-width:1200px;
+margin:auto;
+padding:20px;
 }
-.heroCenter{text-align:center}
-.heroResult{font-size:72px;font-weight:700;color:#ffd54a;line-height:1}
-.livePill{
-display:inline-block;
-padding:7px 18px;
-margin:10px 0;
+.card{
+background:#0d2342;
 border-radius:20px;
-background:#d00000;
-font-size:15px;
+padding:20px;
+margin-bottom:20px;
+box-shadow:0 0 20px rgba(0,0,0,.4);
+}
+.card h2{
+margin-bottom:15px;
+color:#d6ff00;
+font-size:1.8rem;
+}
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+gap:20px;
+}
+.team{
+background:#132d54;
+padding:15px;
+border-radius:15px;
+text-align:center;
+font-weight:bold;
+font-size:1.2rem;
+border:2px solid transparent;
+transition:.3s;
+}
+.team:hover{
+transform:scale(1.03);
+border-color:#d6ff00;
+}
+.match{
+background:#132d54;
+padding:15px;
+border-radius:15px;
+margin-bottom:10px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+flex-wrap:wrap;
+}
+.badge{
+background:#d6ff00;
+color:#000;
+padding:5px 10px;
+border-radius:20px;
 font-weight:bold;
 }
-.heroTimer{
-font-size:34px;
-color:#52ff84;
-font-weight:700;
+button{
+background:#d6ff00;
+color:#000;
+border:none;
+padding:12px 20px;
+border-radius:12px;
+font-weight:bold;
+cursor:pointer;
+transition:.3s;
 }
-.sectionTitle{
-font-size:28px;
+button:hover{
+transform:scale(1.05);
+}
+input,select{
+width:100%;
+padding:12px;
+margin-top:10px;
+background:#132d54;
+border:none;
+color:white;
+border-radius:10px;
+}
+.table{
+width:100%;
+border-collapse:collapse;
+margin-top:10px;
+}
+.table th,.table td{
+padding:12px;
 text-align:center;
-color:#ffd54a;
-margin-bottom:14px;
+border-bottom:1px solid rgba(255,255,255,.1);
 }
-
-
-.logoBox{
-width:140px;
-height:140px;
+.table th{
+background:#132d54;
+color:#d6ff00;
+}
+.hidden-temp{display:none;}
+footer{
+text-align:center;
+padding:30px;
+color:#ccc;
+}
+.hero{
+background:linear-gradient(rgba(0,0,0,.5),rgba(0,0,0,.7)),url('https://images.unsplash.com/photo-1517466787929-bc90951d0974?q=80&w=1200&auto=format&fit=crop');
+background-size:cover;
+background-position:center;
+padding:80px 20px;
+text-align:center;
+border-radius:25px;
+margin-bottom:25px;
+}
+.hero h2{
+font-size:4rem;
+font-weight:900;
+}
+.hero span{
+color:#d6ff00;
+}
+.countdown{
 display:flex;
-align-items:center;
 justify-content:center;
-margin:0 auto 10px;
-padding:8px;
-background:linear-gradient(180deg,#242424,#111);
-border:2px solid #d4af37;
-border-radius:22px;
-box-shadow:0 8px 22px rgba(0,0,0,.45);
+gap:15px;
+margin-top:20px;
+flex-wrap:wrap;
+}
+.timebox{
+background:#132d54;
+padding:15px;
+border-radius:15px;
+min-width:90px;
+}
+.timebox h3{
+font-size:2rem;
+color:#d6ff00;
+}
+@media(max-width:768px){
+header h1{font-size:2rem}
+.hero h2{font-size:2.5rem}
+.match{flex-direction:column;gap:10px}
+}
+
+.clasif.oro{
+background:rgba(0,255,120,0.15);
+border-left:4px solid #00ff88;
+font-weight:bold;
+}
+
+.clasif.plata{
+background:rgba(255,80,80,0.12);
+border-left:4px solid #ff5b5b;
 }
 
 </style>
-
-
-<style id="v21extra">
-@keyframes scorePulse{
-0%{transform:scale(1)}
-50%{transform:scale(1.08)}
-100%{transform:scale(1)}
-}
-.scoreAnim{
-animation:scorePulse .45s ease;
-}
-.goalEvent{
-display:flex;
-align-items:center;
-gap:8px;
-padding:6px 0;
-border-bottom:1px solid rgba(255,255,255,.08);
-}
-.goalBall{
-font-size:18px;
-filter:drop-shadow(0 0 6px #f4c430);
-}
-</style>
-
 </head>
-
 <body>
 
-
-<header style="background:linear-gradient(180deg,#202020,#111);border-bottom:3px solid #d4af37;color:white;padding:18px;text-align:center">
-<div style="font-size:18px;color:#f3c340;font-weight:bold">🏆 COSTA DAURADA CUP 2026</div>
-<div style="font-size:30px;font-weight:bold">PARTIDO EN DIRECTO</div>
-<div style="font-size:15px;color:#ccc">INFANTIL S14</div>
+<header>
+<h1>Costa Daurada Cup Infantil</h1>
+<p>29 · 30 Junio · 1 Julio 2026</p>
 </header>
 
-<div style="margin:15px;background:rgba(20,20,20,.92);border:2px solid #d4af37;border-radius:18px;padding:15px;text-align:center">
-<div style="font-size:18px">📅 <span id="fechaPartido">Sin definir</span></div>
-<div style="font-size:18px;margin-top:5px">🕒 <span id="horaPartido">--:--</span></div>
-<div style="margin-top:10px;color:#ffd54a;font-size:24px;font-weight:bold">⏳ <span id="cuentaAtras">Configura la fecha del partido</span></div>
-</div>
+<div class="container">
 
-
-<div id="inicio" class="screen active">
-
-
-<div class="heroScore">
-<div class="heroRow">
-<div style="text-align:center">
-<img id="logoLocal" class="heroLogo" src="">
-<div id="nombreLocal">RAMON SICART</div>
-</div>
-
-<div class="heroCenter">
-<div class="heroResult" id="resultado">0 - 0</div>
-<div class="livePill">🔴 EN DIRECTO</div>
-<div class="heroTimer" id="timer">00:00</div>
-<div style="color:#ddd;font-size:18px;">1ª PARTE</div>
-</div>
-
-<div style="text-align:center">
-<img id="logoVisitante" class="heroLogo" src="">
-<div id="nombreVisitante">RIVAL</div>
-</div>
+<div class="hero">
+<h2>Vive la <span>Experiencia</span> del Torneo</h2>
+<p style="margin-top:15px;font-size:1.2rem;">8 equipos · Fase Oro y Plata · Semifinales y Final</p>
+<div class="countdown">
+<div class="timebox"><h3 id="days">0</h3><p>Días</p></div>
+<div class="timebox"><h3 id="hours">0</h3><p>Horas</p></div>
+<div class="timebox"><h3 id="minutes">0</h3><p>Min</p></div>
 </div>
 </div>
 
-<div class="events">
-<h3 class="sectionTitle">⚽ EVENTOS DEL PARTIDO</h3>
+<div class="card">
+<h2>⚽ Formato del torneo</h2>
+<p>2 grupos de 4 equipos. Todos juegan 3 partidos de fase de grupos.</p>
+<br>
+<p>🔹 Los 2 primeros → Fase Oro</p>
+<p>🔹 Los 2 últimos → Fase Plata</p>
+<p>🔹 Semifinales y Final</p>
+</div>
 
-
-<h3>Eventos</h3>
-
-
-<div id="lista" style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
-  <div style="border-right:1px solid #444;padding-right:10px;">
-    <div style="text-align:center;color:#f3c340;font-weight:bold;margin-bottom:10px;">LOCAL</div>
-    <div id="eventosLocal"></div>
-  </div>
-  <div style="padding-left:10px;">
-    <div style="text-align:center;color:#f3c340;font-weight:bold;margin-bottom:10px;">VISITANTE</div>
-    <div id="eventosVisitante"></div>
-  </div>
+<div class="card">
+<h2>💳 Inscripciones</h2>
+<table class="table">
+<tr>
+<th>Concepto</th>
+<th>Precio</th>
+</tr>
+<tr>
+<td>Inscripción</td>
+<td>60€</td>
+</tr>
+<tr>
+<td>Hotel + pensión completa (opcional)</td>
+<td>60€</td>
+</tr>
+</table>
 </div>
 
 
 
+
+
+<div class="card">
+<h2>📅 Calendario</h2>
+
+<div class="match">
+<div>
+<h3>29 Junio</h3>
+<p>Partidos Fase de Grupos</p>
+</div>
+<button onclick="scrollToSection('faseGrupos')" class="badge" style="border:none;cursor:pointer;">Fase Grupos</button>
 </div>
 
-<div style="margin-top:24px;background:linear-gradient(180deg,#202020,#141414);padding:0;border-radius:24px;border:2px solid #d4af37;box-shadow:0 12px 30px rgba(0,0,0,.45)">
-<h3 style="color:#f3c340;font-size:28px;text-align:center;margin-bottom:12px;">📋 ALINEACIÓN TITULAR</h3>
-<img id="imgAlineacion" class="imageBox" style="display:block;width:100%;height:520px;object-fit:contain;background:#0b0b0b;border:3px solid #303030;border-radius:22px;padding:0">
+<div class="match">
+<div>
+<h3>30 Junio</h3>
+<p>Fase de grupos + Semifinales</p>
+</div>
+<button onclick="scrollToSection('faseSemis')" class="badge" style="border:none;cursor:pointer;">Semis</button>
 </div>
 
-<div style="margin-top:24px;background:linear-gradient(180deg,#202020,#141414);padding:0;border-radius:24px;border:2px solid #d4af37;box-shadow:0 12px 30px rgba(0,0,0,.45)">
-<h3 style="color:#f3c340;font-size:28px;text-align:center;margin-bottom:12px;">🏆 CLASIFICACIÓN</h3>
-<img id="imgClasificacion" class="imageBox" style="display:block;width:100%;height:260px;object-fit:contain;background:#0b0b0b;border:3px solid #303030;border-radius:22px;padding:0">
+<div class="match">
+<div>
+<h3>1 Julio</h3>
+<p>Final Plata + Final Oro</p>
 </div>
-
-<div style="margin-top:24px;background:linear-gradient(180deg,#202020,#141414);padding:0;border-radius:24px;border:2px solid #d4af37;box-shadow:0 12px 30px rgba(0,0,0,.45)">
-<h3 style="color:#f3c340;font-size:28px;text-align:center;margin-bottom:12px;">⚽ RESULTADOS</h3>
-<img id="imgResultados" class="imageBox" style="display:block;width:100%;height:260px;object-fit:contain;background:#0b0b0b;border:3px solid #303030;border-radius:22px;padding:0;box-shadow:inset 0 0 30px rgba(255,255,255,.04),0 8px 24px rgba(0,0,0,.5)">
+<button onclick="scrollToSection('faseFinales')" class="badge" style="border:none;cursor:pointer;">Finales</button>
 </div>
-
-</div>
-
-<div id="alineacion" class="screen"><div style="padding:30px;text-align:center;color:#aaa">La alineación ya se muestra en la pantalla principal.</div></div>
-
-<div id="clasificacion" class="screen"><div style="padding:30px;text-align:center;color:#aaa">La clasificación ya se muestra en la pantalla principal.</div></div>
-
-<div id="resultados" class="screen">
-
-<img id="imgResultadosPantalla" class="imageBox" style="object-fit:contain;background:#222" src="">
 
 </div>
 
-<button
-onclick="admin()"
-style="
-position:fixed;
-top:15px;
-right:15px;
-width:45px;
-height:45px;
-border-radius:50%;
-background:#d4af37;
-font-size:22px;
-">
-⚙️
+<div class="card">
+<h2>👦 Plantilla Ramon Sicart Infantil</h2>
+<table class="table">
+<tr>
+<th>Dorsal</th>
+<th>Jugador</th>
+<th>Posición</th>
+<th>Goles</th>
+</tr>
+<tr><td>1</td><td>Arnau</td><td>Portero</td><td id="gol-arnau">0</td></tr>
+<tr><td>2</td><td>AMJAD</td><td>Defensa</td><td id="gol-amjad">0</td></tr>
+<tr><td>3</td><td>Adri</td><td>Defensa</td><td id="gol-adri">0</td></tr>
+<tr><td>4</td><td>Luca</td><td>Defensa</td><td id="gol-luca">0</td></tr>
+<tr><td>5</td><td>Álvaro</td><td>Defensa</td><td id="gol-alvaro">0</td></tr>
+<tr><td>6</td><td>Adrià S</td><td>Medio</td><td id="gol-adria">0</td></tr>
+<tr><td>7</td><td>Axel</td><td>Extremo</td><td id="gol-axel">0</td></tr>
+<tr><td>8</td><td>Jimi</td><td>Medio</td><td id="gol-jimi">0</td></tr>
+<tr><td>9</td><td>Nil</td><td>Delantero</td><td id="gol-nil">0</td></tr>
+<tr><td>10</td><td>Gerad</td><td>Delantero</td><td id="gol-gerad">0</td></tr>
+<tr><td>11</td><td>Eloy</td><td>Extremo</td><td id="gol-eloy">0</td></tr>
+<tr><td>19</td><td>Roger</td><td>Delantero</td><td id="gol-roger">0</td></tr>
+</table>
+</div>
+
+<div class="card">
+<h2>📊 Clasificación Grupo</h2>
+<table class="table">
+<tr>
+<th>#</th>
+<th>Equipo</th>
+<th>PTS</th>
+<th>GF</th>
+<th>GC</th>
+<th>PJ</th>
+</tr>
+<tr class="clasif oro">
+<td>1</td>
+<td>Ramon Sicart</td>
+<td id="clasificacion-pts">0</td>
+<td id="clasificacion-gf">0</td>
+<td id="clasificacion-gc">0</td>
+<td id="clasificacion-pj">0</td>
+</tr>
+<tr class="clasif oro"><td>2</td><td>Equipo A</td><td id="a-pts">0</td><td id="a-gf">0</td><td id="a-gc">0</td><td id="a-pj">0</td></tr>
+<tr class="clasif plata"><td>3</td><td>Equipo B</td><td id="b-pts">0</td><td id="b-gf">0</td><td id="b-gc">0</td><td id="b-pj">0</td></tr>
+<tr class="clasif plata"><td>4</td><td>Equipo C</td><td id="c-pts">0</td><td id="c-gf">0</td><td id="c-gc">0</td><td id="c-pj">0</td></tr>
+</table>
+</div>
+
+<div class="card">
+<h2>🏆 Resultados Grupo</h2>
+<table class="table">
+<tr><th>Partido</th><th>Resultado</th></tr>
+<tr><td id="grupo-partido1">Ramon Sicart vs Equipo A</td><td id="grupo-resultado1">Pendiente</td></tr>
+<tr><td id="grupo-partido2">Ramon Sicart vs Equipo B</td><td id="grupo-resultado2">Pendiente</td></tr>
+<tr><td id="grupo-partido3">Ramon Sicart vs Equipo C</td><td id="grupo-resultado3">Pendiente</td></tr>
+<tr><td>Equipo A vs Equipo B</td><td contenteditable="true" id="ab">-</td></tr>
+<tr><td>Equipo A vs Equipo C</td><td contenteditable="true" id="ac">-</td></tr>
+<tr><td>Equipo B vs Equipo C</td><td contenteditable="true" id="bc">-</td></tr>
+</table>
+
+<button onclick="guardarResultadosGrupo()" style="margin-top:15px;">
+💾 Guardar resultados grupo
 </button>
 
-<!-- PANEL ADMIN -->
-<div id="adminPanel" style="
-display:none;
-position:fixed;
-inset:0;
-background:rgba(0,0,0,.85);
-z-index:9999;
-overflow-y:auto;
--webkit-overflow-scrolling:touch;
-padding:15px;
-">
-<div style="
-background:#222;
-max-width:430px;
-margin:20px auto;
-padding:20px;
-border-radius:16px;
-color:#fff;
-max-height:calc(100vh - 40px);
-overflow-y:auto;
--webkit-overflow-scrolling:touch;
-border:2px solid #d4af37;
-">
-<h2 style="margin-bottom:12px;">⚙️ Administrador</h2>
-
-<label>Equipo local</label><br>
-<input id="editLocal" style="width:100%;padding:8px;margin:5px 0 10px"><br>
-
-<label>Equipo visitante</label><br>
-<input id="editVisitante" style="width:100%;padding:8px;margin:5px 0 10px"><br>
-
-<label>Escudo local</label><br>
-<input type="file" id="fileLocal" accept="image/*"><br><br>
-
-<label>Escudo visitante</label><br>
-<input type="file" id="fileVisitante" accept="image/*"><br><br>
-
-
-<hr style="margin:15px 0;border-color:#555">
-<h3>Control del partido</h3>
-<div style="text-align:center">
-<button class="green" onclick="primeraParte()">▶ 1ª Parte</button>
-<button class="green" onclick="segundaParte()">▶ 2ª Parte</button>
-<button class="orange" onclick="pause()">⏸ Pausa</button>
-<button class="red" onclick="terminarPartido()">🏁 Terminado</button>
-<button class="red" onclick="reset()">🔄 Reset</button><br>
-<button class="blue" onclick="golLocal()">+ Gol Local</button>
-<button class="red" onclick="golVisitante()">+ Gol Visitante</button>
 </div>
-<br>
 
-<hr>
-<h3>Imágenes</h3>
+<div class="card">
+<h2>📋 Partidos</h2>
+<table class="table">
+<tr><th>Partido</th><th>Info</th></tr>
+<tr><td>Ramon Sicart vs Equipo A</td><td id="info-partido1">Pendiente</td></tr>
+<tr><td>Ramon Sicart vs Equipo B</td><td id="info-partido2">Pendiente</td></tr>
+<tr><td>Ramon Sicart vs Equipo C</td><td id="info-partido3">Pendiente</td></tr>
+</table>
+</div>
 
-<label>Alineación (1200x900)</label><br>
-<input type="file" id="fileAlineacion" accept="image/*">
-<button type="button" onclick="borrarImagen('Alineacion')">🗑️ Quitar</button><br><br>
+<div class="card" id="faseGrupos">
+<h2>⚽ Fase de Grupos</h2>
 
-<label>Clasificación (1600x700)</label><br>
-<input type="file" id="fileClasificacion" accept="image/*">
-<button type="button" onclick="borrarImagen('Clasificacion')">🗑️ Quitar</button><br><br>
+<div class="match">
+<div>
+<h3 id="titulo-partido1">Ramon Sicart vs Equipo A</h3>
+<p id="info-partido1">Pendiente</p>
+<button type="button" onclick="document.getElementById('partido1-editor').style.display = document.getElementById('partido1-editor').style.display === 'block' ? 'none' : 'block';" style="margin-top:10px;background:#d6ff00;color:#000;">✏️ Editar</button>
 
-<label>Resultados (1600x700)</label><br>
-<input type="file" id="fileResultados" accept="image/*">
-<button type="button" onclick="borrarImagen('Resultados')">🗑️ Quitar</button><br><br>
+<div id="partido1-editor" style="margin-top:20px;display:none;background:#0b1d38;padding:15px;border-radius:15px;">
+<input type="date" id="fecha1">
+<input type="time" id="hora1">
+<input type="text" id="nombre-equipo1" placeholder="Nombre rival">
+<input placeholder="Resultado ej: 3-1">
 
+<h3 style="margin-top:20px;">⚽ Goleadores</h3>
+<label>Arnau <input type="number" data-player="Arnau" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>AMJAD <input type="number" data-player="AMJAD" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Adri <input type="number" data-player="Adri" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Luca <input type="number" data-player="Luca" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Álvaro <input type="number" data-player="Álvaro" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Adrià S <input type="number" data-player="Adrià S" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Axel <input type="number" data-player="Axel" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Jimi <input type="number" data-player="Jimi" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Nil <input type="number" data-player="Nil" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Gerad <input type="number" data-player="Gerad" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Eloy <input type="number" data-player="Eloy" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Roger <input type="number" data-player="Roger" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Gol en propia <input type="number" data-player="Gol en propia" class="gol-input" value="0" min="0" style="width:80px"></label><br>
 
-<label>Fecha del partido</label><br>
-<input type="date" id="editFecha" style="width:100%;padding:8px"><br><br>
-
-<label>Hora del partido</label><br>
-<input type="time" id="editHora" style="width:100%;padding:8px"><br><br>
-
-<button onclick="guardarAdmin()" style="background:#28a745;color:#fff;">Guardar</button>
-<button onclick="cerrarAdmin()" style="background:#dc3545;color:#fff;">Cerrar</button>
+<button type="button" onclick="guardarResultadoDirecto('partido1','fecha1','hora1')" style="margin-top:20px;background:#00d26a;color:white;">💾 Guardar cambios</button>
+</div>
 </div>
 </div>
 
-<nav>
+<div class="match">
+<div>
+<h3 id="titulo-partido2">Ramon Sicart vs Equipo B</h3>
+<p id="info-partido2">Pendiente</p>
+<button type="button" onclick="document.getElementById('partido2-editor').style.display = document.getElementById('partido2-editor').style.display === 'block' ? 'none' : 'block';" style="margin-top:10px;background:#d6ff00;color:#000;">✏️ Editar</button>
 
-<button onclick="mostrar('inicio')">🏠</button>
+<div id="partido2-editor" style="margin-top:20px;display:none;background:#0b1d38;padding:15px;border-radius:15px;">
+<input type="date" id="fecha2">
+<input type="time" id="hora2">
+<input type="text" id="nombre-equipo2" placeholder="Nombre rival">
+<input placeholder="Resultado ej: 2-1">
+<h3 style="margin-top:20px;">⚽ Goleadores</h3>
+<label>Arnau <input type="number" data-player="Arnau" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>AMJAD <input type="number" data-player="AMJAD" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Adri <input type="number" data-player="Adri" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Luca <input type="number" data-player="Luca" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Álvaro <input type="number" data-player="Álvaro" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Adrià S <input type="number" data-player="Adrià S" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Axel <input type="number" data-player="Axel" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Jimi <input type="number" data-player="Jimi" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Nil <input type="number" data-player="Nil" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Gerad <input type="number" data-player="Gerad" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Eloy <input type="number" data-player="Eloy" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Roger <input type="number" data-player="Roger" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Gol en propia <input type="number" data-player="Gol en propia" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<button type="button" onclick="guardarResultadoDirecto('partido2','fecha2','hora2')" style="margin-top:20px;background:#00d26a;color:white;">💾 Guardar cambios</button>
+</div>
+</div>
+</div>
 
+<div class="match">
+<div>
+<h3 id="titulo-partido3">Ramon Sicart vs Equipo C</h3>
+<p id="info-partido3">Pendiente</p>
+<button type="button" onclick="document.getElementById('partido3-editor').style.display = document.getElementById('partido3-editor').style.display === 'block' ? 'none' : 'block';" style="margin-top:10px;background:#d6ff00;color:#000;">✏️ Editar</button>
 
-<button onclick="mostrar('resultados')">⚽</button>
+<div id="partido3-editor" style="margin-top:20px;display:none;background:#0b1d38;padding:15px;border-radius:15px;">
+<input type="date" id="fecha3">
+<input type="time" id="hora3">
+<input type="text" id="nombre-equipo3" placeholder="Nombre rival">
+<input placeholder="Resultado ej: 1-1">
+<h3 style="margin-top:20px;">⚽ Goleadores</h3>
+<label>Arnau <input type="number" data-player="Arnau" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>AMJAD <input type="number" data-player="AMJAD" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Adri <input type="number" data-player="Adri" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Luca <input type="number" data-player="Luca" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Álvaro <input type="number" data-player="Álvaro" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Adrià S <input type="number" data-player="Adrià S" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Axel <input type="number" data-player="Axel" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Jimi <input type="number" data-player="Jimi" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Nil <input type="number" data-player="Nil" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Gerad <input type="number" data-player="Gerad" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Eloy <input type="number" data-player="Eloy" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Roger <input type="number" data-player="Roger" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<label>Gol en propia <input type="number" data-player="Gol en propia" class="gol-input" value="0" min="0" style="width:80px"></label><br>
+<button type="button" onclick="guardarResultadoDirecto('partido3','fecha3','hora3')" style="margin-top:20px;background:#00d26a;color:white;">💾 Guardar cambios</button>
+</div>
+</div>
+</div>
 
-</nav>
-<script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-app-compat.js"></script>
+<footer>
+Costa Daurada Cup Infantil · Ramon Sicart · 2026
+</footer>
 
-<script src="https://www.gstatic.com/firebasejs/12.1.0/firebase-database-compat.js"></script>
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyD3X8TTd9XPiFlByDxBxFBNqqjHuRxOkfU",
-  authDomain: "costa-daurada-cup.firebaseapp.com",
-  databaseURL: "https://costa-daurada-cup-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "costa-daurada-cup",
-  storageBucket: "costa-daurada-cup.firebasestorage.app",
-  messagingSenderId: "348811031231",
-  appId: "1:348811031231:web:8a65cccce4870abb968c0a"
-};
+function login(){
+const pass = document.getElementById('password').value;
+const panel = document.getElementById('adminPanel');
 
-firebase.initializeApp(firebaseConfig);
+console.log('Intentando login', pass);
 
-const db = firebase.database();
-
-function guardarFirebase(){
-
-    const ref=firebase.database().ref("partido");
-    ref.once("value").then(snap=>{
-        const old=snap.val()||{};
-        ref.set({
-            local:nombreLocal.innerHTML,
-            visitante:nombreVisitante.innerHTML,
-            golesLocal:l,
-            golesVisitante:v,
-            tiempo:s,
-            fase:fase,
-            estado:estadoCrono,
-            inicio:inicioCrono,
-            eventosLocal:eventosLocal.innerHTML,
-            eventosVisitante:eventosVisitante.innerHTML,
-            logoLocal:logoLocal.src||old.logoLocal||"",
-            logoVisitante:logoVisitante.src||old.logoVisitante||"",
-            imgAlineacion:imgAlineacion.src||old.imgAlineacion||"",
-            imgClasificacion:imgClasificacion.src||old.imgClasificacion||"",
-            imgResultados:imgResultados.src||old.imgResultados||"",
-            fecha:fechaPartido.textContent,
-            hora:horaPartido.textContent
-        });
-    });
-
+if(pass === '2990'){
+panel.style.display = 'block';
+panel.hidden = false;
+alert('✅ Acceso concedido');
+} else {
+alert('❌ Contraseña incorrecta');
+}
 }
 
-let s=0;
-let t=null;
-let l=0;
-let v=0;
-let fase=0;
-
-let estadoCrono="stop";
-let inicioCrono=0;
-function mostrar(id){
-
-document.querySelectorAll(".screen").forEach(e=>e.classList.remove("active"));
-
-document.getElementById(id).classList.add("active");
-
+document.addEventListener('DOMContentLoaded',()=>{
+const btn=document.getElementById('adminLoginBtn');
+if(btn){
+btn.addEventListener('click',login);
 }
-function iniciarCronoSincronizado(){
-
-    if(t) clearInterval(t);
-
-    t = setInterval(()=>{
-
-        if(estadoCrono!="running") return;
-
-        s = Math.floor((Date.now()-inicioCrono)/1000);
-
-        if(fase==2)
-            s += 25*60;
-
-        if(fase==1 && s>=25*60){
-            s=25*60;
-            estadoCrono="pause";
-        }
-
-        if(fase==2 && s>=50*60){
-            s=50*60;
-            estadoCrono="finish";
-        }
-
-        pintar();
-
-    },1000);
-
-}
-function pintar(){
-
-let m=Math.floor(s/60).toString().padStart(2,"0");
-
-let ss=(s%60).toString().padStart(2,"0");
-
-timer.innerHTML=m+":"+ss;
-
-}
-
-
-function pause(){
-
-    estadoCrono="pause";
-
-    guardarFirebase();
-
-}
-
-function reset(){
-
-    if(!confirm("¿Seguro que quieres reiniciar el partido?")) return;
-
-    // Parar cronómetro
-    pause();
-
-    // Reiniciar tiempo
-    s = 0;
-    pintar();
-
-    // Reiniciar marcador
-    l = 0;
-    v = 0;
-    marcador();
-    guardarFirebase();
-    actualizarCuentaAtras();adaptarEscudos();
-
-    // Borrar todos los eventos
-    eventosLocal.innerHTML=""; eventosVisitante.innerHTML="";
-
-}
-
-function marcador(){
-    resultado.innerHTML = l + " - " + v;
-}
-
-function golLocal(){
-
-    l++;
-    marcador();
-    guardarFirebase();
-    actualizarCuentaAtras();adaptarEscudos();
-
-    let jugador = prompt("Nombre del goleador");
-
-    if(!jugador) jugador = "Jugador";
-
-    let minuto = prompt("¿En qué minuto ha sido el gol?");
-
-    if(!minuto) minuto = Math.floor(s/60);
-
-    eventosLocal.innerHTML += `<div class="goalEvent"><span class="goalBall">⚽</span><span>${minuto}\' ${jugador}</span></div>`;
-
-}
-
-function golVisitante(){
-
-    v++;
-    marcador();
-    guardarFirebase();
-
-    
-
-    let minuto = prompt("¿En qué minuto ha sido el gol?");
-
-    if(!minuto) minuto = Math.floor(s/60);
-
-    eventosVisitante.innerHTML += `<div class="goalEvent"><span class="goalBall">⚽</span><span>${minuto}\' Gol</span></div>`;
-
-}
-
-function admin(){
-
-    const pass = prompt("Introduce la contraseña");
-
-    if(pass !== "2990"){
-        alert("Contraseña incorrecta");
-        return;
-    }
-
-    document.getElementById('adminPanel').style.display='block';document.body.style.overflow='hidden';
-    editLocal.value=nombreLocal.innerHTML;
-    editVisitante.value=nombreVisitante.innerHTML;
-editFecha.value=localStorage.getItem('fechaPartido')||'';
-editHora.value=localStorage.getItem('horaPartido')||'';
-
-}
-
-function cerrarAdmin(){
- document.getElementById('adminPanel').style.display='none';document.body.style.overflow='auto';
-}
-function leerImagen(inputId,imgId){
-
-    return new Promise(resolve=>{
-
-        const input=document.getElementById(inputId);
-
-        if(!input.files.length){
-            resolve();
-            return;
-        }
-
-        const r=new FileReader();
-
-        r.onload=e=>{
-
-            document.getElementById(imgId).src=e.target.result;
-
-            resolve();
-
-        };
-
-        r.readAsDataURL(input.files[0]);
-
-    });
-
-}
-async function guardarAdmin(){
- nombreLocal.innerHTML=editLocal.value;
- nombreVisitante.innerHTML=editVisitante.value;
-
- localStorage.setItem('nombreLocal',nombreLocal.innerHTML);
- localStorage.setItem('nombreVisitante',nombreVisitante.innerHTML);
- localStorage.setItem('fechaPartido',editFecha.value);
- localStorage.setItem('horaPartido',editHora.value);
-
- fechaPartido.textContent=editFecha.value||'Sin definir';
- horaPartido.textContent=editHora.value||'--:--';
-
- await leerImagen("fileLocal","logoLocal");
- await leerImagen("fileVisitante","logoVisitante");
- await leerImagen("fileAlineacion","imgAlineacion");
- await leerImagen("fileClasificacion","imgClasificacion");
- await leerImagen("fileResultados","imgResultados");
-
- guardarFirebase();
- cerrarAdmin();
-}
-
-
-function primeraParte(){
-
-    fase=1;
-
-    estadoCrono="running";
-
-    inicioCrono=Date.now();
-
-    guardarFirebase();
-
-}
-function segundaParte(){
-
-    fase=2;
-
-    estadoCrono="running";
-
-    inicioCrono=Date.now()-25*60*1000;
-
-    guardarFirebase();
-
-}
-function terminarPartido(){
-    pause();
-    s=50*60;
-    pintar();
-    document.getElementById('timer').innerHTML='50:00<br><span style="font-size:24px;color:#d4af37;">TERMINADO</span>';
-}
-
-
-function actualizarCuentaAtras(){
- const f=localStorage.getItem('fechaPartido');
- const h=localStorage.getItem('horaPartido');
- if(!f||!h)return;
- fechaPartido.textContent=f;
- horaPartido.textContent=h;
- const d=new Date(f+"T"+h+":00");
- let ms=d-new Date();
- if(ms<=0){cuentaAtras.textContent="¡ES LA HORA DEL PARTIDO!";return;}
- const dd=Math.floor(ms/86400000);ms%=86400000;
- const hh=Math.floor(ms/3600000);ms%=3600000;
- const mm=Math.floor(ms/60000);ms%=60000;
- const ss=Math.floor(ms/1000);
- cuentaAtras.textContent=`${dd}d ${hh}h ${mm}m ${ss}s`;
-}
-setInterval(actualizarCuentaAtras,1000);
-
-
-function borrarImagen(tipo){
- localStorage.removeItem('img'+tipo);
- const img=document.getElementById('img'+tipo);
- if(img) img.removeAttribute('src');
-}
-
-
-const _oldMarcador=marcador;
-marcador=function(){
-  _oldMarcador();
-  const r=document.getElementById('resultado');
-  if(r){
-    r.classList.remove('scoreAnim');
-    void r.offsetWidth;
-    r.classList.add('scoreAnim');
-  }
-}
-
-
-function adaptarEscudos(){
- ['logoLocal','logoVisitante'].forEach(id=>{
-   const img=document.getElementById(id);
-   if(!img) return;
-   img.style.objectFit='contain';
-   img.style.width='auto';
-   img.style.height='auto';
-   img.style.maxWidth='100%';
-   img.style.maxHeight='100%';
- });
-}
-
-
-firebase.database().ref("partido").on("value",(snapshot)=>{
- const d=snapshot.val();
- if(!d) return;
-estadoCrono = d.estado || "stop";
-inicioCrono = d.inicio || 0;
-fase = d.fase || 0;
-iniciarCronoSincronizado();
- pintar();
- l=d.golesLocal||0;
- v=d.golesVisitante||0;
- nombreLocal.innerHTML=d.local||nombreLocal.innerHTML;
- nombreVisitante.innerHTML=d.visitante||nombreVisitante.innerHTML;
- resultado.innerHTML=l+" - "+v;
- if(d.eventosLocal!==undefined) eventosLocal.innerHTML=d.eventosLocal;
- if(d.eventosVisitante!==undefined) eventosVisitante.innerHTML=d.eventosVisitante;
- if(d.logoLocal) logoLocal.src=d.logoLocal;
- if(d.logoVisitante) logoVisitante.src=d.logoVisitante;
- if(d.imgAlineacion)
-    document.getElementById("imgAlineacion").src=d.imgAlineacion;
-
-if(d.imgClasificacion)
-    document.getElementById("imgClasificacion").src=d.imgClasificacion;
-
-if(d.imgResultados){
-    document.getElementById("imgResultados").src=d.imgResultados;
-    const dup=document.getElementById("imgResultadosPantalla");
-    if(dup) dup.src=d.imgResultados;
-}
-
-if(d.fecha)
-    fechaPartido.textContent=d.fecha;
-
-if(d.hora)
-    horaPartido.textContent=d.hora;
 });
 
-window.onload = () => {
+const targetDate = new Date('June 29, 2026 09:00:00').getTime();
 
-    firebase.database().ref("partido").once("value").then((snapshot) => {
+setInterval(()=>{
+const now = new Date().getTime();
+const distance = targetDate - now;
 
-        const d = snapshot.val();
+const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
 
-        if (d) {
+if(distance > 0){
+document.getElementById('days').innerText = days;
+document.getElementById('hours').innerText = hours;
+document.getElementById('minutes').innerText = minutes;
+}
+},1000);
 
-            nombreLocal.innerHTML = d.local || "LOCAL";
-            nombreVisitante.innerHTML = d.visitante || "VISITANTE";
+let partidos = 0;
+let golesPartido = [];
+let goles = 0;
+let goleadores = {};
 
-            l = d.golesLocal || 0;
-            v = d.golesVisitante || 0;
+function togglePago(tipo){
+if(tipo==='torneo'){
+const estado=document.getElementById('torneoPago');
+estado.innerText = estado.innerText==='Pendiente' ? 'Pagado ✅' : 'Pendiente';
+}
 
-            s = 0;
-            fase = d.fase || 0;
+if(tipo==='hotel'){
+const estado=document.getElementById('hotelPago');
+estado.innerText = estado.innerText==='Pendiente' ? 'Pagado ✅' : 'Pendiente';
+}
+}
 
-            if (d.eventosLocal) eventosLocal.innerHTML = d.eventosLocal;
-            if (d.eventosVisitante) eventosVisitante.innerHTML = d.eventosVisitante;
+function sumarPartido(){
+partidos++;
+document.getElementById('partidosJugados').innerText = partidos;
+}
 
-            if (d.logoLocal) logoLocal.src = d.logoLocal;
-            if (d.logoVisitante) logoVisitante.src = d.logoVisitante;
-            if (d.imgAlineacion) document.getElementById('imgAlineacion').src = d.imgAlineacion;
-            if (d.imgClasificacion) document.getElementById('imgClasificacion').src = d.imgClasificacion;
-            if (d.imgResultados){
-                document.getElementById('imgResultados').src = d.imgResultados;
-                const dup=document.getElementById('imgResultadosPantalla');
-                if(dup) dup.src=d.imgResultados;
-            }
-            if (d.fecha) fechaPartido.textContent=d.fecha;
-            if (d.hora) horaPartido.textContent=d.hora;
+function sumarGol(){
+const jugador = document.getElementById('goleador').value;
+if(!jugador) return;
 
-        } else {
+goles++;
+document.getElementById('golesTotales').innerText = goles;
 
-            // Primer uso: carga localStorage
-            if(localStorage.getItem('nombreLocal'))
-                nombreLocal.innerHTML = localStorage.getItem('nombreLocal');
+if(!goleadores[jugador]) goleadores[jugador]=0;
+goleadores[jugador]++;
 
-            if(localStorage.getItem('nombreVisitante'))
-                nombreVisitante.innerHTML = localStorage.getItem('nombreVisitante');
+renderTablaGoles();
+actualizarVistaJugadores();
+document.getElementById('goleador').value='';
+}
 
-            if(localStorage.getItem('logoLocal'))
-                logoLocal.src = localStorage.getItem('logoLocal');
+function renderTablaGoles(){
+const tabla = document.getElementById('tablaGoles');
 
-            if(localStorage.getItem('logoVisitante'))
-                logoVisitante.src = localStorage.getItem('logoVisitante');
+tabla.innerHTML=`
+<tr>
+<th>Jugador</th>
+<th>Goles</th>
+</tr>
+`;
 
-        }
+for(let jugador in goleadores){
+tabla.innerHTML += `
+<tr>
+<td>${jugador}</td>
+<td>${goleadores[jugador]}</td>
+</tr>
+`;
+}
+}
 
-       pintar();
-marcador();
-iniciarCronoSincronizado();
-actualizarCuentaAtras();
-adaptarEscudos();
+function addMatchGoal(){
+const jugador = document.getElementById('goleadorSelect').value;
+golesPartido.push(jugador);
 
-    });
+const lista=document.getElementById('listaGoles');
+lista.innerHTML='';
 
+golesPartido.forEach(g=>{
+lista.innerHTML += `<p>⚽ ${g}</p>`;
+
+if(!goleadores[g]) goleadores[g]=0;
+goleadores[g]++;
+});
+
+renderTablaGoles();
+}
+
+function actualizarVistaJugadores(){
+for(let jugador in goleadores){
+const id='gol-'+jugador.toLowerCase().replace('à','a').replace(' ','');
+const celda=document.getElementById(id);
+if(celda){
+celda.innerText=goleadores[jugador];
+}
+}
+
+const jugadores=['arnau','amjad','adri','luca','alvaro','adria','axel','jimi','nil','gerad','eloy','roger'];
+
+jugadores.forEach(j=>{
+const pj=document.getElementById('pj-'+j);
+if(pj){
+pj.innerText=partidos;
+}
+});
+}
+
+function guardarPartido(){
+const rival=document.getElementById('rival').value;
+const resultado=document.getElementById('resultado').value;
+
+if(!rival || !resultado) return;
+
+partidos++;
+document.getElementById('partidosJugados').innerText = partidos;
+
+const contenedor=document.getElementById('partidosGuardados');
+
+contenedor.innerHTML += `
+<div class="match">
+<div>
+<h3>Ramon Sicart vs ${rival}</h3>
+<p>Resultado: ${resultado}</p>
+<p>Goleadores: ${golesPartido.join(', ')}</p>
+</div>
+</div>
+`;
+
+golesPartido=[];
+document.getElementById('listaGoles').innerHTML='';
+document.getElementById('rival').value='';
+document.getElementById('resultado').value='';
+}
+
+function togglePartido(id){
+const partido = document.getElementById(id);
+
+if(!partido){
+console.log('No existe:',id);
+return;
+}
+
+if(partido.style.display === 'block'){
+partido.style.display = 'none';
+}else{
+partido.style.display = 'block';
+}
+}
+
+window.togglePartido = togglePartido;
+
+function guardarCambios(){
+localStorage.setItem('torneoGuardado','ok');
+alert('Cambios guardados correctamente');
+}
+
+function guardarResultado(partido,equipo,fechaId,horaId){
+const editor = document.getElementById(partido+'-editor');
+if(!editor){return;}
+
+const resultado = editor.querySelector('input').parentNode.querySelectorAll('input')[2].value;
+const fecha = document.getElementById(fechaId).value;
+const hora = document.getElementById(horaId).value;
+
+if(resultado.indexOf('-')===-1){
+alert('Resultado inválido');
+return;
+}
+
+const partes = resultado.split('-');
+const gf = parseInt(partes[0]) || 0;
+const gc = parseInt(partes[1]) || 0;
+
+var resumen = [];
+
+editor.querySelectorAll('.gol-input').forEach(function(input){
+var goles = parseInt(input.value) || 0;
+var jugador = input.dataset.player;
+
+if(goles>0){
+resumen.push(jugador+' x'+goles);
+
+if(jugador!='Gol en propia'){
+var key = jugador.toLowerCase().replace('à','a').split(' ').join('');
+
+var golCell = document.getElementById('gol-'+key);
+var pjCell = document.getElementById('pj-'+key);
+
+if(golCell){
+golCell.innerText = parseInt(golCell.innerText)+goles;
+}
+
+if(pjCell){
+pjCell.innerText = parseInt(pjCell.innerText)+1;
+}
+}
+}
+});
+
+document.getElementById('clasificacion-pj').innerText = parseInt(document.getElementById('clasificacion-pj').innerText)+1;
+document.getElementById('clasificacion-gf').innerText = parseInt(document.getElementById('clasificacion-gf').innerText)+gf;
+document.getElementById('clasificacion-gc').innerText = parseInt(document.getElementById('clasificacion-gc').innerText)+gc;
+
+if(gf>gc){
+document.getElementById('clasificacion-pts').innerText = parseInt(document.getElementById('clasificacion-pts').innerText)+3;
+}else if(gf===gc){
+document.getElementById('clasificacion-pts').innerText = parseInt(document.getElementById('clasificacion-pts').innerText)+1;
+}
+
+var texto = '📅 '+fecha+' ⏰ '+hora+' | Resultado '+resultado+' | ⚽ '+resumen.join(', ');
+
+var info = document.getElementById('info-'+partido);
+if(info){
+info.innerText = texto;
+}
+
+editor.style.display='none';
+localStorage.setItem(partido,texto);
+alert('✅ Partido actualizado');
+}
+
+function addPlayer(){
+const nombre=document.getElementById('playerName').value;
+const dorsal=document.getElementById('playerNumber').value;
+const posicion=document.getElementById('playerPosition').value;
+
+if(!nombre || !dorsal) return;
+
+alert('Jugador añadido: '+nombre);
+
+localStorage.setItem('ultimoJugador',JSON.stringify({nombre,dorsal,posicion}));
+
+
+document.getElementById('playerName').value='';
+document.getElementById('playerNumber').value='';
+}
+
+const partidosGuardados = {};
+
+function normalizarJugador(nombre){
+return nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s/g,'');
+}
+
+function guardarResultadoDirecto(partido,fechaId,horaId){
+const editor=document.getElementById(partido+'-editor');
+const inputs=editor.querySelectorAll('input');
+const fecha=document.getElementById(fechaId).value;
+
+const numero=partido.replace('partido','');
+const rivalInput=document.getElementById('nombre-equipo'+numero);
+const rival=rivalInput ? rivalInput.value : '';
+
+if(rival){
+
+const mapa = {
+'1':'A',
+'2':'B',
+'3':'C'
 };
+
+const letra = mapa[numero];
+
+// actualizar nombres globales
+window.nombresEquipos = window.nombresEquipos || {
+A:'Equipo A',
+B:'Equipo B',
+C:'Equipo C'
+};
+
+window.nombresEquipos[letra] = rival;
+
+// actualizar textos visibles
+document.querySelectorAll('*').forEach(function(el){
+
+if(el.children.length === 0){
+
+el.innerHTML = el.innerHTML
+.replace(/Equipo A/g, window.nombresEquipos.A)
+.replace(/Equipo B/g, window.nombresEquipos.B)
+.replace(/Equipo C/g, window.nombresEquipos.C);
+
+}
+
+});
+
+// actualizar clasificación
+const filasClasif = document.querySelectorAll('.table')[2].querySelectorAll('tr');
+
+for(let i=1;i<filasClasif.length;i++){
+
+const nombre = filasClasif[i].cells[1].innerText;
+
+if(nombre.includes('Equipo A') || nombre === window.nombresEquipos.A){
+filasClasif[i].cells[1].innerText = window.nombresEquipos.A;
+}
+
+if(nombre.includes('Equipo B') || nombre === window.nombresEquipos.B){
+filasClasif[i].cells[1].innerText = window.nombresEquipos.B;
+}
+
+if(nombre.includes('Equipo C') || nombre === window.nombresEquipos.C){
+filasClasif[i].cells[1].innerText = window.nombresEquipos.C;
+}
+
+}
+
+const titulo=document.getElementById('titulo-'+partido);
+
+if(titulo){
+titulo.innerText='Ramon Sicart vs '+rival;
+}
+
+}
+const hora=document.getElementById(horaId).value;
+const resultado=inputs[3].value;
+
+if(resultado.indexOf('-')===-1){alert('Introduce resultado válido');return;}
+
+if(partidosGuardados[partido]){
+const anterior = partidosGuardados[partido];
+
+Object.keys(anterior.goles).forEach(function(jugador){
+const key=normalizarJugador(jugador)
+.replace('adrias','adria')
+.replace('luca','luca');
+const gol=document.getElementById('gol-'+key);
+const pj=document.getElementById('pj-'+key);
+
+if(gol){gol.innerText=parseInt(gol.innerText)-anterior.goles[jugador];}
+if(pj){pj.innerText=Math.max(0,parseInt(pj.innerText)-1);}
+});
+
+document.getElementById('clasificacion-pj').innerText=parseInt(document.getElementById('clasificacion-pj').innerText)-1;
+document.getElementById('clasificacion-gf').innerText=parseInt(document.getElementById('clasificacion-gf').innerText)-anterior.gf;
+document.getElementById('clasificacion-gc').innerText=parseInt(document.getElementById('clasificacion-gc').innerText)-anterior.gc;
+document.getElementById('clasificacion-pts').innerText=parseInt(document.getElementById('clasificacion-pts').innerText)-anterior.pts;
+}
+
+const partes=resultado.split('-');
+const gf=parseInt(partes[0])||0;
+const gc=parseInt(partes[1])||0;
+let resumen=[];
+let golesJugadores={};
+
+editor.querySelectorAll('.gol-input').forEach(function(el){
+const goles=parseInt(el.value)||0;
+const jugador=el.dataset.player;
+if(goles>0){
+resumen.push(jugador+' x'+goles);
+if(jugador!=='Gol en propia'){
+golesJugadores[jugador]=goles;
+const key=normalizarJugador(jugador)
+.replace('adrias','adria')
+.replace('luca','luca');
+const gol=document.getElementById('gol-'+key);
+const pj=document.getElementById('pj-'+key);
+if(gol){gol.innerText=parseInt(gol.innerText)+goles;}
+if(pj){pj.innerText=parseInt(pj.innerText)+1;}
+}
+}
+});
+
+document.getElementById('clasificacion-pj').innerText=parseInt(document.getElementById('clasificacion-pj').innerText)+1;
+document.getElementById('clasificacion-gf').innerText=parseInt(document.getElementById('clasificacion-gf').innerText)+gf;
+document.getElementById('clasificacion-gc').innerText=parseInt(document.getElementById('clasificacion-gc').innerText)+gc;
+let puntos=0;
+if(gf>gc){
+puntos=3;
+document.getElementById('clasificacion-pts').innerText=parseInt(document.getElementById('clasificacion-pts').innerText)+3;
+}else if(gf===gc){
+puntos=1;
+document.getElementById('clasificacion-pts').innerText=parseInt(document.getElementById('clasificacion-pts').innerText)+1;
+}
+
+partidosGuardados[partido]={
+gf:gf,
+gc:gc,
+pts:puntos,
+goles:golesJugadores
+};
+
+// ACTUALIZAR RIVAL EN CLASIFICACIÓN
+const numeroPartido = partido.replace('partido','');
+
+let rivalLetra = '';
+
+if(numeroPartido === '1') rivalLetra = 'a';
+if(numeroPartido === '2') rivalLetra = 'b';
+if(numeroPartido === '3') rivalLetra = 'c';
+
+if(rivalLetra){
+
+document.getElementById(rivalLetra+'-pj').innerText =
+parseInt(document.getElementById(rivalLetra+'-pj').innerText) + 1;
+
+document.getElementById(rivalLetra+'-gf').innerText =
+parseInt(document.getElementById(rivalLetra+'-gf').innerText) + gc;
+
+document.getElementById(rivalLetra+'-gc').innerText =
+parseInt(document.getElementById(rivalLetra+'-gc').innerText) + gf;
+
+if(gc > gf){
+
+document.getElementById(rivalLetra+'-pts').innerText =
+parseInt(document.getElementById(rivalLetra+'-pts').innerText) + 3;
+
+}else if(gc === gf){
+
+document.getElementById(rivalLetra+'-pts').innerText =
+parseInt(document.getElementById(rivalLetra+'-pts').innerText) + 1;
+
+}
+
+}
+
+ordenarClasificacion();
+
+const texto='📅 '+fecha+' ⏰ '+hora+' | Resultado '+resultado+' | ⚽ '+resumen.join(', ');
+const numeroResultado=partido.replace('partido','');
+
+const grupoResultado=document.getElementById('grupo-resultado'+numeroResultado);
+if(grupoResultado){
+grupoResultado.innerText=resultado;
+}
+
+const grupoPartido=document.getElementById('grupo-partido'+numeroResultado);
+if(grupoPartido && rival){
+grupoPartido.innerText='Ramon Sicart vs '+rival;
+}
+
+const info=document.getElementById('info-'+partido);
+if(info){info.innerText=texto;}
+editor.style.display='none';
+localStorage.setItem(partido,texto);
+alert('✅ Guardado correctamente');
+}
+
+
+function resetGrupo(){
+
+document.getElementById('a-pts').innerText='0';
+document.getElementById('a-gf').innerText='0';
+document.getElementById('a-gc').innerText='0';
+document.getElementById('a-pj').innerText='0';
+
+document.getElementById('b-pts').innerText='0';
+document.getElementById('b-gf').innerText='0';
+document.getElementById('b-gc').innerText='0';
+document.getElementById('b-pj').innerText='0';
+
+document.getElementById('c-pts').innerText='0';
+document.getElementById('c-gf').innerText='0';
+document.getElementById('c-gc').innerText='0';
+document.getElementById('c-pj').innerText='0';
+
+}
+
+function aplicarResultado(local,visitante,gf,gc){
+
+document.getElementById(local+'-pj').innerText=
+parseInt(document.getElementById(local+'-pj').innerText)+1;
+
+document.getElementById(visitante+'-pj').innerText=
+parseInt(document.getElementById(visitante+'-pj').innerText)+1;
+
+document.getElementById(local+'-gf').innerText=
+parseInt(document.getElementById(local+'-gf').innerText)+gf;
+
+document.getElementById(local+'-gc').innerText=
+parseInt(document.getElementById(local+'-gc').innerText)+gc;
+
+document.getElementById(visitante+'-gf').innerText=
+parseInt(document.getElementById(visitante+'-gf').innerText)+gc;
+
+document.getElementById(visitante+'-gc').innerText=
+parseInt(document.getElementById(visitante+'-gc').innerText)+gf;
+
+if(gf>gc){
+document.getElementById(local+'-pts').innerText=
+parseInt(document.getElementById(local+'-pts').innerText)+3;
+}else if(gc>gf){
+document.getElementById(visitante+'-pts').innerText=
+parseInt(document.getElementById(visitante+'-pts').innerText)+3;
+}else{
+document.getElementById(local+'-pts').innerText=
+parseInt(document.getElementById(local+'-pts').innerText)+1;
+
+document.getElementById(visitante+'-pts').innerText=
+parseInt(document.getElementById(visitante+'-pts').innerText)+1;
+}
+}
+
+
+
+
+function guardarResultadosGrupo(){
+
+resetGrupo();
+
+const partidos = [
+{id:'ab',l:'a',v:'b'},
+{id:'ac',l:'a',v:'c'},
+{id:'bc',l:'b',v:'c'}
+];
+
+partidos.forEach(function(p){
+
+const el = document.getElementById(p.id);
+
+if(!el) return;
+
+const valor = el.innerText.trim();
+
+if(!valor || valor === '-' || valor.toLowerCase() === 'pendiente'){
+return;
+}
+
+if(/^\d+\s*-\s*\d+$/.test(valor)){
+
+const partes = valor.split('-');
+
+const gf = parseInt(partes[0].trim()) || 0;
+const gc = parseInt(partes[1].trim()) || 0;
+
+aplicarResultado(p.l,p.v,gf,gc);
+
+}
+
+});
+
+ordenarClasificacion();
+
+alert('✅ Clasificación actualizada');
+
+}
+
+
+
+function ordenarClasificacion(){
+
+const tabla = document.querySelectorAll('.table')[2];
+const filas = tabla.querySelectorAll('tr');
+
+const datosRamon = {
+pts: document.getElementById('clasificacion-pts').innerText,
+gf: document.getElementById('clasificacion-gf').innerText,
+gc: document.getElementById('clasificacion-gc').innerText,
+pj: document.getElementById('clasificacion-pj').innerText
+};
+
+const equipos = [
+{
+nombre:'Ramon Sicart',
+pts:parseInt(document.getElementById('clasificacion-pts').innerText)||0,
+gf:parseInt(document.getElementById('clasificacion-gf').innerText)||0,
+gc:parseInt(document.getElementById('clasificacion-gc').innerText)||0,
+pj:parseInt(document.getElementById('clasificacion-pj').innerText)||0
+},
+{
+nombre:(window.nombresEquipos && window.nombresEquipos.A) ? window.nombresEquipos.A : 'Equipo A',
+pts:parseInt(document.getElementById('a-pts').innerText)||0,
+gf:parseInt(document.getElementById('a-gf').innerText)||0,
+gc:parseInt(document.getElementById('a-gc').innerText)||0,
+pj:parseInt(document.getElementById('a-pj').innerText)||0
+},
+{
+nombre:(window.nombresEquipos && window.nombresEquipos.B) ? window.nombresEquipos.B : 'Equipo B',
+pts:parseInt(document.getElementById('b-pts').innerText)||0,
+gf:parseInt(document.getElementById('b-gf').innerText)||0,
+gc:parseInt(document.getElementById('b-gc').innerText)||0,
+pj:parseInt(document.getElementById('b-pj').innerText)||0
+},
+{
+nombre:(window.nombresEquipos && window.nombresEquipos.C) ? window.nombresEquipos.C : 'Equipo C',
+pts:parseInt(document.getElementById('c-pts').innerText)||0,
+gf:parseInt(document.getElementById('c-gf').innerText)||0,
+gc:parseInt(document.getElementById('c-gc').innerText)||0,
+pj:parseInt(document.getElementById('c-pj').innerText)||0
+}
+];
+
+equipos.sort(function(a,b){
+
+if(b.pts !== a.pts) return b.pts - a.pts;
+
+const diffA = a.gf - a.gc;
+const diffB = b.gf - b.gc;
+
+if(diffB !== diffA) return diffB - diffA;
+
+if(b.gf !== a.gf) return b.gf - a.gf;
+
+return a.gc - b.gc;
+
+});
+
+for(let i=0;i<equipos.length;i++){
+
+if(!filas[i+1]) continue;
+
+const fila = filas[i+1];
+
+fila.className = i < 2 ? 'clasif oro' : 'clasif plata';
+
+fila.cells[0].innerText = i+1;
+fila.cells[1].innerText = equipos[i].nombre;
+fila.cells[2].innerText = equipos[i].pts;
+fila.cells[3].innerText = equipos[i].gf;
+fila.cells[4].innerText = equipos[i].gc;
+fila.cells[5].innerText = equipos[i].pj;
+
+// mantener IDs correctos
+if(equipos[i].nombre === 'Ramon Sicart'){
+
+fila.cells[2].id = 'clasificacion-pts';
+fila.cells[3].id = 'clasificacion-gf';
+fila.cells[4].id = 'clasificacion-gc';
+fila.cells[5].id = 'clasificacion-pj';
+
+}else if(equipos[i].nombre.includes('A')){
+
+fila.cells[2].id = 'a-pts';
+fila.cells[3].id = 'a-gf';
+fila.cells[4].id = 'a-gc';
+fila.cells[5].id = 'a-pj';
+
+}else if(equipos[i].nombre.includes('B')){
+
+fila.cells[2].id = 'b-pts';
+fila.cells[3].id = 'b-gf';
+fila.cells[4].id = 'b-gc';
+fila.cells[5].id = 'b-pj';
+
+}else{
+
+fila.cells[2].id = 'c-pts';
+fila.cells[3].id = 'c-gf';
+fila.cells[4].id = 'c-gc';
+fila.cells[5].id = 'c-pj';
+
+}
+
+}
+
+}
 
 </script>
 
