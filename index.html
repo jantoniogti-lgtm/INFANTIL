@@ -437,15 +437,7 @@ let m=Math.floor(s/60).toString().padStart(2,"0");
 
 let ss=(s%60).toString().padStart(2,"0");
 
-if(estadoCrono==="finish"){
-timer.innerHTML="50:00";
-if(window.textoParte) textoParte.textContent="FINALIZADO";
-return;
-}
 timer.innerHTML=m+":"+ss;
-if(window.textoParte){
-textoParte.textContent=(fase===2?"2ª PARTE":"1ª PARTE");
-}
 
 }
 
@@ -532,8 +524,8 @@ function admin(){
     document.getElementById('adminPanel').style.display='block';document.body.style.overflow='hidden';
     editLocal.value=nombreLocal.innerHTML;
     editVisitante.value=nombreVisitante.innerHTML;
-editFecha.value=localStorage.getItem('fechaPartido')||'';
-editHora.value=localStorage.getItem('horaPartido')||'';
+editFecha.value=fechaPartido.textContent==="Sin definir"?"":fechaPartido.textContent;
+editHora.value=horaPartido.textContent==="--:--"?"":horaPartido.textContent;
 
 }
 
@@ -612,27 +604,37 @@ function segundaParte(){
 function terminarPartido(){
 
     estadoCrono="finish";
-    fase=2;
     s=50*60;
     pintar();
+    textoParte.textContent="FINAL";
     guardarFirebase();
 
 }
 
 
 function actualizarCuentaAtras(){
- const f=localStorage.getItem('fechaPartido');
- const h=localStorage.getItem('horaPartido');
- if(!f||!h)return;
- fechaPartido.textContent=f;
- horaPartido.textContent=h;
+
+ const f=fechaPartido.textContent;
+ const h=horaPartido.textContent;
+
+ if(!f||!h||f==="Sin definir"||h==="--:--"){
+    cuentaAtras.textContent="Configura la fecha del partido";
+    return;
+ }
+
  const d=new Date(f+"T"+h+":00");
  let ms=d-new Date();
- if(ms<=0){cuentaAtras.textContent="¡ES LA HORA DEL PARTIDO!";return;}
- const dd=Math.floor(ms/86400000);ms%=86400000;
- const hh=Math.floor(ms/3600000);ms%=3600000;
- const mm=Math.floor(ms/60000);ms%=60000;
+
+ if(ms<=0){
+    cuentaAtras.textContent="¡ES LA HORA DEL PARTIDO!";
+    return;
+ }
+
+ const dd=Math.floor(ms/86400000); ms%=86400000;
+ const hh=Math.floor(ms/3600000); ms%=3600000;
+ const mm=Math.floor(ms/60000); ms%=60000;
  const ss=Math.floor(ms/1000);
+
  cuentaAtras.textContent=`${dd}d ${hh}h ${mm}m ${ss}s`;
 }
 setInterval(actualizarCuentaAtras,1000);
