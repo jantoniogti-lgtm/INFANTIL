@@ -437,7 +437,15 @@ let m=Math.floor(s/60).toString().padStart(2,"0");
 
 let ss=(s%60).toString().padStart(2,"0");
 
+if(estadoCrono==="finish"){
+timer.innerHTML="50:00";
+if(window.textoParte) textoParte.textContent="FINALIZADO";
+return;
+}
 timer.innerHTML=m+":"+ss;
+if(window.textoParte){
+textoParte.textContent=(fase===2?"2ª PARTE":"1ª PARTE");
+}
 
 }
 
@@ -604,9 +612,9 @@ function segundaParte(){
 function terminarPartido(){
 
     estadoCrono="finish";
+    fase=2;
     s=50*60;
     pintar();
-    textoParte.textContent="FINAL";
     guardarFirebase();
 
 }
