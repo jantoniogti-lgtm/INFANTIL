@@ -737,7 +737,7 @@ align-items:center;
 
 justify-content:center;
 
-width:42px;
+min-width:58px;width:auto;padding:0 8px;
 
 height:42px;
 
@@ -914,7 +914,7 @@ gap:10px;
 
 .hero-rival{
 
-width:70px;
+width:96px;
 
 height:70px;
 
@@ -1250,7 +1250,7 @@ gap:16px;
 flex:1;
 
 }
-.clubInfo img{width:42px;height:42px;object-fit:contain;border-radius:50%;}
+.clubInfo img{min-width:58px;width:auto;padding:0 8px;height:42px;object-fit:contain;border-radius:50%;}
 .clubLogo{
 
 width:46px;
@@ -1514,7 +1514,7 @@ justify-content:flex-end;
 
 .teamLeft img{
 
-width:42px;
+min-width:58px;width:auto;padding:0 8px;
 
 height:42px;
 
@@ -1532,7 +1532,7 @@ gap:8px;
 
 .scoreBox span{
 
-width:42px;
+min-width:58px;width:auto;padding:0 8px;
 
 height:42px;
 
@@ -1815,6 +1815,12 @@ box-shadow:0 16px 35px rgba(0,0,0,.35)!important;
 
 </style>
 
+
+<style>
+.winScore{background:#1d7f43!important;color:#fff!important}
+.drawScore{background:#b38a12!important;color:#fff!important}
+.loseScore{background:#a12c2c!important;color:#fff!important}
+</style>
 </head>
 
 <body>
@@ -1853,7 +1859,7 @@ box-shadow:0 16px 35px rgba(0,0,0,.35)!important;
 </aside>
 
 <main>
-<div class='liveTicker' id='liveTicker'>🔴 EN DIRECTO · <span id='tickerText'>00:00 · Ramón Sicart 2-1 Creixell</span></div>
+<div class='liveTicker' id='liveTicker'>🔴 EN DIRECTO · <span id='tickerText'>00:00 · Ramón Sicart 2-1 <span id='nextRival'>Creixell</span></span></div>
 
 <header>
 
@@ -1936,7 +1942,7 @@ Plantilla
 <div class="card nextMatch">
 <div class="cardTitle">
 <h2>⚽ Próximo Partido</h2>
-<span class="liveTag">EN 65 DÍAS</span>
+<span class="liveTag"><span id='nextBadge'>PRÓXIMO</span></span>
 </div>
 
 <div style="display:grid;grid-template-columns:1fr 120px 1fr;align-items:center;text-align:center;gap:20px;margin:20px 0;">
@@ -1961,8 +1967,8 @@ Plantilla
 </div>
 
 <div style="display:flex;justify-content:space-around;background:#111923;border:1px solid #2f4157;border-radius:16px;padding:16px;margin:10px 0 20px">
-<div>📅 12 Septiembre</div>
-<div>⏰ 12:00</div>
+<div>📅 <span id='nextDate'>--</span></div>
+<div>⏰ <span id='nextTime'>--</span></div>
 <div>🏟 Municipal</div>
 </div>
 
@@ -1998,63 +2004,26 @@ Plantilla
 <div class="card">
 <div class="cardTitle"><h2>📅 Últimos partidos</h2></div>
 
-<div class="matchRow winner">
+<div class="matchRow winner" onclick="openMatch(1)" style="cursor:pointer">
 <div class="teamLeft"><img src="assets/logo.png"><span>Ramón Sicart</span></div>
 <div class="scoreBox"><span>3</span><span>1</span></div>
 <div class="teamRight"><span><span class="posDown">▼</span>Creixell</span><div class="clubLogo"></div></div>
 </div>
 
-<div class="matchRow">
+<div class="matchRow" onclick="openMatch(2)" style="cursor:pointer">
 <div class="teamLeft"><div class="clubLogo"></div><span><span class="posUp">▲</span>Leader FC</span></div>
 <div class="scoreBox"><span>2</span><span>2</span></div>
 <div class="teamRight"><span>Ramón Sicart</span><img src="assets/logo.png"></div>
 </div>
 
-<div class="matchRow pending">
+<div class="matchRow ${m[7]=='G'?'winner':m[7]=='E'?'draw':m[7]=='P'?'loss':'pending'}" onclick="openMatch(3)" style="cursor:pointer">
 <div class="teamLeft"><img src="assets/logo.png"><span>Ramón Sicart</span></div>
-<div class="scoreBox pendingScore"><span>VS</span></div>
-<div class="teamRight"><span><span class="posUp">▲</span>Youth Stars</span><div class="clubLogo"></div></div>
-</div>
-</div>
-
-<!-- Goleadores -->
-
-<div class="card">
-<h2>🔥 Goleadores</h2>
-<div class="scorersGrid">
-<div class="scorerCard">
-<div class="medal">🥇</div>
-<div class="player">Gerard Rodenes</div>
-<div class="goals">39</div>
-<div class="extra">24 PJ · 8 Asist.</div>
-</div>
-<div class="scorerCard">
-<div class="medal">🥈</div>
-<div class="player">Roger</div>
-<div class="goals">18</div>
-<div class="extra">22 PJ · 5 Asist.</div>
-</div>
-<div class="scorerCard">
-<div class="medal">🥉</div>
-<div class="player">Axel</div>
-<div class="goals">8</div>
-<div class="extra">20 PJ · 6 Asist.</div>
-</div>
-</div>
-</div>
-
-<!-- Noticias -->
-
-<div class="card newsCard" style="grid-column:1/3;">
-<img src="assets/team.jpg">
-<div class="newsContent">
-<h2>📰 Arranca la nueva temporada 2026/27</h2>
-<p>El Ramón Sicart comienza una nueva temporada con ilusión. Desde esta aplicación podrás seguir resultados, clasificación, estadísticas, noticias y, próximamente, el partido en directo sincronizado.</p>
-<a href="#" class="newsBtn">📖 Leer más</a>
-</div>
+<div class="scoreBox ${m[7]=='G'?'winScore':m[7]=='E'?'drawScore':m[7]=='P'?'loseScore':'pendingScore'}"><span>${m[6]&&m[6]!==''?m[6]:'VS'}</span></div>
+<div class="teamRight"><span>Youth Stars</span><div class="clubLogo"></div></div>
 </div>
 
 </div>
+
 </section>
 
 <div class="adminPanel" id="adminPanel">
@@ -2090,31 +2059,32 @@ Resultado: 2-1 · Estado: En juego
 <h2>📅 Calendario</h2>
 <input id="matchSearch" placeholder="Buscar partido..." style="width:100%;padding:14px;border-radius:12px;background:#202C3D;color:white;border:none;margin:18px 0">
 <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
-<button class="miniButton">Todos</button>
-<button class="miniButton">Pendientes</button>
-<button class="miniButton">Ganados</button>
-<button class="miniButton">Empatados</button>
-<button class="miniButton">Perdidos</button>
+<button class="miniButton" style="background:#9DDC00;color:#111" data-filter="ALL" onclick="setCalendarFilter('ALL')">Todos</button>
+<button class="miniButton" data-filter="N" onclick="setCalendarFilter('N')">Pendientes</button>
+<button class="miniButton" data-filter="G" onclick="setCalendarFilter('G')">Ganados</button>
+<button class="miniButton" data-filter="E" onclick="setCalendarFilter('E')">Empatados</button>
+<button class="miniButton" data-filter="P" onclick="setCalendarFilter('P')">Perdidos</button>
 </div>
 
-<div class="matchRow pending">
-<div class="teamLeft"><img src="assets/logo.png"><span>Ramón Sicart</span></div>
-<div class="scoreBox pendingScore"><span>VS</span></div>
-<div class="teamRight"><span>Jornada 1</span><div class="clubLogo"></div></div>
-</div>
 
-<div class="matchRow pending">
-<div class="teamLeft"><img src="assets/logo.png"><span>Ramón Sicart</span></div>
-<div class="scoreBox pendingScore"><span>VS</span></div>
-<div class="teamRight"><span>Jornada 2</span><div class="clubLogo"></div></div>
-</div>
 
-<div class="matchRow pending">
-<div class="teamLeft"><img src="assets/logo.png"><span>Ramón Sicart</span></div>
-<div class="scoreBox pendingScore"><span>VS</span></div>
-<div class="teamRight"><span>Jornada 3</span><div class="clubLogo"></div></div>
+<div class="card" style="min-height:auto;margin-bottom:16px">
+<h3>🏆 Temporada 25/26</h3>
+<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;text-align:center">
+<div><b>26</b><br>Jornadas</div>
+<div style="color:#46d369"><b>18</b><br>Victorias</div>
+<div style="color:#e8c547"><b>1</b><br>Empates</div>
+<div style="color:#ff5a5a"><b>5</b><br>Derrotas</div>
+<div><b>2</b><br>Pend.</div>
 </div>
+</div>
+<div id="calendarPages"></div>
 
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:22px">
+<button class="primaryButton" onclick="prevCalendarPage()">◀ Anterior</button>
+<div id="calendarIndicator" style="font-weight:700">Página 1 / 5</div>
+<button class="primaryButton" onclick="nextCalendarPage()">Siguiente ▶</button>
+</div>
 </div>
 </section>
 
@@ -2143,6 +2113,99 @@ Resultado: 2-1 · Estado: En juego
 <button onclick="closePlayer()" style="margin-top:20px;padding:12px 24px;border:none;border-radius:12px;background:#9DDC00;font-weight:700">Cerrar</button>
 </div>
 </div>
+
+<div id="matchModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:6000;align-items:center;justify-content:center">
+<div style="background:#171F2B;width:520px;max-width:95%;border-radius:20px;padding:24px">
+<h2>⚽ Ficha del Partido</h2>
+<p id="matchTitle" style="margin:15px 0;color:#B7C1CE"></p>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">
+<div style="background:#202C3D;padding:10px;border-radius:12px;text-align:center"><small>Fecha</small><br><b id="mDate">--</b></div>
+<div style="background:#202C3D;padding:10px;border-radius:12px;text-align:center"><small>Hora</small><br><b id="mHour">--</b></div>
+<div style="background:#202C3D;padding:10px;border-radius:12px;text-align:center"><small>Estado</small><br><b id="mState">Pend.</b></div>
+<div style="background:#202C3D;padding:10px;border-radius:12px;text-align:center"><small>Resultado</small><br><b id="mScore">VS</b></div>
+</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+<button class="miniButton" onclick="showMatchTab('info')">ℹ️ Info</button>
+<button class="miniButton" onclick="showMatchTab('conv')">📋 Convocatoria</button>
+<button class="miniButton" onclick="showMatchTab('lineup')">🧭 Alineación</button>
+<button class="miniButton" onclick="showMatchTab('events')">⚽ Partido</button>
+<button class="miniButton" onclick="showMatchTab('mvp')">⭐ MVP</button>
+<button class="miniButton" onclick="showMatchTab('media')">📸 Multimedia</button>
+</div>
+
+<div id="tab-info" class="matchTab">
+<div class="card" style="min-height:auto">
+<h3>ℹ️ Información del partido</h3>
+<p>📅 <b id="mDate2">04/10/2025</b></p>
+<p>🕒 <b id="mHour2">12:15</b></p>
+<p>🏟 Campo: Municipal</p>
+<p>📍 Estado: Pendiente</p>
+</div>
+</div>
+
+<div id="tab-conv" class="matchTab" style="display:none">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+<div class="card" style="min-height:auto;padding:14px">
+<h3>📋 Convocatoria</h3>
+<p style="color:#B7C1CE;font-size:13px">Lista de convocados</p>
+</div>
+
+<div class="card" style="min-height:auto;padding:14px">
+</div></div><div id='tab-lineup' class='matchTab' style='display:none'><div style='display:grid;grid-template-columns:1fr 1fr;gap:12px'><div class='card' style='min-height:auto'><h3>🧭 Alineación</h3>
+<p style="color:#B7C1CE;font-size:13px">Titulares y banquillo</p>
+</div>
+
+<div class="card" style="min-height:auto;padding:14px">
+</div></div><div id='tab-events' class='matchTab' style='display:none'><div style='display:grid;grid-template-columns:1fr 1fr;gap:12px'><div class='card' style='min-height:auto'><h3>⚽ Incidencias</h3>
+<p style="color:#B7C1CE;font-size:13px">Goles · Asistencias · Amarillas · Rojas</p>
+</div>
+
+<div class="card" style="min-height:auto;padding:14px">
+</div></div><div id='tab-mvp' class='matchTab' style='display:none'><div style='display:grid;grid-template-columns:1fr'><div class='card' style='min-height:auto'><h3>⭐ MVP del Partido</h3>
+<p style="color:#B7C1CE;font-size:13px">1 voto por usuario</p>
+<div style="display:grid;gap:10px;margin-top:12px">
+<select id="mvpPlayer" style="padding:12px;border-radius:10px;background:#202C3D;color:#fff;border:1px solid #2D3C4E">
+<option>Selecciona un jugador...</option>
+<option>Roger Caralt Jané</option>
+<option>Amjad Makroum Rabih</option>
+<option>Adrià Serralabós Martínez</option>
+<option>Alex Arnal Garrido</option>
+<option>Álvaro Montalbán Rodríguez</option>
+<option>Pereguasch Sadurní</option>
+<option>Axel García Sánchez</option>
+<option>Jan de la Cruz Batet</option>
+<option>Gerard Rodenes Coll</option>
+<option>Jaume Rovirosa Melendres</option>
+<option>Luca D'Alba Gironès</option>
+<option>Eloy Gómez Díaz</option>
+<option>Arau Kuipers Urgell</option>
+<option>Guillem Gómez Herraiz</option>
+<option>Enzo Ros Martínez</option>
+<option>Adrià Soler Solé</option>
+</select>
+
+<button class="primaryButton" onclick="voteMVP()">🗳️ Emitir voto</button>
+<button class="miniButton" onclick="clearMVPVote()" style="margin-top:8px">❌ Quitar / Cambiar voto</button>
+
+<div id="voteStatus" style="font-size:13px;color:#B7C1CE">Cada usuario dispone de un único voto.</div>
+
+<hr style="border-color:#2D3C4E">
+
+<div style="display:flex;justify-content:space-between"><span>🥇 <span id="mvp1">Sin votos</span></span><b id="mvp1v">0</b></div>
+<div style="display:flex;justify-content:space-between"><span>🥈 <span id="mvp2">Sin votos</span></span><b id="mvp2v">0</b></div>
+<div style="display:flex;justify-content:space-between"><span>🥉 <span id="mvp3">Sin votos</span></span><b id="mvp3v">0</b></div>
+</div>
+</div>
+</div>
+</div></div>
+<div id='tab-media' class='matchTab' style='display:none'>
+<div class='card' style='min-height:auto'>
+<h3>📸 Multimedia</h3>
+<p>Próximamente podrás añadir fotos, vídeos y resúmenes del partido.</p>
+</div>
+</div>
+<button onclick="closeMatch()" type="button"  class="primaryButton" style="margin-top:18px">Cerrar</button>
+</div></div>
 </main>
 
 <div class="mobile-bottom">
@@ -2293,6 +2356,171 @@ function prevPlayer(){currentIndex=(currentIndex-1+players.length)%players.lengt
 function nextPlayer(){currentIndex=(currentIndex+1)%players.length;openPlayer(players[currentIndex].d);}
 </script>
 <script>function closePlayer(){playerModal.style.display='none';}</script>
+
+<script>
+function openMatch(j){
+ const modal=document.getElementById('matchModal');
+ document.getElementById('matchTitle').textContent='Jornada '+j;
+ document.getElementById('mDate').textContent='04/10/2025';
+ document.getElementById('mHour').textContent='12:15';
+ document.getElementById('mState').textContent='Pendiente';
+ document.getElementById('mScore').textContent=(calendarMatches[j-1]&&calendarMatches[j-1][6])?calendarMatches[j-1][6]:'VS';
+ modal.style.display='flex';
+}
+function closeMatch(){
+ const modal=document.getElementById('matchModal');
+ if(modal) modal.style.display='none';
+ document.querySelectorAll('.matchTab').forEach(t=>t.style.display='none');
+ const info=document.getElementById('tab-info');
+ if(info) info.style.display='block';
+}
+</script>
+
+<script>
+const calendarMatches=[
+['🏠','J1','Ramón Sicart','Joventut Bisbalenca','04/10/2025','12:15','1-0','G'],
+['✈️','J2',"Base L'Arboç",'Ramón Sicart','11/10/2025','12:25','3-3','E'],
+['🏠','J3','Ramón Sicart','Escola F. Base Vendrell','19/10/2025','17:00','2-3','P'],
+['✈️','J4','Vallmoll','Ramón Sicart','26/10/2025','12:45','1-6','G'],
+['🏠','J5','Ramón Sicart','Roda de Barà','02/11/2025','12:00','7-2','G'],
+['✈️','J6','Base Marc Bartra','Ramón Sicart','09/11/2025','13:00','1-6','G'],
+['🏠','J7','Ramón Sicart','Torredembarra','16/11/2025','11:00','3-0','G'],
+['✈️','J8','EFB Calafell C','Ramón Sicart','23/11/2025','13:15','2-1','P'],
+['✈️','J9','Vendrell C','Ramón Sicart','30/11/2025','13:15','7-3','P'],
+['🏠','J10','Ramón Sicart','Tancat','14/12/2025','12:00','4-3','G'],
+['✈️','J11','Col·legi Sant Pau','Ramón Sicart','21/12/2025','13:45','1-2','G'],
+['🏠','J12','Ramón Sicart','Base Vilanova 2015 D','11/01/2026','12:00','6-2','G'],
+['✈️','J13','UE Creixell','Ramón Sicart','18/01/2026','12:00','','N'],
+['✈️','J14','Joventut Bisbalenca','Ramón Sicart','24/01/2026','12:00','2-3','G'],
+['🏠','J15','Ramón Sicart',"Base L'Arboç",'01/02/2026','12:00','3-4','P'],
+['✈️','J16','EFB Vendrell','Ramón Sicart','08/02/2026','14:00','3-4','G'],
+['🏠','J17','Ramón Sicart','Vallmoll','22/02/2026','12:00','7-3','G'],
+['✈️','J18','Roda de Barà','Ramón Sicart','01/03/2026','11:45','1-4','G'],
+['🏠','J19','Ramón Sicart','Base Marc Bartra','08/03/2026','12:00','12-0','G'],
+['✈️','J20','Torredembarra','Ramón Sicart','15/03/2026','10:30','1-2','G'],
+['🏠','J21','Ramón Sicart','EFB Calafell C','22/03/2026','12:00','2-3','P'],
+['🏠','J22','Ramón Sicart','Vendrell C','29/03/2026','12:00','7-1','G'],
+['✈️','J23','Tancat','Ramón Sicart','12/04/2026','11:30','1-4','G'],
+['🏠','J24','Ramón Sicart','Col·legi Sant Pau','19/04/2026','12:00','2-1','G'],
+['✈️','J25','Base Vilanova 2015 D','Ramón Sicart','25/04/2026','12:10','2-0','P'],
+['🏠','J26','Ramón Sicart','UE Creixell','03/05/2026','12:00','','N']
+];
+let calPage=0;
+function renderCalendarPage(){
+ const wrap=document.getElementById('calendarPages'); if(!wrap) return;
+ const s=calPage*6,e=Math.min(s+6,calendarMatches.length);
+ wrap.innerHTML='';
+ for(let i=s;i<e;i++){
+  const m=calendarMatches[i];
+  wrap.innerHTML+=`<div class="matchRow ${m[7]=='G'?'winner':m[7]=='E'?'draw':m[7]=='P'?'loss':'pending'}" onclick="openMatch(${i+1})" style="cursor:pointer">
+<div class="teamLeft"><span style="font-weight:800;color:#9DDC00">${m[0]} ${m[1]}</span>&nbsp;<span>${m[2]}</span></div>
+<div class="scoreBox ${m[7]=='G'?'winScore':m[7]=='E'?'drawScore':m[7]=='P'?'loseScore':'pendingScore'}"><span>${m[6]&&m[6]!==''?m[6]:'VS'}</span></div>
+<div class="teamRight"><span>${m[3]}</span><span>${m[7]=='G'?'🟢':m[7]=='E'?'🟡':m[7]=='P'?'🔴':'⚪'}</span></div></div>
+<div style="margin:-6px 0 12px 56px;color:#9aa8b7;font-size:13px">📅 ${m[4]||'Por definir'} · 🕒 ${m[5]||'--:--'}</div>`;
+ }
+ document.getElementById('calendarIndicator').textContent=`Página ${calPage+1} / ${Math.ceil(calendarMatches.length/6)}`;
+}
+function nextCalendarPage(){if((calPage+1)*6<calendarMatches.length){calPage++;renderCalendarPage();}}
+function prevCalendarPage(){if(calPage>0){calPage--;renderCalendarPage();}}
+document.addEventListener('DOMContentLoaded',renderCalendarPage);
+</script>
+
+<script>
+function voteMVP(){
+ if(localStorage.getItem('mvp_vote_match_1')){
+   document.getElementById('voteStatus').textContent='✅ Ya has utilizado tu voto para este partido.';
+   return;
+ }
+ const sel=document.getElementById('mvpPlayer');
+ if(sel.selectedIndex===0){
+   document.getElementById('voteStatus').textContent='Selecciona un jugador.';
+   return;
+ }
+ localStorage.setItem('mvp_vote_match_1',sel.value);
+ document.getElementById('mvp1').textContent=sel.value;
+ document.getElementById('mvp1v').textContent='1';
+ document.getElementById('voteStatus').textContent='🎉 Voto registrado correctamente.';
+}
+</script>
+
+<script>
+const MVP_KEY='mvp_vote_match_1';
+function voteMVP(){
+ const sel=document.getElementById('mvpPlayer');
+ const status=document.getElementById('voteStatus');
+ if(!sel||sel.selectedIndex===0){status.textContent='Selecciona un jugador.';return;}
+ const previous=localStorage.getItem(MVP_KEY);
+ if(previous && previous!==sel.value){
+   status.textContent='Ya has votado. Pulsa "Quitar / Cambiar voto" para modificarlo.';
+   return;
+ }
+ localStorage.setItem(MVP_KEY,sel.value);
+ document.getElementById('mvp1').textContent=sel.value;
+ document.getElementById('mvp1v').textContent='1';
+ status.textContent='✅ Voto registrado.';
+}
+function clearMVPVote(){
+ localStorage.removeItem(MVP_KEY);
+ document.getElementById('mvp1').textContent='Sin votos';
+ document.getElementById('mvp1v').textContent='0';
+ document.getElementById('voteStatus').textContent='Voto eliminado. Ya puedes votar de nuevo.';
+ const sel=document.getElementById('mvpPlayer');
+ if(sel) sel.selectedIndex=0;
+}
+document.addEventListener('DOMContentLoaded',()=>{
+ const v=localStorage.getItem(MVP_KEY);
+ if(v){
+   document.getElementById('mvp1').textContent=v;
+   document.getElementById('mvp1v').textContent='1';
+   document.getElementById('voteStatus').textContent='Ya has votado en este navegador.';
+ }
+});
+</script>
+
+<script>
+function showMatchTab(name){
+ document.querySelectorAll('.matchTab').forEach(t=>t.style.display='none');
+ const el=document.getElementById('tab-'+name);
+ if(el) el.style.display='block';
+}
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+ const m=document.getElementById('matchModal');
+ if(m){
+   m.addEventListener('click',e=>{ if(e.target===m) closeMatch(); });
+ }
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+ const next=calendarMatches.find(m=>m[7]=='N');
+ if(!next) return;
+ document.getElementById('nextRival').textContent=next[0]=='🏠'?next[3]:next[2];
+ document.getElementById('nextDate').textContent=next[4];
+ document.getElementById('nextTime').textContent=next[5];
+ const d=new Date(next[4].split('/').reverse().join('-')+'T'+(next[5]||'12:00'));
+ function upd(){
+  const diff=d-new Date();
+  if(diff<=0){document.getElementById('nextBadge').textContent='EN DIRECTO';return;}
+  const days=Math.floor(diff/86400000);
+  document.getElementById('nextBadge').textContent='EN '+days+' DÍAS';
+ }
+ upd(); setInterval(upd,60000);
+});
+</script>
+
+<script>
+let currentFilter='ALL';
+function setCalendarFilter(f){
+ currentFilter=f;
+ calPage=0;renderCalendarPage();
+ 
+ const btn=document.querySelector('[data-filter="'+f+'"]');
+ if(btn){document.querySelectorAll('[data-filter]').forEach(x=>{x.style.background='#263445';x.style.color='#fff';});btn.style.background='#9DDC00';btn.style.color='#111';}
+}
+</script>
 </body>
 
 </html>
