@@ -1978,6 +1978,41 @@ margin-top:10px!important;
 }
 </style>
 
+
+<style id="v518fase1">
+:root{--header-h:64px;}
+header{
+position:sticky!important;
+top:0;
+z-index:9999;
+backdrop-filter:blur(12px);
+-webkit-backdrop-filter:blur(12px);
+box-shadow:0 2px 10px rgba(0,0,0,.18);
+}
+main{padding-top:8px!important;}
+.section,.card{scroll-margin-top:76px;}
+@media(max-width:768px){
+header{min-height:64px!important;padding:10px 14px!important;}
+header h1{font-size:18px!important;}
+.page{animation:fadeIn .22s ease;}
+}
+@keyframes fadeIn{
+from{opacity:.4;transform:translateY(8px)}
+to{opacity:1;transform:translateY(0)}
+}
+</style>
+
+
+<style id="v518fix2">
+@media(max-width:768px){
+#standingsPage table{table-layout:fixed!important}
+#standingsPage th:nth-child(1),#standingsPage td:nth-child(1){width:42px;text-align:center}
+#standingsPage th:nth-child(2),#standingsPage td:nth-child(2){width:auto}
+#standingsPage th:nth-child(n+3),#standingsPage td:nth-child(n+3){width:48px;text-align:center}
+}
+#matchModal .closeX{position:absolute;top:12px;right:12px;width:42px;height:42px;border-radius:50%;border:none;background:#263445;color:#fff;font-size:22px;cursor:pointer}
+#matchModal>div{position:relative}
+</style>
 </head>
 
 <body>
@@ -2287,7 +2322,7 @@ Resultado: 2-1 · Estado: En juego
 </div>
 
 <div id="matchModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:6000;align-items:center;justify-content:center">
-<div style="background:#171F2B;width:520px;max-width:95%;border-radius:20px;padding:24px">
+<div style="background:#171F2B;width:520px;max-width:95%;border-radius:20px;padding:24px"><button class="closeX" onclick="closeMatch()">✕</button>
 <h2>⚽ Ficha del Partido</h2>
 <p id="matchTitle" style="margin:15px 0;color:#B7C1CE"></p>
 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">
@@ -2982,6 +3017,14 @@ window.addEventListener("load",()=>{
 
 });
 
+</script>
+
+<script>
+document.addEventListener('click',function(e){
+ const m=document.getElementById('matchModal');
+ if(e.target===m) closeMatch();
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMatch();});
 </script>
 </body>
 
