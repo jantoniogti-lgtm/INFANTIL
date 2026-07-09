@@ -2245,7 +2245,169 @@ Resultado: 2-1 · Estado: En juego
 <button>👥</button>
 <button>⚙️</button>
 </div>
+<script type="module">
 
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+    getDatabase,
+    ref,
+    get,
+    set,
+    update,
+    onValue
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+
+const firebaseConfig = {
+
+    apiKey: "AIzaSyA2WgBQxFSPWTQMk3NTWBFPc8K5XyCOcDw",
+
+    authDomain: "club-manager-9a242.firebaseapp.com",
+
+    databaseURL:"https://club-manager-9a242-default-rtdb.europe-west1.firebasedatabase.app",
+
+    projectId:"club-manager-9a242",
+
+    storageBucket:"club-manager-9a242.firebasestorage.app",
+
+    messagingSenderId:"931689419367",
+
+    appId:"1:931689419367:web:b638b313cf639ee8dd3ac2"
+
+};
+
+const app = initializeApp(firebaseConfig);
+
+window.db=getDatabase(app);
+window.firebaseManager = {
+
+    async load(path){
+
+        const snap = await fb.get(
+            fb.ref(db,"clubManager/"+path)
+        );
+
+        if(snap.exists()) return snap.val();
+
+        return null;
+
+    },
+
+    async save(path,data){
+
+        await fb.set(
+            fb.ref(db,"clubManager/"+path),
+            data
+        );
+
+    },
+
+    async update(path,data){
+
+        await fb.update(
+            fb.ref(db,"clubManager/"+path),
+            data
+        );
+
+    },
+
+    listen(path,callback){
+
+        fb.onValue(
+
+            fb.ref(db,"clubManager/"+path),
+
+            s=>callback(s.val())
+
+        );
+listen(path, callback){
+
+    fb.onValue(
+
+        fb.ref(db,"clubManager/"+path),
+
+        (snapshot)=>{
+
+            callback(snapshot.val());
+
+        }
+
+    );
+
+}
+    }
+
+};
+window.sync = {
+
+    async init(){
+
+        console.log("🔄 Iniciando sincronización...");
+
+        await this.calendar();
+
+        await this.standings();
+
+        await this.players();
+
+        console.log("✅ Sincronización terminada");
+
+    },
+
+    async calendar(){
+
+        firebaseManager.listen("calendar",(data)=>{
+
+    if(!data) return;
+
+    window.calendarMatches=data;
+
+    renderCalendarPage();
+
+    if(typeof renderLastMatches==="function")
+        renderLastMatches();
+
+    console.log("📡 Calendario actualizado");
+
+});
+
+    async standings(){
+
+    firebaseManager.listen("standings",(data)=>{
+
+    if(!data) return;
+
+    window.standings=data;
+
+    renderStandings();
+
+    console.log("📡 Clasificación actualizada");
+
+});
+
+    async players(){
+
+        firebaseManager.listen("players",(data)=>{
+
+    if(!data) return;
+
+    window.players=data;
+
+    renderPlayers(players);
+
+});
+console.log("✅ Firebase Manager listo");
+window.fb={
+    ref,
+    get,
+    set,
+    update,
+    onValue
+};
+
+console.log("✅ Firebase conectado");
+
+</script>
 <script>
 const aside=document.querySelector('aside');
 const btn=document.getElementById('menuToggle');
@@ -2464,6 +2626,56 @@ const calendarMatches=[
 ];
 let calPage=0;
 function renderCalendarPage(){
+async function saveCalendar(){
+
+    try{
+
+        await firebaseManager.save(
+            "calendar",
+            calendarMatches
+        );
+
+        console.log("✅ Calendario guardado");
+
+    }catch(e){
+
+        console.error(e);
+
+    }
+
+}
+async function saveStandings(){
+
+    try{
+
+        await firebaseManager.save(
+            "standings",
+            standings
+        );
+
+    }catch(e){
+
+        console.error(e);
+
+    }
+async function savePlayers(){
+
+    try{
+
+        await firebaseManager.save(
+            "players",
+            players
+        );
+
+    }catch(e){
+
+        console.error(e);
+
+    }
+
+}
+}
+
  const wrap=document.getElementById('calendarPages'); if(!wrap)return;
  const list=calendarMatches.filter(m=>currentFilter==='ALL'||m[7]===currentFilter);
  const total=Math.max(1,Math.ceil(list.length/6));
@@ -2661,7 +2873,15 @@ function renderLastMatches(){
 }
 window.addEventListener('load',renderLastMatches);
 </script>
+<script>
 
+window.addEventListener("load",()=>{
+
+    sync.init();
+
+});
+
+</script>
 </body>
 
 </html>
