@@ -737,7 +737,7 @@ align-items:center;
 
 justify-content:center;
 
-min-width:58px;width:auto;padding:0 8px;
+min-width:64px;width:auto;padding:0 10px;
 
 height:42px;
 
@@ -1250,7 +1250,7 @@ gap:16px;
 flex:1;
 
 }
-.clubInfo img{min-width:58px;width:auto;padding:0 8px;height:42px;object-fit:contain;border-radius:50%;}
+.clubInfo img{min-width:64px;width:auto;padding:0 10px;height:42px;object-fit:contain;border-radius:50%;}
 .clubLogo{
 
 width:46px;
@@ -1514,7 +1514,7 @@ justify-content:flex-end;
 
 .teamLeft img{
 
-min-width:58px;width:auto;padding:0 8px;
+min-width:64px;width:auto;padding:0 10px;
 
 height:42px;
 
@@ -1532,7 +1532,7 @@ gap:8px;
 
 .scoreBox span{
 
-min-width:58px;width:auto;padding:0 8px;
+min-width:64px;width:auto;padding:0 10px;
 
 height:42px;
 
@@ -1672,7 +1672,9 @@ box-shadow:inset 4px 0 0 #9DDC00;
 .table td:nth-child(2){display:flex;align-items:center;justify-content:space-between}
 .matchRow.winner{box-shadow:inset 4px 0 0 #32D74B}
 .matchRow.pending{box-shadow:inset 4px 0 0 #9DDC00}
-.matchRow:not(.winner):not(.pending){box-shadow:inset 4px 0 0 #FFC857}
+.matchRow.loss{box-shadow:inset 4px 0 0 #FF4D4F}
+.matchRow.draw{box-shadow:inset 4px 0 0 #FFC857}
+.matchRow:not(.winner):not(.pending):not(.loss):not(.draw){box-shadow:none}
 .matchRow{transition:.25s}
 .matchRow:hover{transform:translateX(6px)}
 
@@ -1814,9 +1816,22 @@ box-shadow:0 16px 35px rgba(0,0,0,.35)!important;
 }
 
 </style>
-
-
 <style>
+#standingsPage .card{
+    overflow-x:auto;
+}
+#standingsPage table{
+    width:100%;
+    min-width:900px;
+}
+#standingsPage tbody tr{
+    display:table-row;
+}
+#standingsPage td,
+#standingsPage th{
+    white-space:nowrap;
+}
+
 .winScore{background:#1d7f43!important;color:#fff!important}
 .drawScore{background:#b38a12!important;color:#fff!important}
 .loseScore{background:#a12c2c!important;color:#fff!important}
@@ -1840,7 +1855,6 @@ box-shadow:0 16px 35px rgba(0,0,0,.35)!important;
 
 <button class="active" onclick="showPage('homePage')">🏠 Inicio</button>
 
-<button onclick="showPage('matchesPage')">⚽ Partidos</button>
 
 <button onclick="showPage('standingsPage')">🏆 Clasificación</button>
 
@@ -1983,7 +1997,9 @@ Plantilla
 <div class="card">
 <div class="cardTitle">
 <h2>🏆 Clasificación</h2>
-<button class="miniButton">Ver tabla</button>
+<button class="miniButton" onclick="showPage('standingsPage');window.scrollTo({top:0,behavior:'smooth'});">
+    Ver tabla
+</button>
 </div>
 
 <table class="table">
@@ -1991,37 +2007,21 @@ Plantilla
 <tr><th>POS</th><th>EQUIPO</th><th>PJ</th><th>DG</th><th>PTS</th></tr>
 </thead>
 <tbody>
-<tr><td>1</td><td><span class="posUp">▲</span>Leader FC<div class="formBadges"><span class="winDot"></span><span class="winDot"></span><span class="drawDot"></span><span class="winDot"></span><span class="winDot"></span></div></td><td>22</td><td>+38</td><td><b>55</b></td></tr>
-<tr><td>2</td><td><span class="posUp">▲</span>Youth Stars<div class="formBadges"><span class="winDot"></span><span class="winDot"></span><span class="lossDot"></span><span class="winDot"></span><span class="drawDot"></span></div></td><td>22</td><td>+29</td><td><b>49</b></td></tr>
-<tr style="background:#23382B;color:#9DDC00;font-weight:700">
-<td>4</td><td><span class="posUp">▲</span>🛡 Ramón Sicart<div class="formBadges"><span class="winDot"></span><span class="drawDot"></span><span class="winDot"></span><span class="lossDot"></span><span class="winDot"></span></div></td><td>22</td><td>+14</td><td><b>42</b></td></tr>
-<tr><td>5</td><td><span class="posDown">▼</span>Creixell<div class="formBadges"><span class="lossDot"></span><span class="drawDot"></span><span class="lossDot"></span><span class="winDot"></span><span class="lossDot"></span></div></td><td>22</td><td>+10</td><td><b>40</b></td></tr>
+<tr><td>1</td><td>EFB Calafell C</td><td>24</td><td>+63</td><td><b>60</b></td></tr>
+<tr><td>2</td><td>EFB Vendrell</td><td>24</td><td>+58</td><td><b>58</b></td></tr>
+<tr class="me"><td>3</td><td>Ramón Sicart</td><td>24</td><td>+47</td><td><b>52</b></td></tr>
+<tr><td>4</td><td>Col·legi Sant Pau</td><td>24</td><td>+38</td><td><b>51</b></td></tr>
+<tr><td>5</td><td>Base Vilanova 2015 D</td><td>24</td><td>+20</td><td><b>46</b></td></tr>
 </tbody>
 </table>
 </div>
 
 <!-- Resultados -->
 <div class="card">
-<div class="cardTitle"><h2>📅 Últimos partidos</h2></div>
-
-<div class="matchRow winner" onclick="openMatch(1)" style="cursor:pointer">
-<div class="teamLeft"><img src="assets/logo.png"><span>Ramón Sicart</span></div>
-<div class="scoreBox"><span>3</span><span>1</span></div>
-<div class="teamRight"><span><span class="posDown">▼</span>Creixell</span><div class="clubLogo"></div></div>
+<div class="cardTitle">
+<h2>📅 Últimos partidos</h2>
 </div>
-
-<div class="matchRow" onclick="openMatch(2)" style="cursor:pointer">
-<div class="teamLeft"><div class="clubLogo"></div><span><span class="posUp">▲</span>Leader FC</span></div>
-<div class="scoreBox"><span>2</span><span>2</span></div>
-<div class="teamRight"><span>Ramón Sicart</span><img src="assets/logo.png"></div>
-</div>
-
-<div class="matchRow ${m[7]=='G'?'winner':m[7]=='E'?'draw':m[7]=='P'?'loss':'pending'}" onclick="openMatch(3)" style="cursor:pointer">
-<div class="teamLeft"><img src="assets/logo.png"><span>Ramón Sicart</span></div>
-<div class="scoreBox ${m[7]=='G'?'winScore':m[7]=='E'?'drawScore':m[7]=='P'?'loseScore':'pendingScore'}"><span>${m[6]&&m[6]!==''?m[6]:'VS'}</span></div>
-<div class="teamRight"><span>Youth Stars</span><div class="clubLogo"></div></div>
-</div>
-
+<div id="lastMatches"></div>
 </div>
 
 </section>
@@ -2052,7 +2052,6 @@ Resultado: 2-1 · Estado: En juego
 </div>
 </section>
 
-<section id="matchesPage" class="dashboard" style="display:none"><div class="card"><h2>⚽ Partidos</h2><p>Próximamente en V4.2</p></div></section>
 
 <section id="calendarPage" class="dashboard" style="display:none">
 <div class="card">
@@ -2072,9 +2071,9 @@ Resultado: 2-1 · Estado: En juego
 <h3>🏆 Temporada 25/26</h3>
 <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;text-align:center">
 <div><b>26</b><br>Jornadas</div>
-<div style="color:#46d369"><b>18</b><br>Victorias</div>
+<div style="color:#46d369"><b>17</b><br>Victorias</div>
 <div style="color:#e8c547"><b>1</b><br>Empates</div>
-<div style="color:#ff5a5a"><b>5</b><br>Derrotas</div>
+<div style="color:#ff5a5a"><b>6</b><br>Derrotas</div>
 <div><b>2</b><br>Pend.</div>
 </div>
 </div>
@@ -2082,13 +2081,44 @@ Resultado: 2-1 · Estado: En juego
 
 <div style="display:flex;justify-content:space-between;align-items:center;margin-top:22px">
 <button class="primaryButton" onclick="prevCalendarPage()">◀ Anterior</button>
-<div id="calendarIndicator" style="font-weight:700">Página 1 / 5</div>
+<div id="calendarIndicator" style="font-weight:700">0 de 0 partidos</div>
 <button class="primaryButton" onclick="nextCalendarPage()">Siguiente ▶</button>
 </div>
 </div>
 </section>
 
-<section id="standingsPage" class="dashboard" style="display:none"><div class="card"><h2>🏆 Clasificación</h2><p>Próximamente</p></div></section>
+<section id="standingsPage" style="display:none;padding:24px;max-width:1500px;margin:auto">
+
+<div class="card" style="overflow-x:auto">
+
+<h2>🏆 Clasificación Infantil S14 - Grupo 32</h2>
+
+<table class="table">
+
+<thead>
+<tr>
+<th>POS</th>
+<th>EQUIPO</th>
+<th>PJ</th>
+<th>G</th>
+<th>E</th>
+<th>P</th>
+<th>GF</th>
+<th>GC</th>
+<th>DG</th>
+<th>PTS</th>
+</tr>
+</thead>
+
+<tbody id="standingsTable">
+
+</tbody>
+
+</table>
+
+</div>
+
+</section>
 
 
 <div id="playerModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:5000;align-items:center;justify-content:center">
@@ -2312,9 +2342,19 @@ const players=[
 {d:26,n:"Adrià Soler Solé",p:"Sin posición",pj:0,g:0,y:0,r:0}
 ];
 function showPage(id){
-['homePage','playersPage','matchesPage','calendarPage','standingsPage'].forEach(x=>{
+['homePage','playersPage','calendarPage','standingsPage'].forEach(x=>{
 const e=document.getElementById(x);
-if(e)e.style.display=(x===id)?'grid':'none';
+if(!e) return;
+
+if(x===id){
+    if(x==="homePage"){
+    e.style.display="grid";
+}else{
+    e.style.display="block";
+}
+}else{
+    e.style.display = "none";
+}
 });
 }
 function renderPlayers(list){
@@ -2358,22 +2398,39 @@ function nextPlayer(){currentIndex=(currentIndex+1)%players.length;openPlayer(pl
 <script>function closePlayer(){playerModal.style.display='none';}</script>
 
 <script>
+
+
+
+let currentMatch=null;
 function openMatch(j){
- const modal=document.getElementById('matchModal');
- document.getElementById('matchTitle').textContent='Jornada '+j;
- document.getElementById('mDate').textContent='04/10/2025';
- document.getElementById('mHour').textContent='12:15';
- document.getElementById('mState').textContent='Pendiente';
- document.getElementById('mScore').textContent=(calendarMatches[j-1]&&calendarMatches[j-1][6])?calendarMatches[j-1][6]:'VS';
- modal.style.display='flex';
+  currentMatch=calendarMatches[j-1];
+  if(!currentMatch) return;
+  const m=currentMatch;
+  const modal=document.getElementById('matchModal');
+  document.getElementById('matchTitle').textContent=`${m[1]} · ${(m[0]=='🏠'?m[3]:m[2])}`;
+  document.getElementById('mDate').textContent=m[4];
+  document.getElementById('mDate2').textContent=m[4];
+  document.getElementById('mHour').textContent=m[5];
+  document.getElementById('mHour2').textContent=m[5];
+  document.getElementById('mScore').textContent=m[6]||'VS';
+  let estado='Pendiente';
+  if(m[6]){
+    const [a,b]=m[6].split('-').map(Number);
+    if(a===b) estado='Empatado';
+    else estado=((m[0]=='🏠'?a>b:b>a)?'Ganado':'Perdido');
+  }
+  document.getElementById('mState').textContent=estado;
+  document.querySelectorAll('.matchTab').forEach(t=>t.style.display='none');
+  document.getElementById('tab-info').style.display='block';
+  modal.style.display='flex';
 }
 function closeMatch(){
- const modal=document.getElementById('matchModal');
- if(modal) modal.style.display='none';
+ currentMatch=null;
+ document.getElementById('matchModal').style.display='none';
  document.querySelectorAll('.matchTab').forEach(t=>t.style.display='none');
- const info=document.getElementById('tab-info');
- if(info) info.style.display='block';
+ document.getElementById('tab-info').style.display='block';
 }
+
 </script>
 
 <script>
@@ -2407,41 +2464,27 @@ const calendarMatches=[
 ];
 let calPage=0;
 function renderCalendarPage(){
- const wrap=document.getElementById('calendarPages'); if(!wrap) return;
- const s=calPage*6,e=Math.min(s+6,calendarMatches.length);
+ const wrap=document.getElementById('calendarPages'); if(!wrap)return;
+ const list=calendarMatches.filter(m=>currentFilter==='ALL'||m[7]===currentFilter);
+ const total=Math.max(1,Math.ceil(list.length/6));
+ if(calPage>=total) calPage=0;
+ const s=calPage*6,e=Math.min(s+6,list.length);
  wrap.innerHTML='';
  for(let i=s;i<e;i++){
-  const m=calendarMatches[i];
-  wrap.innerHTML+=`<div class="matchRow ${m[7]=='G'?'winner':m[7]=='E'?'draw':m[7]=='P'?'loss':'pending'}" onclick="openMatch(${i+1})" style="cursor:pointer">
+  const m=list[i];
+  const cls=m[7]=='G'?'winner':m[7]=='E'?'draw':m[7]=='P'?'loss':'pending';
+  wrap.innerHTML+=`<div class="matchRow ${cls}" onclick="openMatch(${calendarMatches.indexOf(m)+1})" style="cursor:pointer">
 <div class="teamLeft"><span style="font-weight:800;color:#9DDC00">${m[0]} ${m[1]}</span>&nbsp;<span>${m[2]}</span></div>
-<div class="scoreBox ${m[7]=='G'?'winScore':m[7]=='E'?'drawScore':m[7]=='P'?'loseScore':'pendingScore'}"><span>${m[6]&&m[6]!==''?m[6]:'VS'}</span></div>
-<div class="teamRight"><span>${m[3]}</span><span>${m[7]=='G'?'🟢':m[7]=='E'?'🟡':m[7]=='P'?'🔴':'⚪'}</span></div></div>
-<div style="margin:-6px 0 12px 56px;color:#9aa8b7;font-size:13px">📅 ${m[4]||'Por definir'} · 🕒 ${m[5]||'--:--'}</div>`;
+<div class="scoreBox ${m[7]=='G'?'winScore':m[7]=='E'?'drawScore':m[7]=='P'?'loseScore':'pendingScore'}"><span>${m[6]||'VS'}</span></div>
+<div class="teamRight"><span>${m[3]}</span></div></div>
+<div style="margin:-6px 0 12px 56px;color:#9aa8b7;font-size:13px">📅 ${m[4]} · 🕒 ${m[5]}</div>`;
  }
- document.getElementById('calendarIndicator').textContent=`Página ${calPage+1} / ${Math.ceil(calendarMatches.length/6)}`;
+ document.getElementById('calendarIndicator').textContent=`Página ${calPage+1} / ${total}`;
 }
-function nextCalendarPage(){if((calPage+1)*6<calendarMatches.length){calPage++;renderCalendarPage();}}
-function prevCalendarPage(){if(calPage>0){calPage--;renderCalendarPage();}}
 document.addEventListener('DOMContentLoaded',renderCalendarPage);
 </script>
 
-<script>
-function voteMVP(){
- if(localStorage.getItem('mvp_vote_match_1')){
-   document.getElementById('voteStatus').textContent='✅ Ya has utilizado tu voto para este partido.';
-   return;
- }
- const sel=document.getElementById('mvpPlayer');
- if(sel.selectedIndex===0){
-   document.getElementById('voteStatus').textContent='Selecciona un jugador.';
-   return;
- }
- localStorage.setItem('mvp_vote_match_1',sel.value);
- document.getElementById('mvp1').textContent=sel.value;
- document.getElementById('mvp1v').textContent='1';
- document.getElementById('voteStatus').textContent='🎉 Voto registrado correctamente.';
-}
-</script>
+
 
 <script>
 const MVP_KEY='mvp_vote_match_1';
@@ -2515,12 +2558,110 @@ document.addEventListener('DOMContentLoaded',()=>{
 let currentFilter='ALL';
 function setCalendarFilter(f){
  currentFilter=f;
- calPage=0;renderCalendarPage();
- 
+ calPage=0;
+ document.querySelectorAll('[data-filter]').forEach(b=>{b.style.background='#263445';b.style.color='#fff';});
  const btn=document.querySelector('[data-filter="'+f+'"]');
- if(btn){document.querySelectorAll('[data-filter]').forEach(x=>{x.style.background='#263445';x.style.color='#fff';});btn.style.background='#9DDC00';btn.style.color='#111';}
+ if(btn){btn.style.background='#9DDC00';btn.style.color='#111';}
+ renderCalendarPage();
 }
 </script>
+
+<script>
+function getFilteredMatches(){
+  return calendarMatches.filter(m=>{
+    const txt=m.join(' ').toLowerCase();
+    const okSearch=!window.currentSearch||txt.includes(window.currentSearch);
+    const okFilter=!window.currentFilter||window.currentFilter==='ALL'||m[7]===window.currentFilter;
+    return okSearch&&okFilter;
+  });
+}
+
+const _oldRender=renderCalendarPage;
+renderCalendarPage=function(){
+  _oldRender();
+  const total=getFilteredMatches().length;
+  const shown=Math.min(total,Math.max(0,(calPage*6)+Math.min(6,total-calPage*6)));
+  const ind=document.getElementById('calendarIndicator');
+  if(ind) ind.textContent=`${shown} de ${total} partidos`;
+}
+
+function nextCalendarPage(){
+ const totalPages=Math.max(1,Math.ceil(getFilteredMatches().length/6));
+ if(calPage<totalPages-1){calPage++;renderCalendarPage();}
+}
+function prevCalendarPage(){
+ if(calPage>0){calPage--;renderCalendarPage();}
+}
+document.addEventListener('DOMContentLoaded',()=>renderCalendarPage());
+</script>
+<script>
+const standings=[
+
+{p:1,e:"EFB Calafell C",pj:24,g:20,e2:0,pd:4,gf:94,gc:31,pts:60},
+{p:2,e:"EFB Vendrell",pj:24,g:19,e2:1,pd:4,gf:95,gc:37,pts:58},
+{p:3,e:"Ramón Sicart",pj:24,g:17,e2:1,pd:6,gf:94,gc:47,pts:52},
+{p:4,e:"Col·legi Sant Pau",pj:24,g:16,e2:3,pd:5,gf:84,gc:46,pts:51},
+{p:5,e:"Base Vilanova 2015 D",pj:24,g:15,e2:1,pd:8,gf:66,gc:46,pts:46},
+{p:6,e:"Joventut Bisbalenca",pj:24,g:14,e2:1,pd:9,gf:77,gc:49,pts:43},
+{p:7,e:"Vendrell C",pj:24,g:10,e2:1,pd:13,gf:54,gc:65,pts:31},
+{p:8,e:"Torredembarra",pj:24,g:8,e2:3,pd:13,gf:53,gc:73,pts:27},
+{p:9,e:"Tancat",pj:24,g:7,e2:2,pd:15,gf:48,gc:74,pts:23},
+{p:10,e:"Base L'Arboç",pj:24,g:7,e2:1,pd:16,gf:46,gc:70,pts:22},
+{p:11,e:"Roda de Barà",pj:24,g:6,e2:1,pd:17,gf:40,gc:79,pts:19},
+{p:12,e:"Vallmoll",pj:24,g:5,e2:1,pd:18,gf:41,gc:92,pts:16},
+{p:13,e:"Base Marc Bartra",pj:24,g:1,e2:2,pd:21,gf:23,gc:113,pts:5}
+
+];
+
+function renderStandings(){
+console.log("Renderizando clasificación...", standings.length);
+const tbody=document.getElementById("standingsTable");
+
+tbody.innerHTML="";
+
+standings.forEach(t=>{
+
+const dg=t.gf-t.gc;
+
+tbody.innerHTML+=`
+<tr ${t.e==="Ramón Sicart"?"class='me'":""}>
+<td>${t.p}</td>
+<td>${t.e}</td>
+<td>${t.pj}</td>
+<td>${t.g}</td>
+<td>${t.e2}</td>
+<td>${t.pd}</td>
+<td>${t.gf}</td>
+<td>${t.gc}</td>
+<td style="color:${dg>=0?'#32D74B':'#ff5d5d'}">${dg>0?'+':''}${dg}</td>
+<td><b>${t.pts}</b></td>
+</tr>`;
+});
+console.log("Clasificación cargada");
+}
+
+document.addEventListener("DOMContentLoaded",renderStandings);
+</script>
+
+<script>
+function renderLastMatches(){
+ const c=document.getElementById('lastMatches');
+ if(!c || typeof calendarMatches==='undefined') return;
+ const played=calendarMatches.filter(m=>m[7]!=='N').slice(-3).reverse();
+ c.innerHTML=played.map(m=>{
+   const idx=calendarMatches.indexOf(m)+1;
+   const cls=m[7]==='G'?'winner':m[7]==='E'?'draw':'loss';
+   const score=m[6]||'VS';
+   return `<div class="matchRow ${cls}" onclick="openMatch(${idx})" style="cursor:pointer">
+<div class="teamLeft"><span>${m[2]}</span></div>
+<div class="scoreBox ${m[7]==='G'?'winScore':m[7]==='E'?'drawScore':'loseScore'}"><span>${score}</span></div>
+<div class="teamRight"><span>${m[3]}</span></div>
+</div>`;
+ }).join('');
+}
+window.addEventListener('load',renderLastMatches);
+</script>
+
 </body>
 
 </html>
