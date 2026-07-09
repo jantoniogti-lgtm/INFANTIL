@@ -2279,24 +2279,34 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 window.db=getDatabase(app);
+
+console.log("✅ Firebase Manager listo");
+window.fb = {
+    ref,
+    get,
+    set,
+    update,
+    onValue
+};
+
 window.firebaseManager = {
 
     async load(path){
 
-        const snap = await fb.get(
-            fb.ref(db,"clubManager/"+path)
+        const snapshot = await get(
+            ref(db,"clubManager/"+path)
         );
 
-        if(snap.exists()) return snap.val();
-
-        return null;
+        return snapshot.exists()
+            ? snapshot.val()
+            : null;
 
     },
 
     async save(path,data){
 
-        await fb.set(
-            fb.ref(db,"clubManager/"+path),
+        await set(
+            ref(db,"clubManager/"+path),
             data
         );
 
@@ -2304,8 +2314,8 @@ window.firebaseManager = {
 
     async update(path,data){
 
-        await fb.update(
-            fb.ref(db,"clubManager/"+path),
+        await update(
+            ref(db,"clubManager/"+path),
             data
         );
 
@@ -2313,96 +2323,30 @@ window.firebaseManager = {
 
     listen(path,callback){
 
-        fb.onValue(
+        onValue(
 
-            fb.ref(db,"clubManager/"+path),
+            ref(db,"clubManager/"+path),
 
-            s=>callback(s.val())
+            snapshot=>{
+
+                callback(snapshot.val());
+
+            }
 
         );
-listen(path, callback){
 
-    fb.onValue(
-
-        fb.ref(db,"clubManager/"+path),
-
-        (snapshot)=>{
-
-            callback(snapshot.val());
-
-        }
-
-    );
-
-}
     }
 
 };
-window.sync = {
+
+window.sync={
 
     async init(){
 
-        console.log("🔄 Iniciando sincronización...");
+        console.log("🔄 Sync iniciado");
 
-        await this.calendar();
+    }
 
-        await this.standings();
-
-        await this.players();
-
-        console.log("✅ Sincronización terminada");
-
-    },
-
-    async calendar(){
-
-        firebaseManager.listen("calendar",(data)=>{
-
-    if(!data) return;
-
-    window.calendarMatches=data;
-
-    renderCalendarPage();
-
-    if(typeof renderLastMatches==="function")
-        renderLastMatches();
-
-    console.log("📡 Calendario actualizado");
-
-});
-
-    async standings(){
-
-    firebaseManager.listen("standings",(data)=>{
-
-    if(!data) return;
-
-    window.standings=data;
-
-    renderStandings();
-
-    console.log("📡 Clasificación actualizada");
-
-});
-
-    async players(){
-
-        firebaseManager.listen("players",(data)=>{
-
-    if(!data) return;
-
-    window.players=data;
-
-    renderPlayers(players);
-
-});
-console.log("✅ Firebase Manager listo");
-window.fb={
-    ref,
-    get,
-    set,
-    update,
-    onValue
 };
 
 console.log("✅ Firebase conectado");
@@ -2634,7 +2578,7 @@ async function saveCalendar(){
             "calendar",
             calendarMatches
         );
-
+await increaseVersion();
         console.log("✅ Calendario guardado");
 
     }catch(e){
@@ -2642,6 +2586,21 @@ async function saveCalendar(){
         console.error(e);
 
     }
+
+}
+async function increaseVersion(){
+
+    const snap = await firebaseManager.load("config");
+
+    if(!snap) return;
+
+    let version = snap.dataVersion || 1;
+
+    version++;
+
+    await firebaseManager.update("config",{
+        dataVersion:version
+    });
 
 }
 async function saveStandings(){
@@ -2652,7 +2611,7 @@ async function saveStandings(){
             "standings",
             standings
         );
-
+await increaseVersion();
     }catch(e){
 
         console.error(e);
@@ -2666,7 +2625,7 @@ async function savePlayers(){
             "players",
             players
         );
-
+await increaseVersion();
     }catch(e){
 
         console.error(e);
