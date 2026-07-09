@@ -2002,60 +2002,6 @@ to{opacity:1;transform:translateY(0)}
 }
 </style>
 
-
-<style id="v519calendarfix">
-@media (max-width:768px){
-.matchRow{
-display:grid!important;
-grid-template-columns:1fr 92px 1fr!important;
-align-items:center!important;
-gap:10px!important;
-padding:10px 12px!important;
-margin-bottom:8px!important;
-border-radius:14px!important;
-min-height:78px!important;
-}
-.teamLeft,.teamRight{
-font-size:15px!important;
-font-weight:700!important;
-}
-.scoreBox span{
-min-width:72px!important;
-height:40px!important;
-font-size:22px!important;
-border-radius:10px!important;
-}
-#calendarPage .primaryButton{
-width:140px!important;
-height:46px!important;
-padding:0!important;
-font-size:15px!important;
-}
-#calendarPage>div>div:last-child{
-margin-top:14px!important;
-}
-#calendarIndicator{
-font-size:16px!important;
-font-weight:700!important;
-}
-#matchModal .closeX{
-display:flex!important;
-position:absolute;
-top:12px;
-right:12px;
-width:42px;
-height:42px;
-border-radius:50%;
-background:#263445;
-color:#fff;
-align-items:center;
-justify-content:center;
-font-size:24px;
-cursor:pointer;
-z-index:2;
-}
-}
-</style>
 </head>
 
 <body>
@@ -2364,8 +2310,8 @@ Resultado: 2-1 · Estado: En juego
 </div>
 </div>
 
-<div id="matchModal" onclick="if(event.target===this)closeMatch()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:6000;align-items:center;justify-content:center">
-<div style="position:relative;background:#171F2B;width:520px;max-width:95%;border-radius:20px;padding:24px"><div class="closeX" onclick="closeMatch()">✕</div>
+<div id="matchModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:6000;align-items:center;justify-content:center">
+<div style="position:relative;background:#171F2B;width:520px;max-width:95%;border-radius:20px;padding:24px"><button onclick="closeMatch()" style="position:absolute;top:12px;right:12px;width:42px;height:42px;border:none;border-radius:50%;background:#263445;color:#fff;font-size:24px;cursor:pointer;z-index:9999">✕</button>
 <h2>⚽ Ficha del Partido</h2>
 <p id="matchTitle" style="margin:15px 0;color:#B7C1CE"></p>
 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">
@@ -3061,6 +3007,30 @@ window.addEventListener("load",()=>{
 });
 
 </script>
+
+<script>
+(function(){
+const modal=document.getElementById('matchModal');
+if(modal){
+  modal.addEventListener('click',function(e){
+    if(e.target===modal) closeMatch();
+  });
+}
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape') closeMatch();
+});
+window.closeMatch=function(){
+  const m=document.getElementById('matchModal');
+  if(m){
+    m.style.display='none';
+    m.style.visibility='hidden';
+    m.style.opacity='0';
+  }
+  document.body.style.overflow='';
+};
+})();
+</script>
+
 </body>
 
 </html>
