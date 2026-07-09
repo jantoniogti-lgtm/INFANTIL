@@ -2400,7 +2400,7 @@ Resultado: 2-1 · Estado: En juego
 <p>Próximamente podrás añadir fotos, vídeos y resúmenes del partido.</p>
 </div>
 </div>
-<button onclick="closeMatch()" type="button"  class="primaryButton" style="margin-top:18px">Cerrar</button>
+
 </div></div>
 </main>
 
@@ -2697,16 +2697,13 @@ function openMatch(j){
   modal.style.display='flex';
 }
 function closeMatch(){
- currentMatch=null;
- document.getElementById('matchModal').style.display='none';
- document.querySelectorAll('.matchTab').forEach(t=>t.style.display='none');
- document.getElementById('tab-info').style.display='block';
-}
-
-function closeMatch(){
  const modal=document.getElementById('matchModal');
+ if(!modal) return;
  modal.style.display='none';
  document.body.style.overflow='';
+ document.querySelectorAll('.matchTab').forEach(t=>t.style.display='none');
+ const info=document.getElementById('tab-info');
+ if(info) info.style.display='block';
 }
 document.addEventListener('DOMContentLoaded',()=>{
  const modal=document.getElementById('matchModal');
