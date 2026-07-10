@@ -2443,7 +2443,31 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+async function cargarConfig() {
+    try {
+        const snap = await get(ref(db,"clubManager/config"));
 
+        if (!snap.exists()) return;
+
+        const config = snap.val();
+
+        console.log("Configuración cargada:", config);
+
+        window.clubConfig = config;
+
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+async function iniciarClubManager() {
+
+    await cargarConfig();
+
+    console.log("Club Manager iniciado");
+
+}
 window.db=getDatabase(app);
 
 console.log("✅ Firebase Manager listo");
@@ -2581,6 +2605,7 @@ function finishMatch(){
    }
    oldFinish();
  };
+ if(typeof renderClock==='function'){
  const oldRender=renderClock;
  renderClock=function(){
    oldRender();
@@ -2590,6 +2615,7 @@ function finishMatch(){
      "' · Estado: "+(sec<1500?'1ª Parte':sec<2400?'Descanso':'2ª Parte');
    }
  };
+}
 })();
 </script>
 
@@ -3019,3 +3045,6 @@ window.addEventListener("load",()=>{
 </body>
 
 </html>
+<script>
+if(typeof iniciarClubManager==='function'){document.addEventListener('DOMContentLoaded', iniciarClubManager);}
+</script>
