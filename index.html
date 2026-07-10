@@ -2022,7 +2022,7 @@ to{opacity:1;transform:translateY(0)}
 <button class="active" onclick="showPage('homePage')">🏠 Inicio</button>
 
 
-<button onclick="showPage('standingsPage')">🏆 Clasificación</button>
+<button onclick="showPage('standingsPage','adminPage')">🏆 Clasificación</button>
 
 <button onclick="showPage('playersPage')">👥 Jugadores</button>
 
@@ -2032,7 +2032,7 @@ to{opacity:1;transform:translateY(0)}
 
 <button>📰 Noticias</button>
 
-<button>⚙ Administración</button>
+<button onclick="showPage('adminPage')">⚙ Administración</button>
 
 </nav>
 
@@ -2071,7 +2071,8 @@ placeholder="Buscar jugador, partido...">
 
 <button>🔔</button>
 
-<button>👤</button>
+<button onclick="showPage('adminPage')">👤</button>
+<button onclick="showPage('adminPage')">⚙️</button>
 
 </div>
 
@@ -2286,6 +2287,86 @@ Resultado: 2-1 · Estado: En juego
 
 </section>
 
+
+<section id="adminPage" class="dashboard" style="display:none">
+
+<div class="card">
+<h2>⚙️ Panel Administrador</h2>
+
+<div class="stats-grid">
+
+<div class="stat-card">
+<div class="stat-icon">👥</div>
+<div>
+<h2 id="adminPlayers">16</h2>
+<p>Jugadores</p>
+</div>
+</div>
+
+<div class="stat-card">
+<div class="stat-icon">📅</div>
+<div>
+<h2 id="adminMatches">26</h2>
+<p>Partidos</p>
+</div>
+</div>
+
+<div class="stat-card">
+<div class="stat-icon">🏆</div>
+<div>
+<h2 id="adminTeams">13</h2>
+<p>Equipos</p>
+</div>
+</div>
+
+<div class="stat-card">
+<div class="stat-icon">📰</div>
+<div>
+<h2 id="adminNews">0</h2>
+<p>Noticias</p>
+</div>
+</div>
+
+</div>
+
+<div class="card" style="margin-top:20px">
+
+<h3>⚡ Acciones rápidas</h3>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px;margin-top:20px">
+
+<button class="primaryButton" onclick="showAdminModule('players')">
+👥 Jugadores
+</button>
+
+<button class="primaryButton" onclick="showAdminModule('calendar')">
+📅 Calendario
+</button>
+
+<button class="primaryButton" onclick="showAdminModule('standings')">
+🏆 Clasificación
+</button>
+
+<button class="primaryButton" onclick="showAdminModule('news')">
+📰 Noticias
+</button>
+
+<button class="primaryButton" onclick="showAdminModule('config')">
+⚙️ Configuración
+</button>
+
+<button class="primaryButton" onclick="syncNow()">
+🔄 Sincronizar
+</button>
+
+</div>
+
+</div>
+
+</section>
+
+
+<section id="adminPlayersModule" class="dashboard" style="display:none"><div class="card"><h2>👥 Gestión de jugadores</h2><div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap"><input id="adminPlayerSearch" placeholder="Buscar jugador..." style="flex:1;padding:12px;border-radius:12px;background:#202C3D;color:#fff;border:none"><button class="primaryButton" onclick="alert('Alta de jugador - siguiente fase')">➕ Nuevo jugador</button></div><div id="adminPlayersList"></div><button class="secondaryButton" style="margin-top:20px" onclick="showPage('adminPage')">⬅ Volver</button></div></section>
 
 <div id="playerModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:5000;align-items:center;justify-content:center">
 <div style="background:#171F2B;width:420px;max-width:95%;border-radius:20px;padding:24px;text-align:center">
@@ -2540,7 +2621,7 @@ window.sync={
 };
 
 console.log("✅ Firebase conectado");
-
+actualizarDashboardAdmin();
 </script>
 <script>
 const aside=document.querySelector('aside');
@@ -2571,6 +2652,22 @@ function updateCountdown(){
 }
 updateCountdown();
 setInterval(updateCountdown,60000);
+</script>
+<script>
+function showAdminModule(module){
+ const map={
+  players:'playersPage',
+  calendar:'calendarPage',
+  standings:'standingsPage',
+  news:'homePage',
+  config:'adminPage'
+ };
+ if(map[module]) showPage(map[module]);
+}
+function syncNow(){
+ console.log('Sincronización iniciada');
+ alert('Sincronización con Firebase iniciada');
+}
 </script>
 
 <script>
@@ -2640,7 +2737,7 @@ const players=[
 {d:26,n:"Adrià Soler Solé",p:"Sin posición",pj:0,g:0,y:0,r:0}
 ];
 function showPage(id){
-['homePage','playersPage','calendarPage','standingsPage'].forEach(x=>{
+['homePage','playersPage','calendarPage','standingsPage','adminPage','adminPlayersModule'].forEach(x=>{
 const e=document.getElementById(x);
 if(!e) return;
 
@@ -3042,9 +3139,66 @@ window.addEventListener("load",()=>{
 });
 
 </script>
-</body>
+
+<script>
+function renderAdminPlayers(){
+ const c=document.getElementById('adminPlayersList');
+ if(!c||!window.players)return;
+ c.innerHTML=players.map(p=>`<div style="display:flex;justify-content:space-between;padding:12px;border-bottom:1px solid #2D3C4E"><span>#${p.d} ${p.n}</span><span>✏️ 🗑️</span></div>`).join('');
+}
+const old=showAdminModule;
+showAdminModule=function(m){
+ if(m==='players'){
+   showPage('adminPlayersModule');
+   renderAdminPlayers();
+   return;
+ }
+ old(m);
+}
+</script>
+
+<script>
+function renderAdminPlayers(){const b=document.getElementById('adminPlayersList');if(!b||!window.players)return;const t=(document.getElementById('adminPlayerSearch')?.value||'').toLowerCase();b.innerHTML=players.filter(p=>p.n.toLowerCase().includes(t)||String(p.d).includes(t)).map(p=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:#202C3D;border-radius:14px;margin-bottom:10px"><div><b>#${p.d}</b> ${p.n}<br><small>${p.p}</small></div><div><button class='miniButton' onclick='editPlayer(${p.d})'>✏️</button> <button class='miniButton' onclick='duplicatePlayer(${p.d})'>📋</button> <button class='miniButton' onclick='deletePlayer(${p.d})'>🗑️</button></div></div>`).join('');}
+function editPlayer(d){alert('Editar jugador '+d);}
+function duplicatePlayer(d){alert('Duplicar jugador '+d);}
+function deletePlayer(d){if(confirm('¿Eliminar jugador?'))alert('Pendiente Firebase');}
+document.addEventListener('input',e=>{if(e.target.id==='adminPlayerSearch')renderAdminPlayers();});
+const _old=showAdminModule;showAdminModule=function(m){if(m==='players'){showPage('adminPlayersModule');renderAdminPlayers();return;}_old(m);}
+</script></body>
 
 </html>
 <script>
 if(typeof iniciarClubManager==='function'){document.addEventListener('DOMContentLoaded', iniciarClubManager);}
+</script>
+</script>
+<script>
+async function actualizarDashboardAdmin(){
+
+    try{
+
+        const jugadores = await firebaseManager.load("jugadores");
+        const equipos   = await firebaseManager.load("equipos");
+        const partidos  = await firebaseManager.load("partidos");
+        const noticias  = await firebaseManager.load("noticias");
+
+        document.getElementById("adminPlayers").textContent =
+            jugadores ? Object.keys(jugadores).length : 0;
+
+        document.getElementById("adminTeams").textContent =
+            equipos ? Object.keys(equipos).length : 0;
+
+        document.getElementById("adminMatches").textContent =
+            partidos ? Object.keys(partidos).length : 0;
+
+        document.getElementById("adminNews").textContent =
+            noticias ? Object.keys(noticias).length : 0;
+
+    }catch(e){
+
+        console.error("Dashboard:",e);
+
+    }
+
+}
+</script>
 </script>
