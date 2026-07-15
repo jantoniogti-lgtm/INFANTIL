@@ -823,6 +823,180 @@ font-weight:800;
 color:#00c853;
 
 }
+.adminCards{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+
+gap:20px;
+
+margin-bottom:30px;
+
+}
+
+.adminCard{
+
+background:#202020;
+
+border-radius:18px;
+
+padding:30px;
+
+text-align:center;
+
+cursor:pointer;
+
+transition:.25s;
+
+border:2px solid transparent;
+
+}
+
+.adminCard:hover{
+
+transform:translateY(-6px);
+
+border-color:#ffd400;
+
+}
+
+.adminIcon{
+
+font-size:50px;
+
+margin-bottom:20px;
+
+}
+
+.adminCard h3{
+
+margin-bottom:10px;
+
+font-size:22px;
+
+}
+
+.adminCard p{
+
+color:#999;
+
+}
+.playerRow{
+
+display:grid;
+
+grid-template-columns:70px 70px 1fr 170px;
+
+align-items:center;
+
+gap:15px;
+
+background:#1b1b1b;
+
+padding:15px;
+
+margin-bottom:12px;
+
+border-radius:14px;
+
+transition:.25s;
+
+}
+
+.playerRow:hover{
+
+background:#242424;
+
+}
+
+.playerAvatar{
+
+width:55px;
+
+height:55px;
+
+border-radius:50%;
+
+overflow:hidden;
+
+background:#333;
+
+}
+
+.playerAvatar img{
+
+width:100%;
+
+height:100%;
+
+object-fit:cover;
+
+}
+
+.playerActions{
+
+display:flex;
+
+justify-content:flex-end;
+
+gap:10px;
+
+}
+.photoUploader{
+
+margin-top:25px;
+
+text-align:center;
+
+}
+
+.photoPreview{
+
+width:170px;
+
+height:170px;
+
+margin:auto;
+
+border-radius:20px;
+
+overflow:hidden;
+
+background:#2a2a2a;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+font-size:60px;
+
+margin-bottom:15px;
+
+}
+
+.photoPreview img{
+
+width:100%;
+
+height:100%;
+
+object-fit:cover;
+
+}
+#adminWorkspace{
+
+margin-top:35px;
+
+padding-top:30px;
+
+border-top:1px solid #333;
+
+min-height:500px;
+
+}
 </style>
 </head>
 
@@ -1276,13 +1450,77 @@ Configuración
 
 <div class="card adminContent" id="adminContent">
 
-<h2>Bienvenido al Panel de Administración</h2>
+<div id="adminDashboard">
 
-<p style="margin-top:20px;color:#aaa;line-height:1.8;">
+<h2 style="margin-bottom:30px;">Panel de Administración</h2>
 
-Desde aquí controlaremos absolutamente todo el Club Manager V6.
+<div class="adminCards">
 
-</p>
+<div class="adminCard" data-admin-view="players">
+
+<div class="adminIcon">👥</div>
+
+<h3>Jugadores</h3>
+
+<p>Gestionar plantilla</p>
+
+</div>
+
+<div class="adminCard" data-admin-view="matches">
+
+<div class="adminIcon">📅</div>
+
+<h3>Partidos</h3>
+
+<p>Calendario y resultados</p>
+
+</div>
+
+<div class="adminCard" data-admin-view="classification">
+
+<div class="adminIcon">🏆</div>
+
+<h3>Clasificación</h3>
+
+<p>Tabla de liga</p>
+
+</div>
+
+<div class="adminCard" data-admin-view="statistics">
+
+<div class="adminIcon">📊</div>
+
+<h3>Estadísticas</h3>
+
+<p>Datos del club</p>
+
+</div>
+
+<div class="adminCard" data-admin-view="media">
+
+<div class="adminIcon">🖼️</div>
+
+<h3>Multimedia</h3>
+
+<p>Fotos y escudos</p>
+
+</div>
+
+<div class="adminCard" data-admin-view="firebase">
+
+<div class="adminIcon">☁️</div>
+
+<h3>Firebase</h3>
+
+<p>Sincronización</p>
+
+</div>
+
+</div>
+
+<div id="adminWorkspace"></div>
+
+</div>
 
 </div>
 
@@ -1326,14 +1564,18 @@ Ramón Sicart Club Manager V6
         <br><br>
 
         <select id="playerPosition">
+<option>Portero</option>
+<option>Defensa</option>
+<option>Centrocampista</option>
+<option>Extremo</option>
+<option>Delantero</option>
+</select>
 
-            <option>Portero</option>
-            <option>Defensa</option>
-            <option>Centrocampista</option>
-            <option>Extremo</option>
-            <option>Delantero</option>
-
-        </select>
+<br><br>
+<div class="photoUploader">
+<div id="photoPreview" class="photoPreview">👤</div>
+<input type="file" id="playerPhoto" accept="image/*">
+</div>
 
         <br><br>
 
@@ -1383,6 +1625,7 @@ class Player{
     constructor({
 
         id = Date.now(),
+        photo = "",
         number = 0,
         name = "",
         position = "Defensa",
@@ -1393,12 +1636,13 @@ class Player{
     }={}){
 
         this.id=id;
+        this.photo=photo;
+
         this.number=number;
         this.name=name;
         this.position=position;
 
         this.goals=goals;
-
         this.yellow=yellow;
         this.red=red;
 
@@ -1452,6 +1696,38 @@ class Match{
 }
 
 let editingPlayer=null;
+const playerModal=document.getElementById("playerModal");
+
+const playerModalTitle=document.getElementById("playerModalTitle");
+
+const playerNumber=document.getElementById("playerNumber");
+
+const playerName=document.getElementById("playerName");
+
+const playerPosition=document.getElementById("playerPosition");
+const playerPhoto=document.getElementById("playerPhoto");
+
+const photoPreview=document.getElementById("photoPreview");
+playerPhoto.onchange=e=>{
+
+const file=e.target.files[0];
+
+if(!file) return;
+
+const reader=new FileReader();
+
+reader.onload=function(ev){
+
+photoPreview.innerHTML=
+
+`<img src="${ev.target.result}">`;
+
+};
+
+reader.readAsDataURL(file);
+
+};
+
 function save(){
 
 localStorage.setItem(
@@ -1620,43 +1896,124 @@ ${player.position}
 });
 
 }
+function renderAdminPlayers(){
+
+const list=document.getElementById("adminPlayersList");
+
+if(!list) return;
+
+list.innerHTML="";
+
+App.players
+.sort((a,b)=>a.number-b.number)
+.forEach(player=>{
+
+list.innerHTML+=`
+
+<div class="playerRow">
+
+<div>
+
+<strong>#${player.number}</strong>
+
+</div>
+
+<div class="playerAvatar">
+
+<img src="${player.photo || 'https://placehold.co/80x80?text=👤'}">
+
+</div>
+
+<div>
+
+<div style="font-size:18px;font-weight:800;">
+
+${player.name}
+
+</div>
+
+<div style="color:#999">
+
+${player.position}
+
+</div>
+
+</div>
+
+<div class="playerActions">
+
+<button
+class="btn btn-yellow"
+data-edit="${player.id}">
+
+✏
+
+</button>
+
+<button
+class="btn btn-red"
+data-delete="${player.id}">
+
+🗑
+
+</button>
+
+</div>
+
+</div>
+
+`;
+
+});
+
+bindPlayerButtons();
+
+}
 function bindPlayerButtons(){
 
-    document
-    .querySelectorAll("[data-edit]")
-    .forEach(button=>{
+    document.querySelectorAll("[data-edit]").forEach(btn=>{
 
-        button.onclick=()=>{
-
-            const id=Number(button.dataset.edit);
+        btn.onclick=()=>{
 
             const player=App.players.find(
 
-                p=>p.id===id
+                p=>p.id==btn.dataset.edit
 
             );
 
-            openPlayerModal(player);
+            if(player){
+
+                openPlayerModal(player);
+
+            }
 
         };
 
     });
 
-    document
-    .querySelectorAll("[data-delete]")
-    .forEach(button=>{
+    document.querySelectorAll("[data-delete]").forEach(btn=>{
 
-        button.onclick=()=>{
+        btn.onclick=()=>{
 
-            deletePlayer(
+            deletePlayer(Number(btn.dataset.delete));
 
-                Number(button.dataset.delete)
-
-            );
+            renderAdminPlayers();
 
         };
 
     });
+
+    const newPlayer=document.getElementById("adminNewPlayer");
+
+    if(newPlayer){
+
+        newPlayer.onclick=()=>{
+
+            openPlayerModal();
+
+        };
+
+    }
 
 }
 /*************************************************
@@ -1722,28 +2079,27 @@ function renderStats(){
 }
 function openPlayerModal(player=null){
 
-    editingPlayer=player;
+editingPlayer=player;
 
-    document.getElementById("playerModal").classList.add("active");
+playerModal.classList.add("active");
 
-    document.getElementById("playerModalTitle").textContent=
+playerModalTitle.textContent=
 
-        player ? "Editar jugador" : "Nuevo jugador";
+player?"Editar jugador":"Nuevo jugador";
 
-    document.getElementById("playerNumber").value=
+playerNumber.value=
 
-        player ? player.number : "";
+player?player.number:"";
 
-    document.getElementById("playerName").value=
+playerName.value=
 
-        player ? player.name : "";
+player?player.name:"";
 
-    document.getElementById("playerPosition").value=
+playerPosition.value=
 
-        player ? player.position : "Defensa";
+player?player.position:"Defensa";
 
 }
-
 function closePlayerModal(){
 
     document.getElementById("playerModal")
@@ -1761,7 +2117,9 @@ function savePlayer(){
     const name=playerName.value.trim();
 
     const position=playerPosition.value;
-
+const photo = photoPreview.querySelector("img")
+    ? photoPreview.querySelector("img").src
+    : "";
     if(name==="") return;
 
     if(editingPlayer){
@@ -1769,6 +2127,7 @@ function savePlayer(){
         editingPlayer.number=number;
         editingPlayer.name=name;
         editingPlayer.position=position;
+	editingPlayer.photo = photo;
 
     }else{
 
@@ -1776,11 +2135,15 @@ function savePlayer(){
 
             new Player({
 
-                number,
-                name,
-                position
+photo,
 
-            })
+number,
+
+name,
+
+position
+
+})
 
         );
 
@@ -1806,7 +2169,9 @@ function resetPlayerForm(){
     document.getElementById("playerName").value="";
 
     document.getElementById("playerPosition").selectedIndex=0;
+photoPreview.innerHTML="👤";
 
+playerPhoto.value="";
 }
 function deletePlayer(id){
 
@@ -1848,7 +2213,70 @@ document.getElementById("savePlayerBtn").onclick=savePlayer;
 
 document.getElementById("cancelPlayerBtn").onclick=closePlayerModal;
 
+document.querySelectorAll(".adminCard").forEach(card=>{
 
+card.onclick=()=>{
+
+const workspace=document.getElementById("adminWorkspace");
+
+switch(card.dataset.adminView){
+
+case "matches":
+
+workspace.innerHTML=`
+
+<h2>📅 Gestión de partidos</h2>
+
+<p style="margin-top:15px;color:#999">
+
+Aquí construiremos el calendario.
+
+</p>
+
+`;
+
+break;
+
+case "statistics":
+
+workspace.innerHTML=`
+
+<h2>📊 Estadísticas</h2>
+
+<p style="margin-top:15px;color:#999">
+
+Estadísticas automáticas del club.
+
+</p>
+
+`;
+
+break;
+case "players":
+
+workspace.innerHTML=`
+
+<h2>👥 Gestión de jugadores</h2>
+
+<button class="btn btn-green" id="adminNewPlayer">
+
+➕ Nuevo jugador
+
+</button>
+
+<div id="adminPlayersList"></div>
+
+`;
+
+renderAdminPlayers();
+
+break;
+
+}
+
+};
+
+});
 console.log("V6 iniciada");
 });
 
