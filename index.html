@@ -986,6 +986,47 @@ height:100%;
 object-fit:cover;
 
 }
+.modalCard label{
+
+display:block;
+
+margin-bottom:8px;
+
+margin-top:18px;
+
+font-weight:700;
+
+color:#ddd;
+
+}
+
+.modalCard input,
+.modalCard select{
+
+width:100%;
+
+padding:14px;
+
+border:none;
+
+border-radius:12px;
+
+background:#2a2a2a;
+
+color:#fff;
+
+font-size:15px;
+
+outline:none;
+
+}
+
+.modalCard input:focus,
+.modalCard select:focus{
+
+border:2px solid #ffd400;
+
+}
 #adminWorkspace{
 
 margin-top:35px;
@@ -1555,14 +1596,24 @@ Ramón Sicart Club Manager V6
 
         <h2 id="playerModalTitle">Jugador</h2>
 
-        <input id="playerNumber" type="number" placeholder="Dorsal">
+        <label>Dorsal</label>
+
+<input
+id="playerNumber"
+type="number"
+placeholder="Ej. 10">
 
         <br><br>
 
-        <input id="playerName" type="text" placeholder="Nombre">
+        <label>Nombre</label>
+
+<input
+id="playerName"
+type="text"
+placeholder="Nombre del jugador">
 
         <br><br>
-
+<label>Posición</label>
         <select id="playerPosition">
 <option>Portero</option>
 <option>Defensa</option>
@@ -1594,14 +1645,15 @@ Ramón Sicart Club Manager V6
     </div>
 
 </div>
+
 <script>
+
 "use strict";
 
+const App = {
 /*************************************************
  RAMÓN SICART CLUB MANAGER V6
 *************************************************/
-
-const App={
 
 version:"6.0",
 
@@ -2098,70 +2150,67 @@ player?player.name:"";
 playerPosition.value=
 
 player?player.position:"Defensa";
+if(player && player.photo){
+    photoPreview.innerHTML = `<img src="${player.photo}">`;
+}else{
+    photoPreview.innerHTML = "👤";
+}
+
+playerPhoto.value = "";
+
 
 }
 function closePlayerModal(){
 
-    document.getElementById("playerModal")
+    playerModal.classList.remove("active");
 
-    .classList.remove("active");
-editingPlayer=null;
+    editingPlayer = null;
 
-resetPlayerForm();
+    resetPlayerForm();
 
-}
-function savePlayer(){
+}function savePlayer(){
+    console.log("Guardar jugador");
+    const number = Number(playerNumber.value);
+    const name = playerName.value.trim();
+    const position = playerPosition.value;
 
-    const number=Number(playerNumber.value);
+    const photo = photoPreview.querySelector("img")
+        ? photoPreview.querySelector("img").src
+        : "";
 
-    const name=playerName.value.trim();
-
-    const position=playerPosition.value;
-const photo = photoPreview.querySelector("img")
-    ? photoPreview.querySelector("img").src
-    : "";
-    if(name==="") return;
+    if(!number || !name){
+        alert("Introduce el dorsal y el nombre.");
+        return;
+    }
 
     if(editingPlayer){
 
-        editingPlayer.number=number;
-        editingPlayer.name=name;
-        editingPlayer.position=position;
-	editingPlayer.photo = photo;
+        editingPlayer.number = number;
+        editingPlayer.name = name;
+        editingPlayer.position = position;
+        editingPlayer.photo = photo;
 
     }else{
 
-        App.players.push(
-
-            new Player({
-
-photo,
-
-number,
-
-name,
-
-position
-
-})
-
-        );
-
+        App.players.push(new Player({
+            id: Date.now(),
+            photo,
+            number,
+            name,
+            position
+        }));
+console.log(App.players);
     }
 
     save();
 
     renderPlayers();
-
+    renderAdminPlayers();
     renderTopScorers();
-
     renderStats();
 
     closePlayerModal();
-
 }
-
-
 function resetPlayerForm(){
 
     document.getElementById("playerNumber").value="";
@@ -2281,6 +2330,49 @@ console.log("V6 iniciada");
 });
 
 </script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script>
 
+const firebaseConfig = {
+
+  apiKey: "AIzaSyA2WgBQxFSPWTQMk3NTWBFPc8K5XyCOcDw",
+
+  authDomain: "club-manager-9a242.firebaseapp.com",
+
+  databaseURL: "https://club-manager-9a242-default-rtdb.europe-west1.firebasedatabase.app",
+
+  projectId: "club-manager-9a242",
+
+  storageBucket: "club-manager-9a242.firebasestorage.app",
+
+  messagingSenderId: "931689419367",
+
+  appId: "1:931689419367:web:b638b313cf639ee8dd3ac2",
+
+  measurementId: "G-92X2B8ESXS"
+
+};
+
+const Firebase = {
+
+    db:null,
+
+    storage:null,
+
+    init(){
+
+        firebase.initializeApp(firebaseConfig);
+
+        this.db = firebase.firestore();
+
+        this.storage = firebase.storage();
+
+    }
+
+};
+</script>
 </body>
 </html>
