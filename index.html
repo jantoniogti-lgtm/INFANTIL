@@ -1038,6 +1038,238 @@ border-top:1px solid #333;
 min-height:500px;
 
 }
+/*==========================
+CALENDARIO V2
+==========================*/
+
+.calendarRound{
+
+margin-bottom:35px;
+
+}
+
+.calendarRound h3{
+
+font-size:30px;
+
+font-weight:900;
+
+color:#ffd400;
+
+margin-bottom:20px;
+
+text-transform:uppercase;
+
+}
+
+.matchCard{
+
+background:linear-gradient(180deg,#1d1d1d,#131313);
+
+border-radius:20px;
+
+overflow:hidden;
+
+border:1px solid rgba(255,255,255,.05);
+
+margin-bottom:18px;
+
+box-shadow:0 12px 30px rgba(0,0,0,.35);
+
+transition:.25s;
+
+}
+
+.matchCard:hover{
+
+transform:translateY(-3px);
+
+}
+
+.matchMain{
+
+display:grid;
+
+grid-template-columns:1fr 260px 1fr;
+
+align-items:center;
+
+padding:25px;
+
+}
+
+.teamHome,
+.teamAway{
+
+display:flex;
+
+align-items:center;
+
+gap:25px;
+
+flex:1;
+
+}
+
+.teamAway{
+
+justify-content:flex-end;
+
+text-align:right;
+
+}
+
+.teamInfo{
+
+display:flex;
+
+flex-direction:column;
+
+}
+
+.teamName{
+
+font-size:30px;
+
+font-weight:900;
+
+line-height:1.1;
+
+}
+
+.teamType{
+
+margin-top:10px;
+
+font-size:14px;
+
+font-weight:700;
+
+color:#ffd400;
+
+letter-spacing:1px;
+
+text-transform:uppercase;
+
+}
+
+.teamLogo{
+
+width:95px;
+
+height:95px;
+
+background:#252525;
+
+border-radius:20px;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+overflow:hidden;
+
+flex-shrink:0;
+
+}
+
+.teamLogo img{
+
+width:100%;
+
+height:100%;
+
+object-fit:contain;
+
+}
+.scoreBox{
+
+width:72px;
+
+height:72px;
+
+background:#111;
+
+border:2px solid #333;
+
+border-radius:18px;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+font-size:42px;
+
+font-weight:900;
+
+color:#ffd400;
+
+}
+
+.matchFooter{
+
+display:flex;
+
+justify-content:space-between;
+
+padding:18px 25px;
+
+background:#111;
+
+border-top:1px solid rgba(255,255,255,.05);
+
+color:#bbb;
+
+font-size:14px;
+
+}
+
+.matchStatus{
+
+display:inline-block;
+
+margin-top:18px;
+
+padding:7px 18px;
+
+border-radius:30px;
+
+font-weight:800;
+
+text-transform:uppercase;
+
+font-size:13px;
+
+}
+
+.matchStatus.Finalizado{
+
+background:#0b6d27;
+
+color:white;
+
+}
+
+.matchStatus.Programado{
+
+background:#7b6200;
+
+color:white;
+
+}
+
+/* IMPORTANTE: cambia el nombre de esta clase */
+.matchStatus.live{
+
+background:#c30000;
+
+color:white;
+
+}
 </style>
 </head>
 
@@ -1286,41 +1518,15 @@ CALENDARIO
 
 <section id="calendario" class="page hidden">
 
-<div class="sectionHeader">
+    <div class="sectionHeader">
 
-<h2>Calendario</h2>
+        <h2>Calendario</h2>
 
-<button class="btn btn-green" id="newMatchButton">
-Nuevo Partido
-</button>
+    </div>
 
-</div>
+    <div id="calendarCards"></div>
 
-<div class="card">
-
-<table>
-
-<thead>
-
-<tr>
-
-<th>Fecha</th>
-<th>Local</th>
-<th>Visitante</th>
-<th>Estado</th>
-<th></th>
-
-</tr>
-
-</thead>
-
-<tbody id="matchesTable">
-
-</tbody>
-
-</table>
-
-</div>
+</section>
 
 </section>
 
@@ -1645,6 +1851,91 @@ placeholder="Nombre del jugador">
     </div>
 
 </div>
+<div id="matchModal" class="modal">
+
+    <div class="modalCard">
+
+        <h2 id="matchModalTitle">
+            Nuevo Partido
+        </h2>
+
+        <label>Fecha</label>
+        <input type="date" id="matchDate">
+
+        <label>Competición</label>
+        <input
+            type="text"
+            id="matchCompetition"
+            value="Liga">
+
+        <label>Jornada</label>
+        <input
+            type="text"
+            id="matchRound"
+            placeholder="Jornada 1">
+
+        <label>Campo</label>
+        <input
+            type="text"
+            id="matchVenue">
+
+        <label>Equipo Local</label>
+        <input
+            type="text"
+            id="matchHome"
+            value="Ramón Sicart">
+
+        <label>Equipo Visitante</label>
+        <input
+            type="text"
+            id="matchAway">
+
+        <label>Estado</label>
+
+        <select id="matchStatus">
+
+            <option>Programado</option>
+
+            <option>En juego</option>
+
+            <option>Finalizado</option>
+
+        </select>
+<label>Goles Local</label>
+<input
+    type="number"
+    id="matchHomeGoals"
+    value="0"
+    min="0">
+
+<label>Goles Visitante</label>
+<input
+    type="number"
+    id="matchAwayGoals"
+    value="0"
+    min="0">
+
+        <br><br>
+
+        <button
+            class="btn btn-green"
+            id="saveMatchBtn">
+
+            Guardar
+
+        </button>
+
+        <button
+            class="btn btn-red"
+            id="cancelMatchBtn">
+
+            Cancelar
+
+        </button>
+
+    </div>
+
+</div>
 
 <script>
 
@@ -1675,29 +1966,26 @@ const STORAGE="RS_CLUB_MANAGER_V6";
 class Player{
 
     constructor({
-
-        id = Date.now(),
-        photo = "",
-        number = 0,
-        name = "",
-        position = "Defensa",
-        goals = 0,
-        yellow = 0,
-        red = 0
-
+        id=Date.now(),
+        photo="",
+        number=0,
+        name="",
+        position="Defensa",
+        birth="",
+        height="",
+        weight="",
+        preferredFoot="",
+        matches=0,
+        starts=0,
+        minutes=0,
+        goals=0,
+        yellow=0,
+        red=0,
+        mvp=0,
+        createdAt=Date.now(),
+        updatedAt=Date.now()
     }={}){
-
-        this.id=id;
-        this.photo=photo;
-
-        this.number=number;
-        this.name=name;
-        this.position=position;
-
-        this.goals=goals;
-        this.yellow=yellow;
-        this.red=red;
-
+        Object.assign(this,{id,photo,number,name,position,birth,height,weight,preferredFoot,matches,starts,minutes,goals,yellow,red,mvp,createdAt,updatedAt});
     }
 
 }
@@ -1709,44 +1997,59 @@ class Match{
 
     constructor({
 
-        id=Date.now(),
+        id = Date.now(),
 
-        date="",
+        date = "",
 
-        home="",
+        competition = "Liga",
 
-        away="",
+        round = "",
 
-        homeGoals=0,
+        venue = "",
 
-        awayGoals=0,
+        home = "Ramón Sicart",
 
-        status="scheduled",
+        away = "",
 
-        scorers=[]
+        homeGoals = 0,
+
+        awayGoals = 0,
+
+        status = "Programado",
+
+        scorers = [],
+
+        yellowCards = [],
+
+        redCards = [],
+
+        createdAt = Date.now(),
+
+        updatedAt = Date.now()
 
     }={}){
 
-        this.id=id;
-
-        this.date=date;
-
-        this.home=home;
-
-        this.away=away;
-
-        this.homeGoals=homeGoals;
-
-        this.awayGoals=awayGoals;
-
-        this.status=status;
-
-        this.scorers=scorers;
+        Object.assign(this,{
+            id,
+            date,
+            competition,
+            round,
+            venue,
+            home,
+            away,
+            homeGoals,
+            awayGoals,
+            status,
+            scorers,
+            yellowCards,
+            redCards,
+            createdAt,
+            updatedAt
+        });
 
     }
 
 }
-
 let editingPlayer=null;
 const playerModal=document.getElementById("playerModal");
 
@@ -1760,6 +2063,27 @@ const playerPosition=document.getElementById("playerPosition");
 const playerPhoto=document.getElementById("playerPhoto");
 
 const photoPreview=document.getElementById("photoPreview");
+let editingMatch = null;
+
+const matchModal=document.getElementById("matchModal");
+
+const matchModalTitle=document.getElementById("matchModalTitle");
+
+const matchDate=document.getElementById("matchDate");
+
+const matchCompetition=document.getElementById("matchCompetition");
+
+const matchRound=document.getElementById("matchRound");
+
+const matchVenue=document.getElementById("matchVenue");
+
+const matchHome=document.getElementById("matchHome");
+
+const matchAway=document.getElementById("matchAway");
+
+const matchStatus=document.getElementById("matchStatus");
+const matchHomeGoals = document.getElementById("matchHomeGoals");
+const matchAwayGoals = document.getElementById("matchAwayGoals");
 playerPhoto.onchange=e=>{
 
 const file=e.target.files[0];
@@ -1780,13 +2104,12 @@ reader.readAsDataURL(file);
 
 };
 
+async function savePlayerFirebase(){
+    // Pendiente de Firestore
+}
+
 function save(){
-
-localStorage.setItem(
-STORAGE,
-JSON.stringify(App)
-);
-
+    localStorage.setItem(STORAGE, JSON.stringify(App));
 }
 
 function load(){
@@ -1913,7 +2236,7 @@ grid.innerHTML+=`
 
 <div class="playerPhoto">
 
-<img src="${player.photo || 'https://placehold.co/200x200?text=👤'}">
+player.photo || ""
 
 </div>
 
@@ -2168,7 +2491,116 @@ function closePlayerModal(){
 
     resetPlayerForm();
 
-}function savePlayer(){
+}
+function openMatchModal(match=null){
+
+    editingMatch=match;
+
+    matchModal.classList.add("active");
+
+    matchModalTitle.textContent=
+
+        match?
+
+        "Editar partido"
+
+        :
+
+        "Nuevo partido";
+
+    matchDate.value=match?match.date:"";
+
+    matchCompetition.value=
+
+        match?match.competition:"Liga";
+
+    matchRound.value=
+
+        match?match.round:"";
+
+    matchVenue.value=
+
+        match?match.venue:"";
+
+    matchHome.value=
+
+        match?match.home:"Ramón Sicart";
+
+    matchAway.value=
+
+        match?match.away:"";
+
+    matchStatus.value=
+
+        match?match.status:"Programado";
+matchHomeGoals.value =
+    match ? match.homeGoals : 0;
+
+matchAwayGoals.value =
+    match ? match.awayGoals : 0;
+
+}
+
+function closeMatchModal(){
+
+    editingMatch=null;
+
+    matchModal.classList.remove("active");
+
+}
+
+function saveMatch(){
+
+    const matchData = {
+
+        id: editingMatch ? editingMatch.id : Date.now(),
+
+        date: matchDate.value,
+
+        competition: matchCompetition.value,
+
+        round: matchRound.value,
+
+        venue: matchVenue.value,
+
+        home: matchHome.value,
+
+        away: matchAway.value,
+
+        status: matchStatus.value,
+
+        homeGoals: Number(matchHomeGoals.value),
+
+awayGoals: Number(matchAwayGoals.value),
+
+        scorers: editingMatch ? editingMatch.scorers : [],
+
+        yellowCards: editingMatch ? editingMatch.yellowCards : [],
+
+        redCards: editingMatch ? editingMatch.redCards : []
+
+    };
+
+    if(editingMatch){
+
+        Object.assign(editingMatch,matchData);
+
+    }else{
+
+        App.matches.push(new Match(matchData));
+
+    }
+
+    save();
+
+renderAdminMatches();
+
+renderCalendar();
+
+closeMatchModal();
+
+}
+function savePlayer(){
     console.log("Guardar jugador");
     const number = Number(playerNumber.value);
     const name = playerName.value.trim();
@@ -2237,98 +2669,361 @@ function deletePlayer(id){
     renderStats();
 
 }
+function renderAdminMatches(){
+
+    const list = document.getElementById("adminMatchesList");
+
+    if(!list) return;
+
+    list.innerHTML = "";
+
+    if(App.matches.length === 0){
+
+        list.innerHTML = `
+
+        <div class="card">
+
+            <h3>No hay partidos creados</h3>
+
+            <p style="margin-top:10px;color:#999">
+
+                Pulsa "Nuevo partido" para empezar.
+
+            </p>
+
+        </div>
+
+        `;
+
+    }
+
+    App.matches.forEach(match=>{
+
+        list.innerHTML += `
+
+        <div class="playerRow">
+
+            <div>
+
+                <strong>${match.round || "-"}</strong>
+
+            </div>
+
+            <div>
+
+                📅
+
+            </div>
+
+            <div>
+
+                <div style="font-size:18px;font-weight:800">
+
+                    ${match.home} vs ${match.away}
+
+                </div>
+
+                <div style="color:#999">
+
+                    ${match.date}
+
+                </div>
+
+            </div>
+
+            <div class="playerActions">
+
+                <button
+                    class="btn btn-yellow"
+                    data-match-edit="${match.id}">
+
+                    ✏
+
+                </button>
+
+                <button
+                    class="btn btn-red"
+                    data-match-delete="${match.id}">
+
+                    🗑
+
+                </button>
+
+            </div>
+
+        </div>
+
+        `;
+
+    });
+
+    bindMatchButtons();
+
+}
+function renderCalendar(){
+
+    const tbody = document.getElementById("matchesTable");
+
+    if(!tbody) return;
+
+    tbody.innerHTML = "";
+
+    App.matches
+        .sort((a,b)=>a.date.localeCompare(b.date))
+        .forEach(match=>{
+
+            tbody.innerHTML += `
+            <tr>
+
+                <td>${match.date}</td>
+
+                <td>${match.home}</td>
+
+                <td>${match.away}</td>
+
+                <td>
+
+    ${
+        match.status==="Finalizado"
+        ? `<strong>${match.homeGoals} - ${match.awayGoals}</strong>`
+        : match.status
+    }
+
+</td>
+
+<td></td>
+
+            </tr>
+            `;
+
+        });
+
+}
+function renderCalendarCards(){
+
+    const container = document.getElementById("calendarCards");
+
+    if(!container) return;
+
+    container.innerHTML = "";
+
+    App.matches
+        .sort((a,b)=>a.date.localeCompare(b.date))
+        .forEach(match=>{
+
+            container.innerHTML += `
+
+            <div class="matchCard">
+
+                <div class="matchMain">
+
+                  <div class="teamBlock teamHome">
+
+    <div class="teamLogo">
+
+        <img src="${match.homeLogo || 'https://placehold.co/120x120?text=🛡'}">
+
+    </div>
+
+    <div class="teamInfo">
+
+        <div class="teamName">
+
+            ${match.home}
+
+        </div>
+
+        <div class="teamType">
+
+            ${match.home==="Ramón Sicart" ? "🏠 LOCAL" : ""}
+
+        </div>
+
+    </div>
+
+</div>
+
+                    <div style="text-align:center;">
+
+                        <div style="display:flex;justify-content:center;align-items:center;gap:15px;">
+
+                            <div class="scoreBox">
+
+                                ${
+                                    match.status==="Finalizado"
+                                    ? match.homeGoals
+                                    : "-"
+                                }
+
+                            </div>
+
+                            <div style="font-size:34px;font-weight:900;">-</div>
+
+                            <div class="scoreBox">
+
+                                ${
+                                    match.status==="Finalizado"
+                                    ? match.awayGoals
+                                    : "-"
+                                }
+
+                            </div>
+
+                        </div>
+
+                        <div class="matchStatus ${match.status}">
+
+                            ${match.status}
+
+                        </div>
+
+                    </div>
+
+                    <div class="teamBlock teamAway">
+
+    <div class="teamInfo">
+
+        <div class="teamName">
+
+            ${match.away}
+
+        </div>
+
+        <div class="teamType">
+
+            ${match.away==="Ramón Sicart" ? "✈️ VISITANTE" : ""}
+
+        </div>
+
+    </div>
+
+    <div class="teamLogo">
+
+        <img src="${match.awayLogo || 'https://placehold.co/120x120?text=🛡'}">
+
+    </div>
+
+</div>
+
+                        <div class="teamLogo">
+
+                            <img src="${match.awayLogo || ''}">
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="matchFooter">
+
+                    <span>🏆 ${match.competition}</span>
+
+                    <span>🕒 ${match.date}</span>
+
+                    <span>📍 ${match.venue}</span>
+
+                </div>
+
+            </div>
+
+            `;
+
+        });
+
+}
+function bindMatchButtons(){
+
+    const btn = document.getElementById("adminNewMatch");
+
+    if(btn){
+
+        btn.onclick = ()=>{
+
+            openMatchModal();
+
+        };
+
+    }
+document.querySelectorAll("[data-match-edit]").forEach(btn=>{
+
+    btn.onclick=()=>{
+
+        const match=App.matches.find(
+            m=>m.id==btn.dataset.matchEdit
+        );
+
+        if(match){
+            openMatchModal(match);
+        }
+
+    };
+
+});
+
+document.querySelectorAll("[data-match-delete]").forEach(btn=>{
+
+    btn.onclick=()=>{
+
+        if(!confirm("¿Eliminar partido?")) return;
+
+        App.matches=App.matches.filter(
+            m=>m.id!=btn.dataset.matchDelete
+        );
+
+        save();
+
+        renderAdminMatches();
+
+        renderCalendarCards();
+
+    };
+
+});
+}
 document.addEventListener("DOMContentLoaded",()=>{
 
 load();
 restoreClasses();
-
 firstRun();
-
 initNavigation();
-
 renderPlayers();
-
 renderTopScorers();
-
 renderStats();
+renderCalendarCards();
 
-const addPlayerButton = document.getElementById("addPlayerButton");
-
-if (addPlayerButton) {
-    addPlayerButton.onclick = () => openPlayerModal();
-}
+const addPlayerButton=document.getElementById("addPlayerButton");
+if(addPlayerButton) addPlayerButton.onclick=()=>openPlayerModal();
 
 document.getElementById("savePlayerBtn").onclick=savePlayer;
-
 document.getElementById("cancelPlayerBtn").onclick=closePlayerModal;
+if(typeof saveMatch==="function"){
+ document.getElementById("saveMatchBtn").onclick=saveMatch;
+}
+document.getElementById("cancelMatchBtn").onclick=closeMatchModal;
 
 document.querySelectorAll(".adminCard").forEach(card=>{
-
-card.onclick=()=>{
-
-const workspace=document.getElementById("adminWorkspace");
-
-switch(card.dataset.adminView){
-
-case "matches":
-
-workspace.innerHTML=`
-
-<h2>📅 Gestión de partidos</h2>
-
-<p style="margin-top:15px;color:#999">
-
-Aquí construiremos el calendario.
-
-</p>
-
-`;
-
-break;
-
-case "statistics":
-
-workspace.innerHTML=`
-
-<h2>📊 Estadísticas</h2>
-
-<p style="margin-top:15px;color:#999">
-
-Estadísticas automáticas del club.
-
-</p>
-
-`;
-
-break;
-case "players":
-
-workspace.innerHTML=`
-
-<h2>👥 Gestión de jugadores</h2>
-
-<button class="btn btn-green" id="adminNewPlayer">
-
-➕ Nuevo jugador
-
-</button>
-
-<div id="adminPlayersList"></div>
-
-`;
-
-renderAdminPlayers();
-
-break;
-
-}
-
-};
-
+ card.onclick=()=>{
+   const workspace=document.getElementById("adminWorkspace");
+   switch(card.dataset.adminView){
+     case "matches":
+       workspace.innerHTML=`<div class="sectionHeader"><h2>📅 Gestión de partidos</h2><button class="btn btn-green" id="adminNewMatch">➕ Nuevo partido</button></div><div id="adminMatchesList"></div>`;
+       renderAdminMatches();
+       break;
+     case "statistics":
+       workspace.innerHTML=`<h2>📊 Estadísticas</h2><p style="margin-top:15px;color:#999">Estadísticas automáticas del club.</p>`;
+       break;
+     case "players":
+       workspace.innerHTML=`<div class="sectionHeader"><h2>👥 Gestión de jugadores</h2><button class="btn btn-green" id="adminNewPlayer">➕ Nuevo jugador</button></div><div id="adminPlayersList"></div>`;
+       renderAdminPlayers();
+       break;
+   }
+ };
 });
+
 console.log("V6 iniciada");
-});
 
+});
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
