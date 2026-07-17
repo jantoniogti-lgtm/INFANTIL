@@ -2,18 +2,15 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Ramón Sicart Club Manager V6</title>
 
 <meta name="theme-color" content="#d40000">
 <meta name="description" content="Ramón Sicart Club Manager V6">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-
 <style>
 
 :root{
@@ -1270,6 +1267,23 @@ background:#c30000;
 color:white;
 
 }
+
+/* V6.1 RESPONSIVE */
+@media(max-width:768px){
+.topBar{flex-direction:column;align-items:stretch}
+.logoBox{justify-content:center}
+.clubData{text-align:center}
+.navButtons{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.navButtons button{width:100%}
+.dashboard,.adminGrid{grid-template-columns:1fr!important}
+.matchMain{grid-template-columns:1fr!important;padding:18px;gap:18px}
+.teamHome,.teamAway{justify-content:center;text-align:center;flex-direction:column}
+.matchFooter{flex-direction:column;gap:8px;text-align:center}
+.modalCard{width:95%;max-width:none}
+.playerRow{grid-template-columns:1fr;text-align:center}
+.playerActions{justify-content:center}
+}
+
 </style>
 </head>
 
