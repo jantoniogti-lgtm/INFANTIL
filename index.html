@@ -124,46 +124,34 @@ border-bottom:1px solid rgba(255,255,255,.08);
 }
 
 .topBar{
-
-max-width:1700px;
-
-margin:auto;
-
-padding:18px 22px;
-
-display:flex;
-align-items:center;
-justify-content:space-between;
-gap:20px;
-
+    max-width:1700px;
+    margin:auto;
+    padding:14px 22px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:18px;
+    position:relative;
 }
 
 .logoBox{
-
-display:flex;
-align-items:center;
-gap:16px;
-
+    display:flex;
+    align-items:center;
+    gap:18px;
+    flex-shrink:0;
 }
 
 .logo{
-
-width:62px;
-height:62px;
-
-border-radius:50%;
-
-background:linear-gradient(135deg,var(--club-yellow),var(--club-red));
-
-display:flex;
-align-items:center;
-justify-content:center;
-
-font-size:26px;
-font-weight:900;
-
-box-shadow:var(--shadow);
-
+    width:64px;
+    height:64px;
+    border-radius:18px;
+    background:linear-gradient(135deg,#ffd400,#d00000);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:28px;
+    font-weight:900;
+    box-shadow:0 12px 25px rgba(0,0,0,.35);
 }
 
 .clubData{
@@ -174,11 +162,9 @@ flex-direction:column;
 }
 
 .clubData h1{
-
-font-size:28px;
-font-weight:900;
-letter-spacing:.5px;
-
+    font-size:24px;
+    font-weight:900;
+    line-height:1;
 }
 
 .clubData span{
@@ -189,35 +175,25 @@ color:var(--text3);
 }
 
 .navButtons{
-
-display:flex;
-gap:10px;
-flex-wrap:wrap;
-
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
 }
 
 .navButtons button{
-
-padding:12px 18px;
-
-background:#202020;
-
-border:none;
-
-color:white;
-
-border-radius:12px;
-
-font-weight:700;
-
-transition:var(--transition);
-
+    border:none;
+    border-radius:14px;
+    padding:12px 18px;
+    background:#232323;
+    color:white;
+    font-weight:700;
+    transition:.25s;
 }
 
 .navButtons button:hover{
-
-background:var(--club-red);
-
+    background:#d00000;
+    transform:translateY(-2px);
 }
 
 /* ===========================
@@ -555,16 +531,7 @@ ADMIN
 =========================== */
 
 .adminGrid{
-
-display:grid;
-
-grid-template-columns:
-
-350px
-1fr;
-
-gap:24px;
-
+    display:block;
 }
 
 .adminMenu{
@@ -600,9 +567,8 @@ background:var(--club-red);
 }
 
 .adminContent{
-
-min-height:700px;
-
+    width:100%;
+    min-height:700px;
 }
 /* ===========================
 MODAL
@@ -821,63 +787,74 @@ color:#00c853;
 
 }
 .adminCards{
-
-display:grid;
-
-grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-
-gap:20px;
-
-margin-bottom:30px;
-
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+    gap:20px;
 }
 
 .adminCard{
-
-background:#202020;
-
-border-radius:18px;
-
-padding:30px;
-
-text-align:center;
-
-cursor:pointer;
-
-transition:.25s;
-
-border:2px solid transparent;
-
+    background:#181818;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:18px;
+    padding:22px;
+    cursor:pointer;
+    transition:.25s;
+    display:flex;
+    align-items:center;
+    gap:18px;
+    min-height:95px;
+    box-shadow:0 8px 25px rgba(0,0,0,.25);
 }
 
 .adminCard:hover{
 
-transform:translateY(-6px);
+    transform:translateY(-5px);
 
-border-color:#ffd400;
+    background:#222;
+
+    border-color:#ffd400;
+
+    box-shadow:0 20px 40px rgba(0,0,0,.45);
 
 }
 
 .adminIcon{
-
-font-size:50px;
-
-margin-bottom:20px;
-
+    width:70px;
+    height:70px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:18px;
+    background:linear-gradient(135deg,#ffd400,#ff9800);
+    font-size:34px;
+    margin:0;
+    flex-shrink:0;
 }
 
 .adminCard h3{
-
-margin-bottom:10px;
-
-font-size:22px;
-
+    font-size:22px;
+    font-weight:800;
+    margin-bottom:6px;
 }
 
 .adminCard p{
+    color:#bdbdbd;
+    font-size:14px;
+    line-height:1.5;
+}
+.adminInfo{
+    flex:1;
+}
 
-color:#999;
+.adminArrow{
+    font-size:30px;
+    color:#666;
+    transition:.30s;
+}
 
+.adminCard:hover .adminArrow{
+    color:#ffd400;
+    transform:translateX(8px);
 }
 .playerRow{
 
@@ -1673,41 +1650,7 @@ ADMIN
 
 <div class="adminGrid">
 
-<div class="adminMenu">
-
-<button data-admin="club">
-Club
-</button>
-
-<button data-admin="players">
-Jugadores
-</button>
-
-<button data-admin="matches">
-Partidos
-</button>
-
-<button data-admin="classification">
-Clasificación
-</button>
-
-<button data-admin="statistics">
-Estadísticas
-</button>
-
-<button data-admin="firebase">
-Firebase
-</button>
-
-<button data-admin="backup">
-Backup
-</button>
-
-<button data-admin="settings">
-Configuración
-</button>
-
-</div>
+<!-- Menú lateral eliminado -->
 
 <div class="card adminContent" id="adminContent">
 
@@ -1719,61 +1662,77 @@ Configuración
 
 <div class="adminCard" data-admin-view="players">
 
-<div class="adminIcon">👥</div>
+    <div class="adminIcon">👥</div>
 
-<h3>Jugadores</h3>
+    <div class="adminInfo">
+        <h3>Jugadores</h3>
+        <p>Gestionar plantilla</p>
+    </div>
 
-<p>Gestionar plantilla</p>
+    <div class="adminArrow">➜</div>
 
 </div>
 
 <div class="adminCard" data-admin-view="matches">
 
-<div class="adminIcon">📅</div>
+    <div class="adminIcon">📅</div>
 
-<h3>Partidos</h3>
+    <div class="adminInfo">
+        <h3>Partidos</h3>
+        <p>Calendario y resultados</p>
+    </div>
 
-<p>Calendario y resultados</p>
+    <div class="adminArrow">➜</div>
 
 </div>
-
 <div class="adminCard" data-admin-view="classification">
 
-<div class="adminIcon">🏆</div>
+    <div class="adminIcon">🏆</div>
 
-<h3>Clasificación</h3>
+    <div class="adminInfo">
+        <h3>Clasificación</h3>
+        <p>Tabla de liga</p>
+    </div>
 
-<p>Tabla de liga</p>
+    <div class="adminArrow">➜</div>
 
 </div>
-
 <div class="adminCard" data-admin-view="statistics">
 
-<div class="adminIcon">📊</div>
+    <div class="adminIcon">📊</div>
 
-<h3>Estadísticas</h3>
+    <div class="adminInfo">
+        <h3>Estadísticas</h3>
+        <p>Datos del club</p>
+    </div>
 
-<p>Datos del club</p>
+    <div class="adminArrow">➜</div>
 
 </div>
 
 <div class="adminCard" data-admin-view="media">
 
-<div class="adminIcon">🖼️</div>
+    <div class="adminIcon">🖼️</div>
 
-<h3>Multimedia</h3>
+    <div class="adminInfo">
+        <h3>Multimedia</h3>
+        <p>Fotos y escudos</p>
+    </div>
 
-<p>Fotos y escudos</p>
+    <div class="adminArrow">➜</div>
 
 </div>
 
 <div class="adminCard" data-admin-view="firebase">
 
-<div class="adminIcon">☁️</div>
+    <div class="adminIcon">☁️</div>
 
-<h3>Firebase</h3>
+    <div class="adminInfo">
+        <h3>Firebase</h3>
+        <p>Sincronización</p>
+    </div>
 
-<p>Sincronización</p>
+    <div class="adminArrow">➜</div>
 
 </div>
 
@@ -2979,6 +2938,38 @@ const Firebase = {
     }
 
 };
+/*==============================
+HEADER MOBILE V6.1
+==============================*/
+
+@media(max-width:900px){
+
+.topBar{
+    flex-direction:column;
+    align-items:center;
+}
+
+.logoBox{
+    width:100%;
+    justify-content:center;
+}
+
+.clubData{
+    text-align:center;
+}
+
+.navButtons{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+}
+
+.navButtons button{
+    width:100%;
+}
+
+}
 </script>
 </body>
 </html>
