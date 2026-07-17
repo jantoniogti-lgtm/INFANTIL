@@ -2595,7 +2595,7 @@ awayGoals: Number(matchAwayGoals.value),
 
 renderAdminMatches();
 
-renderCalendar();
+renderCalendarCards();
 
 closeMatchModal();
 
@@ -2800,137 +2800,34 @@ function renderCalendar(){
 
 }
 function renderCalendarCards(){
-
-    const container = document.getElementById("calendarCards");
-
-    if(!container) return;
-
-    container.innerHTML = "";
-
-    App.matches
-        .sort((a,b)=>a.date.localeCompare(b.date))
-        .forEach(match=>{
-
-            container.innerHTML += `
-
-            <div class="matchCard">
-
-                <div class="matchMain">
-
-                  <div class="teamBlock teamHome">
-
-    <div class="teamLogo">
-
-        <img src="${match.homeLogo || 'https://placehold.co/120x120?text=🛡'}">
-
-    </div>
-
-    <div class="teamInfo">
-
-        <div class="teamName">
-
-            ${match.home}
-
-        </div>
-
-        <div class="teamType">
-
-            ${match.home==="Ramón Sicart" ? "🏠 LOCAL" : ""}
-
-        </div>
-
-    </div>
-
+const container=document.getElementById("calendarCards");
+if(!container)return;
+container.innerHTML="";
+const groups={};
+[...App.matches].sort((a,b)=>a.date.localeCompare(b.date)).forEach(m=>{(groups[m.round||"Sin jornada"]??=[]).push(m);});
+for(const round of Object.keys(groups)){
+container.innerHTML+=`<div class="calendarRound"><h3>${round}</h3></div>`;
+for(const match of groups[round]){
+container.innerHTML+=`
+<div class="matchCard">
+<div class="matchMain">
+<div class="teamHome">
+<div class="teamLogo"><img src="${match.homeLogo||'https://placehold.co/120x120?text=🛡'}"></div>
+<div class="teamInfo"><div class="teamName">${match.home}</div><div class="teamType">${match.home==="Ramón Sicart"?"🏠 LOCAL":""}</div></div>
 </div>
-
-                    <div style="text-align:center;">
-
-                        <div style="display:flex;justify-content:center;align-items:center;gap:15px;">
-
-                            <div class="scoreBox">
-
-                                ${
-                                    match.status==="Finalizado"
-                                    ? match.homeGoals
-                                    : "-"
-                                }
-
-                            </div>
-
-                            <div style="font-size:34px;font-weight:900;">-</div>
-
-                            <div class="scoreBox">
-
-                                ${
-                                    match.status==="Finalizado"
-                                    ? match.awayGoals
-                                    : "-"
-                                }
-
-                            </div>
-
-                        </div>
-
-                        <div class="matchStatus ${match.status}">
-
-                            ${match.status}
-
-                        </div>
-
-                    </div>
-
-                    <div class="teamBlock teamAway">
-
-    <div class="teamInfo">
-
-        <div class="teamName">
-
-            ${match.away}
-
-        </div>
-
-        <div class="teamType">
-
-            ${match.away==="Ramón Sicart" ? "✈️ VISITANTE" : ""}
-
-        </div>
-
-    </div>
-
-    <div class="teamLogo">
-
-        <img src="${match.awayLogo || 'https://placehold.co/120x120?text=🛡'}">
-
-    </div>
-
-</div>
-
-                        <div class="teamLogo">
-
-                            <img src="${match.awayLogo || ''}">
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <div class="matchFooter">
-
-                    <span>🏆 ${match.competition}</span>
-
-                    <span>🕒 ${match.date}</span>
-
-                    <span>📍 ${match.venue}</span>
-
-                </div>
-
-            </div>
-
-            `;
-
-        });
-
+<div style="text-align:center">
+<div class="matchStatus ${match.status==='Finalizado'?'Finalizado':match.status==='Programado'?'Programado':'live'}">${match.status}</div>
+<div style="display:flex;justify-content:center;gap:15px;margin-top:12px">
+<div class="scoreBox">${match.status==="Finalizado"?match.homeGoals:"-"}</div>
+<div style="font-size:36px;font-weight:900">-</div>
+<div class="scoreBox">${match.status==="Finalizado"?match.awayGoals:"-"}</div>
+</div></div>
+<div class="teamAway">
+<div class="teamInfo"><div class="teamName">${match.away}</div><div class="teamType">${match.away==="Ramón Sicart"?"✈️ VISITANTE":""}</div></div>
+<div class="teamLogo"><img src="${match.awayLogo||'https://placehold.co/120x120?text=🛡'}"></div>
+</div></div>
+<div class="matchFooter"><span>🏆 ${match.competition}</span><span>📅 ${match.date}</span><span>📍 ${match.venue||"-"}</span></div>
+</div>`;}}
 }
 function bindMatchButtons(){
 
