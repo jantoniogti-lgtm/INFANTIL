@@ -525,8 +525,10 @@ document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'))
 btn.classList.add('active');
 }
 updateDate();
-startCountdown();
+loadDemoData();
 loadNextMatch();
+renderClassification();
+startCountdown();
 
 async function syncFCF(){
  const status=document.getElementById('syncStatus');
@@ -544,7 +546,10 @@ async function syncFCF(){
 
    if(data.matches){
       App.matches=data.matches;
-      if(typeof loadNextMatch==='function') loadNextMatch();
+      if(typeof loadNextMatch==='function') {
+         loadNextMatch();
+         startCountdown();
+      }
    }
 
    const now=new Date().toLocaleString();
