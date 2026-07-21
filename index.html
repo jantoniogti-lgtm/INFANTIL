@@ -283,9 +283,24 @@ margin:10px 0;
 </section>
 
 <section id="players" class="page"><div class="card"><h2>Jugadores</h2></div></section>
-<section id="matches" class="page"><div class="card"><h2>Partidos</h2></div></section>
-<section id="classification" class="page"><div class="card"><h2>Clasificación</h2></div></section>
-<section id="statistics" class="page"><div class="card"><h2>Estadísticas</h2></div></section>
+<section id="matches" class="page">
+<div class="card">
+<h2>📅 Partidos</h2>
+<div id="matchesList"></div>
+</div>
+</section>
+<section id="classification" class="page">
+<div class="card">
+<h2>🏆 Clasificación</h2>
+<div id="classificationTable"></div>
+</div>
+</section>
+<section id="statistics" class="page">
+<div class="card">
+<h2>📊 Estadísticas</h2>
+<div id="statsPanel"></div>
+</div>
+</section>
 <section id="admin" class="page"><div class="card"><h2>Administración</h2><button class="syncBtn" onclick="syncFCF()">🔄 Sincronizar FCF</button><p id="syncStatus">Sin sincronizar</p><p id="lastSync">Última sincronización: --</p></div></section>
 
 </main>
@@ -487,6 +502,79 @@ function renderClassification(){
     div.innerHTML=htmlRows;
 }
 
+
+function renderMatches(){
+ const box=document.getElementById("matchesList");
+ if(!box) return;
+ if(!App.matches.length){box.innerHTML="<p>Sin partidos</p>";return;}
+ let out="";
+ App.matches.forEach((m,i)=>{
+   const home=getTeam(m.home);
+   const away=getTeam(m.away);
+   const played=(m.homeGoals!==undefined && m.awayGoals!==undefined);
+   let state="⏳ Pendiente";
+   if(played){
+      if(m.homeGoals==m.awayGoals) state="🟡 Empate";
+      else if((home.id===1 && m.homeGoals>m.awayGoals)||(away.id===1 && m.awayGoals>m.homeGoals)) state="🟢 Victoria";
+      else state="🔴 Derrota";
+   }
+   out+=`<div style="padding:12px;border-bottom:1px solid #394150">
+   <strong>Jornada ${i+1}</strong><br>
+   ${home.name} ${played?m.homeGoals:"vs"} ${played?("- "+m.awayGoals):""} ${away.name}<br>
+   <small>📅 ${m.date} 🕒 ${m.hour}</small><br>
+   <small>${state}</small>
+   </div>`;
+ });
+ box.innerHTML=out;
+}
+
+
+function renderFullClassification(){
+ const el=document.getElementById("classificationTable");
+ if(!el) return;
+ if(!App.classification.length){
+   el.innerHTML="<p>Sin datos de clasificación.</p>";
+   return;
+ }
+ let t=`<table style="width:100%;border-collapse:collapse">
+ <tr><th>Pos</th><th>Equipo</th><th>Pts</th></tr>`;
+ App.classification.forEach(c=>{
+   const rs=c.name.toUpperCase().includes("RAM");
+   t+=`<tr style="${rs?"background:#FFD60022;font-weight:bold;":""}">
+   <td>${c.position}</td>
+   <td>${c.name}</td>
+   <td style="text-align:right">${c.points}</td>
+   </tr>`;
+ });
+ t+="</table>";
+ el.innerHTML=t;
+}
+
+
+function renderStatistics(){
+ const el=document.getElementById("statsPanel");
+ if(!el) return;
+ let wins=0,draws=0,losses=0,gf=0,ga=0;
+ App.matches.forEach(m=>{
+   if(m.homeGoals===undefined||m.awayGoals===undefined) return;
+   const rsHome=m.home===1;
+   const f=rsHome?m.homeGoals:m.awayGoals;
+   const a=rsHome?m.awayGoals:m.homeGoals;
+   gf+=f; ga+=a;
+   if(f>a) wins++;
+   else if(f===a) draws++;
+   else losses++;
+ });
+ const played=wins+draws+losses;
+ el.innerHTML=`
+ <div>🏟️ Partidos: <b>${played}</b></div>
+ <div>🟢 Victorias: <b>${wins}</b></div>
+ <div>🟡 Empates: <b>${draws}</b></div>
+ <div>🔴 Derrotas: <b>${losses}</b></div>
+ <div>⚽ GF: <b>${gf}</b></div>
+ <div>🥅 GC: <b>${ga}</b></div>`;
+}
+
 function updateDate(){
 
     const dias=[
@@ -525,10 +613,11 @@ document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'))
 btn.classList.add('active');
 }
 updateDate();
-loadDemoData();
-loadNextMatch();
-renderClassification();
 startCountdown();
+loadNextMatch();
+renderMatches();
+renderFullClassification();
+renderStatistics();
 
 async function syncFCF(){
  const status=document.getElementById('syncStatus');
@@ -546,10 +635,10 @@ async function syncFCF(){
 
    if(data.matches){
       App.matches=data.matches;
-      if(typeof loadNextMatch==='function') {
-         loadNextMatch();
-         startCountdown();
-      }
+      if(typeof loadNextMatch==='function') loadNextMatch();
+renderMatches();
+renderFullClassification();
+renderStatistics();
    }
 
    const now=new Date().toLocaleString();
