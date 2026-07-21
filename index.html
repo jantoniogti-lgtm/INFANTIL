@@ -62,6 +62,35 @@ margin-bottom:14px;
     border:2px solid var(--yellow);
 
 }
+.syncBtn{
+
+width:100%;
+
+padding:14px;
+
+border:none;
+
+border-radius:12px;
+
+background:#FFD600;
+
+color:#000;
+
+font-size:18px;
+
+font-weight:bold;
+
+cursor:pointer;
+
+margin-top:15px;
+
+}
+
+.syncBtn:hover{
+
+opacity:.9;
+
+}
 
 .matchHeader{
 
@@ -226,7 +255,7 @@ nav button.active{color:var(--yellow);transform:translateY(-3px)}
 
         <span>PRÓXIMO PARTIDO</span>
 
-        <span id="countdown">-- días</span>
+        <span id="countdown">Cargando...</span>
 
     </div>
 
@@ -234,9 +263,9 @@ nav button.active{color:var(--yellow);transform:translateY(-3px)}
 
         <div class="team">
 
-            <div class="teamLogo">🟡🔴</div>
+            <div class="teamLogo" id="homeLogo">🟡🔴</div>
 
-            <div class="teamName">Ramón Sicart</div>
+            <div class="teamName" id="homeTeam"></div>
 
         </div>
 
@@ -248,28 +277,37 @@ nav button.active{color:var(--yellow);transform:translateY(-3px)}
 
         <div class="team">
 
-            <div class="teamLogo">⚪</div>
+            <div class="teamLogo" id="awayLogo">⚪</div>
 
-            <div class="teamName">Rival</div>
+            <div class="teamName" id="awayTeam"></div>
 
         </div>
 
     </div>
 
-    <div class="matchInfo">
+    <div class="matchInfo" id="matchDate"></div>
 
-        📅 Sin fecha programada
+    <div class="matchInfo" id="matchHour"></div>
 
-    </div>
+    <div class="matchInfo" id="matchField"></div>
+<div class="matchInfo" id="matchCompetition"></div>
 
-    <div class="matchInfo">
+<div class="matchInfo" id="matchRound"></div>
+<div class="matchInfo" id="matchCompetition"></div>
 
-        📍 Sin campo asignado
+<div class="matchInfo" id="matchRound"></div>
+</div>
+<div class="card">
 
-    </div>
+<h2>🏆 Clasificación</h2>
+
+<div id="classificationHome">
+
+Sin datos
 
 </div>
-<div class="card"><h2>🏆 Clasificación</h2><p>Temporada sin iniciar.</p></div>
+
+</div>
 <div class="card"><h2>⚽ Último resultado</h2><p>Sin resultados.</p></div>
 <div class="card"><h2>👑 Goleadores</h2><p>No hay datos.</p></div>
 </section>
@@ -278,7 +316,27 @@ nav button.active{color:var(--yellow);transform:translateY(-3px)}
 <section id="matches" class="page"><div class="card"><h2>Partidos</h2></div></section>
 <section id="classification" class="page"><div class="card"><h2>Clasificación</h2></div></section>
 <section id="statistics" class="page"><div class="card"><h2>Estadísticas</h2></div></section>
-<section id="admin" class="page"><div class="card"><h2>Administración</h2></div></section>
+<section id="admin" class="page">
+
+<div class="card">
+
+<h2>⚙️ Administración</h2>
+
+<button onclick="FCF.sync()" class="syncBtn">
+
+🔄 Sincronizar FCF
+
+</button>
+
+<p id="syncStatus">
+
+Sin sincronizar
+
+</p>
+
+</div>
+
+</section>
 
 </main>
 
@@ -292,7 +350,219 @@ nav button.active{color:var(--yellow);transform:translateY(-3px)}
 </nav>
 
 <script>
-const App={version:"6.2",players:[],matches:[],classification:[],statistics:{}};
+const App = {
+
+    version: "6.2",
+
+    club: {
+        name: "Ramón Sicart",
+        season: "2026 / 2027",
+        category: "Cadete",
+        colors: {
+            primary: "#FFD600",
+            secondary: "#E53935"
+        }
+    },
+teams:[
+
+{
+    id:1,
+    name:"Ramón Sicart",
+    short:"RS",
+    logo:"",
+    color:"#FFD600",
+    field:"Municipal",
+    city:"Llorenç del Penedès",
+    maps:"",
+    competition:"Liga"
+},
+
+{
+    id:2,
+    name:"FC Barcelona",
+    short:"FCB",
+    logo:"",
+    color:"#004D98",
+    field:"Ciutat Esportiva Joan Gamper",
+    city:"Sant Joan Despí",
+    maps:"",
+    competition:"Liga"
+}
+
+],
+    players: [],
+
+    matches: [],
+
+    training: [],
+
+    classification: [],
+
+    scorers: [],
+
+    notifications: [],
+
+    statistics: {
+
+        matchesPlayed: 0,
+        wins: 0,
+        draws: 0,
+        losses: 0,
+        goalsFor: 0,
+        goalsAgainst: 0
+
+    },
+
+    settings: {
+
+        darkMode: true,
+        animations: true
+
+    }
+
+};
+function loadDemoData(){
+
+    App.matches = [
+
+        {
+
+            home:1,
+
+away:2,
+
+            date:"2026-09-12",
+
+            hour:"18:00",
+
+            field:"Municipal"
+
+        }
+
+    ];
+
+}
+function getTeam(id){
+
+    return App.teams.find(team=>team.id===id);
+
+}
+function startCountdown(){
+
+    if(App.matches.length===0) return;
+
+    const match=App.matches[0];
+
+    const target=new Date(match.date+"T"+match.hour+":00");
+
+    function update(){
+
+        const now=new Date();
+
+        const diff=target-now;
+
+        if(diff<=0){
+
+            document.getElementById("countdown").innerHTML=`
+<div style="font-size:20px;font-weight:bold;">
+${days}d
+</div>
+
+<div style="font-size:12px">
+${hours}h ${minutes}m ${seconds}s
+</div>
+`;
+            return;
+
+        }
+
+        const days=Math.floor(diff/(1000*60*60*24));
+
+        const hours=Math.floor((diff/(1000*60*60))%24);
+
+        const minutes=Math.floor((diff/(1000*60))%60);
+
+        const seconds=Math.floor((diff/1000)%60);
+
+       document.getElementById("countdown").innerHTML=`
+<div style="font-size:20px;font-weight:bold;">
+${days}d
+</div>
+
+<div style="font-size:12px">
+${hours}h ${minutes}m ${seconds}s
+</div>
+`;
+
+    }
+
+    update();
+
+    setInterval(update,1000);
+
+}
+function loadNextMatch(){
+
+    if(App.matches.length===0) return;
+
+    const match=App.matches[0];
+
+    const home=getTeam(match.home);
+
+    const away=getTeam(match.away);
+
+    document.getElementById("homeTeam").innerHTML=home.name;
+
+    document.getElementById("awayTeam").innerHTML=away.name;
+
+    document.getElementById("matchDate").innerHTML="📅 "+match.date;
+
+    document.getElementById("matchHour").innerHTML="🕒 "+match.hour;
+
+    document.getElementById("matchField").innerHTML="📍 "+home.field;
+document.getElementById("matchCompetition").innerHTML=
+"🏆 "+match.competition;
+
+document.getElementById("matchRound").innerHTML=
+"📅 Jornada "+match.round;
+
+}
+function renderClassification(){
+
+    const div=document.getElementById("classificationHome");
+
+    if(!div) return;
+
+    if(App.classification.length===0){
+
+        div.innerHTML="Sin datos";
+
+        return;
+
+    }
+
+    let html="";
+
+    App.classification.slice(0,5).forEach(team=>{
+
+        html+=`
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            padding:6px 0;
+            border-bottom:1px solid #333;
+        ">
+            <span>${team.position}</span>
+            <span>${team.name}</span>
+            <strong>${team.points}</strong>
+        </div>
+        `;
+
+    });
+
+    div.innerHTML=html;
+
+}
 function updateDate(){
 
     const dias=[
@@ -331,6 +601,145 @@ document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'))
 btn.classList.add('active');
 }
 updateDate();
+
+function loadDemoData(){
+
+    App.matches=[{
+
+    id:1,
+
+    competition:"Lliga",
+
+    round:1,
+
+    home:1,
+
+    away:2,
+
+    date:"2026-09-12",
+
+    hour:"18:00",
+
+    stadium:"Municipal de Llorenç",
+
+    address:"Llorenç del Penedès",
+
+    maps:"",
+
+    status:"scheduled",
+
+    homeGoals:null,
+
+    awayGoals:null
+
+}];
+
+}
+
+loadNextMatch();
+const FCF = {
+
+    endpoint:"/api/fcf",
+
+    async sync(){
+
+        const status=document.getElementById("syncStatus");
+
+        status.innerHTML="🟡 Sincronizando...";
+
+        try{
+
+            const response=await fetch(this.endpoint,{
+                cache:"no-store"
+            });
+
+            if(!response.ok){
+
+                throw new Error("Error servidor");
+
+            }
+
+            const data=await response.json();
+
+            App.teams=data.teams || [];
+
+            App.matches=data.matches || [];
+
+            App.classification=data.classification || [];
+
+            App.scorers=data.scorers || [];
+
+            loadNextMatch();
+
+            startCountdown();
+
+            localStorage.setItem(
+                "fcf-cache",
+                JSON.stringify(data)
+            );
+
+            localStorage.setItem(
+                "fcf-last-sync",
+                new Date().toISOString()
+            );
+
+            status.innerHTML="🟢 Sincronizado";
+
+        }
+
+        catch(e){
+
+            status.innerHTML="🔴 Sin conexión";
+
+            const cache=localStorage.getItem("fcf-cache");
+
+            if(cache){
+
+                const data=JSON.parse(cache);
+
+                App.teams=data.teams || [];
+
+                App.matches=data.matches || [];
+
+                App.classification=data.classification || [];
+
+                App.scorers=data.scorers || [];
+
+                loadNextMatch();
+
+                startCountdown();
+
+            }
+
+        }
+
+    }
+
+};
+startCountdown();
+window.addEventListener("load",()=>{
+
+    const cache=localStorage.getItem("fcf-cache");
+
+    if(cache){
+
+        const data=JSON.parse(cache);
+
+        App.teams=data.teams;
+
+        App.matches=data.matches;
+
+        App.classification=data.classification;
+
+        App.scorers=data.scorers;
+
+        loadNextMatch();
+
+        startCountdown();
+
+    }
+
+});
 </script>
 
 </body>
