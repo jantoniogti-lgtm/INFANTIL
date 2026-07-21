@@ -62,35 +62,6 @@ margin-bottom:14px;
     border:2px solid var(--yellow);
 
 }
-.syncBtn{
-
-width:100%;
-
-padding:14px;
-
-border:none;
-
-border-radius:12px;
-
-background:#FFD600;
-
-color:#000;
-
-font-size:18px;
-
-font-weight:bold;
-
-cursor:pointer;
-
-margin-top:15px;
-
-}
-
-.syncBtn:hover{
-
-opacity:.9;
-
-}
 
 .matchHeader{
 
@@ -211,6 +182,17 @@ font-size:11px;
 transition:.2s;
 }
 nav button.active{color:var(--yellow);transform:translateY(-3px)}
+
+.syncBtn{
+background:#f7c600;
+color:#000;
+border:none;
+padding:12px 18px;
+border-radius:10px;
+font-weight:bold;
+cursor:pointer;
+margin:10px 0;
+}
 </style>
 </head>
 <body>
@@ -290,23 +272,11 @@ nav button.active{color:var(--yellow);transform:translateY(-3px)}
     <div class="matchInfo" id="matchHour"></div>
 
     <div class="matchInfo" id="matchField"></div>
-<div class="matchInfo" id="matchCompetition"></div>
 
-<div class="matchInfo" id="matchRound"></div>
-<div class="matchInfo" id="matchCompetition"></div>
-
-<div class="matchInfo" id="matchRound"></div>
 </div>
 <div class="card">
-
 <h2>🏆 Clasificación</h2>
-
-<div id="classificationHome">
-
-Sin datos
-
-</div>
-
+<div id="classificationHome"></div>
 </div>
 <div class="card"><h2>⚽ Último resultado</h2><p>Sin resultados.</p></div>
 <div class="card"><h2>👑 Goleadores</h2><p>No hay datos.</p></div>
@@ -316,27 +286,7 @@ Sin datos
 <section id="matches" class="page"><div class="card"><h2>Partidos</h2></div></section>
 <section id="classification" class="page"><div class="card"><h2>Clasificación</h2></div></section>
 <section id="statistics" class="page"><div class="card"><h2>Estadísticas</h2></div></section>
-<section id="admin" class="page">
-
-<div class="card">
-
-<h2>⚙️ Administración</h2>
-
-<button onclick="FCF.sync()" class="syncBtn">
-
-🔄 Sincronizar FCF
-
-</button>
-
-<p id="syncStatus">
-
-Sin sincronizar
-
-</p>
-
-</div>
-
-</section>
+<section id="admin" class="page"><div class="card"><h2>Administración</h2><button class="syncBtn" onclick="syncFCF()">🔄 Sincronizar FCF</button><p id="syncStatus">Sin sincronizar</p><p id="lastSync">Última sincronización: --</p></div></section>
 
 </main>
 
@@ -463,15 +413,8 @@ function startCountdown(){
 
         if(diff<=0){
 
-            document.getElementById("countdown").innerHTML=`
-<div style="font-size:20px;font-weight:bold;">
-${days}d
-</div>
+            document.getElementById("countdown").innerHTML="🔴 EN JUEGO";
 
-<div style="font-size:12px">
-${hours}h ${minutes}m ${seconds}s
-</div>
-`;
             return;
 
         }
@@ -484,15 +427,9 @@ ${hours}h ${minutes}m ${seconds}s
 
         const seconds=Math.floor((diff/1000)%60);
 
-       document.getElementById("countdown").innerHTML=`
-<div style="font-size:20px;font-weight:bold;">
-${days}d
-</div>
+        document.getElementById("countdown").innerHTML=
 
-<div style="font-size:12px">
-${hours}h ${minutes}m ${seconds}s
-</div>
-`;
+            `${days}d ${hours}h ${minutes}m ${seconds}s`;
 
     }
 
@@ -520,49 +457,36 @@ function loadNextMatch(){
     document.getElementById("matchHour").innerHTML="🕒 "+match.hour;
 
     document.getElementById("matchField").innerHTML="📍 "+home.field;
-document.getElementById("matchCompetition").innerHTML=
-"🏆 "+match.competition;
-
-document.getElementById("matchRound").innerHTML=
-"📅 Jornada "+match.round;
 
 }
+
 function renderClassification(){
 
     const div=document.getElementById("classificationHome");
-
     if(!div) return;
 
     if(App.classification.length===0){
-
-        div.innerHTML="Sin datos";
-
+        div.innerHTML="<p>Sin datos FCF</p>";
         return;
-
     }
 
-    let html="";
+    let htmlRows="";
 
-    App.classification.slice(0,5).forEach(team=>{
+    App.classification.forEach(team=>{
 
-        html+=`
-        <div style="
-            display:flex;
-            justify-content:space-between;
-            padding:6px 0;
-            border-bottom:1px solid #333;
-        ">
-            <span>${team.position}</span>
-            <span>${team.name}</span>
-            <strong>${team.points}</strong>
-        </div>
-        `;
+        const isRS=team.name.toUpperCase().includes("RAM");
 
+        htmlRows+=`
+        <div style="display:grid;grid-template-columns:35px 1fr 45px;padding:8px 0;border-bottom:1px solid #394150;${isRS?"background:#FFD60022;font-weight:bold;":""}">
+            <div>${team.position}</div>
+            <div>${team.name}</div>
+            <div style="text-align:right">${team.points}</div>
+        </div>`;
     });
 
-    div.innerHTML=html;
-
+    div.innerHTML=htmlRows;
 }
+
 function updateDate(){
 
     const dias=[
@@ -601,145 +525,44 @@ document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'))
 btn.classList.add('active');
 }
 updateDate();
+startCountdown();
+loadNextMatch();
 
-function loadDemoData(){
+async function syncFCF(){
+ const status=document.getElementById('syncStatus');
+ const last=document.getElementById('lastSync');
+ if(status) status.textContent='⏳ Sincronizando...';
+ try{
+   const r=await fetch('/api/fcf');
+   if(!r.ok) throw new Error();
+   const data=await r.json();
 
-    App.matches=[{
+   if(data.classification){
+      App.classification=data.classification;
+      if(typeof renderClassification==='function') renderClassification();
+   }
 
-    id:1,
+   if(data.matches){
+      App.matches=data.matches;
+      if(typeof loadNextMatch==='function') loadNextMatch();
+   }
 
-    competition:"Lliga",
+   const now=new Date().toLocaleString();
+   localStorage.setItem('rs_last_sync',now);
 
-    round:1,
-
-    home:1,
-
-    away:2,
-
-    date:"2026-09-12",
-
-    hour:"18:00",
-
-    stadium:"Municipal de Llorenç",
-
-    address:"Llorenç del Penedès",
-
-    maps:"",
-
-    status:"scheduled",
-
-    homeGoals:null,
-
-    awayGoals:null
-
-}];
-
+   if(last) last.textContent='Última sincronización: '+now;
+   if(status) status.textContent='✅ Sincronización correcta';
+ }catch(e){
+   if(status) status.textContent='❌ Error al conectar con la API';
+ }
 }
 
-loadNextMatch();
-const FCF = {
-
-    endpoint:"/api/fcf",
-
-    async sync(){
-
-        const status=document.getElementById("syncStatus");
-
-        status.innerHTML="🟡 Sincronizando...";
-
-        try{
-
-            const response=await fetch(this.endpoint,{
-                cache:"no-store"
-            });
-
-            if(!response.ok){
-
-                throw new Error("Error servidor");
-
-            }
-
-            const data=await response.json();
-
-            App.teams=data.teams || [];
-
-            App.matches=data.matches || [];
-
-            App.classification=data.classification || [];
-
-            App.scorers=data.scorers || [];
-
-            loadNextMatch();
-
-            startCountdown();
-
-            localStorage.setItem(
-                "fcf-cache",
-                JSON.stringify(data)
-            );
-
-            localStorage.setItem(
-                "fcf-last-sync",
-                new Date().toISOString()
-            );
-
-            status.innerHTML="🟢 Sincronizado";
-
-        }
-
-        catch(e){
-
-            status.innerHTML="🔴 Sin conexión";
-
-            const cache=localStorage.getItem("fcf-cache");
-
-            if(cache){
-
-                const data=JSON.parse(cache);
-
-                App.teams=data.teams || [];
-
-                App.matches=data.matches || [];
-
-                App.classification=data.classification || [];
-
-                App.scorers=data.scorers || [];
-
-                loadNextMatch();
-
-                startCountdown();
-
-            }
-
-        }
-
-    }
-
-};
-startCountdown();
-window.addEventListener("load",()=>{
-
-    const cache=localStorage.getItem("fcf-cache");
-
-    if(cache){
-
-        const data=JSON.parse(cache);
-
-        App.teams=data.teams;
-
-        App.matches=data.matches;
-
-        App.classification=data.classification;
-
-        App.scorers=data.scorers;
-
-        loadNextMatch();
-
-        startCountdown();
-
-    }
-
+document.addEventListener('DOMContentLoaded',()=>{
+ const last=document.getElementById('lastSync');
+ const saved=localStorage.getItem('rs_last_sync');
+ if(last && saved) last.textContent='Última sincronización: '+saved;
 });
+
 </script>
 
 </body>
