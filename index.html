@@ -786,7 +786,7 @@ function startCountdown(){
 
     if(App.matches.length===0) return;
 
-    const match=App.matches[0];
+    const match=getActiveMatch() || App.matches[0];
 
     const target=new Date(match.date+"T"+match.hour+":00");
 
@@ -831,7 +831,7 @@ function loadNextMatch(){
 
     if(App.matches.length===0) return;
 
-    const match=App.matches[0];
+    const match=getActiveMatch() || App.matches[0];
 
     console.log(match);
 
@@ -901,7 +901,8 @@ function renderMatches(){
    <strong>Jornada ${i+1}</strong><br>
    ${home.name} ${played?m.homeGoals:"vs"} ${played?("- "+m.awayGoals):""} ${away.name}<br>
    <small>📅 ${m.date} 🕒 ${m.hour}</small><br>
-   <small>${state}</small>
+   <small>${state}</small><br>
+   <button class="syncBtn" style="padding:6px 10px;margin-top:8px" onclick="openMatch(${m.id})">▶ Abrir</button>
    </div>`;
  });
  box.innerHTML=out;
@@ -1219,8 +1220,10 @@ document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'))
 btn.classList.add('active');
 }
 updateDate();
+loadMatches();
 if(App.matches.length===0){
     loadDemoData();
+    saveMatches();
 }
 startCountdown();
 loadNextMatch();
@@ -1718,6 +1721,43 @@ function savePlayer(){
     document.getElementById("playerCaptain").checked=false;
 
 }
+
+function closeMatchEditor(){
+ var m=document.getElementById("matchEditorModal");
+ if(m)m.style.display="none";
+}
+function saveMatch(){
+ const comp=document.getElementById("matchCompetition").value||"Liga";
+ const md=Number(document.getElementById("matchday").value)||1;
+ const dt=document.getElementById("matchDateInput").value;
+ const hr=document.getElementById("matchHourInput").value;
+ const field=document.getElementById("matchFieldInput").value||"Municipal";
+ const home=Number(document.getElementById("matchHome").value);
+ const away=Number(document.getElementById("matchAway").value);
+
+ if(!dt||!hr){alert("Completa fecha y hora");return;}
+
+ const match={
+   id:Date.now(),
+   competition:comp,
+   matchday:md,
+   date:dt,
+   hour:hr,
+   field:field,
+   home:home,
+   away:away,
+   homeGoals:0,
+   awayGoals:0
+ };
+ if(!App.matches)App.matches=[];
+ App.matches.push(match);
+ App.activeMatchId=match.id;
+ if(typeof renderMatches==="function")renderMatches();
+ saveMatches();
+ closeMatchEditor();
+ alert("Partido creado");
+}
+
 </script>
 <div id="playerManagerModal"
 style="display:none;
@@ -1827,5 +1867,92 @@ Cancelar
 </div>
 
 </div>
-</body>
+<div id="matchEditorModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2000;align-items:center;justify-content:center;">
+<div style="background:#1E293B;width:92%;max-width:400px;border-radius:16px;padding:20px;">
+<h2 style="color:#FFD600">📅 Nuevo partido</h2>
+<label>🏆 Competición</label><input id="matchCompetition" value="Liga" style="width:100%;padding:10px;margin:8px 0;">
+<label>📅 Jornada</label><input id="matchday" type="number" value="1" style="width:100%;padding:10px;margin:8px 0;">
+<label>📆 Fecha</label><input id="matchDateInput" type="date" style="width:100%;padding:10px;margin:8px 0;">
+<label>🕒 Hora</label><input id="matchHourInput" type="time" style="width:100%;padding:10px;margin:8px 0;">
+<label>🏟️ Campo</label><input id="matchFieldInput" value="Municipal" style="width:100%;padding:10px;margin:8px 0;">
+<label>🏠 Local</label>
+<select id="matchHome" style="width:100%;padding:10px;margin:8px 0;">
+<option value="1">Ramón Sicart</option><option value="2">FC Barcelona</option>
+</select>
+<label>🚌 Visitante</label>
+<select id="matchAway" style="width:100%;padding:10px;margin:8px 0;">
+<option value="2">FC Barcelona</option><option value="1">Ramón Sicart</option>
+</select>
+<button class="syncBtn" onclick="saveMatch()">💾 Guardar</button>
+<button class="syncBtn" onclick="closeMatchEditor()">Cancelar</button>
+</div></div></body>
 </html>
+
+
+
+<!-- ===== PASO 5.4 (INSTRUCCIONES DE INTEGRACIÓN) ===== -->
+<script>
+/*
+Sustituye la función editMatch(id) por una versión que:
+1. Busque el partido por id.
+2. Rellene el formulario (competition, matchday, date, hour, field, home, away).
+3. Guarde el id en window.editingMatchId.
+4. Abra el modal.
+
+En saveMatch():
+- Si window.editingMatchId existe:
+    - actualizar el partido existente.
+- Si no existe:
+    - crear uno nuevo.
+Después:
+- renderMatches();
+- closeMatchEditor();
+
+En deleteMatch(id):
+- Confirmar borrado.
+- Eliminar el partido de App.matches.
+- Si existe saveData(), llamarla.
+- renderMatches();
+*/
+
+function saveMatches(){
+    localStorage.setItem("rs_matches",JSON.stringify(App.matches));
+    localStorage.setItem("rs_activeMatchId",String(App.activeMatchId||""));
+}
+
+function loadMatches(){
+    try{
+        const saved=localStorage.getItem("rs_matches");
+        if(saved){
+            App.matches=JSON.parse(saved);
+        }
+        const active=localStorage.getItem("rs_activeMatchId");
+        if(active){
+            App.activeMatchId=Number(active);
+        }
+    }catch(e){
+        console.error("Error cargando partidos",e);
+    }
+}
+
+
+function getActiveMatch(){
+    if(!App.matches || !App.matches.length) return null;
+    let match=App.matches.find(m=>m.id===App.activeMatchId);
+    if(!match){
+        match=App.matches[0];
+        App.activeMatchId=match.id;
+    }
+    return match;
+}
+
+
+function openMatch(id){
+    App.activeMatchId=id;
+    saveMatches();
+    if(typeof loadNextMatch==="function") loadNextMatch();
+    if(typeof renderMatches==="function") renderMatches();
+    alert("Partido activo actualizado");
+}
+
+</script>
