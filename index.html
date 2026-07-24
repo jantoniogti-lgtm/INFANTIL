@@ -522,7 +522,7 @@ padding:4px 10px;border-radius:999px;margin-bottom:8px;font-size:14px}
 
     </div>
 
-    <hr>
+    <hr id="homeSeparator">
 
     <div id="homeGoalsBox" style="display:none; margin-top:20px;">
 
@@ -664,10 +664,17 @@ padding:4px 10px;border-radius:999px;margin-bottom:8px;font-size:14px}
 👥 Gestión de jugadores
 </button>
 
+<button class="syncBtn" onclick="openTeams()">
+⚽ Gestión de equipos
+</button>
+
+<button class="syncBtn" onclick="openMatchManager()">
+📅 Gestión de partidos
+</button>
+
 <button class="syncBtn" onclick="syncFCF()">
 🔄 Sincronizar FCF
 </button>
-
 <p id="syncStatus">Sin sincronizar</p>
 <p id="lastSync">Última sincronización: --</p>
 
@@ -699,18 +706,16 @@ const App = {
             secondary: "#E53935"
         }
     },
-teams:[
-
+teams: [
 {
     id:1,
     name:"Ramón Sicart",
     short:"RS",
+    city:"Llorenç del Penedès",
+    field:"Ramón Sicart",
     logo:"",
     color:"#FFD600",
-    field:"Municipal",
-    city:"Llorenç del Penedès",
-    maps:"",
-    competition:"Liga"
+    protected:true
 },
 {
     id:2,
@@ -723,8 +728,8 @@ teams:[
     maps:"",
     competition:"Liga"
 }
-
 ],
+activeMatch: null,
     players: [{id:1,number:10,name:'Gerard',position:'Delantero',goals:12,yellow:2,red:0,matches:18,status:'Disponible',captain:true},{id:2,number:19,name:'Nil',position:'Extremo',goals:8,yellow:1,red:0,matches:17,status:'Disponible'},{id:3,number:1,name:'Arnau',position:'Portero',goals:0,yellow:0,red:0,matches:18,status:'Disponible'}],
 
     matches: [],
@@ -758,35 +763,31 @@ teams:[
 };
 function loadDemoData(){
 
-    App.matches = [
+    App.matches=[{
+        home:1,
+        away:2,
+        date:"2026-09-12",
+        hour:"18:00",
+        field:"Municipal"
+    }];
 
-        {
-
-            home:1,
-
-away:2,
-
-            date:"2026-09-12",
-
-            hour:"18:00",
-
-            field:"Municipal"
-
-        }
-
-    ];
-
-}
-function getTeam(id){
+    App.activeMatch=0;
+}function getTeam(id){
 
     return App.teams.find(team=>team.id===id);
 
 }
+let countdownInterval = null;
+let editingTeamId=null;
 function startCountdown(){
 
     if(App.matches.length===0) return;
 
-    const match=getActiveMatch() || App.matches[0];
+    if(App.activeMatch===null || !App.matches[App.activeMatch]){
+    return;
+}
+
+const match=App.matches[App.activeMatch];
 
     const target=new Date(match.date+"T"+match.hour+":00");
 
@@ -821,39 +822,59 @@ if(LiveMatch.state!=="PREMATCH"){
 
     }
 
-    update();
-    setInterval(update,1000);
+ update();
 
+if(countdownInterval){
+    clearInterval(countdownInterval);
 }
+
+countdownInterval = setInterval(update,1000);
+} 
 function loadNextMatch(){
 
-    console.log("loadNextMatch ejecutado");
+    if(App.activeMatch===null || !App.matches[App.activeMatch]){
+        return;
+    }
 
-    if(App.matches.length===0) return;
-
-    const match=getActiveMatch() || App.matches[0];
-
-    console.log(match);
+    const match=App.matches[App.activeMatch];
 
     const home=getTeam(match.home);
     const away=getTeam(match.away);
 
-    console.log(home);
-    console.log(away);
+    document.getElementById("homeTeam").textContent=home.name;
+    document.getElementById("awayTeam").textContent=away.name;
 
-    document.getElementById("homeTeam").textContent = home.name;
-    document.getElementById("awayTeam").textContent = away.name;
-const homeLogo = document.getElementById("homeLogoImg");
-const awayLogo = document.getElementById("awayLogoImg");
+    const homeLogo=document.getElementById("homeLogoImg");
+    const awayLogo=document.getElementById("awayLogoImg");
 
-if (homeLogo) homeLogo.src = home.logo || "";
-if (awayLogo) awayLogo.src = away.logo || "";
-const comp=document.getElementById("homeCompetition");
+    if(homeLogo) homeLogo.src=home.logo || "";
+    if(awayLogo) awayLogo.src=away.logo || "";
 
-if(comp){
+    const comp=document.getElementById("homeCompetition");
+
+    if(comp){
     comp.textContent=match.competition || "Liga";
 }
+
+const date=document.getElementById("matchDate");
+const hour=document.getElementById("matchHour");
+const field=document.getElementById("matchField");
+
+if(date){
+    date.textContent="📅 "+formatDate(match.date);
 }
+
+if(hour){
+    hour.textContent="🕒 "+match.hour;
+}
+
+if(field){
+    field.textContent="📍 "+(match.field || "");
+}
+
+startCountdown();
+    }
+
 function renderClassification(){
 
     const div=document.getElementById("classificationHome");
@@ -900,9 +921,8 @@ function renderMatches(){
    out+=`<div style="padding:12px;border-bottom:1px solid #394150">
    <strong>Jornada ${i+1}</strong><br>
    ${home.name} ${played?m.homeGoals:"vs"} ${played?("- "+m.awayGoals):""} ${away.name}<br>
-   <small>📅 ${m.date} 🕒 ${m.hour}</small><br>
-   <small>${state}</small><br>
-   <button class="syncBtn" style="padding:6px 10px;margin-top:8px" onclick="openMatch(${m.id})">▶ Abrir</button>
+   <small>📅 ${formatDate(m.date)} 🕒 ${m.hour}</small><br>
+   <small>${state}</small>
    </div>`;
  });
  box.innerHTML=out;
@@ -1121,12 +1141,14 @@ const homeGoalsRight=document.getElementById("homeGoalsRight");
 if(!homeGoalsBox||!homeGoalsLeft||!homeGoalsRight)return;
 const goalsOnly=sorted.filter(e=>e.type==="goal");
 if(!goalsOnly.length){
-homeGoalsBox.style.display="none";
-homeGoalsLeft.innerHTML="";
-homeGoalsRight.innerHTML="";
-return;
-}
-function refreshHome(){
+
+    homeGoalsBox.style.display="none";
+
+}else{
+
+    homeGoalsBox.style.display="block";
+
+}function refreshHome(){
 
     updateHomeScore();
 
@@ -1205,7 +1227,17 @@ function updateDate(){
         hoy.getFullYear();
 
 }
+function formatDate(date){
 
+    if(!date) return "";
+
+    const p = date.split("-");
+
+    if(p.length !== 3) return date;
+
+    return p[2] + "/" + p[1] + "/" + p[0];
+
+}
 const APP_PIN="2990";
 function accessProtected(page,btn){
  const pin=prompt("Introduce el PIN");
@@ -1220,10 +1252,8 @@ document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'))
 btn.classList.add('active');
 }
 updateDate();
-loadMatches();
 if(App.matches.length===0){
     loadDemoData();
-    saveMatches();
 }
 startCountdown();
 loadNextMatch();
@@ -1320,6 +1350,97 @@ function openPlayerSelector(team){
  #${p.number} ${p.name}
  </button>`).join('');
  document.getElementById('playerModal').style.display='flex';
+}
+function openTeams(){
+
+    renderTeamManager();
+
+    document.getElementById("teamManagerModal").style.display="flex";
+
+}
+function renderTeamManager(){
+
+    const box=document.getElementById("teamManagerList");
+
+    if(!box) return;
+
+    box.innerHTML=App.teams.map(team=>`
+
+    <div style="
+    background:#223047;
+    border-radius:10px;
+    padding:12px;
+    margin-bottom:10px;">
+
+        <b>${team.name}</b><br>
+
+        <small>${team.city}</small>
+
+        <div style="margin-top:10px;">
+
+            <button
+            class="syncBtn"
+            style="padding:8px 12px"
+            onclick="editTeam(${team.id})">
+
+            ✏️ Editar
+
+            </button>
+
+        </div>
+
+    </div>
+
+    `).join("");
+
+}
+function newTeam(){
+
+    alert("Nuevo equipo - Sprint 1.3.2");
+
+}
+
+function editTeam(id){
+
+    const team=App.teams.find(t=>t.id===id);
+
+    if(!team) return;
+
+    editingTeamId=id;
+
+    teamName.value=team.name;
+    teamShort.value=team.short;
+    teamCity.value=team.city;
+    teamField.value=team.field;
+
+    document.getElementById("teamEditorModal").style.display="flex";
+
+}
+function closeTeamEditor(){
+
+    document.getElementById("teamEditorModal").style.display="none";
+
+}
+function saveTeam(){
+
+    const team=App.teams.find(t=>t.id===editingTeamId);
+
+    if(!team) return;
+
+    team.name=teamName.value;
+    team.short=teamShort.value;
+    team.city=teamCity.value;
+    team.field=teamField.value;
+
+    renderTeamManager();
+
+    closeTeamEditor();
+
+}
+function closeTeams(){
+
+    document.getElementById("teamManagerModal").style.display="none";
+
 }
 function closePlayerModal(){
  document.getElementById('playerModal').style.display='none';
@@ -1432,7 +1553,209 @@ document.addEventListener('DOMContentLoaded',()=>{
  if(p)p.onclick=()=>{eventMinuteOffset++;document.getElementById('eventMinuteValue').textContent=(getEventMinute()+eventMinuteOffset)+"'";};
  if(m)m.onclick=()=>{eventMinuteOffset--;document.getElementById('eventMinuteValue').textContent=(getEventMinute()+eventMinuteOffset)+"'";};
 });
+function openMatchManager(){
 
+    renderMatchManager();
+
+    document.getElementById("matchManagerModal").style.display="flex";
+
+}
+
+function closeMatchManager(){
+
+    document.getElementById("matchManagerModal").style.display="none";
+
+}
+
+function renderMatchManager(){
+
+    const box=document.getElementById("matchManagerList");
+    if(!box) return;
+
+    if(App.matches.length===0){
+        box.innerHTML="No hay partidos.";
+        return;
+    }
+
+    box.innerHTML=App.matches.map((m,i)=>{
+        const home=getTeam(m.home);
+        const away=getTeam(m.away);
+
+      return `
+<div style="background:#223047;padding:12px;border-radius:10px;margin-bottom:10px;">
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+
+<b>Jornada ${i+1}</b>
+
+<button
+class="syncBtn"
+style="padding:6px 10px"
+onclick="setActiveMatch(${i})">
+
+${App.activeMatch===i ? "⭐ Partido activo" : "☆ Activar"}
+
+</button>
+
+</div>
+
+${home.name}<br>
+🆚<br>
+${away.name}<br><br>
+
+📅 ${formatDate(m.date)}<br>
+🕒 ${m.hour}<br><br>
+
+<button
+class="syncBtn"
+style="padding:8px 12px;margin-right:6px"
+onclick="editMatch(${i})">
+
+✏️ Editar
+
+</button>
+
+<button
+class="syncBtn"
+style="padding:8px 12px;background:#c62828;color:white"
+onclick="deleteMatch(${i})">
+
+🗑️ Eliminar
+
+</button>
+
+</div>`;
+    }).join("");
+}
+
+let editingMatch = null;
+
+function newMatch(){
+
+    editingMatch = null;
+
+    document.getElementById("matchType").value = "Liga";
+    document.getElementById("matchCompetition").value = "";
+    document.getElementById("matchRound").value = "";
+    document.getElementById("matchEditorDate").value="";
+document.getElementById("matchEditorHour").value="";
+
+    document.querySelector("#matchEditorModal h2").textContent =
+    "📅 Nuevo partido";
+
+    document.getElementById("matchEditorModal").style.display = "flex";
+
+}
+function editMatch(index){
+
+    editingMatch=index;
+
+    const match=App.matches[index];
+
+    document.getElementById("matchType").value=match.type || "Liga";
+    document.getElementById("matchCompetition").value=match.competition || "";
+    document.getElementById("matchRound").value=match.round || "";
+    document.getElementById("matchEditorDate").value=match.date;
+    document.getElementById("matchEditorHour").value=match.hour;
+
+    document.querySelector("#matchEditorModal h2").textContent=
+    "✏️ Editar partido";
+
+    document.getElementById("matchEditorModal").style.display="flex";
+
+}
+function deleteMatch(index){
+
+    const match = App.matches[index];
+
+    const home = getTeam(match.home);
+    const away = getTeam(match.away);
+
+    if(!confirm(
+        `¿Eliminar este partido?\n\n${home.name} vs ${away.name}`
+    )) return;
+
+    App.matches.splice(index,1);
+
+    if(App.activeMatch === index){
+        App.activeMatch = null;
+    }
+
+    renderMatchManager();
+    renderMatches();
+    loadNextMatch();
+    renderStatistics();
+
+}
+function setActiveMatch(index){
+
+    App.activeMatch=index;
+
+    renderMatchManager();
+    loadNextMatch();
+    renderMatches();
+
+}
+
+function closeMatchEditor(){
+
+    document.getElementById("matchEditorModal").style.display = "none";
+
+}
+function saveMatch(){
+
+    const type=document.getElementById("matchType").value;
+    const competition=document.getElementById("matchCompetition").value.trim();
+    const round=document.getElementById("matchRound").value.trim();
+    const date=document.getElementById("matchEditorDate").value;
+    const hour=document.getElementById("matchEditorHour").value;
+
+    if(date==="" || hour===""){
+        alert("Fecha="+date+" Hora="+hour);
+        return;
+editingMatch=null;
+
+document.querySelector("#matchEditorModal h2").textContent=
+"📅 Nuevo partido";
+    }
+
+ const data={
+
+    home:1,
+    away:2,
+
+    type:type,
+    competition:competition,
+    round:round,
+    date:date,
+    hour:hour,
+    field:"Municipal"
+
+};
+
+if(editingMatch===null){
+
+    App.matches.push(data);
+
+    if(App.activeMatch===null){
+        App.activeMatch=App.matches.length-1;
+    }
+
+}else{
+
+    App.matches[editingMatch]=data;
+
+}
+App.matches.sort((a,b)=>(a.date+" "+a.hour).localeCompare(b.date+" "+b.hour));
+
+renderMatchManager();
+renderMatches();
+loadNextMatch();
+
+editingMatch=null;
+document.querySelector("#matchEditorModal h2").textContent="📅 Nuevo partido";
+closeMatchEditor();
+}
 </script>
 
 <div id="playerModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center;">
@@ -1484,40 +1807,85 @@ function updateHomeLive(){
     const badge=document.getElementById("homeBadge");
     const state=document.getElementById("homeLiveState");
     const liveState=document.getElementById("liveState");
-
+const date=document.getElementById("matchDate");
+const hour=document.getElementById("matchHour");
+const field=document.getElementById("matchField");
+const goals=document.getElementById("homeGoalsBox");
+const separator=document.getElementById("homeSeparator");
     if(!badge || !state || !liveState) return;
 
     switch(LiveMatch.state){
 
-        case "PREMATCH":
-            badge.textContent="📅 PRÓXIMO PARTIDO";
-            state.textContent="Esperando inicio";
-            liveState.textContent="⚪ PREPARTIDO";
-            break;
+       case "PREMATCH":
 
-        case "FIRST_HALF":
-            badge.textContent="🔴 EN DIRECTO";
-            state.textContent="🟢 Primera Parte";
-            liveState.textContent="🟢 Primera Parte";
-            break;
+    badge.textContent="📅 PRÓXIMO PARTIDO";
+    state.textContent="PREPARTIDO";
+    liveState.textContent="⚪ PREPARTIDO";
+
+    date.style.display="";
+    hour.style.display="";
+    field.style.display="";
+
+    goals.style.display="none";
+    separator.style.display="block";
+
+    break;
+
+       case "FIRST_HALF":
+
+    badge.textContent="🔴 EN DIRECTO";
+    state.textContent="🟢 Primera Parte";
+    liveState.textContent="🟢 Primera Parte";
+
+    date.style.display="none";
+    hour.style.display="none";
+    field.style.display="none";
+
+    separator.style.display="block";
+
+    break;
 
         case "HALFTIME":
             badge.textContent="🔴 EN DIRECTO";
-            state.textContent="🟡 Descanso";
-            liveState.textContent="🟡 Descanso";
-            break;
+    state.textContent="🟢 Primera Parte";
+    liveState.textContent="🟢 Primera Parte";
+
+    date.style.display="none";
+    hour.style.display="none";
+    field.style.display="none";
+
+    separator.style.display="block";
+
+    break;
+
 
         case "SECOND_HALF":
-            badge.textContent="🔴 EN DIRECTO";
-            state.textContent="🔵 Segunda Parte";
-            liveState.textContent="🔵 Segunda Parte";
-            break;
+           badge.textContent="🔴 EN DIRECTO";
+    state.textContent="🟢 Primera Parte";
+    liveState.textContent="🟢 Primera Parte";
+
+    date.style.display="none";
+    hour.style.display="none";
+    field.style.display="none";
+
+    separator.style.display="block";
+
+    break;
+
 
         case "FINISHED":
-            badge.textContent="🏁 FINALIZADO";
-            state.textContent="🏁 Finalizado";
-            liveState.textContent="🏁 Finalizado";
-            break;
+            badge.textContent="🔴 EN DIRECTO";
+    state.textContent="🟢 Primera Parte";
+    liveState.textContent="🟢 Primera Parte";
+
+    date.style.display="none";
+    hour.style.display="none";
+    field.style.display="none";
+
+    separator.style.display="block";
+
+    break;
+
     }
 }
 
@@ -1721,43 +2089,6 @@ function savePlayer(){
     document.getElementById("playerCaptain").checked=false;
 
 }
-
-function closeMatchEditor(){
- var m=document.getElementById("matchEditorModal");
- if(m)m.style.display="none";
-}
-function saveMatch(){
- const comp=document.getElementById("matchCompetition").value||"Liga";
- const md=Number(document.getElementById("matchday").value)||1;
- const dt=document.getElementById("matchDateInput").value;
- const hr=document.getElementById("matchHourInput").value;
- const field=document.getElementById("matchFieldInput").value||"Municipal";
- const home=Number(document.getElementById("matchHome").value);
- const away=Number(document.getElementById("matchAway").value);
-
- if(!dt||!hr){alert("Completa fecha y hora");return;}
-
- const match={
-   id:Date.now(),
-   competition:comp,
-   matchday:md,
-   date:dt,
-   hour:hr,
-   field:field,
-   home:home,
-   away:away,
-   homeGoals:0,
-   awayGoals:0
- };
- if(!App.matches)App.matches=[];
- App.matches.push(match);
- App.activeMatchId=match.id;
- if(typeof renderMatches==="function")renderMatches();
- saveMatches();
- closeMatchEditor();
- alert("Partido creado");
-}
-
 </script>
 <div id="playerManagerModal"
 style="display:none;
@@ -1867,92 +2198,213 @@ Cancelar
 </div>
 
 </div>
-<div id="matchEditorModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2000;align-items:center;justify-content:center;">
-<div style="background:#1E293B;width:92%;max-width:400px;border-radius:16px;padding:20px;">
-<h2 style="color:#FFD600">📅 Nuevo partido</h2>
-<label>🏆 Competición</label><input id="matchCompetition" value="Liga" style="width:100%;padding:10px;margin:8px 0;">
-<label>📅 Jornada</label><input id="matchday" type="number" value="1" style="width:100%;padding:10px;margin:8px 0;">
-<label>📆 Fecha</label><input id="matchDateInput" type="date" style="width:100%;padding:10px;margin:8px 0;">
-<label>🕒 Hora</label><input id="matchHourInput" type="time" style="width:100%;padding:10px;margin:8px 0;">
-<label>🏟️ Campo</label><input id="matchFieldInput" value="Municipal" style="width:100%;padding:10px;margin:8px 0;">
-<label>🏠 Local</label>
-<select id="matchHome" style="width:100%;padding:10px;margin:8px 0;">
-<option value="1">Ramón Sicart</option><option value="2">FC Barcelona</option>
+<div id="matchManagerModal"
+style="display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.75);
+z-index:1700;
+align-items:center;
+justify-content:center;">
+
+<div style="
+background:#1E293B;
+width:95%;
+max-width:430px;
+max-height:85vh;
+overflow:auto;
+border-radius:16px;
+padding:20px;">
+
+<h2 style="color:#FFD600">
+📅 Gestión de partidos
+</h2>
+
+<div id="matchManagerList">
+No hay partidos.
+</div>
+<br>
+
+<button class="syncBtn" onclick="newMatch()">
+➕ Nuevo partido
+</button>
+
+<button class="syncBtn"
+onclick="closeMatchManager()">
+Cerrar
+</button>
+
+</div>
+
+</div>
+<div id="matchEditorModal"
+style="display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.75);
+z-index:1800;
+align-items:center;
+justify-content:center;">
+
+<div style="
+background:#1E293B;
+width:95%;
+max-width:430px;
+border-radius:16px;
+padding:20px;">
+
+<h2 style="color:#FFD600;margin-bottom:15px;">
+📅 Nuevo partido
+</h2>
+
+<label>Tipo</label>
+
+<select id="matchType" style="width:100%;padding:10px;margin-bottom:12px">
+
+<option>Liga</option>
+<option>Copa</option>
+<option>Torneo</option>
+<option>Amistoso</option>
+
 </select>
-<label>🚌 Visitante</label>
-<select id="matchAway" style="width:100%;padding:10px;margin:8px 0;">
-<option value="2">FC Barcelona</option><option value="1">Ramón Sicart</option>
-</select>
-<button class="syncBtn" onclick="saveMatch()">💾 Guardar</button>
-<button class="syncBtn" onclick="closeMatchEditor()">Cancelar</button>
-</div></div></body>
+
+<label>Competición</label>
+
+<input
+id="matchCompetition"
+style="width:100%;padding:10px;margin-bottom:12px;">
+
+<label>Jornada</label>
+
+<input
+id="matchRound"
+type="number"
+style="width:100%;padding:10px;margin-bottom:12px;">
+
+<label>Fecha</label>
+
+<input
+id="matchEditorDate"
+type="date"
+style="width:100%;padding:10px;margin-bottom:12px;">
+
+<label>Hora</label>
+
+<input
+id="matchEditorHour"
+type="time"
+style="width:100%;padding:10px;margin-bottom:12px;">
+
+<button
+class="syncBtn"
+onclick="saveMatch()">
+
+💾 Guardar partido
+
+</button>
+
+<button
+class="syncBtn"
+onclick="closeMatchEditor()">
+
+Cancelar
+
+</button>
+
+</div>
+
+</div>
+<div id="teamManagerModal"
+style="display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.75);
+z-index:1900;
+align-items:center;
+justify-content:center;">
+
+<div style="
+background:#1E293B;
+width:95%;
+max-width:430px;
+max-height:85vh;
+overflow:auto;
+border-radius:16px;
+padding:20px;">
+
+<h2 style="color:#FFD600">
+⚽ Gestión de equipos
+</h2>
+
+<div id="teamManagerList">
+No hay equipos.
+</div>
+
+<br>
+
+<button class="syncBtn" onclick="newTeam()">
+➕ Nuevo equipo
+</button>
+
+<button class="syncBtn" onclick="closeTeams()">
+Cerrar
+</button>
+
+</div>
+
+</div>
+<div id="teamEditorModal"
+style="display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.75);
+z-index:2000;
+align-items:center;
+justify-content:center;">
+
+<div style="
+background:#1E293B;
+width:95%;
+max-width:420px;
+border-radius:16px;
+padding:20px;">
+
+<h2 style="color:#FFD600">
+⚽ Equipo
+</h2>
+
+<label>Nombre</label>
+<input id="teamName"
+style="width:100%;padding:10px;margin-bottom:12px;">
+
+<label>Nombre corto</label>
+<input id="teamShort"
+style="width:100%;padding:10px;margin-bottom:12px;">
+
+<label>Ciudad</label>
+<input id="teamCity"
+style="width:100%;padding:10px;margin-bottom:12px;">
+
+<label>Campo</label>
+<input id="teamField"
+style="width:100%;padding:10px;margin-bottom:12px;">
+
+<button class="syncBtn"
+onclick="saveTeam()">
+
+💾 Guardar
+
+</button>
+
+<button class="syncBtn"
+onclick="closeTeamEditor()">
+
+Cancelar
+
+</button>
+
+</div>
+
+</div>
+</body>
 </html>
-
-
-
-<!-- ===== PASO 5.4 (INSTRUCCIONES DE INTEGRACIÓN) ===== -->
-<script>
-/*
-Sustituye la función editMatch(id) por una versión que:
-1. Busque el partido por id.
-2. Rellene el formulario (competition, matchday, date, hour, field, home, away).
-3. Guarde el id en window.editingMatchId.
-4. Abra el modal.
-
-En saveMatch():
-- Si window.editingMatchId existe:
-    - actualizar el partido existente.
-- Si no existe:
-    - crear uno nuevo.
-Después:
-- renderMatches();
-- closeMatchEditor();
-
-En deleteMatch(id):
-- Confirmar borrado.
-- Eliminar el partido de App.matches.
-- Si existe saveData(), llamarla.
-- renderMatches();
-*/
-
-function saveMatches(){
-    localStorage.setItem("rs_matches",JSON.stringify(App.matches));
-    localStorage.setItem("rs_activeMatchId",String(App.activeMatchId||""));
-}
-
-function loadMatches(){
-    try{
-        const saved=localStorage.getItem("rs_matches");
-        if(saved){
-            App.matches=JSON.parse(saved);
-        }
-        const active=localStorage.getItem("rs_activeMatchId");
-        if(active){
-            App.activeMatchId=Number(active);
-        }
-    }catch(e){
-        console.error("Error cargando partidos",e);
-    }
-}
-
-
-function getActiveMatch(){
-    if(!App.matches || !App.matches.length) return null;
-    let match=App.matches.find(m=>m.id===App.activeMatchId);
-    if(!match){
-        match=App.matches[0];
-        App.activeMatchId=match.id;
-    }
-    return match;
-}
-
-
-function openMatch(id){
-    App.activeMatchId=id;
-    saveMatches();
-    if(typeof loadNextMatch==="function") loadNextMatch();
-    if(typeof renderMatches==="function") renderMatches();
-    alert("Partido activo actualizado");
-}
-
-</script>
