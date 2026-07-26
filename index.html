@@ -906,8 +906,8 @@ function renderMatches(){
  if(!App.matches.length){box.innerHTML="<p>Sin partidos</p>";return;}
  let out="";
  App.matches.forEach((m,i)=>{
-   const home=getTeam(m.home);
-   const away=getTeam(m.away);
+   const home=getTeam(m.home)||{name:'Local'};
+   const away=getTeam(m.away)||{name:'Visitante'};
    const played=(m.homeGoals!==undefined && m.awayGoals!==undefined);
    let state="⏳ Pendiente";
    if(played){
@@ -1531,13 +1531,29 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 function openMatchManager(){
 
-    renderMatchManager();
+    const modal=document.getElementById("matchManagerModal");
+    const list=document.getElementById("matchManagerList");
+    if(!modal||!list){
+        alert("Error: falta el gestor de partidos.");
+        return;
+    }
 
-    document.getElementById("matchManagerModal").style.display="flex";
+    try{
+        if(typeof renderMatchManager==="function"){
+            renderMatchManager();
+        }else{
+            list.innerHTML="<p>No hay gestor disponible.</p>";
+        }
+    }catch(e){
+        console.error(e);
+        list.innerHTML="<p>Error cargando partidos.</p>";
+    }
+
+    modal.style.display="flex";
 
 }
 
-function closeMatchManager(){
+function closeMatchManagerfunction closeMatchManager(){
 
     document.getElementById("matchManagerModal").style.display="none";
 
@@ -1554,8 +1570,8 @@ function renderMatchManager(){
     }
 
     box.innerHTML=App.matches.map((m,i)=>{
-        const home=getTeam(m.home);
-        const away=getTeam(m.away);
+        const home=getTeam(m.home)||{name:'Local'};
+        const away=getTeam(m.away)||{name:'Visitante'};
 
       return `
 <div style="background:#223047;padding:12px;border-radius:10px;margin-bottom:10px;">
