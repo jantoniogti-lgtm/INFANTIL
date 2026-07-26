@@ -663,18 +663,16 @@ padding:4px 10px;border-radius:999px;margin-bottom:8px;font-size:14px}
 <button class="syncBtn" onclick="openPlayerManager()">
 👥 Gestión de jugadores
 </button>
-
 <button class="syncBtn" onclick="openTeams()">
 ⚽ Gestión de equipos
 </button>
-
 <button class="syncBtn" onclick="openMatchManager()">
 📅 Gestión de partidos
 </button>
-
 <button class="syncBtn" onclick="syncFCF()">
 🔄 Sincronizar FCF
 </button>
+
 <p id="syncStatus">Sin sincronizar</p>
 <p id="lastSync">Última sincronización: --</p>
 
@@ -778,7 +776,6 @@ function loadDemoData(){
 
 }
 let countdownInterval = null;
-let editingTeamId=null;
 function startCountdown(){
 
     if(App.matches.length===0) return;
@@ -1351,95 +1348,74 @@ function openPlayerSelector(team){
  </button>`).join('');
  document.getElementById('playerModal').style.display='flex';
 }
-function openTeams(){
+let editingTeamId=null;
+function openTeams(){renderTeamManager();document.getElementById("teamManagerModal").style.display="flex";}
+function closeTeams(){document.getElementById("teamManagerModal").style.display="none";}
+function renderTeamManager(){
+ const box=document.getElementById("teamManagerList");
+ if(!box) return;
+ box.innerHTML=App.teams.map(t=>`
+ <div style="background:#223047;padding:12px;border-radius:10px;margin-bottom:10px;">
+ <b>${t.name}</b><br>
+ <small>${t.city||""}</small><br><br>
+ <button class="syncBtn" style="padding:8px 12px;margin-right:6px" onclick="editTeam(${t.id})">✏️ Editar</button>
+ ${t.protected?"":"<button class='syncBtn' style='padding:8px 12px;background:#c62828;color:#fff' onclick='deleteTeam("+t.id+")'>🗑️ Eliminar</button>"}
+ </div>`).join("");
+}
+
+function deleteTeam(id){
+ const team=App.teams.find(t=>t.id===id);
+ if(!team) return;
+ if(team.protected){
+   alert("Ramón Sicart no puede eliminarse.");
+   return;
+ }
+ if(!confirm("¿Eliminar "+team.name+"?")) return;
+ App.teams=App.teams.filter(t=>t.id!==id);
+ renderTeamManager();
+}
+
+function editTeam(id){const t=App.teams.find(x=>x.id===id);if(!t)return;editingTeamId=id;teamName.value=t.name;teamShort.value=t.short;teamCity.value=t.city;teamField.value=t.field;document.getElementById("teamEditorModal").style.display="flex";}
+function closeTeamEditor(){document.getElementById("teamEditorModal").style.display="none";}
+function saveTeam(){
+
+    const data={
+        id: editingTeamId ?? Date.now(),
+        name: teamName.value.trim(),
+        short: teamShort.value.trim(),
+        city: teamCity.value.trim(),
+        field: teamField.value.trim(),
+        logo:"",
+        color:"#3B82F6",
+        protected:false
+    };
+
+    if(data.name===""){
+        alert("Introduce el nombre del equipo");
+        return;
+    }
+
+    if(editingTeamId===null){
+        App.teams.push(data);
+    }else{
+        const index=App.teams.findIndex(t=>t.id===editingTeamId);
+        App.teams[index]={...App.teams[index],...data};
+    }
 
     renderTeamManager();
-
-    document.getElementById("teamManagerModal").style.display="flex";
-
-}
-function renderTeamManager(){
-
-    const box=document.getElementById("teamManagerList");
-
-    if(!box) return;
-
-    box.innerHTML=App.teams.map(team=>`
-
-    <div style="
-    background:#223047;
-    border-radius:10px;
-    padding:12px;
-    margin-bottom:10px;">
-
-        <b>${team.name}</b><br>
-
-        <small>${team.city}</small>
-
-        <div style="margin-top:10px;">
-
-            <button
-            class="syncBtn"
-            style="padding:8px 12px"
-            onclick="editTeam(${team.id})">
-
-            ✏️ Editar
-
-            </button>
-
-        </div>
-
-    </div>
-
-    `).join("");
+    closeTeamEditor();
 
 }
 function newTeam(){
 
-    alert("Nuevo equipo - Sprint 1.3.2");
+    editingTeamId=null;
 
-}
-
-function editTeam(id){
-
-    const team=App.teams.find(t=>t.id===id);
-
-    if(!team) return;
-
-    editingTeamId=id;
-
-    teamName.value=team.name;
-    teamShort.value=team.short;
-    teamCity.value=team.city;
-    teamField.value=team.field;
+    teamName.value="";
+    teamShort.value="";
+    teamCity.value="";
+    teamField.value="";
 
     document.getElementById("teamEditorModal").style.display="flex";
-
-}
-function closeTeamEditor(){
-
-    document.getElementById("teamEditorModal").style.display="none";
-
-}
-function saveTeam(){
-
-    const team=App.teams.find(t=>t.id===editingTeamId);
-
-    if(!team) return;
-
-    team.name=teamName.value;
-    team.short=teamShort.value;
-    team.city=teamCity.value;
-    team.field=teamField.value;
-
-    renderTeamManager();
-
-    closeTeamEditor();
-
-}
-function closeTeams(){
-
-    document.getElementById("teamManagerModal").style.display="none";
 
 }
 function closePlayerModal(){
@@ -2314,97 +2290,7 @@ Cancelar
 </div>
 
 </div>
-<div id="teamManagerModal"
-style="display:none;
-position:fixed;
-inset:0;
-background:rgba(0,0,0,.75);
-z-index:1900;
-align-items:center;
-justify-content:center;">
 
-<div style="
-background:#1E293B;
-width:95%;
-max-width:430px;
-max-height:85vh;
-overflow:auto;
-border-radius:16px;
-padding:20px;">
-
-<h2 style="color:#FFD600">
-⚽ Gestión de equipos
-</h2>
-
-<div id="teamManagerList">
-No hay equipos.
-</div>
-
-<br>
-
-<button class="syncBtn" onclick="newTeam()">
-➕ Nuevo equipo
-</button>
-
-<button class="syncBtn" onclick="closeTeams()">
-Cerrar
-</button>
-
-</div>
-
-</div>
-<div id="teamEditorModal"
-style="display:none;
-position:fixed;
-inset:0;
-background:rgba(0,0,0,.75);
-z-index:2000;
-align-items:center;
-justify-content:center;">
-
-<div style="
-background:#1E293B;
-width:95%;
-max-width:420px;
-border-radius:16px;
-padding:20px;">
-
-<h2 style="color:#FFD600">
-⚽ Equipo
-</h2>
-
-<label>Nombre</label>
-<input id="teamName"
-style="width:100%;padding:10px;margin-bottom:12px;">
-
-<label>Nombre corto</label>
-<input id="teamShort"
-style="width:100%;padding:10px;margin-bottom:12px;">
-
-<label>Ciudad</label>
-<input id="teamCity"
-style="width:100%;padding:10px;margin-bottom:12px;">
-
-<label>Campo</label>
-<input id="teamField"
-style="width:100%;padding:10px;margin-bottom:12px;">
-
-<button class="syncBtn"
-onclick="saveTeam()">
-
-💾 Guardar
-
-</button>
-
-<button class="syncBtn"
-onclick="closeTeamEditor()">
-
-Cancelar
-
-</button>
-
-</div>
-
-</div>
+<div id="teamManagerModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1900;align-items:center;justify-content:center;"><div style="background:#1E293B;width:95%;max-width:430px;padding:20px;border-radius:16px;"><h2 style="color:#FFD600">⚽ Gestión de equipos</h2><div id="teamManagerList"></div><button class="syncBtn" onclick="newTeam()">➕ Nuevo equipo</button><button class="syncBtn" onclick="closeTeams()">Cerrar</button></div></div><div id="teamEditorModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2000;align-items:center;justify-content:center;"><div style="background:#1E293B;width:95%;max-width:420px;padding:20px;border-radius:16px;"><input id="teamName" placeholder="Nombre" style="width:100%;padding:10px;margin-bottom:10px;"><input id="teamShort" placeholder="Nombre corto" style="width:100%;padding:10px;margin-bottom:10px;"><input id="teamCity" placeholder="Ciudad" style="width:100%;padding:10px;margin-bottom:10px;"><input id="teamField" placeholder="Campo" style="width:100%;padding:10px;margin-bottom:10px;"><button class="syncBtn" onclick="saveTeam()">💾 Guardar</button><button class="syncBtn" onclick="closeTeamEditor()">Cancelar</button></div></div>
 </body>
 </html>
