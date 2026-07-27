@@ -1376,40 +1376,35 @@ document.getElementById(page).classList.add('active');
 document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
 btn.classList.add('active');
 }
-updateDate();
 
-loadDemoData();
+function initApp(){
 
-startCountdown();
-loadNextMatch();
+    updateDate();
 
-window.addEventListener("load",()=>{
+    if(!loadData()){
+        loadDemoData();
+    }
+
+    renderPlayers();
+    renderConvocations();
+    renderLineup();
+    renderMatches();
+    renderClassification();
+    renderFullClassification();
+    renderStatistics();
+
+    loadNextMatch();
 
     refreshScoreboard();
-
     refreshTimeline();
+    updateClockDisplay();
+    updateHomeLive();
 
-    if(typeof updateClockDisplay==="function"){
-        updateClockDisplay();
-    }
+    startCountdown();
+}
 
-    if(typeof updateHomeLive==="function"){
-        updateHomeLive();
-    }
+window.addEventListener("load", initApp);
 
-    if(typeof renderMatches==="function"){
-        renderMatches();
-    }
-
-    if(typeof renderFullClassification==="function"){
-        renderFullClassification();
-    }
-
-    if(typeof renderStatistics==="function"){
-        renderStatistics();
-    }
-
-});
 
 async function syncFCF(){
  const status=document.getElementById('syncStatus');
@@ -2109,7 +2104,6 @@ function saveMatch(){
     if(date==="" || hour===""){
     alert("Debes introducir una fecha y una hora.");
     return;
-saveData();
 }
 const data={
 
@@ -2158,6 +2152,7 @@ updateHomeLive();
 editingMatch=null;
 document.querySelector("#matchEditorModal h2").textContent="📅 Nuevo partido";
 closeMatchEditor();
+saveData();
 }
 </script>
 
@@ -2455,13 +2450,19 @@ function closePlayerEditor(){
 }
 function savePlayer(){
 
+    
+
     const number = Number(document.getElementById("playerNumber").value);
     const name = document.getElementById("playerName").value.trim();
     const surname = document.getElementById("playerSurname").value.trim();
     const position = document.getElementById("playerPosition").value;
     const captain = document.getElementById("playerCaptain").checked;
 
+    
+
     if(!number || !name){
+
+        
 
         alert("Introduce al menos dorsal y nombre.");
 
@@ -2469,6 +2470,9 @@ function savePlayer(){
 
     }
 
+    
+
+    
  if(editingPlayerId){
 
     const player = App.players.find(p=>p.id===editingPlayerId);
@@ -2516,7 +2520,7 @@ const STORAGE_KEY = "RS_CLUB_MANAGER_V6";
 
 function saveData(){
 
-    console.log("SAVE DATA EJECUTADA");
+    
 
     const data = {
 
@@ -2537,7 +2541,7 @@ function saveData(){
         JSON.stringify(data)
     );
 
-    console.log(localStorage.getItem(STORAGE_KEY));
+    
 
 }
 
