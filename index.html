@@ -353,6 +353,45 @@ margin:10px 0;
 .empty{padding:14px;color:#94A3B8}
 .shirt{width:34px;height:40px;background:repeating-linear-gradient(90deg,#ffd600 0,#ffd600 8px,#e53935 8px,#e53935 16px);clip-path:polygon(20% 0,35% 10%,65% 10%,80% 0,100% 18%,88% 28%,88% 100%,12% 100%,12% 28%,0 18%);display:flex;align-items:center;justify-content:center;color:#000;font-weight:bold;font-size:14px}
 .minute{margin-left:auto;font-weight:bold}
+.teamShirt{
+
+width:34px;
+height:40px;
+
+clip-path:polygon(
+20% 0,
+35% 10%,
+65% 10%,
+80% 0,
+100% 18%,
+88% 28%,
+88% 100%,
+12% 100%,
+12% 28%,
+0 18%);
+
+border:1px solid rgba(255,255,255,.15);
+
+}
+
+.homeShirt{
+
+background:
+repeating-linear-gradient(
+90deg,
+#FFD600 0,
+#FFD600 8px,
+#E53935 8px,
+#E53935 16px);
+
+}
+
+.awayShirt{
+
+background:
+#E5E7EB;
+
+}
 
 
 .scoreBadge{display:inline-block;background:#16a34a;color:#fff;font-weight:bold;
@@ -704,27 +743,34 @@ const App = {
             secondary: "#E53935"
         }
     },
-teams: [
+teams:[
 {
     id:1,
     name:"Ramón Sicart",
     short:"RS",
-    city:"Llorenç del Penedès",
-    field:"Ramón Sicart",
+    city:"",
+    field:"",
     logo:"",
-    color:"#FFD600",
-    protected:true
+    protected:true,
+    shirt:{
+        primary:"#FFD600",
+        secondary:"#E53935",
+        style:"stripes"
+    }
 },
 {
     id:2,
     name:"FC Barcelona",
     short:"FCB",
+    city:"",
+    field:"",
     logo:"",
-    color:"#004D98",
-    field:"Ciutat Esportiva Joan Gamper",
-    city:"Sant Joan Despí",
-    maps:"",
-    competition:"Liga"
+    protected:false,
+    shirt:{
+        primary:"#004D98",
+        secondary:"#A50044",
+        style:"stripes"
+    }
 }
 ],
 activeMatch: null,
@@ -834,10 +880,19 @@ function loadNextMatch(){
     }
 
     const match=App.matches[App.activeMatch];
+const home = getTeam(match.home);
 
-    const home=getTeam(match.home);
-    const away=getTeam(match.away);
-
+const away = match.useCustomAway
+    ? {
+        name: match.awayCustom,
+        logo: ""
+      }
+    : (
+        getTeam(match.away) || {
+            name: "Equipo visitante",
+            logo: ""
+        }
+      );
     document.getElementById("homeTeam").textContent=home.name;
     document.getElementById("awayTeam").textContent=away.name;
 
@@ -868,7 +923,15 @@ if(hour){
 if(field){
     field.textContent="📍 "+(match.field || "");
 }
+// Actualizar Modo Partido
+const liveResult = document.getElementById("liveResult");
 
+if(liveResult){
+
+    liveResult.textContent =
+        `${home.name} ${LiveMatch.homeScore} - ${LiveMatch.awayScore} ${away.name}`;
+
+}
 startCountdown();
     }
 
@@ -906,8 +969,19 @@ function renderMatches(){
  if(!App.matches.length){box.innerHTML="<p>Sin partidos</p>";return;}
  let out="";
  App.matches.forEach((m,i)=>{
-   const home=getTeam(m.home)||{name:'Local'};
-   const away=getTeam(m.away)||{name:'Visitante'};
+   const home = getTeam(m.home) || {
+    name: "Equipo local"
+};
+
+const away = m.useCustomAway
+    ? {
+        name: m.awayCustom
+    }
+    : (
+        getTeam(m.away) || {
+            name: "Equipo visitante"
+        }
+    );
    const played=(m.homeGoals!==undefined && m.awayGoals!==undefined);
    let state="⏳ Pendiente";
    if(played){
@@ -1009,6 +1083,7 @@ function saveConvocation(){
  App.convocation=ids;
  localStorage.setItem("rs_convocation",JSON.stringify(ids));
  alert("Convocatoria guardada");
+saveData();
 }
 document.addEventListener("DOMContentLoaded",()=>{
  renderConvocations();
@@ -1036,6 +1111,7 @@ function saveLineup(){
    players:ids
  }));
  alert("Alineación guardada");
+saveData();
 }
 document.addEventListener("DOMContentLoaded",()=>{
  renderLineup();
@@ -1052,25 +1128,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 });
 
 
-const matchEvents=[];
-function matchEvent(type){
- const names={goal:"⚽ Gol",yellow:"🟨 Amarilla",red:"🟥 Roja",end:"🏁 Final del partido"};
- matchEvents.push({type,time:new Date().toLocaleTimeString()});
- const log=document.getElementById("matchLog");
- log.innerHTML=matchEvents.map(e=>`<div>${e.time} - ${names[e.type]}</div>`).join("");
- localStorage.setItem("rs_match_events",JSON.stringify(matchEvents));
-}
-document.addEventListener("DOMContentLoaded",()=>{
- const saved=JSON.parse(localStorage.getItem("rs_match_events")||"[]");
- if(saved.length){
-   saved.forEach(e=>matchEvents.push(e));
-   const log=document.getElementById("matchLog");
-   if(log){
-     const names={goal:"⚽ Gol",yellow:"🟨 Amarilla",red:"🟥 Roja",end:"🏁 Final del partido"};
-     log.innerHTML=matchEvents.map(e=>`<div>${e.time} - ${names[e.type]}</div>`).join("");
-   }
- }
-});
+
 
 
 
@@ -1103,17 +1161,74 @@ const LiveMatch={
  awayScore:0,
  events:[]
 };
+const ActiveMatch = {
 
+    home: null,
+    away: null,
+
+    get data(){
+
+        if(
+            App.activeMatch===null ||
+            !App.matches[App.activeMatch]
+        ){
+            return null;
+        }
+
+        return App.matches[App.activeMatch];
+
+    },
+
+    load(){
+
+        const match=this.data;
+
+        if(!match) return;
+
+        this.home=getTeam(match.home);
+
+        if(match.useCustomAway){
+
+            this.away={
+                id:null,
+                name:match.awayCustom,
+                logo:"",
+                shirt:null
+            };
+
+        }else{
+
+            this.away=getTeam(match.away);
+
+        }
+
+    }
+
+};
 function addLiveEvent(ev){
+ if((ev.type==="yellow"||ev.type==="red") && isRamonSicart(ev.team) && ev.player){
+   const p=App.players.find(x=>x.number===ev.player.number);
+   if(p){
+      if(ev.type==="yellow") p.yellow=(p.yellow||0)+1;
+      if(ev.type==="red") p.red=(p.red||0)+1;
+   }
+ }
  LiveMatch.events.push(ev);
 
  if(ev.type==="goal"){
    if(ev.team==="home") LiveMatch.homeScore++;
    else LiveMatch.awayScore++;
+
+   if(isRamonSicart(ev.team) && ev.player){
+      const p=App.players.find(x=>x.number===ev.player.number);
+      if(p) p.goals=(p.goals||0)+1;
+   }
+
    ev.score=LiveMatch.homeScore+"-"+LiveMatch.awayScore;
 }
 refreshTimeline();
 refreshScoreboard();
+saveData();
 }
 function updateHomeScore(){
 
@@ -1127,9 +1242,22 @@ function updateHomeScore(){
 function refreshScoreboard(){
  const c=document.getElementById("countdown");
  if(c) c.innerHTML=`🔴 ${LiveMatch.homeScore} - ${LiveMatch.awayScore}`;
-updateHomeScore();
+ updateHomeScore();
  const live=document.getElementById("liveResult");
- if(live) live.textContent=`Ramón Sicart ${LiveMatch.homeScore} - ${LiveMatch.awayScore} Rival`;
+ if(live){
+   let homeName="Local",awayName="Visitante";
+   if(App.activeMatch!==null && App.matches[App.activeMatch]){
+     const m=App.matches[App.activeMatch];
+     const h=getTeam(m.home);
+     homeName=h?h.name:"Local";
+     if(m.useCustomAway){awayName=m.awayCustom||"Visitante";}
+     else{
+       const a=getTeam(m.away);
+       awayName=a?a.name:"Visitante";
+     }
+   }
+   live.textContent=`${homeName} ${LiveMatch.homeScore} - ${LiveMatch.awayScore} ${awayName}`;
+ }
 }
 function updateHomeGoals(sorted){
 const homeGoalsBox=document.getElementById("homeGoalsBox");
@@ -1249,14 +1377,39 @@ document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'))
 btn.classList.add('active');
 }
 updateDate();
-if(App.matches.length===0){
-    loadDemoData();
-}
+
+loadDemoData();
+
 startCountdown();
 loadNextMatch();
-renderMatches();
-renderFullClassification();
-renderStatistics();
+
+window.addEventListener("load",()=>{
+
+    refreshScoreboard();
+
+    refreshTimeline();
+
+    if(typeof updateClockDisplay==="function"){
+        updateClockDisplay();
+    }
+
+    if(typeof updateHomeLive==="function"){
+        updateHomeLive();
+    }
+
+    if(typeof renderMatches==="function"){
+        renderMatches();
+    }
+
+    if(typeof renderFullClassification==="function"){
+        renderFullClassification();
+    }
+
+    if(typeof renderStatistics==="function"){
+        renderStatistics();
+    }
+
+});
 
 async function syncFCF(){
  const status=document.getElementById('syncStatus');
@@ -1275,6 +1428,10 @@ async function syncFCF(){
    if(data.matches){
       App.matches=data.matches;
       if(typeof loadNextMatch==='function') loadNextMatch();
+refreshScoreboard();
+refreshTimeline();
+updateClockDisplay();
+updateHomeLive();
 renderMatches();
 renderFullClassification();
 renderStatistics();
@@ -1305,11 +1462,71 @@ function selectEvent(type){
 eventMinuteOffset=0;
 document.getElementById('minuteSelector').style.display='flex';
 document.getElementById('eventMinuteValue').textContent=getEventMinute()+"'";
- document.getElementById('eventModalBody').innerHTML=`
- <h3 style="color:#FFD600;margin-bottom:15px">¿De qué equipo?</h3>
- <button class="syncBtn" onclick="selectTeam('home')">🟡🔴 Ramón Sicart</button>
- <button class="syncBtn" onclick="selectTeam('away')">⚪ Rival</button>
- <button class="syncBtn" onclick="resetEventModal()">Cancelar</button>`;
+ ActiveMatch.load();
+
+const homeName = ActiveMatch.home?.name || "Local";
+const awayName = ActiveMatch.away?.name || "Visitante";
+
+document.getElementById('eventModalBody').innerHTML = `
+<h3 style="color:#FFD600;margin-bottom:18px;text-align:center;">
+¿De qué equipo?
+</h3>
+
+<div style="
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:12px;
+margin-bottom:18px;">
+
+<button
+class="syncBtn"
+style="
+display:flex;
+align-items:center;
+justify-content:center;
+gap:10px;
+padding:14px;"
+
+onclick="selectTeam('home')">
+
+<div class="teamShirt homeShirt"></div>
+
+<div style="font-weight:bold">
+${homeName}
+</div>
+
+</button>
+
+<button
+class="syncBtn"
+style="
+display:flex;
+align-items:center;
+justify-content:center;
+gap:10px;
+padding:14px;"
+
+onclick="selectTeam('away')">
+
+<div class="teamShirt awayShirt"></div>
+
+<div style="font-weight:bold">
+${awayName}
+</div>
+
+</button>
+
+</div>
+
+<button
+class="syncBtn"
+onclick="resetEventModal()">
+
+Cancelar
+
+</button>
+`;
+paintTeamShirts();
 }
 function resetEventModal(){
  document.getElementById('minuteSelector').style.display='none';
@@ -1331,22 +1548,80 @@ function selectTeam(team){
     openPlayerSelector(team);
 }
 
+function isRamonSicartHome(){
+
+    if(App.activeMatch===null) return true;
+
+    const match=App.matches[App.activeMatch];
+
+    return match.home===1;
+
+}
+
+function getPlayersForSide(side){
+
+    const rsHome=isRamonSicartHome();
+
+    if(rsHome){
+
+        if(side==="home"){
+            return App.players;
+        }
+
+    }else{
+
+        if(side==="away"){
+            return App.players;
+        }
+
+    }
+
+    const rival=[];
+
+    for(let i=1;i<=11;i++){
+
+        rival.push({
+            number:i,
+            name:"Jugador "+i
+        });
+
+    }
+
+    return rival;
+
+}
+function isRamonSicart(side){
+
+    const rsHome = isRamonSicartHome();
+
+    if(rsHome){
+
+        return side==="home";
+
+    }
+
+    return side==="away";
+
+}
 function openPlayerSelector(team){
- const list=document.getElementById('playerList');
- let players=[];
- if(team==='home'){
-   players=App.players;
- }else{
-   players=[];
-   for(let i=1;i<=11;i++){
-      players.push({number:i,name:'Jugador '+i});
-   }
- }
- list.innerHTML=players.map(p=>`
- <button class="syncBtn" style="width:100%;margin-bottom:6px" onclick="selectPlayer('${team}',${p.number},'${p.name}')">
- #${p.number} ${p.name}
- </button>`).join('');
- document.getElementById('playerModal').style.display='flex';
+
+    const list=document.getElementById("playerList");
+
+    const players=getPlayersForSide(team);
+
+    list.innerHTML=players.map(p=>`
+        <button
+            class="syncBtn"
+            style="width:100%;margin-bottom:6px"
+            onclick="selectPlayer('${team}',${p.number},'${p.name}')">
+
+            #${p.number} ${p.name}
+
+        </button>
+    `).join("");
+
+    document.getElementById("playerModal").style.display="flex";
+
 }
 let editingTeamId=null;
 function openTeams(){renderTeamManager();document.getElementById("teamManagerModal").style.display="flex";}
@@ -1404,7 +1679,7 @@ function saveTeam(){
 
     renderTeamManager();
     closeTeamEditor();
-
+saveData();
 }
 function newTeam(){
 
@@ -1428,27 +1703,33 @@ function getEventMinute(){
 }
 
 function selectPlayer(team,number,name){
- pendingEvent.player={number:number,name:name};
- pendingEvent.team=team;
 
- addLiveEvent({
-   minute:getEventMinute()+eventMinuteOffset,
-   type:pendingEvent.type,
-   team:team,
-   player:{
-      number:number,
-      name:name
-   }
- });
+    console.log("CLICK",team,number,name);
 
- closePlayerModal();
+    const event={
 
-setTimeout(() => {
+        minute:getEventMinute()+eventMinuteOffset,
+
+        type:pendingEvent.type,
+
+        team:team,
+
+        player:{
+            number:number,
+            name:name
+        }
+
+    };
+
+    addLiveEvent(event);
+
+    pendingEvent={};
+
+    closePlayerModal();
+
     closeEventModal();
-}, 50);
- pendingEvent={};
-}
 
+}
 
 
 let matchState='PREMATCH';
@@ -1457,13 +1738,13 @@ function showMatchStateMenu(){
  const box=document.getElementById('matchStateOptions');
  if(!box){alert('Error: matchStateOptions no encontrado');return;}
  let html='';
- if(matchState==='PREMATCH'){
+ if(LiveMatch.state==='PREMATCH'){
    html='<button class="syncBtn" onclick="setMatchState(\'FIRST_HALF\')">🟢 Iniciar partido</button>';
- }else if(matchState==='FIRST_HALF'){
+ }else if(LiveMatch.state==='FIRST_HALF'){
    html='<button class="syncBtn" onclick="setMatchState(\'HALFTIME\')">🟡 Descanso</button>';
- }else if(matchState==='HALFTIME'){
+ }else if(LiveMatch.state==='HALFTIME'){
    html='<button class="syncBtn" onclick="setMatchState(\'SECOND_HALF\')">🟢 Iniciar segunda parte</button>';
- }else if(matchState==='SECOND_HALF'){
+ }else if(LiveMatch.state==='SECOND_HALF'){
    html='<button class="syncBtn" onclick="setMatchState(\'FINISHED\')">🏁 Finalizar partido</button>';
  }else{
    html='<div style="padding:10px">🏁 Partido finalizado.<br>Puedes seguir añadiendo y editando eventos.</div>';
@@ -1475,7 +1756,6 @@ function closeMatchStateMenu(){
  document.getElementById('matchStateModal').style.display='none';
 }
 function setMatchState(state){
- matchState=state;
  LiveMatch.state=state;
 
  if(state==='FIRST_HALF'){
@@ -1484,6 +1764,7 @@ function setMatchState(state){
    matchSeconds=0;
    updateClockDisplay();
    startClock();
+
  }
 
  if(state==='HALFTIME'){
@@ -1519,6 +1800,7 @@ updateHomeLive();
 
 setTimeout(() => {
     closeMatchStateMenu();
+saveData();
 }, 50);
 }
 
@@ -1553,7 +1835,7 @@ function openMatchManager(){
 
 }
 
-function closeMatchManagerfunction closeMatchManager(){
+function closeMatchManager(){
 
     document.getElementById("matchManagerModal").style.display="none";
 
@@ -1570,6 +1852,7 @@ function renderMatchManager(){
     }
 
     box.innerHTML=App.matches.map((m,i)=>{
+console.log(m);
         const home=getTeam(m.home)||{name:'Local'};
         const away=getTeam(m.away)||{name:'Visitante'};
 
@@ -1621,10 +1904,67 @@ onclick="deleteMatch(${i})">
 }
 
 let editingMatch = null;
+function fillTeamsSelects(){
 
-function newMatch(){
+    const home=document.getElementById("matchHome");
+    const away=document.getElementById("matchAway");
+
+    if(!home || !away) return;
+
+    home.innerHTML="";
+    away.innerHTML="";
+
+    App.teams.forEach(team=>{
+
+        home.innerHTML+=`
+        <option value="${team.id}">
+            ${team.name}
+        </option>`;
+
+        away.innerHTML+=`
+        <option value="${team.id}">
+            ${team.name}
+        </option>`;
+
+    });
+
+}
+function toggleCustomAway(){
+
+    const existing=document.getElementById("awayExisting");
+    const select=document.getElementById("matchAway");
+    const input=document.getElementById("customAwayName");
+
+    if(existing.checked){
+
+        select.style.display="block";
+        input.style.display="none";
+        input.value="";
+
+    }else{
+
+        select.style.display="none";
+        input.style.display="block";
+        select.selectedIndex=0;
+
+    }
+
+}function newMatch(){
 
     editingMatch = null;
+fillTeamsSelects();
+
+document.getElementById("matchHome").value=1;
+
+document.getElementById("matchAway").selectedIndex=0;
+
+document.getElementById("awayExisting").checked=true;
+
+toggleCustomAway();
+
+toggleCustomAway();
+
+document.getElementById("customAwayName").value="";
 
     document.getElementById("matchType").value = "Liga";
     document.getElementById("matchCompetition").value = "";
@@ -1640,23 +1980,46 @@ document.getElementById("matchEditorHour").value="";
 }
 function editMatch(index){
 
-    editingMatch=index;
+    editingMatch = index;
 
-    const match=App.matches[index];
+    const match = App.matches[index];
 
-    document.getElementById("matchType").value=match.type || "Liga";
-    document.getElementById("matchCompetition").value=match.competition || "";
-    document.getElementById("matchRound").value=match.round || "";
-    document.getElementById("matchEditorDate").value=match.date;
-    document.getElementById("matchEditorHour").value=match.hour;
+    fillTeamsSelects();
 
-    document.querySelector("#matchEditorModal h2").textContent=
+    // Equipo local
+    document.getElementById("matchHome").value = match.home;
+
+    // Equipo visitante
+    if(match.useCustomAway){
+
+        document.getElementById("awayCustom").checked = true;
+
+        toggleCustomAway();
+
+        document.getElementById("customAwayName").value = match.awayCustom || "";
+
+    }else{
+
+        document.getElementById("awayExisting").checked = true;
+
+        toggleCustomAway();
+
+        document.getElementById("matchAway").value = match.away;
+
+    }
+
+    document.getElementById("matchType").value = match.type || "Liga";
+    document.getElementById("matchCompetition").value = match.competition || "";
+    document.getElementById("matchRound").value = match.round || "";
+    document.getElementById("matchEditorDate").value = match.date;
+    document.getElementById("matchEditorHour").value = match.hour;
+
+    document.querySelector("#matchEditorModal h2").textContent =
     "✏️ Editar partido";
 
-    document.getElementById("matchEditorModal").style.display="flex";
+    document.getElementById("matchEditorModal").style.display = "flex";
 
-}
-function deleteMatch(index){
+}function deleteMatch(index){
 
     const match = App.matches[index];
 
@@ -1676,7 +2039,11 @@ function deleteMatch(index){
     renderMatchManager();
     renderMatches();
     loadNextMatch();
-    renderStatistics();
+refreshScoreboard();
+refreshTimeline();
+updateClockDisplay();
+updateHomeLive();
+renderStatistics();
 
 }
 function setActiveMatch(index){
@@ -1685,10 +2052,47 @@ function setActiveMatch(index){
 
     renderMatchManager();
     loadNextMatch();
+refreshScoreboard();
+refreshTimeline();
+updateClockDisplay();
+updateHomeLive();
     renderMatches();
 
 }
+function paintTeamShirts(){
 
+    ActiveMatch.load();
+
+    const shirts=document.querySelectorAll(".teamShirt");
+
+    if(shirts.length<2) return;
+
+    const teams=[ActiveMatch.home,ActiveMatch.away];
+
+    shirts.forEach((shirt,index)=>{
+
+        const team=teams[index];
+
+        if(!team || !team.shirt){
+
+            shirt.style.background="#D1D5DB";
+
+            return;
+
+        }
+
+        shirt.style.background=
+        `repeating-linear-gradient(
+        90deg,
+        ${team.shirt.primary} 0,
+        ${team.shirt.primary} 8px,
+        ${team.shirt.secondary} 8px,
+        ${team.shirt.secondary} 16px
+        )`;
+
+    });
+
+}
 function closeMatchEditor(){
 
     document.getElementById("matchEditorModal").style.display = "none";
@@ -1703,18 +2107,21 @@ function saveMatch(){
     const hour=document.getElementById("matchEditorHour").value;
 
     if(date==="" || hour===""){
-        alert("Fecha="+date+" Hora="+hour);
-        return;
-editingMatch=null;
+    alert("Debes introducir una fecha y una hora.");
+    return;
+saveData();
+}
+const data={
 
-document.querySelector("#matchEditorModal h2").textContent=
-"📅 Nuevo partido";
-    }
+    home: Number(document.getElementById("matchHome").value),
 
- const data={
+away: document.getElementById("awayExisting").checked
+      ? Number(document.getElementById("matchAway").value)
+      : null,
 
-    home:1,
-    away:2,
+awayCustom: document.getElementById("customAwayName").value,
+
+useCustomAway: document.getElementById("awayCustom").checked,
 
     type:type,
     competition:competition,
@@ -1743,6 +2150,10 @@ App.matches.sort((a,b)=>(a.date+" "+a.hour).localeCompare(b.date+" "+b.hour));
 renderMatchManager();
 renderMatches();
 loadNextMatch();
+refreshScoreboard();
+refreshTimeline();
+updateClockDisplay();
+updateHomeLive();
 
 editingMatch=null;
 document.querySelector("#matchEditorModal h2").textContent="📅 Nuevo partido";
@@ -1767,13 +2178,31 @@ closeMatchEditor();
 
 <script>
 function openEventModal(){
-    if(typeof resetEventModal==="function"){ resetEventModal(); }
+
+    if(typeof resetEventModal==="function"){
+        resetEventModal();
+    }
+
     var m=document.getElementById("eventModal");
-    if(m) m.style.display="flex";
+
+    if(m){
+
+        m.style.display="flex";
+        m.style.pointerEvents="auto";
+
+    }
+
 }
 function closeEventModal(){
+
     var m=document.getElementById("eventModal");
-    if(m) m.style.display="none";
+
+    if(!m) return;
+
+    m.style.display="none";
+
+    m.style.pointerEvents="none";
+
 }
 
 
@@ -1838,9 +2267,9 @@ const separator=document.getElementById("homeSeparator");
     break;
 
         case "HALFTIME":
-            badge.textContent="🔴 EN DIRECTO";
-    state.textContent="🟢 Primera Parte";
-    liveState.textContent="🟢 Primera Parte";
+            badge.textContent="⏸ DESCANSO";
+    state.textContent="🟡 DESCANSO";
+    liveState.textContent="🟡 DESCANSO";
 
     date.style.display="none";
     hour.style.display="none";
@@ -1853,8 +2282,8 @@ const separator=document.getElementById("homeSeparator");
 
         case "SECOND_HALF":
            badge.textContent="🔴 EN DIRECTO";
-    state.textContent="🟢 Primera Parte";
-    liveState.textContent="🟢 Primera Parte";
+    state.textContent="🔵 Segunda Parte";
+    liveState.textContent="🔵 Segunda Parte";
 
     date.style.display="none";
     hour.style.display="none";
@@ -1866,9 +2295,9 @@ const separator=document.getElementById("homeSeparator");
 
 
         case "FINISHED":
-            badge.textContent="🔴 EN DIRECTO";
-    state.textContent="🟢 Primera Parte";
-    liveState.textContent="🟢 Primera Parte";
+            badge.textContent="🏁 FINAL";
+    state.textContent="🏁 FINALIZADO";
+    liveState.textContent="🏁 FINALIZADO";
 
     date.style.display="none";
     hour.style.display="none";
@@ -2071,14 +2500,81 @@ function savePlayer(){
 
     renderAdminPlayers();
 
-    renderPlayers();
+renderPlayers();
 
-    closePlayerEditor();
-    editingPlayerId = null;
-    document.getElementById("playerNumber").value="";
-    document.getElementById("playerName").value="";
-    document.getElementById("playerSurname").value="";
-    document.getElementById("playerCaptain").checked=false;
+renderConvocations();
+
+renderLineup();
+
+closePlayerEditor();
+
+editingPlayerId = null;
+
+saveData();
+}
+const STORAGE_KEY = "RS_CLUB_MANAGER_V6";
+
+function saveData(){
+
+    console.log("SAVE DATA EJECUTADA");
+
+    const data = {
+
+        version: App.version,
+
+        app: App,
+
+        liveMatch: LiveMatch,
+
+        matchSeconds: matchSeconds,
+
+        activeMatch: App.activeMatch
+
+    };
+
+    localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(data)
+    );
+
+    console.log(localStorage.getItem(STORAGE_KEY));
+
+}
+
+function loadData(){
+
+    const raw = localStorage.getItem(STORAGE_KEY);
+
+    if(!raw) return false;
+
+    try{
+
+        const data = JSON.parse(raw);
+
+        if(data.app){
+            App.players = data.app.players || App.players;
+            App.teams = data.app.teams || App.teams;
+            App.matches = data.app.matches || App.matches;
+            App.classification = data.app.classification || [];
+            App.statistics = data.app.statistics || App.statistics;
+            App.activeMatch = data.app.activeMatch ?? App.activeMatch;
+        }
+
+        if(data.liveMatch){
+            Object.assign(LiveMatch,data.liveMatch);
+        }
+
+        matchSeconds = data.matchSeconds || 0;
+
+        return true;
+
+    }catch(e){
+
+        console.error("Error cargando datos",e);
+
+        return false;
+
+    }
 
 }
 </script>
@@ -2248,8 +2744,44 @@ padding:20px;">
 <h2 style="color:#FFD600;margin-bottom:15px;">
 📅 Nuevo partido
 </h2>
+<label>Equipo local</label>
 
-<label>Tipo</label>
+<select id="matchHome"
+style="width:100%;padding:10px;margin-bottom:12px;">
+</select>
+
+<label>Equipo visitante</label>
+
+<label style="display:flex;align-items:center;margin-bottom:8px;">
+<input
+type="radio"
+name="awayMode"
+id="awayExisting"
+checked
+onchange="toggleCustomAway()"
+style="margin-right:8px;">
+Seleccionar equipo existente
+</label>
+
+<select
+id="matchAway"
+style="width:100%;padding:10px;margin-bottom:15px;">
+</select>
+
+<label style="display:flex;align-items:center;margin-bottom:8px;">
+<input
+type="radio"
+name="awayMode"
+id="awayCustom"
+onchange="toggleCustomAway()"
+style="margin-right:8px;">
+Escribir rival manualmente
+</label>
+
+<input
+id="customAwayName"
+placeholder="Nombre del rival"
+style="display:none;width:100%;padding:10px;margin-bottom:12px;"><label>Tipo</label>
 
 <select id="matchType" style="width:100%;padding:10px;margin-bottom:12px">
 
