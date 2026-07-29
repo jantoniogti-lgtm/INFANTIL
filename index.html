@@ -5,6 +5,55 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RS Club Manager V6.2</title>
 <style>
+.photoPreview{
+
+width:140px;
+height:140px;
+
+margin:15px auto;
+
+border-radius:50%;
+
+overflow:hidden;
+
+background:#2F3F57;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+border:4px solid #FFD600;
+
+}
+
+.photoPreview img{
+
+width:100%;
+height:100%;
+
+object-fit:cover;
+
+}
+
+#playerPhotoIcon{
+
+font-size:70px;
+
+color:white;
+
+}
+
+.deletePhotoBtn{
+
+background:#c62828;
+
+color:white;
+
+width:100%;
+
+}
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
 :root{
 --bg:#0F172A;
@@ -474,6 +523,85 @@ padding:4px 10px;border-radius:999px;margin-bottom:8px;font-size:14px}
     color:#9BE15D;
     font-weight:bold;
 }
+.photo-editor{
+
+position:fixed;
+
+left:0;
+
+top:0;
+
+width:100%;
+
+height:100%;
+
+background:rgba(0,0,0,.8);
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+z-index:9999;
+
+}
+
+.photo-editor-box{
+
+width:420px;
+
+max-width:95%;
+
+background:#222;
+
+padding:20px;
+
+border-radius:15px;
+
+text-align:center;
+
+}
+
+#cropArea{
+
+width:300px;
+
+height:300px;
+
+margin:auto;
+
+overflow:hidden;
+
+border-radius:50%;
+
+background:#111;
+
+position:relative;
+
+}
+
+#cropArea img{
+
+position:absolute;
+
+left:0;
+
+top:0;
+
+user-select:none;
+
+cursor:grab;
+
+max-width:none;
+
+}
+.deletePhotoBtn{
+    width:100%;
+    margin-bottom:12px;
+    background:#c62828;
+    color:#fff;
+}
 </style>
 </head>
 <body>
@@ -747,7 +875,7 @@ firebase.initializeApp(firebaseConfig);
 
 const db = firebase.database();
 const dbRef = db.ref("clubManagerV6");
-const storage = firebase.storage();
+
 </script>
 <script>
 const App = {
@@ -2851,20 +2979,40 @@ function closePlayerEditor(){
     document.getElementById("playerEditorModal").style.display="none";
 document.getElementById("playerStatus").value = "Disponible";
 }
-async function uploadPlayerPhoto(file){
+function fileToBase64(file){
 
-    if(!file) return "";
+    return new Promise((resolve,reject)=>{
 
-    const fileName =
-        "players/" + Date.now() + "_" + file.name;
+        const reader = new FileReader();
 
-    const storageRef = storage.ref(fileName);
+        reader.onload = () => resolve(reader.result);
 
-    await storageRef.put(file);
+        reader.onerror = reject;
 
-    const url = await storageRef.getDownloadURL();
+        reader.readAsDataURL(file);
 
-    return url;
+    });
+
+}
+function removePlayerPhoto(){
+
+    if(editingPlayerId){
+
+        const player = App.players.find(p=>p.id===editingPlayerId);
+
+        if(player){
+
+            player.photo = "";
+
+            saveData();
+
+            alert("Foto eliminada.");
+
+        }
+
+    }
+
+    document.getElementById("playerPhoto").value = "";
 
 }
 async function savePlayer(){
@@ -2877,15 +3025,7 @@ let photo = "";
 
 if(file){
 
-    try{
-    photo = await uploadPlayerPhoto(file);
-    console.log("URL:", photo);
-}catch(error){
-    console.error(error);
-    alert(error.message);
-    return;
-}
-console.log(photo);
+    photo = await fileToBase64(file);
 
 }else if(editingPlayerId){
 
@@ -3259,11 +3399,38 @@ style="width:100%;padding:10px;margin-bottom:12px;">
 style="width:100%;padding:10px;margin-bottom:12px;">
 <label>Foto del jugador</label>
 
+<div id="playerPhotoPreview" class="photoPreview">
+
+    <img id="playerPhotoImg" style="display:none;">
+
+    <div id="playerPhotoIcon">👤</div>
+
+</div>
+
 <input
 type="file"
 id="playerPhoto"
 accept="image/*"
-style="width:100%;margin-bottom:12px;">
+style="display:none;">
+
+<button
+class="syncBtn"
+type="button"
+onclick="document.getElementById('playerPhoto').click()">
+
+📷 Cambiar foto
+
+</button>
+
+<button
+class="syncBtn deletePhotoBtn"
+type="button"
+onclick="removePlayerPhoto()">
+
+🗑️ Eliminar foto
+
+</button>
+
 <label>Posición</label>
 
 <select id="playerPosition"
@@ -3585,6 +3752,53 @@ Cerrar
 </button>
 
 </div>
+
+</div>
+<div id="photoEditor" class="photo-editor" style="display:none;">
+
+    <div class="photo-editor-box">
+
+        <h3>Editar fotografía</h3>
+
+        <div id="cropArea">
+
+            <img id="cropImage">
+
+        </div>
+
+        <div style="margin-top:15px;">
+
+            <input
+                type="range"
+                id="zoomSlider"
+                min="1"
+                max="3"
+                step="0.01"
+                value="1">
+
+        </div>
+
+        <div class="photoButtons">
+
+            <button
+                type="button"
+                onclick="cancelCrop()">
+
+                Cancelar
+
+            </button>
+
+            <button
+                type="button"
+                onclick="saveCrop()">
+
+                Guardar
+
+            </button>
+
+        </div>
+
+    </div>
 
 </div>
 </body>
