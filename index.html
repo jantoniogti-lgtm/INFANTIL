@@ -788,7 +788,13 @@ max-width:none;
 <button id="matchStateBtn" class="syncBtn" onclick="showMatchStateMenu()">🟢 Iniciar partido</button>
 
 <button class="syncBtn" onclick="alert('Editor de acta (próximo sprint)')">📝 Editar acta</button>
+<button
+class="syncBtn"
+onclick="confirmResetMatch()">
 
+🔄 Reiniciar partido
+
+</button>
 <div id="liveScoreboard" class="card" style="text-align:center;margin-top:15px;">
 <div id="liveClock" style="font-size:42px;font-weight:bold;color:#FFD600;">00:00</div>
 <div id="liveState" style="font-size:18px;font-weight:bold;margin-top:8px;">⚪ PREPARTIDO</div>
@@ -1607,27 +1613,54 @@ let selectedPlayer = null;
 let cropper = null;
 let currentPhotoInput = null;
 function startClock(){
- if(clockRunning)return;
- clockRunning=true;
- matchClockInterval=setInterval(()=>{
-  matchSeconds++;
-  LiveMatch.minute=Math.floor(matchSeconds/60);
-  if(typeof updateClockDisplay==='function')updateClockDisplay();
- },1000);
-}
 
+    if(clockRunning) return;
+
+    if(!LiveMatch.startTimestamp){
+
+        LiveMatch.startTimestamp =
+            Date.now() - (LiveMatch.pausedSeconds*1000);
+
+    }
+
+    clockRunning=true;
+
+    matchClockInterval=setInterval(()=>{
+
+        matchSeconds=Math.floor(
+            (Date.now()-LiveMatch.startTimestamp)/1000
+        );
+
+        LiveMatch.minute=Math.floor(matchSeconds/60);
+
+        updateClockDisplay();
+
+        saveData();
+
+    },1000);
+
+}
 function stopClock(){
- clearInterval(matchClockInterval);
- clockRunning=false;
-}
 
+    clearInterval(matchClockInterval);
+
+    clockRunning=false;
+
+    LiveMatch.pausedSeconds=matchSeconds;
+
+    saveData();
+
+}
 const LiveMatch={
  state:"PREMATCH",
  minute:0,
  half:1,
  homeScore:0,
  awayScore:0,
- events:[]
+ events:[],
+
+ startTimestamp:null,
+ pausedSeconds:0
 };
 const ActiveMatch = {
 
@@ -1741,7 +1774,34 @@ if(!goalsOnly.length){
 
     homeGoalsBox.style.display="block";
 
-}function refreshHome(){
+}
+function resetLiveMatch(){
+
+    stopClock();
+
+    matchSeconds=0;
+
+    LiveMatch.state="PREMATCH";
+    LiveMatch.minute=0;
+    LiveMatch.half=1;
+
+    LiveMatch.homeScore=0;
+    LiveMatch.awayScore=0;
+
+    LiveMatch.events=[];
+
+    LiveMatch.startTimestamp=null;
+    LiveMatch.pausedSeconds=0;
+
+    refreshScoreboard();
+    refreshTimeline();
+    updateClockDisplay();
+    updateHomeLive();
+
+    saveData();
+
+}
+function refreshHome(){
 
     updateHomeScore();
 
@@ -1750,6 +1810,15 @@ if(!goalsOnly.length){
     updateHomeGoals(sorted);
 
     updateHomeLive();
+
+}
+function confirmResetMatch(){
+
+    if(!confirm(
+        "¿Reiniciar el partido?\n\nSe borrarán el marcador, el cronómetro y todos los eventos."
+    )) return;
+
+    resetLiveMatch();
 
 }
 homeGoalsBox.style.display="block";
@@ -1870,7 +1939,12 @@ if(firebaseLoaded){
     }
 
 }
-
+if (
+        LiveMatch.state === "FIRST_HALF" ||
+        LiveMatch.state === "SECOND_HALF"
+    ) {
+        startClock();
+    }
 normalizePlayers();
 
     renderPlayers();
@@ -2245,6 +2319,9 @@ function setMatchState(state){
    LiveMatch.half=1;
    LiveMatch.minute=0;
    matchSeconds=0;
+
+LiveMatch.startTimestamp=null;
+LiveMatch.pausedSeconds=0;
    updateClockDisplay();
    startClock();
 
@@ -2253,6 +2330,9 @@ function setMatchState(state){
  if(state==='HALFTIME'){
    stopClock();
    matchSeconds=40*60;
+
+LiveMatch.startTimestamp=null;
+LiveMatch.pausedSeconds=40*60;
    LiveMatch.minute=40;
    updateClockDisplay();
  }
@@ -3946,7 +4026,48 @@ Cerrar
  </div>
 
 </div><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+<script>
 
+function confirmResetMatch(){
+
+    if(!confirm(
+        "¿Seguro que quieres reiniciar el partido?"
+    )){
+        return;
+    }
+
+    resetLiveMatch();
+
+}
+
+function resetLiveMatch(){
+
+    stopClock();
+
+    matchSeconds = 0;
+
+    LiveMatch.state = "PREMATCH";
+    LiveMatch.minute = 0;
+    LiveMatch.half = 1;
+
+    LiveMatch.homeScore = 0;
+    LiveMatch.awayScore = 0;
+
+    LiveMatch.events = [];
+
+    LiveMatch.startTimestamp = null;
+    LiveMatch.pausedSeconds = 0;
+
+    refreshScoreboard();
+    refreshTimeline();
+    updateClockDisplay();
+    updateHomeLive();
+
+    saveData();
+
+}
+
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 </body>
 </html>
