@@ -54,6 +54,12 @@ color:white;
 width:100%;
 
 }
+#cropImage{
+    display:block;
+    max-width:100%;
+    max-height:420px;
+    margin:auto;
+}
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
 :root{
 --bg:#0F172A;
@@ -549,20 +555,23 @@ z-index:9999;
 
 .photo-editor-box{
 
-width:420px;
+    width:420px;
 
-max-width:95%;
+    max-width:95%;
 
-background:#222;
+    max-height:90vh;
 
-padding:20px;
+    overflow:auto;
 
-border-radius:15px;
+    background:#222;
 
-text-align:center;
+    padding:20px;
+
+    border-radius:15px;
+
+    text-align:center;
 
 }
-
 #cropArea{
 
 width:300px;
@@ -1036,7 +1045,9 @@ function startCountdown(){
 }
 
 const match=App.matches[App.activeMatch];
-
+console.log("Partido activo:", App.activeMatch);
+console.log("Partidos:", App.matches);
+console.log("Estado:", LiveMatch.state);
     const target=new Date(match.date+"T"+match.hour+":00");
 
     function update(){
@@ -1595,6 +1606,8 @@ let matchSeconds=0;
 let clockRunning=false;
 let editingPlayerId = null;
 let selectedPlayer = null;
+let cropper = null;
+let currentPhotoInput = null;
 function startClock(){
  if(clockRunning)return;
  clockRunning=true;
@@ -1836,25 +1849,13 @@ btn.classList.add('active');
 
 async function initApp(){
 
-    const firebaseLoaded = await loadFirebase();
+   const firebaseLoaded = await loadFirebase();
 
-if(firebaseLoaded){
+if(!firebaseLoaded){
 
-    saveData();
-
-}else{
-
-    if(loadData()){
-
-        await saveFirebase();
-
-    }else{
+    if(!loadData()){
 
         loadDemoData();
-
-        normalizePlayers();
-
-        saveData();
 
     }
 
@@ -1862,25 +1863,32 @@ if(firebaseLoaded){
 
 normalizePlayers();
 
-    renderPlayers();
-    renderConvocations();
-    renderLineup();
-    renderMatches();
-    renderClassification();
-    renderFullClassification();
-    renderStatistics();
+renderPlayers();
+renderConvocations();
+renderLineup();
+renderMatches();
+renderClassification();
+renderFullClassification();
+renderStatistics();
 
-    loadNextMatch();
-
-    refreshScoreboard();
-    refreshTimeline();
-    updateClockDisplay();
-    updateHomeLive();
-startRealtimeSync();
-    startCountdown();
+loadNextMatch();
+refreshScoreboard();
+refreshTimeline();
+updateClockDisplay();
+updateHomeLive();
+startCountdown();
 }
 
 window.addEventListener("load", initApp);
+document.addEventListener("DOMContentLoaded", () => {
+
+    renderPlayers();
+
+    loadNextMatch();
+
+    startCountdown();
+
+});
 
 
 async function syncFCF(){
@@ -2996,6 +3004,16 @@ function fileToBase64(file){
 }
 function removePlayerPhoto(){
 
+    window.croppedPhoto = null;
+
+    document.getElementById("playerPhoto").value = "";
+
+    document.getElementById("playerPhotoImg").src = "";
+
+    document.getElementById("playerPhotoImg").style.display = "none";
+
+    document.getElementById("playerPhotoIcon").style.display = "flex";
+
     if(editingPlayerId){
 
         const player = App.players.find(p=>p.id===editingPlayerId);
@@ -3006,13 +3024,138 @@ function removePlayerPhoto(){
 
             saveData();
 
-            alert("Foto eliminada.");
-
         }
 
     }
 
-    document.getElementById("playerPhoto").value = "";
+}function openPhotoEditor(event){
+
+    const file = event.target.files[0];
+
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(e){
+
+        document.getElementById("photoEditor").style.display="flex";
+
+        const image=document.getElementById("cropImage");
+
+        image.src=e.target.result;
+
+        if(cropper){
+
+            cropper.destroy();
+
+        }
+
+        cropper = new Cropper(image,{
+
+    aspectRatio:1,
+
+    viewMode:2,
+
+    dragMode:"move",
+
+    autoCropArea:1,
+
+    responsive:true,
+
+    background:false,
+
+    movable:true,
+
+    zoomable:true,
+
+    zoomOnWheel:true,
+
+    cropBoxMovable:false,
+
+    cropBoxResizable:false,
+
+    guides:false,
+
+    center:false,
+
+    highlight:false
+
+});
+const slider = document.getElementById("zoomRange");
+
+slider.value = 1;
+
+slider.oninput = function(){
+
+    cropper.zoomTo(Number(this.value));
+
+};
+const slider = document.getElementById("zoomRange");
+
+if(slider){
+
+    slider.value = 1;
+
+    slider.oninput = function(){
+
+        if(cropper){
+            cropper.zoomTo(Number(this.value));
+        }
+
+    };
+
+}
+   
+
+    reader.readAsDataURL(file);
+
+}
+
+function closePhotoEditor(){
+
+    if(cropper){
+
+        cropper.destroy();
+
+        cropper=null;
+
+    }
+
+    document.getElementById("photoEditor").style.display="none";
+const slider = document.getElementById("zoomRange");
+
+if(slider){
+    slider.value = 1;
+}
+
+document.getElementById("cropImage").src = "";
+}
+function saveCrop(){
+
+    if(!cropper) return;
+
+    const canvas = cropper.getCroppedCanvas({
+
+    width:300,
+
+    height:300,
+
+    imageSmoothingEnabled:true,
+
+    imageSmoothingQuality:"high"
+
+});
+    const photo=canvas.toDataURL("image/jpeg",0.8);
+
+    document.getElementById("playerPhotoImg").src=photo;
+
+    document.getElementById("playerPhotoImg").style.display="block";
+
+    document.getElementById("playerPhotoIcon").style.display="none";
+
+    window.croppedPhoto=photo;
+
+    closePhotoEditor();
 
 }
 async function savePlayer(){
@@ -3023,17 +3166,16 @@ const file =
 
 let photo = "";
 
-if(file){
+if(window.croppedPhoto){
 
-    photo = await fileToBase64(file);
+    photo = window.croppedPhoto;
 
 }else if(editingPlayerId){
 
     photo =
         App.players.find(p=>p.id===editingPlayerId)?.photo || "";
 
-}
-    const number = Number(document.getElementById("playerNumber").value);
+}    const number = Number(document.getElementById("playerNumber").value);
     const name = document.getElementById("playerName").value.trim();
     const surname = document.getElementById("playerSurname").value.trim();
     const position = document.getElementById("playerPosition").value;
@@ -3114,6 +3256,15 @@ closePlayerEditor();
 editingPlayerId = null;
 
 saveData();
+window.croppedPhoto = null;
+
+document.getElementById("playerPhoto").value = "";
+
+document.getElementById("playerPhotoImg").src = "";
+
+document.getElementById("playerPhotoImg").style.display = "none";
+
+document.getElementById("playerPhotoIcon").style.display = "flex";
 }
 const STORAGE_KEY = "RS_CLUB_MANAGER_V6";
 
@@ -3411,8 +3562,8 @@ style="width:100%;padding:10px;margin-bottom:12px;">
 type="file"
 id="playerPhoto"
 accept="image/*"
-style="display:none;">
-
+style="display:none;"
+onchange="openPhotoEditor(event)">
 <button
 class="syncBtn"
 type="button"
@@ -3758,38 +3909,38 @@ Cerrar
 
     <div class="photo-editor-box">
 
-        <h3>Editar fotografía</h3>
+        <h3 style="margin-bottom:15px;color:#FFD600;">
+            Editar fotografía
+        </h3>
 
-        <div id="cropArea">
+        <img id="cropImage">
+<div style="margin:20px 0;">
 
-            <img id="cropImage">
+    🔍 Zoom
 
-        </div>
+    <input
+        id="zoomRange"
+        type="range"
+        min="0.5"
+        max="3"
+        value="1"
+        step="0.01"
+        style="width:100%;">
 
-        <div style="margin-top:15px;">
+</div>
 
-            <input
-                type="range"
-                id="zoomSlider"
-                min="1"
-                max="3"
-                step="0.01"
-                value="1">
-
-        </div>
-
-        <div class="photoButtons">
+        <div style="margin-top:15px;display:flex;gap:10px;">
 
             <button
-                type="button"
-                onclick="cancelCrop()">
+                class="syncBtn"
+                onclick="closePhotoEditor()">
 
                 Cancelar
 
             </button>
 
             <button
-                type="button"
+                class="syncBtn"
                 onclick="saveCrop()">
 
                 Guardar
@@ -3799,7 +3950,10 @@ Cerrar
         </div>
 
     </div>
+ </div>
 
-</div>
+</div><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 </body>
 </html>
