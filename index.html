@@ -1045,9 +1045,7 @@ function startCountdown(){
 }
 
 const match=App.matches[App.activeMatch];
-console.log("Partido activo:", App.activeMatch);
-console.log("Partidos:", App.matches);
-console.log("Estado:", LiveMatch.state);
+
     const target=new Date(match.date+"T"+match.hour+":00");
 
     function update(){
@@ -1849,13 +1847,25 @@ btn.classList.add('active');
 
 async function initApp(){
 
-   const firebaseLoaded = await loadFirebase();
+    const firebaseLoaded = await loadFirebase();
 
-if(!firebaseLoaded){
+if(firebaseLoaded){
 
-    if(!loadData()){
+    saveData();
+
+}else{
+
+    if(loadData()){
+
+        await saveFirebase();
+
+    }else{
 
         loadDemoData();
+
+        normalizePlayers();
+
+        saveData();
 
     }
 
@@ -1863,32 +1873,25 @@ if(!firebaseLoaded){
 
 normalizePlayers();
 
-renderPlayers();
-renderConvocations();
-renderLineup();
-renderMatches();
-renderClassification();
-renderFullClassification();
-renderStatistics();
-
-loadNextMatch();
-refreshScoreboard();
-refreshTimeline();
-updateClockDisplay();
-updateHomeLive();
-startCountdown();
-}
-
-window.addEventListener("load", initApp);
-document.addEventListener("DOMContentLoaded", () => {
-
     renderPlayers();
+    renderConvocations();
+    renderLineup();
+    renderMatches();
+    renderClassification();
+    renderFullClassification();
+    renderStatistics();
 
     loadNextMatch();
 
+    refreshScoreboard();
+    refreshTimeline();
+    updateClockDisplay();
+    updateHomeLive();
+startRealtimeSync();
     startCountdown();
+}
 
-});
+window.addEventListener("load", initApp);
 
 
 async function syncFCF(){
@@ -3083,34 +3086,24 @@ function removePlayerPhoto(){
 });
 const slider = document.getElementById("zoomRange");
 
-slider.value = 1;
-
-slider.oninput = function(){
-
-    cropper.zoomTo(Number(this.value));
-
-};
-const slider = document.getElementById("zoomRange");
-
-if(slider){
+if (slider) {
 
     slider.value = 1;
 
-    slider.oninput = function(){
+    slider.oninput = function () {
 
-        if(cropper){
+        if (cropper) {
             cropper.zoomTo(Number(this.value));
         }
 
     };
 
 }
-   
+    };
 
     reader.readAsDataURL(file);
 
 }
-
 function closePhotoEditor(){
 
     if(cropper){
@@ -3124,7 +3117,7 @@ function closePhotoEditor(){
     document.getElementById("photoEditor").style.display="none";
 const slider = document.getElementById("zoomRange");
 
-if(slider){
+if (slider) {
     slider.value = 1;
 }
 
