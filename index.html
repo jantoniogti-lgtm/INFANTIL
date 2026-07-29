@@ -731,7 +731,7 @@ padding:4px 10px;border-radius:999px;margin-bottom:8px;font-size:14px}
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
-
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "TU_API_KEY",
@@ -747,6 +747,7 @@ firebase.initializeApp(firebaseConfig);
 
 const db = firebase.database();
 const dbRef = db.ref("clubManagerV6");
+const storage = firebase.storage();
 </script>
 <script>
 const App = {
@@ -793,8 +794,65 @@ teams:[
 }
 ],
 activeMatch: null,
-    players: [{id:1,number:10,name:'Gerard',position:'Delantero',goals:12,yellow:2,red:0,matches:18,status:'Disponible',captain:true},{id:2,number:19,name:'Nil',position:'Extremo',goals:8,yellow:1,red:0,matches:17,status:'Disponible'},{id:3,number:1,name:'Arnau',position:'Portero',goals:0,yellow:0,red:0,matches:18,status:'Disponible'}],
-
+   players:[
+{ 
+ id: 1,
+  number: 1,
+  name: "Roger",
+  surname: "Caralt Jané",
+  position: "Portero",
+  secondPosition: "",
+  foot: "Derecha",
+  status: "Disponible",
+  captain: false,
+  photo: "",
+  matches: 0,
+  starts: 0,
+  substitutes: 0,
+  minutes: 0,
+  goals: 0,
+  yellow: 0,
+  red: 0
+},
+{
+  id: 2,
+  number: 2,
+  name: "Amjad",
+  surname: "Makroum Rabih",
+  position: "Defensa",
+  secondPosition: "",
+  foot: "Derecha",
+  status: "Disponible",
+  captain: false,
+  photo: "",
+  matches: 0,
+  starts: 0,
+  substitutes: 0,
+  minutes: 0,
+  goals: 0,
+  yellow: 0,
+  red: 0
+},
+{
+  id: 3,
+  number: 3,
+  name: "Adrià",
+  surname: "Serralabós Martínez",
+  position: "Defensa",
+  secondPosition: "",
+  foot: "Izquierda",
+  status: "Disponible",
+  captain: false,
+  photo: "",
+  matches: 0,
+  starts: 0,
+  substitutes: 0,
+  minutes: 0,
+  goals: 0,
+  yellow: 0,
+  red: 0
+}
+],
     matches: [],
 
     training: [],
@@ -1067,34 +1125,285 @@ function renderStatistics(){
 
 
 function renderPlayers(filter=""){
- const box=document.getElementById("playersList");
- if(!box) return;
- const q=filter.toLowerCase();
- const players=App.players.filter(p=>p.name.toLowerCase().includes(q));
- box.innerHTML=players.map(p=>`
- <div style="padding:12px;border-bottom:1px solid #394150">
- <b>${p.captain?"⭐ ":""}#${p.number} ${p.name}</b><br>
- ${p.position}<br>
- ⚽ ${p.goals} | 🟨 ${p.yellow} | 🟥 ${p.red} | 🏟️ ${p.matches}<br>
- ✅ ${p.status}
- </div>`).join("");
+
+    const box=document.getElementById("playersList");
+    if(!box) return;
+
+    const q=filter.toLowerCase();
+
+    const players=App.players
+        .filter(p=>
+            (p.name+" "+(p.surname||""))
+            .toLowerCase()
+            .includes(q)
+        )
+        .sort((a,b)=>a.number-b.number);
+
+    const groups=[
+        {title:"🧤 PORTEROS",color:"#2196F3",items:[]},
+        {title:"🛡️ DEFENSAS",color:"#4CAF50",items:[]},
+        {title:"🎯 CENTROCAMPISTAS",color:"#FF9800",items:[]},
+        {title:"⚽ DELANTEROS",color:"#E53935",items:[]},
+        {title:"📌 OTROS",color:"#607D8B",items:[]}
+    ];
+
+    players.forEach(p=>{
+
+        if(p.position==="Portero"){
+            groups[0].items.push(p);
+        }else if(p.position==="Defensa"){
+            groups[1].items.push(p);
+        }else if(
+            p.position==="Centrocampista" ||
+            p.position==="Mediocentro" ||
+            p.position==="Extremo"
+        ){
+            groups[2].items.push(p);
+        }else if(p.position==="Delantero"){
+            groups[3].items.push(p);
+        }else{
+            groups[4].items.push(p);
+        }
+
+    });
+
+    let html="";
+
+    groups.forEach(g=>{
+
+        if(g.items.length===0) return;
+
+        html+=`
+        <div style="margin:18px 0 10px;background:${g.color};padding:10px 14px;border-radius:10px;font-weight:bold;color:white;">
+            ${g.title} (${g.items.length})
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+        `;
+
+        g.items.forEach(p=>{
+
+            html+=`
+            <div
+onclick="openPlayerProfile(${p.id})"
+style="
+background:#223047;
+border-radius:16px;
+padding:16px;
+border:1px solid #34445f;
+cursor:pointer;
+transition:.2s;
+box-shadow:0 4px 10px rgba(0,0,0,.25);
+">
+
+<div style="
+width:70px;
+height:70px;
+margin:auto;
+border-radius:50%;
+background:#2F3F57;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:34px;
+overflow:hidden;">
+
+${
+p.photo
+?
+`<img src="${p.photo}"
+style="width:100%;height:100%;object-fit:cover;">`
+:
+"👤"
 }
-document.addEventListener("DOMContentLoaded",()=>{
- const s=document.getElementById("playerSearch");
- if(s){
-   renderPlayers();
-   s.addEventListener("input",e=>renderPlayers(e.target.value));
- }
-});
 
+</div>
 
+<div style="
+margin-top:12px;
+text-align:center;
+font-size:22px;
+font-weight:bold;
+color:#FFD600;">
+
+${p.number}
+${p.captain ? `<div style="
+display:inline-flex;
+align-items:center;
+justify-content:center;
+margin-left:8px;
+width:42px;
+height:26px;
+border-radius:6px;
+background:repeating-linear-gradient(
+0deg,
+#FFD600 0,#FFD600 6px,
+#E53935 6px,#E53935 12px
+);
+border:1px solid #fff3;
+color:#fff;
+font-weight:bold;
+font-size:18px;
+text-shadow:0 1px 2px #000;
+">C</div>` : ""}
+
+</div>
+
+<div style="
+margin-top:4px;
+text-align:center;
+font-weight:bold;">
+
+${p.name}
+
+</div>
+
+<div style="
+margin-top:4px;
+text-align:center;
+font-size:13px;
+color:#94A3B8;">
+
+<div style="margin-top:4px;text-align:center;font-size:13px;color:#94A3B8;">
+${p.position}
+</div>
+
+<div style="
+margin-top:8px;
+text-align:center;
+font-weight:bold;
+color:${
+    p.status==="Disponible" ? "#22c55e" :
+    p.status==="Convocado" ? "#eab308" :
+    p.status==="Lesionado" ? "#ef4444" :
+    p.status==="Sancionado" ? "#111827" :
+    p.status==="Descanso" ? "#3b82f6" :
+    "#9ca3af"
+};
+">
+${p.status}
+</div>
+
+</div>
+
+<div style="
+display:grid;
+grid-template-columns:repeat(4,1fr);
+margin-top:14px;
+text-align:center;
+font-size:12px;">
+
+<div>
+⚽<br><b>${p.goals||0}</b>
+</div>
+
+<div>
+🏟<br><b>${p.matches||0}</b>
+</div>
+
+<div>
+🟨<br><b>${p.yellow||0}</b>
+</div>
+
+<div>
+🟥<br><b>${p.red||0}</b>
+</div>
+
+</div>
+
+</div>
+`;
+               
+        });
+
+        html+=`</div>`;
+
+    });
+
+    box.innerHTML=html;
+
+}
+
+function renderPlayerProfile(player){
+
+    document.getElementById("profileName").textContent=
+        player.name+" "+(player.surname||"");
+
+    document.getElementById("profileNumber").textContent=
+        player.number;
+
+    document.getElementById("profilePosition").textContent=
+        player.position;
+
+    document.getElementById("profileSecond").textContent=
+        player.secondPosition || "-";
+
+    document.getElementById("profileFoot").textContent=
+        player.foot;
+
+    document.getElementById("profileStatus").textContent=
+        player.status;
+const img = document.getElementById("profilePhoto");
+const icon = document.getElementById("profilePhotoIcon");
+
+if(player.photo){
+
+    img.src = player.photo;
+    img.style.display = "block";
+    icon.style.display = "none";
+
+}else{
+
+    img.style.display = "none";
+    icon.style.display = "flex";
+
+}
+
+document.getElementById("profileCaptain").style.display =
+    player.captain ? "inline-flex" : "none";
+const cap=document.getElementById("profileCaptain");
+if(cap){
+cap.innerHTML='C';
+cap.style.alignItems='center';
+cap.style.justifyContent='center';
+cap.style.width='54px';
+cap.style.height='32px';
+cap.style.borderRadius='6px';
+cap.style.color='#fff';
+cap.style.fontWeight='bold';
+cap.style.fontSize='22px';
+cap.style.background='repeating-linear-gradient(0deg,#FFD600 0,#FFD600 6px,#E53935 6px,#E53935 12px)';
+}
+
+    document.getElementById("profileMatches").textContent=
+        player.matches;
+
+    document.getElementById("profileStarts").textContent=
+        player.starts;
+
+    document.getElementById("profileSubs").textContent=
+        player.substitutes;
+
+    document.getElementById("profileMinutes").textContent=
+        player.minutes;
+
+    document.getElementById("profileGoals").textContent=
+        player.goals;
+
+    document.getElementById("profileYellow").textContent=
+        player.yellow;
+
+    document.getElementById("profileRed").textContent=
+        player.red;
+
+}
 function renderConvocations(){
  const c=document.getElementById("convocationsList");
  if(!c) return;
  c.innerHTML=App.players.map(p=>`
  <label style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #394150">
  <input type="checkbox" data-id="${p.id}">
- <span>#${p.number} ${p.name}</span>
+ <span>${p.number} ${p.name}</span>
  </label>`).join("");
 }
 function saveConvocation(){
@@ -1120,7 +1429,7 @@ function renderLineup(){
  box.innerHTML=App.players.map(p=>`
  <label style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #394150">
  <input type="checkbox" data-id="${p.id}">
- #${p.number} ${p.name}
+ ${p.number} ${p.name}
  </label>`).join("");
 }
 function saveLineup(){
@@ -1157,6 +1466,7 @@ let matchClockInterval=null;
 let matchSeconds=0;
 let clockRunning=false;
 let editingPlayerId = null;
+let selectedPlayer = null;
 function startClock(){
  if(clockRunning)return;
  clockRunning=true;
@@ -1398,19 +1708,31 @@ btn.classList.add('active');
 
 async function initApp(){
 
-    updateDate();
+    const firebaseLoaded = await loadFirebase();
 
-   const ok = await loadFirebase();
+if(firebaseLoaded){
 
-if(!ok){
+    saveData();
 
-    if(!loadData()){
+}else{
+
+    if(loadData()){
+
+        await saveFirebase();
+
+    }else{
 
         loadDemoData();
+
+        normalizePlayers();
+
+        saveData();
 
     }
 
 }
+
+normalizePlayers();
 
     renderPlayers();
     renderConvocations();
@@ -1426,7 +1748,7 @@ if(!ok){
     refreshTimeline();
     updateClockDisplay();
     updateHomeLive();
-
+startRealtimeSync();
     startCountdown();
 }
 
@@ -1637,7 +1959,7 @@ function openPlayerSelector(team){
             style="width:100%;margin-bottom:6px"
             onclick="selectPlayer('${team}',${p.number},'${p.name}')">
 
-            #${p.number} ${p.name}
+            ${p.number} ${p.name}
 
         </button>
     `).join("");
@@ -2120,6 +2442,24 @@ function closeMatchEditor(){
     document.getElementById("matchEditorModal").style.display = "none";
 
 }
+function openPlayerProfile(id){
+
+    const player = App.players.find(p => p.id === id);
+
+    if(!player) return;
+
+    selectedPlayer = id;
+
+    renderPlayerProfile(player);
+
+    document.getElementById("playerProfileModal").style.display = "flex";
+
+}
+function closePlayerProfile(){
+
+    document.getElementById("playerProfileModal").style.display = "none";
+
+}
 function saveMatch(){
 
     const type=document.getElementById("matchType").value;
@@ -2348,7 +2688,13 @@ function openPlayerManager(){
     document.getElementById("playerManagerModal").style.display="flex";
 
 }
+function closePlayerEditor(){
 
+    editingPlayerId = null;
+
+    document.getElementById("playerEditorModal").style.display = "none";
+
+}
 function closePlayerManager(){
 
     document.getElementById("playerManagerModal").style.display="none";
@@ -2383,7 +2729,7 @@ function renderAdminPlayers(){
 
             <div>
 
-                <b>#${p.number}</b>
+                <b>${p.number}</b>
 
                 ${p.name} ${p.surname || ""}
 
@@ -2391,7 +2737,32 @@ function renderAdminPlayers(){
 
                 <br>
 
-                <small>${p.position}</small>
+                <div style="font-size:13px;color:#94A3B8;">
+    ${p.position}
+</div>
+
+<div style="
+margin-top:6px;
+font-size:12px;
+font-weight:bold;
+color:${
+    p.status==="Disponible" ? "#22c55e" :
+    p.status==="Convocado" ? "#eab308" :
+    p.status==="Lesionado" ? "#ef4444" :
+    p.status==="Sancionado" ? "#111827" :
+    p.status==="Descanso" ? "#3b82f6" :
+    "#9ca3af"
+};
+">
+${
+    p.status==="Disponible" ? "🟢 Disponible" :
+    p.status==="Convocado" ? "🟡 Convocado" :
+    p.status==="Lesionado" ? "🔴 Lesionado" :
+    p.status==="Sancionado" ? "⚫ Sancionado" :
+    p.status==="Descanso" ? "🔵 Descanso" :
+    "⚪ Baja"
+}
+</div>
 
             </div>
 
@@ -2431,11 +2802,13 @@ function deletePlayer(id){
     App.players = App.players.filter(p=>p.id!==id);
 
     renderAdminPlayers();
-
     renderPlayers();
+    renderConvocations();
+    renderLineup();
+
+    saveData();
 
 }
-
 function editPlayer(id){
 
     const player = App.players.find(p=>p.id===id);
@@ -2448,11 +2821,13 @@ function editPlayer(id){
     document.getElementById("playerName").value = player.name;
     document.getElementById("playerSurname").value = player.surname || "";
     document.getElementById("playerPosition").value = player.position;
+document.getElementById("playerStatus").value = player.status || "Disponible";
     document.getElementById("playerCaptain").checked = player.captain;
 
     document.querySelector("#playerEditorModal h2").textContent="✏️ Editar jugador";
 
     document.getElementById("playerEditorModal").style.display="flex";
+document.getElementById("playerPhoto").value = player.photo || "";
 
 }
 function newPlayer(){
@@ -2464,8 +2839,9 @@ function newPlayer(){
     document.getElementById("playerSurname").value="";
     document.getElementById("playerPosition").selectedIndex=0;
     document.getElementById("playerCaptain").checked=false;
-
-    document.querySelector("#playerEditorModal h2").textContent="👤 Nuevo jugador";
+    document.getElementById("playerPhoto").value = "";
+    document.querySelector("#playerEditorModal h2").textContent=
+    "➕ Nuevo jugador";
 
     document.getElementById("playerEditorModal").style.display="flex";
 
@@ -2473,12 +2849,50 @@ function newPlayer(){
 function closePlayerEditor(){
 
     document.getElementById("playerEditorModal").style.display="none";
+document.getElementById("playerStatus").value = "Disponible";
+}
+async function uploadPlayerPhoto(file){
+
+    if(!file) return "";
+
+    const fileName =
+        "players/" + Date.now() + "_" + file.name;
+
+    const storageRef = storage.ref(fileName);
+
+    await storageRef.put(file);
+
+    const url = await storageRef.getDownloadURL();
+
+    return url;
 
 }
-function savePlayer(){
+async function savePlayer(){
 
     
+const file =
+    document.getElementById("playerPhoto").files[0];
 
+let photo = "";
+
+if(file){
+
+    try{
+    photo = await uploadPlayerPhoto(file);
+    console.log("URL:", photo);
+}catch(error){
+    console.error(error);
+    alert(error.message);
+    return;
+}
+console.log(photo);
+
+}else if(editingPlayerId){
+
+    photo =
+        App.players.find(p=>p.id===editingPlayerId)?.photo || "";
+
+}
     const number = Number(document.getElementById("playerNumber").value);
     const name = document.getElementById("playerName").value.trim();
     const surname = document.getElementById("playerSurname").value.trim();
@@ -2497,37 +2911,55 @@ function savePlayer(){
 
     }
 
-    
+    const player = {
 
-    
- if(editingPlayerId){
+    id: editingPlayerId ?? Date.now(),
 
-    const player = App.players.find(p=>p.id===editingPlayerId);
+    number: number,
+    name: name,
+    surname: surname,
 
-    player.number = number;
-    player.name = name;
-    player.surname = surname;
-    player.position = position;
-    player.captain = captain;
+    position: position,
+    secondPosition: "",
+
+    foot: "Derecha",
+    status: document.getElementById("playerStatus").value,
+
+    captain: captain,
+
+    photo: photo,
+
+    matches: 0,
+    starts: 0,
+    substitutes: 0,
+    minutes: 0,
+
+    goals: 0,
+    assists: 0,
+
+    yellow: 0,
+    red: 0,
+
+    mvp: 0
+
+};
+if(editingPlayerId===null){
+
+    App.players.push(player);
 
 }else{
 
-    App.players.push({
+    const index =
+        App.players.findIndex(p=>p.id===editingPlayerId);
 
-        id:Date.now(),
-        number:number,
-        name:name,
-        surname:surname,
-        position:position,
-        captain:captain,
-        goals:0,
-        yellow:0,
-        red:0,
-        matches:0
-
-    });
+    App.players[index]={
+        ...App.players[index],
+        ...player
+    };
 
 }
+
+App.players.sort((a,b)=>a.number-b.number);
 
     renderAdminPlayers();
 
@@ -2564,7 +2996,70 @@ async function saveFirebase(){
     syncingFirebase = false;
 
 }
+function startRealtimeSync(){
 
+    dbRef.on("value",(snapshot)=>{
+
+        if(!snapshot.exists()) return;
+
+        const data = snapshot.val();
+
+        if(syncingFirebase) return;
+
+        syncingFirebase = true;
+
+        if(data.app){
+
+            App.players = data.app.players || [];
+            App.teams = data.app.teams || [];
+            App.matches = data.app.matches || [];
+            App.classification = data.app.classification || [];
+            App.statistics = data.app.statistics || {};
+            App.activeMatch = data.app.activeMatch ?? null;
+
+        }
+
+        if(data.liveMatch){
+
+            Object.assign(LiveMatch,data.liveMatch);
+
+        }
+
+        matchSeconds = data.matchSeconds || 0;
+
+        normalizePlayers();
+
+        renderPlayers();
+        renderAdminPlayers();
+        renderConvocations();
+        renderLineup();
+        renderMatches();
+        renderClassification();
+        renderFullClassification();
+        renderStatistics();
+
+        loadNextMatch();
+
+        refreshScoreboard();
+        refreshTimeline();
+        updateClockDisplay();
+        updateHomeLive();
+
+        localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify({
+                version:App.version,
+                app:App,
+                liveMatch:LiveMatch,
+                matchSeconds:matchSeconds
+            })
+        );
+
+        syncingFirebase = false;
+
+    });
+
+}
 function saveData(){
 
     const data = {
@@ -2600,11 +3095,11 @@ async function loadFirebase(){
     if(data.app){
 
         App.players = data.app.players || [];
-        App.teams = data.app.teams || [];
-        App.matches = data.app.matches || [];
-        App.classification = data.app.classification || [];
-        App.statistics = data.app.statistics || {};
-        App.activeMatch = data.app.activeMatch ?? null;
+App.teams = data.app.teams || [];
+App.matches = data.app.matches || [];
+App.classification = data.app.classification || [];
+App.statistics = data.app.statistics || {};
+App.activeMatch = data.app.activeMatch ?? null;
 
     }
 
@@ -2615,6 +3110,8 @@ async function loadFirebase(){
     }
 
     matchSeconds = data.matchSeconds || 0;
+
+    normalizePlayers();
 
     return true;
 
@@ -2631,30 +3128,62 @@ function loadData(){
         const data = JSON.parse(raw);
 
         if(data.app){
-            App.players = data.app.players || App.players;
-            App.teams = data.app.teams || App.teams;
-            App.matches = data.app.matches || App.matches;
+
+            App.players = data.app.players || [];
+            App.teams = data.app.teams || [];
+            App.matches = data.app.matches || [];
             App.classification = data.app.classification || [];
-            App.statistics = data.app.statistics || App.statistics;
-            App.activeMatch = data.app.activeMatch ?? App.activeMatch;
+            App.statistics = data.app.statistics || {};
+            App.activeMatch = data.app.activeMatch ?? null;
+
         }
 
         if(data.liveMatch){
-            Object.assign(LiveMatch,data.liveMatch);
+
+            Object.assign(LiveMatch, data.liveMatch);
+
         }
 
         matchSeconds = data.matchSeconds || 0;
+
+        normalizePlayers();
 
         return true;
 
     }catch(e){
 
-        console.error("Error cargando datos",e);
+        console.error(e);
 
         return false;
 
     }
 
+}
+function normalizePlayers(){
+
+    App.players.forEach(p=>{
+
+        if(p.photo===undefined) p.photo="";
+
+        if(p.foot===undefined) p.foot="Derecha";
+
+        if(p.secondPosition===undefined) p.secondPosition="";
+
+        if(p.status===undefined) p.status="Disponible";
+
+        if(p.starts===undefined) p.starts=0;
+
+        if(p.substitutes===undefined) p.substitutes=0;
+
+        if(p.minutes===undefined) p.minutes=0;
+
+        if(p.history===undefined) p.history=[];
+
+    });
+
+}
+function closePlayerProfile(){
+    document.getElementById("playerProfileModal").style.display="none";
 }
 </script>
 <div id="playerManagerModal"
@@ -2728,7 +3257,13 @@ style="width:100%;padding:10px;margin-bottom:12px;">
 <label>Apellidos</label>
 <input id="playerSurname" type="text"
 style="width:100%;padding:10px;margin-bottom:12px;">
+<label>Foto del jugador</label>
 
+<input
+type="file"
+id="playerPhoto"
+accept="image/*"
+style="width:100%;margin-bottom:12px;">
 <label>Posición</label>
 
 <select id="playerPosition"
@@ -2740,7 +3275,16 @@ style="width:100%;padding:10px;margin-bottom:12px;">
 <option>Delantero</option>
 
 </select>
+<label>Estado</label>
 
+<select id="playerStatus" style="width:100%;padding:10px;border-radius:8px;margin-bottom:10px;">
+    <option value="Disponible">🟢 Disponible</option>
+    <option value="Convocado">🟡 Convocado</option>
+    <option value="Lesionado">🔴 Lesionado</option>
+    <option value="Sancionado">⚫ Sancionado</option>
+    <option value="Descanso">🔵 Descanso</option>
+    <option value="Baja">⚪ Baja</option>
+</select>
 <label>
 
 <input id="playerCaptain"
@@ -2919,5 +3463,129 @@ Cancelar
 </div>
 
 <div id="teamManagerModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1900;align-items:center;justify-content:center;"><div style="background:#1E293B;width:95%;max-width:430px;padding:20px;border-radius:16px;"><h2 style="color:#FFD600">⚽ Gestión de equipos</h2><div id="teamManagerList"></div><button class="syncBtn" onclick="newTeam()">➕ Nuevo equipo</button><button class="syncBtn" onclick="closeTeams()">Cerrar</button></div></div><div id="teamEditorModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2000;align-items:center;justify-content:center;"><div style="background:#1E293B;width:95%;max-width:420px;padding:20px;border-radius:16px;"><input id="teamName" placeholder="Nombre" style="width:100%;padding:10px;margin-bottom:10px;"><input id="teamShort" placeholder="Nombre corto" style="width:100%;padding:10px;margin-bottom:10px;"><input id="teamCity" placeholder="Ciudad" style="width:100%;padding:10px;margin-bottom:10px;"><input id="teamField" placeholder="Campo" style="width:100%;padding:10px;margin-bottom:10px;"><button class="syncBtn" onclick="saveTeam()">💾 Guardar</button><button class="syncBtn" onclick="closeTeamEditor()">Cancelar</button></div></div>
+<div id="playerProfileModal"
+style="
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.8);
+z-index:2500;
+align-items:center;
+justify-content:center;">
+
+<div style="
+background:#1E293B;
+width:95%;
+max-width:420px;
+max-height:90vh;
+overflow:auto;
+border-radius:16px;
+padding:20px;">
+
+<div style="text-align:center">
+
+<div style="
+width:110px;
+height:110px;
+border-radius:50%;
+overflow:hidden;
+margin:auto;
+background:#2B3648;
+border:4px solid #FFD600;">
+
+<img
+id="profilePhoto"
+src=""
+style="
+width:100%;
+height:100%;
+object-fit:cover;
+display:none;">
+
+<div
+id="profilePhotoIcon"
+style="
+width:100%;
+height:100%;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:48px;">
+
+👤
+
+</div>
+
+</div>
+
+<h2
+id="profileName"
+style="
+margin-top:15px;
+color:#FFD600;">
+Jugador
+</h2>
+
+<div
+id="profileNumber"
+style="
+font-size:26px;
+font-weight:bold;">
+#0
+</div>
+
+<div
+id="profileCaptain"
+style="
+margin-top:8px;
+display:none;
+font-size:18px;
+color:#FFD600;">
+
+⭐ Capitán
+
+</div>
+
+</div>
+
+<hr style="margin:20px 0">
+
+<p><b>Posición:</b> <span id="profilePosition"></span></p>
+
+<p><b>2ª Posición:</b> <span id="profileSecond"></span></p>
+
+<p><b>Pierna:</b> <span id="profileFoot"></span></p>
+
+<p><b>Estado:</b> <span id="profileStatus"></span></p>
+
+<hr style="margin:20px 0">
+
+<h3 style="color:#FFD600">📊 Estadísticas</h3>
+
+<p>🏟️ Partidos: <span id="profileMatches"></span></p>
+
+<p>⭐ Titular: <span id="profileStarts"></span></p>
+
+<p>🔄 Suplente: <span id="profileSubs"></span></p>
+
+<p>⏱️ Minutos: <span id="profileMinutes"></span></p>
+
+<p>⚽ Goles: <span id="profileGoals"></span></p>
+
+<p>🟨 Amarillas: <span id="profileYellow"></span></p>
+
+<p>🟥 Rojas: <span id="profileRed"></span></p>
+
+<button
+class="syncBtn"
+onclick="closePlayerProfile()">
+
+Cerrar
+
+</button>
+
+</div>
+
+</div>
 </body>
 </html>
