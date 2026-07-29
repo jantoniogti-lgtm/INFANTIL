@@ -1646,7 +1646,7 @@ function stopClock(){
 
     clockRunning=false;
 
-    LiveMatch.pausedSeconds=matchSeconds;
+   LiveMatch.pausedSeconds = matchSeconds;
 
     saveData();
 
@@ -2316,42 +2316,80 @@ function setMatchState(state){
  LiveMatch.state=state;
 
  if(state==='FIRST_HALF'){
-   LiveMatch.half=1;
-   LiveMatch.minute=0;
-   matchSeconds=0;
 
-LiveMatch.startTimestamp=null;
-LiveMatch.pausedSeconds=0;
-   updateClockDisplay();
-   startClock();
+    stopClock();
 
- }
+    LiveMatch.state="FIRST_HALF";
+    LiveMatch.half=1;
 
- if(state==='HALFTIME'){
-   stopClock();
-   matchSeconds=40*60;
+    matchSeconds=0;
 
-LiveMatch.startTimestamp=null;
-LiveMatch.pausedSeconds=40*60;
-   LiveMatch.minute=40;
-   updateClockDisplay();
- }
+    LiveMatch.minute=0;
+    LiveMatch.startTimestamp=null;
+    LiveMatch.pausedSeconds=0;
 
+    updateClockDisplay();
+
+    startClock();
+
+}
+
+if(state==='HALFTIME'){
+
+    stopClock();
+
+    matchSeconds=40*60;
+
+    LiveMatch.minute=40;
+
+    LiveMatch.state="HALFTIME";
+
+    LiveMatch.pausedSeconds=40*60;
+
+    LiveMatch.startTimestamp=null;
+
+    updateClockDisplay();
+
+}
  if(state==='SECOND_HALF'){
-   LiveMatch.half=2;
-   matchSeconds=40*60;
-   LiveMatch.minute=40;
-   updateClockDisplay();
-   startClock();
- }
 
- if(state==='FINISHED'){
-   stopClock();
-   matchSeconds=80*60;
-   LiveMatch.minute=80;
-   updateClockDisplay();
- }
+    stopClock();
 
+    LiveMatch.state="SECOND_HALF";
+
+    LiveMatch.half=2;
+
+    matchSeconds=40*60;
+
+    LiveMatch.minute=40;
+
+    LiveMatch.startTimestamp=null;
+
+    LiveMatch.pausedSeconds=40*60;
+
+    updateClockDisplay();
+
+    startClock();
+
+}
+
+if(state==='FINISHED'){
+
+    stopClock();
+
+    matchSeconds=80*60;
+
+    LiveMatch.minute=80;
+
+    LiveMatch.state="FINISHED";
+
+    LiveMatch.pausedSeconds=80*60;
+
+    LiveMatch.startTimestamp=null;
+
+    updateClockDisplay();
+
+}
  const btn=document.getElementById('matchStateBtn');
  if(state==='FIRST_HALF') btn.textContent='🟡 Descanso';
  if(state==='HALFTIME') btn.textContent='🟢 Iniciar segunda parte';
