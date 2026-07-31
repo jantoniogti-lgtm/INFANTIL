@@ -5,49 +5,67 @@
 
 <meta charset="UTF-8">
 
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>RS CLUB MANAGER V7</title>
-
-<meta name="theme-color" content="#FFD600">
+<title>RS Club Manager V7</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 
-<link rel="preconnect"
-href="https://fonts.gstatic.com"
-crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:'Inter',sans-serif;
--webkit-tap-highlight-color:transparent;
-}
+/*==================================================
+VARIABLES
+==================================================*/
 
 :root{
 
---bg:#0f172a;
---header:#111827;
---card:#1e293b;
+--bg:#0b1016;
+
+--surface:#121923;
+
+--card:#182231;
+
+--card2:#1f2c3d;
+
+--border:#2f4055;
 
 --primary:#FFD600;
+
 --secondary:#E53935;
 
---text:#ffffff;
---text2:#94A3B8;
+--text:#FFFFFF;
 
---success:#16a34a;
---warning:#f59e0b;
---danger:#dc2626;
+--text2:#AAB6C6;
 
---radius:18px;
+--success:#32D74B;
+
+--warning:#FFC857;
+
+--danger:#FF5D5D;
+
+--radius:22px;
+
+--shadow:0 15px 35px rgba(0,0,0,.35);
+
+}
+
+/*==================================================
+RESET
+==================================================*/
+
+*{
+
+margin:0;
+
+padding:0;
+
+box-sizing:border-box;
+
+font-family:Inter,sans-serif;
 
 }
 
@@ -63,15 +81,25 @@ background:var(--bg);
 
 color:var(--text);
 
-max-width:480px;
+overflow-x:hidden;
 
-margin:auto;
+}
 
 min-height:100vh;
 
-overflow-x:hidden;
+background:var(--bg);
 
-padding-bottom:90px;
+color:var(--text);
+
+overflow:hidden;
+
+}
+
+img{
+
+max-width:100%;
+
+display:block;
 
 }
 
@@ -79,19 +107,7 @@ button{
 
 cursor:pointer;
 
-border:none;
-
-outline:none;
-
-}
-
-input,
-select,
-textarea{
-
-outline:none;
-
-border:none;
+font-family:inherit;
 
 }
 
@@ -103,136 +119,549 @@ color:inherit;
 
 }
 
-.hidden{
+/*==================================================
+SIDEBAR
+==================================================*/
 
-display:none !important;
+aside{
 
-}
+background:#111922;
 
-.page{
-
-display:none;
-
-animation:fade .25s;
-
-}
-
-.page.active{
-
-display:block;
-
-}
-
-@keyframes fade{
-
-from{
-
-opacity:0;
-
-transform:translateY(8px);
-
-}
-
-to{
-
-opacity:1;
-
-transform:none;
-
-}
-
-}
-
-.card{
-
-background:var(--card);
-
-border-radius:var(--radius);
-
-padding:16px;
-
-margin-bottom:16px;
-
-box-shadow:
-
-0 4px 15px rgba(0,0,0,.25);
-
-}
-
-.sectionTitle{
-
-font-size:26px;
-
-font-weight:800;
-
-color:var(--primary);
-
-margin-bottom:15px;
-
-}
-
-.list{
+border-right:1px solid var(--border);
 
 display:flex;
 
 flex-direction:column;
 
+height:100vh;
+
+overflow:auto;
+
+}
+
+.logo{
+
+padding:28px;
+
+display:flex;
+
+align-items:center;
+
+gap:15px;
+
+border-bottom:1px solid var(--border);
+
+}
+
+.logo img{
+
+width:60px;
+
+height:60px;
+
+object-fit:contain;
+
+}
+
+.logoText h1{
+
+font-size:23px;
+
+font-weight:800;
+
+color:var(--primary);
+
+}
+
+.logoText p{
+
+font-size:13px;
+
+color:var(--text2);
+
+margin-top:4px;
+
+}
+
+nav{
+
+padding:20px;
+
+display:flex;
+
+flex-direction:column;
+
+gap:8px;
+
+}
+
+.menuItem{
+
+height:56px;
+
+display:flex;
+
+align-items:center;
+
+padding:0 18px;
+
+border-radius:16px;
+
+font-weight:600;
+
+color:var(--text2);
+
+transition:.25s;
+
+cursor:pointer;
+
+}
+
+.menuItem:hover{
+
+background:var(--card);
+
+color:white;
+
+}
+
+.menuItem.active{
+
+background:var(--primary);
+
+color:#111;
+
+font-weight:800;
+
+}
+
+/*==================================================
+MAIN
+==================================================*/
+
+main{
+
+width:100%;
+
+min-height:100vh;
+
+display:flex;
+
+flex-direction:column;
+
+}
+
+header{
+
+height:82px;
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+padding:0 35px;
+
+background:#101720;
+
+border-bottom:1px solid var(--border);
+
+}
+
+.headerTitle{
+
+font-size:28px;
+
+font-weight:800;
+
+}
+
+.headerSubtitle{
+
+font-size:13px;
+
+color:var(--text2);
+
+margin-top:4px;
+
+}
+
+.headerRight{
+
+display:flex;
+
 gap:12px;
 
 }
 
-.item{
+.headerButton{
 
-background:#243247;
+width:46px;
+
+height:46px;
+
+border:none;
 
 border-radius:14px;
 
-padding:14px;
+background:var(--card);
+
+color:white;
+
+font-size:20px;
 
 }
 
-.primaryBtn{
+.content{
 
-width:100%;
+padding:30px;
 
-height:48px;
+}
 
-border-radius:12px;
+/*==================================================
+RESPONSIVE
+==================================================*/
+/*==================================
+DASHBOARD
+==================================*/
 
-background:var(--primary);
+.heroCard{
 
-color:#000;
+background:linear-gradient(135deg,#182231,#223247);
 
-font-weight:700;
+border-radius:24px;
+
+padding:40px;
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+margin-bottom:30px;
+
+box-shadow:var(--shadow);
+
+}
+
+.heroLabel{
+.matchCompetition{
+
+color:var(--text2);
+
+margin-bottom:20px;
 
 font-size:15px;
 
-margin-top:12px;
+font-weight:600;
+
+}
+display:inline-block;
+
+padding:8px 16px;
+
+background:var(--primary);
+
+color:#111;
+
+border-radius:30px;
+
+font-size:12px;
+
+font-weight:700;
+
+margin-bottom:20px;
 
 }
 
-.dangerBtn{
+.heroCard h2{
 
-background:var(--danger);
+font-size:42px;
 
-color:white;
-
-}
-
-.successBtn{
-
-background:var(--success);
-
-color:white;
+font-weight:800;
 
 }
 
-.warningBtn{
+.heroCard h3{
 
-background:var(--warning);
+font-size:28px;
 
-color:white;
+margin:10px 0;
 
+color:var(--primary);
+
+}
+
+.heroCard p{
+
+margin-top:15px;
+
+color:var(--text2);
+
+font-size:16px;
+
+}
+
+.primaryButton{
+
+margin-top:25px;
+
+padding:14px 30px;
+
+background:var(--primary);
+
+border:none;
+
+border-radius:14px;
+
+font-size:16px;
+
+font-weight:700;
+
+}
+
+.heroShield{
+
+display:flex;
+
+align-items:center;
+
+gap:25px;
+
+}
+
+.escudoLocal,
+.escudoVisitante{
+
+width:120px;
+
+height:120px;
+
+border-radius:50%;
+
+background:#2d3d52;
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+font-size:38px;
+
+font-weight:800;
+
+}
+
+.vs{
+
+font-size:34px;
+
+font-weight:800;
+
+color:var(--primary);
+
+}
+
+.dashboardGrid{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+
+gap:25px;
+
+margin-top:25px;
+
+}
+
+.dashboardCard{
+
+background:var(--card);
+
+border-radius:22px;
+
+padding:25px;
+
+min-height:180px;
+
+box-shadow:var(--shadow);
+
+}
+
+.dashboardCard h3{
+
+margin-bottom:15px;
+
+font-size:22px;
+
+}
+
+.dashboardCard p{
+
+color:var(--text2);
+
+}
+/*=========================
+MENÚ LATERAL
+=========================*/
+
+#overlay{
+
+position:fixed;
+
+inset:0;
+
+background:rgba(0,0,0,.55);
+
+display:none;
+
+z-index:998;
+
+}
+
+#overlay.open{
+
+display:block;
+
+}
+
+#sideMenu{
+
+position:fixed;
+
+left:-320px;
+
+top:0;
+
+width:300px;
+
+height:100vh;
+
+background:#121923;
+
+transition:.30s;
+
+z-index:999;
+
+padding:25px;
+
+box-shadow:0 0 40px rgba(0,0,0,.5);
+
+overflow:auto;
+
+}
+
+#sideMenu.open{
+
+left:0;
+
+}
+
+.menuHeader{
+
+padding-bottom:25px;
+
+margin-bottom:20px;
+
+border-bottom:1px solid var(--border);
+
+}
+
+.menuHeader h2{
+
+color:var(--primary);
+
+font-size:26px;
+
+}
+
+.menuHeader p{
+
+color:var(--text2);
+
+margin-top:5px;
+
+}
+@media(max-width:980px){
+
+body{
+
+grid-template-columns:1fr;
+
+}
+
+aside{
+
+display:none;
+
+}
+.heroCard{
+
+flex-direction:column;
+
+text-align:center;
+
+padding:25px;
+
+}
+
+.heroShield{
+
+margin-top:30px;
+
+}
+
+.heroCard h2{
+
+font-size:30px;
+
+}
+
+.escudoLocal,
+.escudoVisitante{
+
+width:90px;
+
+height:90px;
+
+font-size:30px;
+
+}
+
+.dashboardGrid{
+
+grid-template-columns:1fr;
+
+}
+
+.dashboardCard{
+
+min-height:140px;
+
+}
+
+.headerRight{
+
+gap:8px;
+
+}
+
+.headerButton{
+
+width:42px;
+
+height:42px;
+
+}
+
+.content{
+
+padding:15px;
+
+}
 }
 
 </style>
@@ -240,3147 +669,182 @@ color:white;
 </head>
 
 <body>
-<!-- ===================================================== -->
-<!-- HEADER -->
-<!-- ===================================================== -->
 
-<header id="appHeader">
 
-<style>
 
-#appHeader{
+<main>
 
-position:sticky;
-top:0;
-z-index:1000;
+<header>
+<button id="menuButton" class="headerButton">☰</button>
 
-height:74px;
+<div>
 
-background:var(--header);
+<div class="headerTitle">
 
-display:flex;
-align-items:center;
-justify-content:space-between;
-
-padding:0 16px;
-
-border-bottom:3px solid var(--primary);
-
-}
-
-.headerLeft{
-
-display:flex;
-align-items:center;
-gap:14px;
-
-}
-
-.logo{
-
-width:48px;
-height:48px;
-
-border-radius:50%;
-
-background:var(--primary);
-
-display:flex;
-align-items:center;
-justify-content:center;
-
-font-size:24px;
-
-color:#000;
-
-font-weight:800;
-
-}
-
-.titleBox{
-
-display:flex;
-flex-direction:column;
-
-}
-
-.appTitle{
-
-font-size:15px;
-
-font-weight:800;
-
-letter-spacing:.5px;
-
-color:var(--primary);
-
-}
-
-.appDate{
-
-font-size:12px;
-
-color:var(--text2);
-
-margin-top:2px;
-
-}
-
-.headerButton{
-
-width:44px;
-height:44px;
-
-border-radius:12px;
-
-background:#2a3445;
-
-color:white;
-
-font-size:22px;
-
-display:flex;
-align-items:center;
-justify-content:center;
-
-transition:.2s;
-
-}
-
-.headerButton:active{
-
-transform:scale(.95);
-
-}
-
-</style>
-
-<div class="headerLeft">
-
-<div class="logo">
-
-⚽
+RS CLUB MANAGER V7
 
 </div>
 
-<div class="titleBox">
+<div class="headerSubtitle">
 
-<div class="appTitle">
-
-RS CLUB MANAGER
-
-</div>
-
-<div
-class="appDate"
-id="todayDate">
-
-Cargando...
+Temporada 2026/2027
 
 </div>
 
 </div>
 
+<div class="headerRight">
+
+<button class="headerButton">🔔</button>
+
+<button class="headerButton">⚙</button>
+
+<button class="headerButton">☰</button>
+
 </div>
-
-<button
-class="headerButton"
-id="menuButton">
-
-☰
-
-</button>
 
 </header>
+<div id="overlay"></div>
 
-<main id="app">
-<!-- ===================================================== -->
-<!-- MENÚ INFERIOR -->
-<!-- ===================================================== -->
+<aside id="sideMenu">
 
-<style>
+<div class="menuHeader">
 
-#bottomNav{
+<h2>RS CLUB</h2>
 
-position:fixed;
-
-bottom:0;
-
-left:50%;
-
-transform:translateX(-50%);
-
-width:100%;
-
-max-width:480px;
-
-height:72px;
-
-background:var(--header);
-
-border-top:2px solid var(--primary);
-
-display:grid;
-
-grid-template-columns:repeat(8,1fr);
-
-z-index:9999;
-
-}
-
-.navButton{
-
-background:none;
-
-border:none;
-
-color:var(--text2);
-
-font-size:11px;
-
-display:flex;
-
-flex-direction:column;
-
-align-items:center;
-
-justify-content:center;
-
-gap:4px;
-
-transition:.2s;
-
-}
-
-.navButton span:first-child{
-
-font-size:20px;
-
-}
-
-.navButton.active{
-
-color:var(--primary);
-
-}
-
-.navButton:active{
-
-transform:scale(.92);
-
-}
-
-</style>
-
-<nav id="bottomNav">
-
-<button class="navButton active" data-page="home">
-
-<span>🏠</span>
-
-<span>Inicio</span>
-
-</button>
-
-<button class="navButton" data-page="players">
-
-<span>👥</span>
-
-<span>Jug.</span>
-
-</button>
-
-<button class="navButton" data-page="matches">
-
-<span>⚽</span>
-
-<span>Partidos</span>
-
-</button>
-
-<button class="navButton" data-page="call">
-
-<span>📋</span>
-
-<span>Conv.</span>
-
-</button>
-
-<button class="navButton" data-page="lineup">
-
-<span>🧩</span>
-
-<span>Once</span>
-
-</button>
-
-<button class="navButton" data-page="table">
-
-<span>🏆</span>
-
-<span>Liga</span>
-
-</button>
-
-<button class="navButton" data-page="stats">
-
-<span>📊</span>
-
-<span>Stats</span>
-
-</button>
-
-<button class="navButton" data-page="admin">
-
-<span>⚙️</span>
-
-<span>Admin</span>
-
-</button>
-
-</nav>
-<!-- ===================================================== -->
-<!-- HOME -->
-<!-- ===================================================== -->
-
-<section
-id="home"
-class="page active">
-
-<div class="card">
-
-<div class="sectionTitle">
-
-🏠 Inicio
+<p>Cadete S15</p>
 
 </div>
 
-<div
-id="nextMatchCard"
-style="
-border:2px solid var(--primary);
-border-radius:16px;
-padding:18px;
-text-align:center;
-">
+<div class="menuItem active">🏠 Inicio</div>
 
-<div
-style="
-font-size:14px;
-color:var(--text2);
-">
+<div class="menuItem">👥 Plantilla</div>
 
-PRÓXIMO PARTIDO
+<div class="menuItem">⚽ Partidos</div>
 
+<div class="menuItem">🏆 Clasificación</div>
+
+<div class="menuItem">📊 Estadísticas</div>
+
+<div class="menuItem">📰 Noticias</div>
+
+<div class="menuItem">⚙ Administración</div>
+
+<div class="menuItem">🔧 Configuración</div>
+
+</aside>
+<div class="content" id="appContent">
+
+<div class="heroCard">
+
+    <div class="heroInfo">
+<div class="matchCompetition">
+Liga Preferente Cadete S15
 </div>
+        <span class="heroLabel">PRÓXIMO PARTIDO</span>
 
-<div
-id="homeTeams"
-style="
-font-size:26px;
-font-weight:800;
-margin-top:12px;
-">
+        <h2>Ramón Sicart</h2>
 
-RAMÓN SICART
+        <h3>vs</h3>
+
+        <h2>Rival</h2>
+
+        <p>
+
+📅 Domingo 19 Julio
 
 <br>
 
-VS
+🕕 18:30
 
 <br>
 
-RIVAL
+📍 Campo Municipal
 
-</div>
-
-<div
-id="homeScore"
-style="
-font-size:48px;
-font-weight:800;
-color:var(--primary);
-margin-top:15px;
-">
-
-0 - 0
-
-</div>
-
-<div
-id="homeState"
-style="
-margin-top:12px;
-font-weight:700;
-color:var(--warning);
-">
-
-PREPARTIDO
-
-</div>
-
-<div
-id="homeDate"
-style="
-margin-top:15px;
-font-size:14px;
-color:var(--text2);
-">
-
-Sin partido programado
-
-</div>
-
-</div>
-
-</div>
-
-<div class="card">
-
-<div class="sectionTitle">
-
-📅 Próximos eventos
-
-</div>
-
-<div
-id="nextEvent">
-
-No hay eventos
-
-</div>
-
-</div>
-
-<div class="card">
-
-<div class="sectionTitle">
-
-🏆 Clasificación
-
-</div>
-
-<div
-id="homeClassification">
-
-Todavía no hay clasificación.
-
-</div>
-
-</div>
-
-<div class="card">
-
-<div class="sectionTitle">
-
-⚽ Pichichi
-
-</div>
-
-<div
-id="topScorers">
-
-Sin datos.
-
-</div>
-
-</div>
-
-</section>
-<!-- ===================================================== -->
-<!-- JUGADORES -->
-<!-- ===================================================== -->
-
-<section
-id="players"
-class="page">
-
-<div class="card">
-
-<div class="sectionTitle">
-
-👥 Jugadores
-
-</div>
-
-<div
-id="playersList"
-class="list">
-
-<div class="item">
-
-Todavía no hay jugadores.
-
-</div>
-
-</div>
-
-<button
-class="primaryBtn"
-id="addPlayerBtn">
-
-➕ Añadir jugador
-
-</button>
-
-</div>
-
-<div class="card">
-
-<div class="sectionTitle">
-
-📊 Resumen
-
-</div>
-
-<div class="list">
-
-<div class="item">
-
-<b>Total jugadores:</b>
-
-<span id="totalPlayers">
-
-0
-
-</span>
-
-</div>
-
-<div class="item">
-
-<b>Convocados:</b>
-
-<span id="totalCalled">
-
-0
-
-</span>
-
-</div>
-
-<div class="item">
-
-<b>Lesionados:</b>
-
-<span id="totalInjured">
-
-0
-
-</span>
-
-</div>
-
-</div>
-
-</div>
-
-</section>
-<!-- ===================================================== -->
-<!-- PARTIDOS -->
-<!-- ===================================================== -->
-
-<section
-id="matches"
-class="page">
-
-<div class="card">
-
-<div class="sectionTitle">
-
-⚽ Partidos
-
-</div>
-
-<button
-class="primaryBtn"
-id="newMatchBtn">
-
-➕ Nuevo partido
-
-</button>
-
-</div>
-
-<div class="card">
-
-<div class="sectionTitle">
-
-📅 Próximo partido
-
-</div>
-
-<div
-id="nextMatch">
-
-<div class="item">
-
-No hay ningún partido programado.
-
-</div>
-
-</div>
-
-</div>
-
-<div class="card">
-
-<div class="sectionTitle">
-
-📋 Lista de partidos
-
-</div>
-
-<div
-id="matchesList"
-class="list">
-
-<div class="item">
-
-Todavía no hay partidos.
-
-</div>
-
-</div>
-
-</div>
-
-<div class="card">
-
-<div class="sectionTitle">
-
-📊 Resumen
-
-</div>
-
-<div class="list">
-
-<div class="item">
-
-<b>Jugados:</b>
-
-<span id="matchesPlayed">
-
-0
-
-</span>
-
-</div>
-
-<div class="item">
-
-<b>Ganados:</b>
-
-<span id="matchesWon">
-
-0
-
-</span>
-
-</div>
-
-<div class="item">
-
-<b>Empatados:</b>
-
-<span id="matchesDraw">
-
-0
-
-</span>
-
-</div>
-
-<div class="item">
-
-<b>Perdidos:</b>
-
-<span id="matchesLost">
-
-0
-
-</span>
-
-</div>
-
-<div class="item">
-
-<b>Goles a favor:</b>
-
-<span id="goalsFor">
-
-0
-
-</span>
-
-</div>
-
-<div class="item">
-
-<b>Goles en contra:</b>
-
-<span id="goalsAgainst">
-
-0
-
-</span>
-
-</div>
-
-</div>
-
-</div>
-
-</section>
-<!-- ===================================================== -->
-<!-- CONVOCATORIA -->
-<!-- ===================================================== -->
-
-<section
-id="call"
-class="page">
-
-<div class="card">
-
-<div class="sectionTitle">
-
-📋 Convocatoria
-
-</div>
-
-<div
-style="
-color:var(--text2);
-margin-bottom:15px;
-">
-
-Selecciona los jugadores convocados para el próximo partido.
-
-</div>
-
-<div
-id="callList"
-class="list">
-
-<div class="item">
-
-Todavía no hay jugadores.
-
-</div>
-
-</div>
-
-<button
-class="primaryBtn"
-id="selectAllPlayersBtn">
-
-✅ Convocar a todos
-
-</button>
-
-<button
-class="primaryBtn warningBtn"
-id="clearCallBtn">
-
-🗑 Vaciar convocatoria
-
-</button>
-
-</div>
-
-<div class="card">
-
-<div class="sectionTitle">
-
-📊 Resumen
-
-</div>
-
-<div class="list">
-
-<div class="item">
-
-<b>Convocados</b>
-
-<span id="calledPlayersCount">
-
-0
-
-</span>
-
-</div>
-
-<div class="item">
-
-<b>No convocados</b>
-
-<span id="notCalledPlayersCount">
-
-0
-
-</span>
-
-</div>
-
-</div>
-
-</div>
-
-</section>
-<!-- ===================================================== -->
-<!-- ALINEACIÓN -->
-<!-- ===================================================== -->
-
-<section
-id="lineup"
-class="page">
-
-<div class="card">
-
-<div class="sectionTitle">
-
-🧩 Alineación
-
-</div>
+</p>
 
-<div
-style="
-color:var(--text2);
-margin-bottom:15px;
-">
+        <button class="primaryButton">
+            VER PARTIDO
+        </button>
 
-Selecciona la alineación inicial del equipo.
+    </div>
 
-</div>
-
-<button
-class="primaryBtn"
-id="formationBtn">
-
-📐 Formación: 1-4-3-3
-
-</button>
-
-</div>
-
-<div class="card">
-
-<div
-id="footballField"
-style="
-position:relative;
-width:100%;
-height:520px;
-border-radius:18px;
-background:linear-gradient(#2e7d32,#1b5e20);
-border:3px solid rgba(255,255,255,.15);
-overflow:hidden;
-">
-
-<!-- Líneas del campo -->
-
-<div style="
-position:absolute;
-left:50%;
-top:0;
-bottom:0;
-width:2px;
-background:rgba(255,255,255,.35);
-transform:translateX(-50%);
-"></div>
-
-<div style="
-position:absolute;
-left:50%;
-top:50%;
-width:90px;
-height:90px;
-border:2px solid rgba(255,255,255,.35);
-border-radius:50%;
-transform:translate(-50%,-50%);
-"></div>
-
-<div style="
-position:absolute;
-left:10px;
-right:10px;
-top:10px;
-bottom:10px;
-border:2px solid rgba(255,255,255,.35);
-"></div>
-
-<div
-id="lineupPlayers">
-
-<!-- Los jugadores se dibujarán aquí mediante JavaScript -->
-
-</div>
-
-</div>
-
-</div>
-
-<div class="card">
-
-<div class="sectionTitle">
-
-👥 Banquillo
-
-</div>
-
-<div
-id="benchPlayers"
-class="list">
-
-<div class="item">
-
-No hay jugadores disponibles.
-
-</div>
-
-</div>
-
-</div>
-
-</section>
-
-<!-- ===================================================== -->
-<!-- CLASIFICACIÓN -->
-<!-- ===================================================== -->
-
-<section
-id="table"
-class="page">
-
-<div class="card">
-
-<div class="sectionTitle">
-
-🏆 Clasificación
-
-</div>
-
-<div
-style="
-color:var(--text2);
-margin-bottom:15px;
-">
-
-La clasificación se actualizará automáticamente al introducir los resultados de los partidos.
-
-</div>
-
-<div
-style="
-overflow-x:auto;
-">
-
-<table
-id="leagueTable"
-style="
-width:100%;
-border-collapse:collapse;
-text-align:center;
-">
-
-<thead>
-
-<tr
-style="
-background:var(--primary);
-color:#000;
-">
-
-<th style="padding:10px;">#</th>
-<th style="padding:10px;text-align:left;">Equipo</th>
-<th style="padding:10px;">PJ</th>
-<th style="padding:10px;">PG</th>
-<th style="padding:10px;">PE</th>
-<th style="padding:10px;">PP</th>
-<th style="padding:10px;">GF</th>
-<th style="padding:10px;">GC</th>
-<th style="padding:10px;">DG</th>
-<th style="padding:10px;">PTS</th>
-
-</tr>
-
-</thead>
-
-<tbody id="leagueTableBody">
-
-<tr>
-
-<td colspan="10" style="padding:20px;">
-
-Todavía no hay equipos.
-
-</td>
-
-</tr>
-
-</tbody>
-
-</table>
-
-</div>
-
-</div>
-
-<div class="card">
-
-<div class="sectionTitle">
-
-📊 Resumen
-
-</div>
-
-<div class="list">
-
-<div class="item">
-
-<b>Equipos:</b>
-
-<span id="totalTeams">
-
-0
-
-</span>
-
-</div>
-
-<div class="item">
-
-<b>Partidos contabilizados:</b>
-
-<span id="tableMatches">
-
-0
-
-</span>
-
-</div>
-
-<div class="item">
-
-<b>Última actualización:</b>
-
-<span id="tableUpdated">
-
-Nunca
-
-</span>
-
-</div>
-
-</div>
-
-</div>
-
-</section>
-<!-- ===================================================== -->
-<!-- ESTADÍSTICAS -->
-<!-- ===================================================== -->
-
-<section
-id="stats"
-class="page">
-
-<div class="card">
-
-<div class="sectionTitle">
-
-📊 Estadísticas
-
-</div>
-
-<div
-style="
-color:var(--text2);
-margin-bottom:15px;
-">
-
-Resumen general del equipo durante la temporada.
-
-</div>
-
-</div>
-
-<div class="card">
-
-<div class="sectionTitle">
-
-⚽ Equipo
-
-</div>
-
-<div class="list">
-
-<div class="item">
-<b>Partidos jugados</b>
-<span id="statsPlayed" style="float:right;">0</span>
-</div>
-
-<div class="item">
-<b>Victorias</b>
-<span id="statsWon" style="float:right;">0</span>
-</div>
-
-<div class="item">
-<b>Empates</b>
-<span id="statsDraw" style="float:right;">0</span>
-</div>
-
-<div class="item">
-<b>Derrotas</b>
-<span id="statsLost" style="float:right;">0</span>
-</div>
-
-<div class="item">
-<b>Goles a favor</b>
-<span id="statsGoalsFor" style="float:right;">0</span>
-</div>
+    <div class="heroShield">
 
-<div class="item">
-<b>Goles en contra</b>
-<span id="statsGoalsAgainst" style="float:right;">0</span>
-</div>
-
-<div class="item">
-<b>Diferencia de goles</b>
-<span id="statsGoalDifference" style="float:right;">0</span>
-</div>
-
-</div>
-
-</div>
-
-<div class="card">
-
-<div class="sectionTitle">
-
-🥇 Top Goleadores
-
-</div>
-
-<div
-id="topScorersList"
-class="list">
-
-<div class="item">
-
-Todavía no hay goles registrados.
-
-</div>
-
-</div>
-
-</div>
-
-<div class="card">
-
-<div class="sectionTitle">
-
-🎖️ Jugadores
-
-</div>
-
-<div class="list">
-
-<div class="item">
-<b>Total jugadores</b>
-<span id="statsPlayers" style="float:right;">0</span>
-</div>
-
-<div class="item">
-<b>Convocados</b>
-<span id="statsCalledPlayers" style="float:right;">0</span>
-</div>
-
-<div class="item">
-<b>Disponibles</b>
-<span id="statsAvailablePlayers" style="float:right;">0</span>
-</div>
-
-</div>
-
-</div>
-
-</section>
-<!-- ===================================================== -->
-<!-- ADMINISTRACIÓN -->
-<!-- ===================================================== -->
-
-<section
-id="admin"
-class="page">
-
-<div class="card">
-
-<div class="sectionTitle">
-
-⚙️ Administración
-
-</div>
-
-<div
-style="
-color:var(--text2);
-margin-bottom:18px;
-">
-
-Desde aquí podrás gestionar toda la aplicación.
-
-</div>
-
-</div>
-
-<div class="card">
-
-<div class="sectionTitle">
-
-👥 Jugadores
-
-</div>
-
-<div class="list">
-
-<button
-class="primaryBtn"
-id="adminPlayersBtn">
-
-Gestionar jugadores
-
-</button>
-
-<button
-class="primaryBtn warningBtn"
-id="importPlayersBtn">
-
-Importar plantilla
-
-</button>
+        <div class="escudoLocal">RS</div>
 
-<button
-class="primaryBtn successBtn"
-id="exportPlayersBtn">
+        <div class="vs">VS</div>
 
-Exportar plantilla
+        <div class="escudoVisitante">?</div>
 
-</button>
+    </div>
 
 </div>
 
-</div>
-
-<div class="card">
-
-<div class="sectionTitle">
-
-⚽ Partidos
-
-</div>
-
-<div class="list">
-
-<button
-class="primaryBtn"
-id="adminMatchesBtn">
-
-Gestionar partidos
-
-</button>
-
-<button
-class="primaryBtn"
-id="adminTeamsBtn">
-
-Gestionar equipos
-
-</button>
-
-<button
-class="primaryBtn warningBtn"
-id="resetSeasonBtn">
-
-Reiniciar temporada
-
-</button>
-
-</div>
-
-</div>
-
-<div class="card">
-
-<div class="sectionTitle">
-
-☁️ Datos
-
-</div>
-
-<div class="list">
-
-<button
-class="primaryBtn successBtn"
-id="saveLocalBtn">
-
-Guardar datos
-
-</button>
-
-<button
-class="primaryBtn"
-id="loadLocalBtn">
-
-Cargar datos
+<div class="dashboardGrid">
 
-</button>
+    <div class="dashboardCard">
 
-<button
-class="primaryBtn"
-id="firebaseSyncBtn">
+        <h3>🏆 Clasificación</h3>
 
-Sincronizar Firebase
+        <p>Sin datos todavía</p>
 
-</button>
+    </div>
 
-</div>
-
-</div>
-
-<div class="card">
-
-<div class="sectionTitle">
-
-📤 Exportación
-
-</div>
-
-<div class="list">
-
-<button
-class="primaryBtn"
-id="exportPNG">
-
-Exportar clasificación PNG
-
-</button>
-
-<button
-class="primaryBtn"
-id="exportLineupPNG">
-
-Exportar alineación PNG
-
-</button>
-
-<button
-class="primaryBtn"
-id="backupJSON">
+    <div class="dashboardCard">
 
-Crear copia JSON
+        <h3>⚽ Goleadores</h3>
 
-</button>
+        <p>Sin datos todavía</p>
 
-</div>
-
-</div>
-
-<div class="card">
-
-<div class="sectionTitle">
-
-🔒 Sistema
-
-</div>
+    </div>
 
-<div class="list">
+    <div class="dashboardCard">
 
-<div class="item">
+        <h3>📅 Último partido</h3>
 
-Versión
+        <p>No disponible</p>
 
-<span style="float:right;">
+    </div>
 
-V7.0.0
+    <div class="dashboardCard">
 
-</span>
+        <h3>📊 Estadísticas</h3>
 
-</div>
-
-<div class="item">
-
-Estado
-
-<span
-id="systemStatus"
-style="float:right;color:#16a34a;">
+        <p>Próximamente</p>
 
-Operativo
+    </div>
 
-</span>
-
-</div>
-
 </div>
 
 </div>
-
-</section>
 
 </main>
-<!-- ===================================================== -->
-<!-- MODAL -->
-<!-- ===================================================== -->
-
-<div
-id="modalOverlay"
-class="hidden"
-style="
-position:fixed;
-inset:0;
-background:rgba(0,0,0,.65);
-display:flex;
-align-items:center;
-justify-content:center;
-padding:20px;
-z-index:99999;
-">
-
-<div
-id="modalWindow"
-style="
-background:var(--card);
-width:100%;
-max-width:430px;
-border-radius:18px;
-overflow:hidden;
-box-shadow:0 15px 40px rgba(0,0,0,.45);
-">
-
-<div
-style="
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:16px 20px;
-border-bottom:2px solid rgba(255,255,255,.08);
-">
-
-<h2
-id="modalTitle"
-style="
-font-size:20px;
-color:var(--primary);
-">
-
-Título
-
-</h2>
-
-<button
-id="closeModalBtn"
-style="
-width:40px;
-height:40px;
-border-radius:10px;
-background:#2f3b52;
-color:#fff;
-font-size:22px;
-">
-
-✕
-
-</button>
-
-</div>
-
-<div
-id="modalBody"
-style="
-padding:20px;
-max-height:65vh;
-overflow-y:auto;
-">
-
-Contenido
-
-</div>
-
-<div
-id="modalFooter"
-style="
-padding:16px 20px;
-border-top:2px solid rgba(255,255,255,.08);
-display:flex;
-gap:10px;
-justify-content:flex-end;
-">
-
-<button
-id="modalCancelBtn"
-class="primaryBtn dangerBtn"
-style="
-margin:0;
-width:auto;
-padding:0 20px;
-">
-
-Cancelar
-
-</button>
-
-<button
-id="modalAcceptBtn"
-class="primaryBtn"
-style="
-margin:0;
-width:auto;
-padding:0 20px;
-">
-
-Aceptar
-
-</button>
-
-</div>
-
-</div>
-
-</div>
-<!-- ===================================================== -->
-<!-- JAVASCRIPT -->
-<!-- ===================================================== -->
-
 <script>
 
-/*=========================================================
-  RS CLUB MANAGER V7
-=========================================================*/
+const menu=document.getElementById("sideMenu");
 
-const APP_VERSION = "7.0.0";
+const overlay=document.getElementById("overlay");
 
-/*=========================================================
-  ESTADO GLOBAL DE LA APLICACIÓN
-=========================================================*/
+const btn=document.getElementById("menuButton");
 
-const app = {
+btn.onclick=()=>{
 
-    players: [],
+menu.classList.add("open");
 
-    teams: [],
-
-    matches: [],
-
-    events: [],
-
-    lineup: [],
-
-    calledPlayers: [],
-
-    settings: {
-
-        clubName: "RAMÓN SICART",
-
-        season: "2026/2027",
-
-        formation: "1-4-3-3"
-
-    }
+overlay.classList.add("open");
 
 };
 
-/*=========================================================
-  ELEMENTOS DEL DOM
-=========================================================*/
+overlay.onclick=()=>{
 
-const pages = document.querySelectorAll(".page");
+menu.classList.remove("open");
 
-const navButtons = document.querySelectorAll(".navButton");
-
-const todayDate = document.getElementById("todayDate");
-
-const modalOverlay = document.getElementById("modalOverlay");
-
-const modalTitle = document.getElementById("modalTitle");
-
-const modalBody = document.getElementById("modalBody");
-
-const modalAcceptBtn = document.getElementById("modalAcceptBtn");
-
-const modalCancelBtn = document.getElementById("modalCancelBtn");
-
-const closeModalBtn = document.getElementById("closeModalBtn");
-
-/*=========================================================
-  VARIABLES DE TRABAJO
-=========================================================*/
-
-let currentPage = "home";
-
-let currentMatch = null;
-
-let currentPlayer = null;
-
-let currentTeam = null;
-
-let isAdmin = false;
-
-/*=========================================================
-  FUNCIONES VACÍAS
-  (SE IRÁN COMPLETANDO EN LOS SIGUIENTES BLOQUES)
-=========================================================*/
-
-function init(){}
-
-function changePage(){}
-
-function renderPlayers(){}
-
-function renderMatches(){}
-
-function renderLineup(){}
-
-function renderClassification(){}
-
-function renderStatistics(){}
-
-function saveData(){}
-
-function loadData(){}
-
-function syncFirebase(){}
-
-function openModal(){}
-
-function closeModal(){}
-/*=========================================================
-  INICIALIZACIÓN
-=========================================================*/
-
-document.addEventListener("DOMContentLoaded", init);
-
-function init(){
-
-    updateTodayDate();
-
-    initNavigation();
-
-    initModal();
-
-    loadData();
-
-    renderPlayers();
-
-    renderMatches();
-
-    renderLineup();
-
-    renderClassification();
-
-    renderStatistics();
-
-}
-
-/*=========================================================
-  FECHA DEL HEADER
-=========================================================*/
-
-function updateTodayDate(){
-
-    const now = new Date();
-
-    todayDate.textContent = now.toLocaleDateString("es-ES",{
-
-        weekday:"long",
-
-        day:"numeric",
-
-        month:"long",
-
-        year:"numeric"
-
-    });
-
-}
-
-/*=========================================================
-  NAVEGACIÓN
-=========================================================*/
-
-function initNavigation(){
-
-    navButtons.forEach(button=>{
-
-        button.addEventListener("click",()=>{
-
-            changePage(button.dataset.page);
-
-        });
-
-    });
-
-}
-
-function changePage(page){
-
-    currentPage = page;
-
-    pages.forEach(p=>{
-
-        p.classList.remove("active");
-
-    });
-
-    const selectedPage = document.getElementById(page);
-
-    if(selectedPage){
-
-        selectedPage.classList.add("active");
-
-    }
-
-    navButtons.forEach(btn=>{
-
-        btn.classList.remove("active");
-
-    });
-
-    document
-        .querySelector(`.navButton[data-page="${page}"]`)
-        ?.classList.add("active");
-
-}
-
-/*=========================================================
-  MODAL
-=========================================================*/
-
-function initModal(){
-
-    closeModalBtn.addEventListener("click",closeModal);
-
-    modalCancelBtn.addEventListener("click",closeModal);
-
-    modalOverlay.addEventListener("click",(e)=>{
-
-        if(e.target===modalOverlay){
-
-            closeModal();
-
-        }
-
-    });
-
-}
-
-function openModal(title,html,onAccept=null){
-
-    modalTitle.textContent=title;
-
-    modalBody.innerHTML=html;
-
-    modalOverlay.classList.remove("hidden");
-
-    modalAcceptBtn.onclick=()=>{
-
-        if(onAccept){
-
-            onAccept();
-
-        }
-
-        closeModal();
-
-    };
-
-}
-
-function closeModal(){
-
-    modalOverlay.classList.add("hidden");
-
-}
-
-/*=========================================================
-  LOCAL STORAGE
-=========================================================*/
-
-function saveData(){
-
-    localStorage.setItem(
-
-        "RSClubManager",
-
-        JSON.stringify(app)
-
-    );
-
-}
-
-function loadData(){
-
-    const data=localStorage.getItem("RSClubManager");
-
-    if(!data) return;
-
-    try{
-
-        Object.assign(app,JSON.parse(data));
-
-    }
-
-    catch(error){
-
-        console.error(error);
-
-    }
-
-}
-/*=========================================================
-  JUGADORES
-=========================================================*/
-
-function renderPlayers(){
-
-    const list = document.getElementById("playersList");
-
-    if(!list) return;
-
-    if(app.players.length===0){
-
-        list.innerHTML=`
-            <div class="item">
-                Todavía no hay jugadores.
-            </div>
-        `;
-
-    }else{
-
-        list.innerHTML=app.players.map((player,index)=>`
-
-            <div class="item">
-
-                <div style="
-                    display:flex;
-                    justify-content:space-between;
-                    align-items:center;
-                    gap:15px;
-                ">
-
-                    <div>
-
-                        <div style="
-                            font-size:18px;
-                            font-weight:700;
-                        ">
-                            ${player.number} · ${player.name}
-                        </div>
-
-                        <div style="
-                            color:var(--text2);
-                            margin-top:4px;
-                        ">
-                            ${player.position}
-                        </div>
-
-                    </div>
-
-                    <div style="display:flex;gap:8px;">
-
-                        <button
-                            onclick="editPlayer(${index})"
-                            class="successBtn"
-                            style="
-                                width:42px;
-                                height:42px;
-                                border-radius:10px;
-                            ">
-                            ✏️
-                        </button>
-
-                        <button
-                            onclick="deletePlayer(${index})"
-                            class="dangerBtn"
-                            style="
-                                width:42px;
-                                height:42px;
-                                border-radius:10px;
-                            ">
-                            🗑️
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        `).join("");
-
-    }
-
-    document.getElementById("totalPlayers").textContent=app.players.length;
-
-    document.getElementById("statsPlayers").textContent=app.players.length;
-
-}
-
-function addPlayer(){
-
-    openModal(
-
-        "Nuevo jugador",
-
-        `
-
-        <input
-            id="playerName"
-            placeholder="Nombre"
-            style="width:100%;padding:12px;margin-bottom:12px;border-radius:10px;">
-
-        <input
-            id="playerNumber"
-            type="number"
-            placeholder="Dorsal"
-            style="width:100%;padding:12px;margin-bottom:12px;border-radius:10px;">
-
-        <select
-            id="playerPosition"
-            style="width:100%;padding:12px;border-radius:10px;">
-
-            <option>Portero</option>
-            <option>Defensa</option>
-            <option>Centrocampista</option>
-            <option>Delantero</option>
-
-        </select>
-
-        `,
-
-        ()=>{
-
-            const name=document.getElementById("playerName").value.trim();
-
-            const number=parseInt(document.getElementById("playerNumber").value);
-
-            const position=document.getElementById("playerPosition").value;
-
-            if(name==="") return;
-
-            app.players.push({
-
-                id:Date.now(),
-
-                name,
-
-                number,
-
-                position,
-
-                goals:0,
-
-                yellow:0,
-
-                red:0,
-
-                called:false
-
-            });
-
-            saveData();
-
-            renderPlayers();
-
-            renderStatistics();
-
-        }
-
-    );
-
-}
-
-document
-.getElementById("addPlayerBtn")
-.addEventListener("click",addPlayer);
-/*=========================================================
-  EDITAR JUGADOR
-=========================================================*/
-
-function editPlayer(index){
-
-    const player = app.players[index];
-
-    openModal(
-
-        "Editar jugador",
-
-        `
-
-        <input
-            id="playerName"
-            value="${player.name}"
-            style="width:100%;padding:12px;margin-bottom:12px;border-radius:10px;">
-
-        <input
-            id="playerNumber"
-            type="number"
-            value="${player.number}"
-            style="width:100%;padding:12px;margin-bottom:12px;border-radius:10px;">
-
-        <select
-            id="playerPosition"
-            style="width:100%;padding:12px;border-radius:10px;">
-
-                <option ${player.position==="Portero"?"selected":""}>Portero</option>
-                <option ${player.position==="Defensa"?"selected":""}>Defensa</option>
-                <option ${player.position==="Centrocampista"?"selected":""}>Centrocampista</option>
-                <option ${player.position==="Delantero"?"selected":""}>Delantero</option>
-
-        </select>
-
-        `,
-
-        ()=>{
-
-            const name=document.getElementById("playerName").value.trim();
-
-            const number=parseInt(document.getElementById("playerNumber").value);
-
-            const position=document.getElementById("playerPosition").value;
-
-            if(name===""){
-
-                alert("Introduce un nombre.");
-
-                return;
-
-            }
-
-            if(isNaN(number)){
-
-                alert("Introduce un dorsal.");
-
-                return;
-
-            }
-
-            const duplicate=app.players.find((p,i)=>
-
-                i!==index && p.number===number
-
-            );
-
-            if(duplicate){
-
-                alert("Ese dorsal ya existe.");
-
-                return;
-
-            }
-
-            player.name=name;
-            player.number=number;
-            player.position=position;
-
-            saveData();
-
-            renderPlayers();
-
-            renderStatistics();
-
-        }
-
-    );
-
-}
-
-/*=========================================================
-  ELIMINAR JUGADOR
-=========================================================*/
-
-function deletePlayer(index){
-
-    const player=app.players[index];
-
-    if(!confirm(`¿Eliminar a ${player.name}?`)){
-
-        return;
-
-    }
-
-    app.players.splice(index,1);
-
-    saveData();
-
-    renderPlayers();
-
-    renderStatistics();
-
-}
-
-/*=========================================================
-  VALIDACIÓN DORSALES
-=========================================================*/
-
-function numberExists(number,ignore=-1){
-
-    return app.players.some((player,index)=>
-
-        index!==ignore && player.number===number
-
-    );
-
-}
-/*=========================================================
-  MODELO DE DATOS
-=========================================================*/
-
-function createPlayer(data = {}){
-
-    return {
-
-        id: data.id || crypto.randomUUID(),
-
-        name: data.name || "",
-
-        number: data.number || 0,
-
-        position: data.position || "Centrocampista",
-
-        photo: data.photo || "",
-
-        goals: data.goals || 0,
-
-        assists: data.assists || 0,
-
-        yellow: data.yellow || 0,
-
-        red: data.red || 0,
-
-        minutes: data.minutes || 0,
-
-        matches: data.matches || 0,
-
-        called: data.called || false,
-
-        starter: data.starter || false,
-
-        injured: data.injured || false
-
-    };
-
-}
-
-function createTeam(data = {}){
-
-    return {
-
-        id: data.id || crypto.randomUUID(),
-
-        name: data.name || "",
-
-        crest: data.crest || "",
-
-        played: data.played || 0,
-
-        won: data.won || 0,
-
-        draw: data.draw || 0,
-
-        lost: data.lost || 0,
-
-        goalsFor: data.goalsFor || 0,
-
-        goalsAgainst: data.goalsAgainst || 0,
-
-        points: data.points || 0
-
-    };
-
-}
-
-function createMatch(data = {}){
-
-    return {
-
-        id: data.id || crypto.randomUUID(),
-
-        date: data.date || "",
-
-        time: data.time || "",
-
-        competition: data.competition || "",
-
-        location: data.location || "",
-
-        homeTeam: data.homeTeam || "",
-
-        awayTeam: data.awayTeam || "",
-
-        homeGoals: data.homeGoals || 0,
-
-        awayGoals: data.awayGoals || 0,
-
-        status: data.status || "PREPARTIDO",
-
-        minute: data.minute || 0,
-
-        lineup: data.lineup || [],
-
-        calledPlayers: data.calledPlayers || [],
-
-        events: data.events || []
-
-    };
-
-}
-
-function createEvent(data = {}){
-
-    return {
-
-        id: data.id || crypto.randomUUID(),
-
-        minute: data.minute || 0,
-
-        team: data.team || "",
-
-        player: data.player || "",
-
-        type: data.type || "goal"
-
-    };
-
-}
-/*=========================================================
-  EQUIPOS
-=========================================================*/
-
-function renderTeams(){
-
-    const totalTeams=document.getElementById("totalTeams");
-
-    if(totalTeams){
-
-        totalTeams.textContent=app.teams.length;
-
-    }
-
-}
-
-function addTeam(){
-
-    openModal(
-
-        "Nuevo equipo",
-
-        `
-
-        <input
-            id="teamName"
-            placeholder="Nombre del equipo"
-            style="width:100%;padding:12px;margin-bottom:12px;border-radius:10px;">
-
-        <input
-            id="teamCrest"
-            placeholder="URL del escudo (opcional)"
-            style="width:100%;padding:12px;border-radius:10px;">
-
-        `,
-
-        ()=>{
-
-            const name=document.getElementById("teamName").value.trim();
-
-            const crest=document.getElementById("teamCrest").value.trim();
-
-            if(name===""){
-
-                alert("Introduce el nombre del equipo.");
-
-                return;
-
-            }
-
-            const exists=app.teams.some(team=>
-
-                team.name.toLowerCase()===name.toLowerCase()
-
-            );
-
-            if(exists){
-
-                alert("Ese equipo ya existe.");
-
-                return;
-
-            }
-
-            app.teams.push(createTeam({
-
-                name:name,
-
-                crest:crest
-
-            }));
-
-            saveData();
-
-            renderTeams();
-
-            renderClassification();
-
-        }
-
-    );
-
-}
-
-function editTeam(index){
-
-    const team=app.teams[index];
-
-    if(!team) return;
-
-    openModal(
-
-        "Editar equipo",
-
-        `
-
-        <input
-            id="teamName"
-            value="${team.name}"
-            style="width:100%;padding:12px;margin-bottom:12px;border-radius:10px;">
-
-        <input
-            id="teamCrest"
-            value="${team.crest}"
-            style="width:100%;padding:12px;border-radius:10px;">
-
-        `,
-
-        ()=>{
-
-            const name=document.getElementById("teamName").value.trim();
-
-            const crest=document.getElementById("teamCrest").value.trim();
-
-            if(name==="") return;
-
-            team.name=name;
-            team.crest=crest;
-
-            saveData();
-
-            renderTeams();
-
-            renderClassification();
-
-        }
-
-    );
-
-}
-
-function deleteTeam(index){
-
-    if(index<0 || index>=app.teams.length){
-
-        return;
-
-    }
-
-    if(!confirm(`¿Eliminar "${app.teams[index].name}"?`)){
-
-        return;
-
-    }
-
-    app.teams.splice(index,1);
-
-    saveData();
-
-    renderTeams();
-
-    renderClassification();
-
-}
-
-/*=========================================================
-  BOTÓN ADMINISTRACIÓN
-=========================================================*/
-
-const adminTeamsBtn=document.getElementById("adminTeamsBtn");
-
-if(adminTeamsBtn){
-
-    adminTeamsBtn.addEventListener("click",addTeam);
-
-}
-/*=========================================================
-  PARTIDOS
-=========================================================*/
-
-function renderMatches(){
-
-    const nextMatch=document.getElementById("nextMatch");
-    const matchesList=document.getElementById("matchesList");
-
-    if(!nextMatch || !matchesList) return;
-
-    if(app.matches.length===0){
-
-        nextMatch.innerHTML=`
-            <div class="item">
-                No hay ningún partido programado.
-            </div>
-        `;
-
-        matchesList.innerHTML=`
-            <div class="item">
-                Todavía no hay partidos.
-            </div>
-        `;
-
-        updateMatchStats();
-
-        return;
-
-    }
-
-    const ordered=[...app.matches].sort((a,b)=>{
-
-        return new Date(`${a.date} ${a.time}`)-new Date(`${b.date} ${b.time}`);
-
-    });
-
-    const next=ordered.find(match=>match.status==="PREPARTIDO") || ordered[0];
-
-    nextMatch.innerHTML=`
-
-        <div class="item">
-
-            <div style="font-weight:700;font-size:18px;">
-                ${next.homeTeam} vs ${next.awayTeam}
-            </div>
-
-            <div style="margin-top:6px;color:var(--text2);">
-                📅 ${next.date} · 🕒 ${next.time}
-            </div>
-
-            <div style="margin-top:6px;color:var(--text2);">
-                🏆 ${next.competition}
-            </div>
-
-            <div style="margin-top:6px;color:var(--primary);font-weight:700;">
-                ${next.status}
-            </div>
-
-        </div>
-
-    `;
-
-    matchesList.innerHTML=ordered.map((match,index)=>`
-
-        <div class="item">
-
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-
-                <div>
-
-                    <div style="font-weight:700;">
-
-                        ${match.homeTeam} ${match.homeGoals} - ${match.awayGoals} ${match.awayTeam}
-
-                    </div>
-
-                    <div style="margin-top:5px;color:var(--text2);">
-
-                        ${match.date} · ${match.time}
-
-                    </div>
-
-                </div>
-
-                <div style="display:flex;gap:8px;">
-
-                    <button
-                        class="successBtn"
-                        style="width:42px;height:42px;border-radius:10px;"
-                        onclick="editMatch(${index})">
-
-                        ✏️
-
-                    </button>
-
-                    <button
-                        class="dangerBtn"
-                        style="width:42px;height:42px;border-radius:10px;"
-                        onclick="deleteMatch(${index})">
-
-                        🗑️
-
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    `).join("");
-
-    updateMatchStats();
-
-}
-
-function updateMatchStats(){
-
-    const played=app.matches.filter(m=>m.status==="FINALIZADO").length;
-
-    document.getElementById("matchesPlayed").textContent=played;
-
-}
-/*=========================================================
-  MOTOR CENTRAL DE LA APLICACIÓN
-=========================================================*/
-
-function refreshUI(){
-
-    renderHeader();
-
-    renderHome();
-
-    renderPlayers();
-
-    renderTeams();
-
-    renderMatches();
-
-    renderCall();
-
-    renderLineup();
-
-    renderClassification();
-
-    renderStatistics();
-
-}
-
-/*=========================================================
-  HEADER
-=========================================================*/
-
-function renderHeader(){
-
-    updateTodayDate();
-
-}
-
-/*=========================================================
-  HOME
-=========================================================*/
-
-function renderHome(){
-
-    const homeScore=document.getElementById("homeScore");
-    const homeTeams=document.getElementById("homeTeams");
-    const homeState=document.getElementById("homeState");
-    const homeDate=document.getElementById("homeDate");
-
-    if(!homeScore) return;
-
-    const next=app.matches.find(m=>m.status!=="FINALIZADO");
-
-    if(!next){
-
-        homeTeams.innerHTML="RAMÓN SICART";
-
-        homeScore.textContent="0 - 0";
-
-        homeState.textContent="SIN PARTIDOS";
-
-        homeDate.textContent="No hay partidos programados.";
-
-        return;
-
-    }
-
-    homeTeams.innerHTML=`
-        ${next.homeTeam}
-        <br>VS<br>
-        ${next.awayTeam}
-    `;
-
-    homeScore.textContent=`${next.homeGoals} - ${next.awayGoals}`;
-
-    homeState.textContent=next.status;
-
-    homeDate.textContent=`${next.date} · ${next.time}`;
-
-}
-
-/*=========================================================
-  FUNCIONES VACÍAS
-=========================================================*/
-
-function renderCall(){}
-
-/*=========================================================
-  REFRESCO AUTOMÁTICO
-=========================================================*/
-
-function updateApp(){
-
-    saveData();
-
-    refreshUI();
-
-}
-
-/*=========================================================
-  INICIALIZACIÓN
-=========================================================*/
-
-const originalInit = init;
-
-init = function(){
-
-    originalInit();
-
-    refreshUI();
+overlay.classList.remove("open");
 
 };
-/*=========================================================
-  MOTOR DE PARTIDOS
-=========================================================*/
 
-function addMatch(){
+</script>
+</body>
 
-    if(app.teams.length < 2){
-
-        alert("Debes crear al menos dos equipos antes de crear un partido.");
-
-        return;
-
-    }
-
-    const teamOptions = app.teams.map(team =>
-
-        `<option value="${team.id}">${team.name}</option>`
-
-    ).join("");
-
-    openModal(
-
-        "Nuevo partido",
-
-        `
-
-        <label>Equipo local</label>
-        <select id="matchHome" style="width:100%;padding:12px;margin-bottom:12px;border-radius:10px;">
-            ${teamOptions}
-        </select>
-
-        <label>Equipo visitante</label>
-        <select id="matchAway" style="width:100%;padding:12px;margin-bottom:12px;border-radius:10px;">
-            ${teamOptions}
-        </select>
-
-        <label>Competición</label>
-        <input
-            id="matchCompetition"
-            placeholder="Liga, Copa..."
-            style="width:100%;padding:12px;margin-bottom:12px;border-radius:10px;">
-
-        <label>Fecha</label>
-        <input
-            id="matchDate"
-            type="date"
-            style="width:100%;padding:12px;margin-bottom:12px;border-radius:10px;">
-
-        <label>Hora</label>
-        <input
-            id="matchTime"
-            type="time"
-            style="width:100%;padding:12px;margin-bottom:12px;border-radius:10px;">
-
-        <label>Campo</label>
-        <input
-            id="matchLocation"
-            placeholder="Campo"
-            style="width:100%;padding:12px;border-radius:10px;">
-
-        `,
-
-        ()=>{
-
-            const homeId=document.getElementById("matchHome").value;
-            const awayId=document.getElementById("matchAway").value;
-
-            if(homeId===awayId){
-
-                alert("El equipo local y visitante no pueden ser el mismo.");
-
-                return;
-
-            }
-
-            const home=app.teams.find(t=>t.id===homeId);
-            const away=app.teams.find(t=>t.id===awayId);
-
-            app.matches.push(
-
-                createMatch({
-
-                    competition:document.getElementById("matchCompetition").value.trim(),
-
-                    date:document.getElementById("matchDate").value,
-
-                    time:document.getElementById("matchTime").value,
-
-                    location:document.getElementById("matchLocation").value.trim(),
-
-                    homeTeam:home.name,
-
-                    awayTeam:away.name
-
-                })
-
-            );
-
-            updateApp();
-
-        }
-
-    );
-
-}
-
-function editMatch(index){
-
-    console.log("Editar partido:",index);
-
-    // Se implementará en el siguiente bloque
-
-}
-
-function deleteMatch(index){
-
-    if(!confirm("¿Eliminar este partido?")){
-
-        return;
-
-    }
-
-    app.matches.splice(index,1);
-
-    updateApp();
-
-}
-
-const newMatchBtn=document.getElementById("newMatchBtn");
-
-if(newMatchBtn){
-
-    newMatchBtn.addEventListener("click",addMatch);
-
-}
-/*=========================================================
-  PARTIDO EN DIRECTO
-=========================================================*/
-
-let liveTimer = null;
-
-function startMatch(matchId){
-
-    const match = app.matches.find(m => m.id === matchId);
-
-    if(!match) return;
-
-    match.status = "EN JUEGO";
-    match.minute = 0;
-
-    updateApp();
-
-    if(liveTimer){
-
-        clearInterval(liveTimer);
-
-    }
-
-    liveTimer = setInterval(()=>{
-
-        match.minute++;
-
-        if(match.minute===25){
-
-            match.status="DESCANSO";
-
-            updateApp();
-
-            clearInterval(liveTimer);
-
-            return;
-
-        }
-
-        if(match.minute>=50){
-
-            finishMatch(match.id);
-
-            return;
-
-        }
-
-        updateLiveMatch(match);
-
-    },60000);
-
-}
-
-function resumeSecondHalf(matchId){
-
-    const match = app.matches.find(m=>m.id===matchId);
-
-    if(!match) return;
-
-    match.status="EN JUEGO";
-
-    updateApp();
-
-    if(liveTimer){
-
-        clearInterval(liveTimer);
-
-    }
-
-    liveTimer=setInterval(()=>{
-
-        match.minute++;
-
-        if(match.minute>=50){
-
-            finishMatch(match.id);
-
-            return;
-
-        }
-
-        updateLiveMatch(match);
-
-    },60000);
-
-}
-
-function finishMatch(matchId){
-
-    const match=app.matches.find(m=>m.id===matchId);
-
-    if(!match) return;
-
-    clearInterval(liveTimer);
-
-    liveTimer=null;
-
-    match.status="FINALIZADO";
-
-    match.minute=50;
-
-    updateClassificationFromMatch(match);
-
-    updateStatisticsFromMatch(match);
-
-    updateApp();
-
-}
-
-function updateLiveMatch(match){
-
-    const homeState=document.getElementById("homeState");
-
-    const homeScore=document.getElementById("homeScore");
-
-    if(homeState){
-
-        homeState.textContent=`${match.status} · ${match.minute}'`;
-
-    }
-
-    if(homeScore){
-
-        homeScore.textContent=`${match.homeGoals} - ${match.awayGoals}`;
-
-    }
-
-}
-
-/*=========================================================
-  GOLES
-=========================================================*/
-
-function addGoal(matchId,team,playerId){
-
-    const match=app.matches.find(m=>m.id===matchId);
-
-    if(!match) return;
-
-    const player=app.players.find(p=>p.id===playerId);
-
-    if(team==="home"){
-
-        match.homeGoals++;
-
-    }else{
-
-        match.awayGoals++;
-
-    }
-
-    if(player){
-
-        player.goals++;
-
-    }
-
-    match.events.push(
-
-        createEvent({
-
-            minute:match.minute,
-
-            player:player ? player.name : "",
-
-            team:team,
-
-            type:"goal"
-
-        })
-
-    );
-
-    updateLiveMatch(match);
-
-    updateApp();
-
-}
-/*=========================================================
-  UTILIDADES
-=========================================================*/
-
-function generateId(){
-
-    if(window.crypto?.randomUUID){
-
-        return crypto.randomUUID();
-
-    }
-
-    return "id_" +
-        Date.now() +
-        "_" +
-        Math.random().toString(36).substring(2,9);
-
-}
-
-function getPlayer(id){
-
-    return app.players.find(p=>p.id===id) || null;
-
-}
-
-function getTeam(id){
-
-    return app.teams.find(t=>t.id===id) || null;
-
-}
-
-function getMatch(id){
-
-    return app.matches.find(m=>m.id===id) || null;
-
-}
-
-function formatScore(match){
-
-    return `${match.homeGoals} - ${match.awayGoals}`;
-
-}
-
-function formatMatchDate(match){
-
-    if(!match.date) return "";
-
-    return `${match.date} · ${match.time}`;
-
-}
-
-function refreshCounters(){
-
-    const ids={
-
-        totalPlayers:app.players.length,
-
-        statsPlayers:app.players.length,
-
-        totalTeams:app.teams.length
-
-    };
-
-    Object.entries(ids).forEach(([id,value])=>{
-
-        const el=document.getElementById(id);
-
-        if(el){
-
-            el.textContent=value;
-
-        }
-
-    });
-
-}
-/*=========================================================
-  CLASIFICACIÓN
-=========================================================*/
-
-function updateClassificationFromMatch(match){
-
-    const home = app.teams.find(t => t.name === match.homeTeam);
-    const away = app.teams.find(t => t.name === match.awayTeam);
-
-    if(!home || !away){
-
-        return;
-
-    }
-
-    home.played++;
-    away.played++;
-
-    home.goalsFor += match.homeGoals;
-    home.goalsAgainst += match.awayGoals;
-
-    away.goalsFor += match.awayGoals;
-    away.goalsAgainst += match.homeGoals;
-
-    if(match.homeGoals > match.awayGoals){
-
-        home.won++;
-        away.lost++;
-
-        home.points += 3;
-
-    }else if(match.homeGoals < match.awayGoals){
-
-        away.won++;
-        home.lost++;
-
-        away.points += 3;
-
-    }else{
-
-        home.draw++;
-        away.draw++;
-
-        home.points++;
-        away.points++;
-
-    }
-
-}
-
-function renderClassification(){
-
-    const body = document.getElementById("leagueTableBody");
-
-    if(!body) return;
-
-    if(app.teams.length===0){
-
-        body.innerHTML=`
-            <tr>
-                <td colspan="10" style="padding:20px;">
-                    Todavía no hay equipos.
-                </td>
-            </tr>
-        `;
-
-        return;
-
-    }
-
-    const table=[...app.teams].sort((a,b)=>{
-
-        if(b.points!==a.points){
-
-            return b.points-a.points;
-
-        }
-
-        const diffA=a.goalsFor-a.goalsAgainst;
-        const diffB=b.goalsFor-b.goalsAgainst;
-
-        if(diffB!==diffA){
-
-            return diffB-diffA;
-
-        }
-
-        return b.goalsFor-a.goalsFor;
-
-    });
-
-    body.innerHTML=table.map((team,index)=>`
-
-        <tr>
-
-            <td>${index+1}</td>
-
-            <td style="text-align:left;padding-left:8px;">
-                ${team.name}
-            </td>
-
-            <td>${team.played}</td>
-
-            <td>${team.won}</td>
-
-            <td>${team.draw}</td>
-
-            <td>${team.lost}</td>
-
-            <td>${team.goalsFor}</td>
-
-            <td>${team.goalsAgainst}</td>
-
-            <td>${team.goalsFor-team.goalsAgainst}</td>
-
-            <td><b>${team.points}</b></td>
-
-        </tr>
-
-    `).join("");
-
-    const total=document.getElementById("tableMatches");
-
-    if(total){
-
-        total.textContent=app.matches.filter(
-
-            m=>m.status==="FINALIZADO"
-
-        ).length;
-
-    }
-
-    const updated=document.getElementById("tableUpdated");
-
-    if(updated){
-
-        updated.textContent=new Date().toLocaleString("es-ES");
-
-    }
-
-}
+</html>
