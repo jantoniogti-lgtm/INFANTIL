@@ -518,7 +518,7 @@ background:rgba(0,0,0,.55);
 
 display:none;
 
-z-index:998;
+z-index:99998;
 
 }
 
@@ -532,31 +532,34 @@ display:block;
 
 position:fixed;
 
-left:-320px;
-
 top:0;
+
+left:-320px;
 
 width:300px;
 
-height:100vh;
+height:100dvh;
 
 background:#121923;
 
-transition:.30s;
+z-index:99999;
 
-z-index:999;
+transition:left .3s ease;
 
-padding:25px;
-
-box-shadow:0 0 40px rgba(0,0,0,.5);
-
-overflow:auto;
+overflow-y:auto;
 
 }
 
 #sideMenu.open{
 
 left:0;
+
+}
+#menuButton{
+
+position:relative;
+
+z-index:100000;
 
 }
 
