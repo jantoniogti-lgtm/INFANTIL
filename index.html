@@ -796,6 +796,39 @@ background:#c62828;
 color:white;
 
 }
+.adminSearch{
+
+margin-bottom:20px;
+
+}
+
+.adminSearch input{
+
+width:100%;
+
+height:52px;
+
+padding:0 18px;
+
+border:none;
+
+border-radius:14px;
+
+background:#243447;
+
+color:white;
+
+font-size:16px;
+
+outline:none;
+
+}
+
+.adminSearch input::placeholder{
+
+color:#8fa1b8;
+
+}
 .adminGrid{
 
 display:grid;
@@ -1170,18 +1203,23 @@ Cancelar
 <div class="adminHeader">
 
 <button id="backAdmin">
-
-← Volver
-
+← Administración
 </button>
 
 <h2>👥 Gestión de jugadores</h2>
 
 <button id="newPlayer">
-
-➕ Nuevo jugador
-
+➕ Nuevo
 </button>
+
+</div>
+
+<div class="adminSearch">
+
+<input
+id="adminSearchPlayer"
+type="text"
+placeholder="Buscar jugador...">
 
 </div>
 
@@ -1540,7 +1578,19 @@ const list=document.getElementById("adminPlayersList");
 
 list.innerHTML="";
 
-App.players.forEach(player=>{
+const search=document
+.getElementById("adminSearchPlayer")
+?.value
+.toLowerCase() || "";
+App.players
+
+.filter(player=>
+
+player.name.toLowerCase().includes(search)
+
+)
+
+.forEach(player=>{
 
 list.innerHTML+=`
 
@@ -1594,6 +1644,17 @@ document.getElementById("adminPlayersPanel").style.display="none";
 document.getElementById("adminHome").style.display="block";
 
 };
+document
+
+.getElementById("adminSearchPlayer")
+
+.addEventListener(
+
+"input",
+
+renderAdminPlayers
+
+);
 const Database={
 
 loadPlayers(){
