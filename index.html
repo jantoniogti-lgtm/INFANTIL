@@ -1,30 +1,111 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>RS CLUB MANAGER V7.1</title>
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>RS CLUB MANAGER V8</title>
+
+<meta name="theme-color" content="#111827">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
 
+/*======================================================
+RS CLUB MANAGER V8
+Autor: ChatGPT + José Antonio
+Versión: 8.0
+Arquitectura definitiva
+======================================================*/
+
+
+/*======================================================
+VARIABLES
+======================================================*/
+
+:root{
+
+--bg:#0F172A;
+--card:#182231;
+--card2:#223247;
+--accent:#FFD600;
+--text:#FFFFFF;
+--text2:#94A3B8;
+--danger:#DC2626;
+--success:#16A34A;
+
+--radius:18px;
+
+--headerHeight:72px;
+
+}
+
+
+/*======================================================
+RESET
+======================================================*/
+
 *{
+
 margin:0;
 padding:0;
 box-sizing:border-box;
-font-family:Arial,Helvetica,sans-serif;
+
+}
+
+html{
+
+scroll-behavior:smooth;
+
 }
 
 body{
-background:#0f1722;
-color:white;
+
+font-family:"Inter",sans-serif;
+
+background:var(--bg);
+
+color:var(--text);
+
+overflow-x:hidden;
+
 }
+
+
+/*======================================================
+APP
+======================================================*/
+
+#app{
+
+width:100%;
+
+min-height:100vh;
+
+}
+
+
+/*======================================================
+HEADER
+======================================================*/
 
 header{
 
-height:70px;
+position:fixed;
 
-background:#182231;
+top:0;
+left:0;
+
+width:100%;
+
+height:72px;
 
 display:flex;
 
@@ -32,27 +113,146 @@ align-items:center;
 
 justify-content:space-between;
 
-padding:0 15px;
+padding:0 22px;
+
+background:rgba(24,34,49,.90);
+
+backdrop-filter:blur(14px);
+
+border-bottom:1px solid rgba(255,255,255,.06);
+
+z-index:9999;
 
 }
 
+.logo{
+
+display:flex;
+
+align-items:center;
+
+gap:12px;
+
+}
+
+#headerRight{
+
+display:flex;
+
+align-items:center;
+
+gap:15px;
+
+}
+
+.headerButton{
+
+width:42px;
+height:42px;
+
+border-radius:12px;
+
+background:#223247;
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+cursor:pointer;
+
+transition:.25s;
+
+}
+
+.headerButton:hover{
+
+background:#304156;
+
+}
+
+display:flex;
+
+align-items:center;
+
+gap:12px;
+
+}
+
+.logoShield{
+
+width:42px;
+
+height:42px;
+
+border-radius:50%;
+
+background:var(--accent);
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+font-weight:800;
+
+color:#111;
+
+}
+
+.logoText{
+
+display:flex;
+
+flex-direction:column;
+
+}
+
+.logoText h1{
+
+font-size:18px;
+
+}
+
+.logoText p{
+
+font-size:12px;
+
+color:var(--text2);
+
+}
+
+
+/*======================================================
+BOTÓN MENÚ
+======================================================*/
+
 #menuButton{
 
-width:45px;
+width:46px;
 
-height:45px;
+height:46px;
 
 border:none;
 
-border-radius:10px;
+border-radius:12px;
 
 background:#243447;
 
 color:white;
 
-font-size:22px;
+font-size:24px;
+
+cursor:pointer;
 
 }
+
+
+/*======================================================
+OVERLAY
+======================================================*/
 
 #overlay{
 
@@ -60,19 +260,30 @@ position:fixed;
 
 inset:0;
 
-background:rgba(0,0,0,.5);
+background:rgba(0,0,0,.55);
 
-display:none;
+opacity:0;
 
-z-index:998;
+visibility:hidden;
+
+transition:.25s;
+
+z-index:8000;
+
+}
+
+#overlay.show{
+
+opacity:1;
+
+visibility:visible;
 
 }
 
-#overlay.open{
 
-display:block;
-
-}
+/*======================================================
+SIDE MENU
+======================================================*/
 
 #sideMenu{
 
@@ -80,55 +291,217 @@ position:fixed;
 
 top:0;
 
-left:-300px;
+left:-320px;
 
-width:280px;
+width:290px;
 
 height:100vh;
 
 background:#182231;
 
-transition:.3s;
+transition:.30s;
 
-z-index:999;
+z-index:9000;
 
-padding:20px;
+padding:24px;
+
+overflow:auto;
 
 }
 
-#sideMenu.open{
+#sideMenu.show{
 
 left:0;
+
+}
+.clubHeader{
+
+display:flex;
+
+align-items:center;
+
+gap:18px;
+
+padding-bottom:25px;
+
+border-bottom:1px solid rgba(255,255,255,.08);
+
+margin-bottom:25px;
+
+}
+
+.clubLogo{
+
+width:70px;
+
+height:70px;
+
+border-radius:18px;
+
+background:linear-gradient(135deg,#FFD600,#F59E0B);
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+font-size:28px;
+
+font-weight:800;
+
+color:#111;
+
+}
+
+.clubText h2{
+
+font-size:28px;
+
+font-weight:800;
+
+margin-bottom:6px;
+
+}
+
+.clubText p{
+
+color:#94A3B8;
+
+font-size:15px;
+
+}
+
+.menuList{
+
+display:flex;
+
+flex-direction:column;
+
+gap:15px;
 
 }
 
 .menuItem{
 
+display:flex;
+
+align-items:center;
+
+gap:16px;
+
 width:100%;
 
-padding:15px;
+padding:18px;
 
-margin-top:10px;
-
-background:#243447;
+background:#182231;
 
 border:none;
 
-border-radius:12px;
+border-radius:18px;
 
 color:white;
 
-font-size:16px;
+cursor:pointer;
+
+transition:.25s;
 
 text-align:left;
 
 }
+
+.menuItem:hover{
+
+background:#223247;
+
+transform:translateX(6px);
+
+}
+
+.menuItem.active{
+
+border:2px solid #FFD600;
+
+background:#223247;
+
+}
+
+.menuIcon{
+
+width:55px;
+
+height:55px;
+
+border-radius:14px;
+
+background:#304156;
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+font-size:26px;
+
+}
+
+.menuInfo{
+
+flex:1;
+
+}
+
+.menuInfo h3{
+
+font-size:20px;
+
+margin-bottom:4px;
+
+}
+
+.menuInfo p{
+
+font-size:13px;
+
+color:#94A3B8;
+
+}
+
+.menuArrow{
+
+font-size:28px;
+
+color:#FFD600;
+
+}
+
+/*======================================================
+CONTENIDO
+======================================================*/
+
+main{
+
+max-width:1400px;
+
+margin:auto;
+
+padding:92px 20px 90px;
+
+}
+
+
+/*======================================================
+PÁGINAS
+======================================================*/
 
 .page{
 
 display:none;
 
 padding:20px;
+
+animation:fade .25s;
 
 }
 
@@ -137,13 +510,45 @@ padding:20px;
 display:block;
 
 }
-.hero{
 
-background:#182231;
+@keyframes fade{
 
-border-radius:20px;
+from{
 
-padding:25px;
+opacity:0;
+
+transform:translateY(10px);
+
+}
+
+to{
+
+opacity:1;
+
+transform:translateY(0);
+
+}
+
+}
+/*======================================================
+HOME
+======================================================*/
+
+.heroCard{
+
+background:linear-gradient(145deg,#1B2A3B,#162231);
+
+border-radius:24px;
+
+padding:28px;
+
+margin-bottom:24px;
+
+box-shadow:0 15px 40px rgba(0,0,0,.30);
+
+}
+
+.heroTop{
 
 display:flex;
 
@@ -151,206 +556,101 @@ justify-content:space-between;
 
 align-items:center;
 
-gap:20px;
-
-margin-bottom:25px;
-
-}
-
-.heroLeft{
-
-flex:1;
+margin-bottom:20px;
 
 }
 
 .badge{
 
-display:inline-block;
+display:inline-flex;
 
-padding:8px 16px;
+align-items:center;
 
-background:#FFD600;
-
-color:#111;
+padding:8px 18px;
 
 border-radius:30px;
 
-font-weight:bold;
+background:var(--accent);
 
-margin-bottom:20px;
+color:#111;
+
+font-size:13px;
+
+font-weight:700;
 
 }
 
-.hero h1{
+.heroCard h1{
 
 font-size:34px;
 
-margin:8px 0;
+font-weight:800;
 
-}
-
-.hero h2{
-
-font-size:28px;
-
-color:#FFD600;
-
-margin:8px 0;
-
-}
-
-.hero p{
+line-height:1.2;
 
 margin-top:10px;
 
-color:#aeb9c8;
+}
+
+.versus{
+
+font-size:34px;
+
+font-weight:800;
+
+color:var(--accent);
+
+margin:20px 0;
+
+text-align:center;
+
+}
+
+.heroInfo{
+
+display:grid;
+
+grid-template-columns:repeat(3,1fr);
+
+gap:14px;
+
+margin-top:25px;
+
+}
+
+.heroInfo div{
+
+background:#223247;
+
+padding:16px;
+
+border-radius:16px;
+
+text-align:center;
+
+font-size:15px;
 
 }
 
 .primaryButton{
 
-margin-top:20px;
+margin-top:25px;
 
-padding:14px 28px;
+width:100%;
 
-background:#FFD600;
-
-color:#111;
-
-border:none;
-
-border-radius:14px;
-
-font-weight:bold;
-
-font-size:16px;
-
-}
-
-.heroRight{
-
-display:flex;
-
-align-items:center;
-
-gap:20px;
-
-}
-
-.shield{
-
-width:110px;
-
-height:110px;
-
-border-radius:50%;
-
-background:#243447;
-
-display:flex;
-
-justify-content:center;
-
-align-items:center;
-
-font-size:34px;
-
-font-weight:bold;
-
-}
-
-.vs{
-
-font-size:32px;
-
-font-weight:bold;
-
-color:#FFD600;
-
-}
-
-.cards{
-
-display:grid;
-
-grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-
-gap:20px;
-
-}
-
-.card{
-
-background:#182231;
-
-border-radius:20px;
-
-padding:20px;
-
-min-height:150px;
-
-}
-
-.card h3{
-
-margin-bottom:15px;
-
-}
-/*==================================
-PLANTILLA
-==================================*/
-
-.pageHeader{
-
-display:flex;
-
-justify-content:space-between;
-
-align-items:center;
-
-margin-bottom:20px;
-
-}
-
-.pageHeader h1{
-
-font-size:32px;
-
-}
-
-.pageHeader p{
-
-margin-top:6px;
-
-color:#94a7bf;
-
-}
-
-.pageButtons{
-
-display:flex;
-
-gap:12px;
-
-}
-
-.pageButtons button{
-
-width:52px;
-
-height:52px;
+height:56px;
 
 border:none;
 
 border-radius:16px;
 
-background:#FFD600;
+background:var(--accent);
 
 color:#111;
 
-font-size:28px;
+font-size:17px;
 
-font-weight:bold;
+font-weight:700;
 
 cursor:pointer;
 
@@ -358,13 +658,164 @@ transition:.25s;
 
 }
 
-.pageButtons button:hover{
+.primaryButton:hover{
 
-transform:scale(1.05);
+transform:translateY(-2px);
 
 }
 
-.playerPhoto{
+.dashboard{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+
+gap:18px;
+
+margin-top:24px;
+
+}
+
+.dashboardCard{
+
+background:#182231;
+
+padding:22px;
+
+border-radius:20px;
+
+transition:.25s;
+
+}
+
+.dashboardCard:hover{
+
+transform:translateY(-4px);
+
+background:#223247;
+
+}
+
+.dashboardCard h3{
+
+margin-bottom:15px;
+
+font-size:18px;
+
+}
+
+.dashboardCard p{
+
+color:var(--text2);
+
+line-height:1.5;
+
+}
+
+/*======================================================
+PAGE TITLE
+======================================================*/
+
+.pageTitle{
+
+margin-bottom:22px;
+
+}
+
+.pageTitle h2{
+
+font-size:32px;
+
+font-weight:800;
+
+margin-bottom:6px;
+
+}
+
+.pageTitle p{
+
+color:var(--text2);
+
+font-size:15px;
+
+}
+
+/*======================================================
+SEARCH
+======================================================*/
+
+.searchBox{
+
+margin-bottom:24px;
+
+}
+
+.searchBox input{
+
+width:100%;
+
+height:56px;
+
+border:none;
+
+border-radius:16px;
+
+background:#223247;
+
+padding:0 18px;
+
+font-size:16px;
+
+color:white;
+
+outline:none;
+
+}
+
+.searchBox input::placeholder{
+
+color:#8FA1B8;
+
+}
+/*======================================================
+PLAYERS
+======================================================*/
+
+#playersGrid{
+
+display:flex;
+
+flex-direction:column;
+
+gap:16px;
+
+}
+
+.playerCard{
+
+background:#182231;
+
+border-radius:22px;
+
+padding:24px;
+
+cursor:pointer;
+
+transition:.25s;
+
+box-shadow:0 10px 25px rgba(0,0,0,.25);
+
+}
+
+.playerCard:hover{
+
+transform:translateY(-6px);
+
+background:#223247;
+
+}
+
+.playerAvatar{
 
 width:95px;
 
@@ -374,7 +825,7 @@ margin:auto;
 
 border-radius:50%;
 
-background:linear-gradient(135deg,#304156,#1b2635);
+background:#304156;
 
 display:flex;
 
@@ -384,47 +835,41 @@ align-items:center;
 
 font-size:42px;
 
-margin-bottom:12px;
+margin-bottom:18px;
 
 }
+
 .playerNumber{
-
-font-size:32px;
-
-font-weight:bold;
-
-color:#FFD600;
 
 text-align:center;
 
-margin-top:15px;
+font-size:34px;
+
+font-weight:800;
+
+color:var(--accent);
 
 }
 
 .playerName{
 
-font-size:18px;
+margin-top:10px;
+
+text-align:center;
+
+font-size:20px;
 
 font-weight:700;
 
-text-align:center;
-
-margin-top:8px;
-
-white-space:nowrap;
-
-overflow:hidden;
-
-text-overflow:ellipsis;
-
 }
+
 .playerPosition{
 
+margin-top:6px;
+
 text-align:center;
 
-color:#9fb0c5;
-
-margin-top:5px;
+color:var(--text2);
 
 }
 
@@ -434,410 +879,44 @@ display:grid;
 
 grid-template-columns:repeat(4,1fr);
 
-margin-top:18px;
+gap:10px;
 
-text-align:center;
-
-font-size:12px;
-
-}
-.player{
-
-background:#182231;
-
-border-radius:18px;
-
-padding:18px;
-
-overflow:hidden;
-
-cursor:pointer;
-
-transition:.25s;
-
-box-shadow:0 8px 20px rgba(0,0,0,.25);
+margin-top:22px;
 
 }
 
-.player:hover{
+.playerStat{
 
-transform:translateY(-5px);
-
-background:#213246;
-
-}
-/*==============================
-ADMIN PLAYER
-==============================*/
-
-#adminPlayerModal{
-
-position:fixed;
-
-inset:0;
-
-display:none;
-
-justify-content:center;
-
-align-items:center;
-
-background:rgba(0,0,0,.75);
-
-z-index:6000;
-
-}
-
-#adminPlayerModal.open{
-
-display:flex;
-
-}
-
-#adminPlayerModal input{
-
-width:100%;
-
-height:50px;
-
-margin-top:15px;
-
-padding:0 15px;
-
-background:#243447;
-
-border:none;
-
-border-radius:12px;
-
-color:white;
-
-font-size:16px;
-
-}
-
-.adminButtons{
-
-display:flex;
-
-gap:15px;
-
-margin-top:25px;
-
-}
-
-.adminButtons button{
-
-flex:1;
-
-height:50px;
-
-border:none;
-
-border-radius:12px;
-
-font-size:16px;
-
-font-weight:bold;
-
-}
-
-#savePlayer{
-
-background:#FFD600;
-
-color:#111;
-
-}
-
-#cancelPlayer{
-
-background:#304156;
-
-color:white;
-
-}
-/*==============================
-PLAYER MODAL
-==============================*/
-
-#playerModal{
-
-position:fixed;
-
-inset:0;
-
-display:none;
-
-justify-content:center;
-
-align-items:center;
-
-background:rgba(0,0,0,.70);
-
-z-index:5000;
-
-}
-
-#playerModal.open{
-
-display:flex;
-
-}
-
-.playerWindow{
-
-width:min(430px,92%);
-
-background:#182231;
-
-border-radius:20px;
-
-padding:25px;
-
-position:relative;
-
-}
-
-#closePlayer{
-
-position:absolute;
-
-top:15px;
-
-right:15px;
-
-width:40px;
-
-height:40px;
-
-background:#243447;
-
-border-radius:50%;
-
-color:white;
-
-font-size:18px;
-
-}
-
-.playerHeader{
-
-text-align:center;
-
-}
-
-.playerAvatar{
-
-width:110px;
-
-height:110px;
-
-border-radius:50%;
-
-background:#243447;
-
-display:flex;
-
-justify-content:center;
-
-align-items:center;
-
-font-size:52px;
-
-margin:auto;
-
-margin-bottom:20px;
-
-}
-
-.playerInfo{
-
-display:grid;
-
-grid-template-columns:repeat(4,1fr);
-
-gap:12px;
-
-margin-top:25px;
-
-}
-
-.playerInfo div{
-
-background:#243447;
+background:#223247;
 
 padding:12px;
 
-border-radius:12px;
+border-radius:14px;
 
 text-align:center;
 
 }
-/*==============================
-ADMIN
-==============================*/
-.adminHeader{
 
-display:flex;
+.playerStat strong{
 
-justify-content:space-between;
-
-align-items:center;
-
-margin-bottom:20px;
-
-}
-
-.adminHeader button{
-
-background:#FFD600;
-
-color:#111;
-
-border:none;
-
-padding:12px 18px;
-
-border-radius:12px;
-
-font-weight:bold;
-
-cursor:pointer;
-
-}
-
-.adminPlayer{
-
-display:flex;
-
-justify-content:space-between;
-
-align-items:center;
-
-background:#182231;
-
-padding:16px;
-
-border-radius:14px;
-
-margin-bottom:12px;
-
-}
-
-.adminPlayerInfo{
-
-display:flex;
-
-gap:12px;
-
-align-items:center;
-
-}
-
-.adminPlayerNumber{
-
-width:40px;
-
-height:40px;
-
-border-radius:50%;
-
-background:#243447;
-
-display:flex;
-
-justify-content:center;
-
-align-items:center;
-
-font-weight:bold;
-
-color:#FFD600;
-
-}
-
-.adminPlayerActions{
-
-display:flex;
-
-gap:10px;
-
-}
-
-.adminPlayerActions button{
-
-width:42px;
-
-height:42px;
-
-border:none;
-
-border-radius:10px;
-
-cursor:pointer;
+display:block;
 
 font-size:18px;
 
-}
-
-.editPlayer{
-
-background:#FFD600;
-
-color:#111;
+margin-top:6px;
 
 }
+/*======================================================
+ADMIN
+======================================================*/
 
-.deletePlayer{
-
-background:#c62828;
-
-color:white;
-
-}
-.adminSearch{
-
-margin-bottom:20px;
-
-}
-
-.adminSearch input{
-
-width:100%;
-
-height:52px;
-
-padding:0 18px;
-
-border:none;
-
-border-radius:14px;
-
-background:#243447;
-
-color:white;
-
-font-size:16px;
-
-outline:none;
-
-}
-
-.adminSearch input::placeholder{
-
-color:#8fa1b8;
-
-}
 .adminGrid{
 
 display:grid;
 
 grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
 
-gap:20px;
-
-margin-top:25px;
+gap:22px;
 
 }
 
@@ -847,23 +926,23 @@ background:#182231;
 
 border:none;
 
-border-radius:20px;
+border-radius:22px;
 
-padding:30px 20px;
+padding:34px 20px;
 
 display:flex;
 
 flex-direction:column;
 
-align-items:center;
-
 justify-content:center;
 
-gap:15px;
+align-items:center;
+
+gap:18px;
+
+font-size:42px;
 
 color:white;
-
-font-size:38px;
 
 cursor:pointer;
 
@@ -883,101 +962,886 @@ background:#223247;
 
 font-size:16px;
 
-font-weight:bold;
+font-weight:700;
 
 }
-@media(max-width:900px){
+/*======================================================
+HOME GRID
+======================================================*/
 
-.hero{
+.homeGrid{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+
+gap:24px;
+
+margin-top:25px;
+
+}
+
+.homeCard{
+
+background:#182231;
+
+border-radius:22px;
+
+padding:22px;
+
+box-shadow:0 12px 30px rgba(0,0,0,.25);
+
+transition:.25s;
+
+}
+
+.homeCard:hover{
+
+transform:translateY(-4px);
+
+}
+
+.homeCard h2{
+
+margin-bottom:18px;
+
+font-size:22px;
+
+}
+
+.homeCard div{
+
+min-height:120px;
+
+color:#94A3B8;
+
+}
+/*======================================================
+HOME COMPONENTS
+======================================================*/
+
+.miniTable div,
+.miniList div,
+.miniMatch,
+.miniNews{
+
+background:#223247;
+
+padding:14px;
+
+border-radius:14px;
+
+margin-bottom:12px;
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+}
+
+.miniTable div:first-child{
+
+border-left:4px solid gold;
+
+}
+
+.miniTable div:nth-child(2){
+
+border-left:4px solid silver;
+
+}
+
+.miniTable div:nth-child(3){
+
+border-left:4px solid #CD7F32;
+
+}
+
+.miniList strong{
+
+font-size:20px;
+
+color:var(--accent);
+
+}
+/*======================================================
+PLAYER DETAIL
+======================================================*/
+
+.playerHeader{
+
+display:flex;
+
+align-items:center;
+
+margin-bottom:25px;
+
+}
+
+.backButton{
+
+height:46px;
+
+padding:0 20px;
+
+border:none;
+
+border-radius:14px;
+
+background:#223247;
+
+color:white;
+
+font-size:15px;
+
+font-weight:600;
+
+cursor:pointer;
+
+transition:.25s;
+
+}
+
+.backButton:hover{
+
+background:#304156;
+
+}
+
+.playerProfile{
+
+display:flex;
 
 flex-direction:column;
+
+align-items:center;
+
+background:#182231;
+
+border-radius:24px;
+
+padding:35px;
+
+margin-bottom:25px;
+
+box-shadow:0 15px 40px rgba(0,0,0,.30);
+
+}
+
+.playerPhotoLarge{
+
+width:140px;
+
+height:140px;
+
+border-radius:50%;
+
+background:#304156;
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+font-size:60px;
+
+margin-bottom:20px;
+
+}
+
+.playerProfile h1{
+
+font-size:34px;
+
+font-weight:800;
+
+margin-bottom:8px;
 
 text-align:center;
 
 }
 
-.heroRight{
+.playerProfile p{
+
+color:var(--text2);
+
+font-size:18px;
+
+margin-bottom:20px;
+
+}
+
+.detailNumber{
+
+width:70px;
+
+height:70px;
+
+border-radius:50%;
+
+background:var(--accent);
+
+color:#111;
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+font-size:34px;
+
+font-weight:800;
+
+}
+.statsGrid{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+
+gap:20px;
+
+margin-bottom:25px;
+
+}
+
+.statCard{
+
+background:#182231;
+
+border-radius:20px;
+
+padding:22px;
+
+text-align:center;
+
+transition:.25s;
+
+}
+
+.statCard:hover{
+
+transform:translateY(-5px);
+
+background:#223247;
+
+}
+
+.statCard h3{
+
+font-size:34px;
+
+margin-bottom:12px;
+
+}
+
+.statCard span{
+
+display:block;
+
+color:#94A3B8;
+
+margin-bottom:12px;
+
+}
+
+.statCard strong{
+
+font-size:34px;
+
+font-weight:800;
+
+color:var(--accent);
+
+}
+.captainBadge{
+
+display:none;
+
+margin-top:12px;
+
+padding:8px 18px;
+
+border-radius:30px;
+
+background:#FFD600;
+
+color:#111;
+
+font-weight:700;
+
+font-size:14px;
+
+}
+.playerCard{
+
+display:flex;
+
+align-items:center;
+
+gap:18px;
+
+padding:18px;
+
+border-radius:20px;
+
+}
+
+.playerInfo{
+
+flex:1;
+
+}
+
+.playerTop{
+
+display:flex;
+
+justify-content:space-between;
+
+margin-bottom:8px;
+
+}
+
+.playerArrow{
+
+font-size:28px;
+
+color:var(--accent);
+
+}
+
+.playerResume{
+
+margin-top:14px;
+
+color:#94A3B8;
+
+font-size:15px;
+
+}
+.teamStats{
+
+display:grid;
+
+grid-template-columns:repeat(3,1fr);
+
+gap:18px;
+
+margin-bottom:25px;
+
+}
+
+.teamStat{
+
+background:#182231;
+
+border-radius:20px;
+
+padding:20px;
+
+text-align:center;
+
+}
+
+.teamStat strong{
+
+display:block;
+
+font-size:34px;
+
+color:#FFD600;
+
+margin-bottom:10px;
+
+}
+
+.teamStat span{
+
+color:#94A3B8;
+
+font-size:15px;
+
+}
+/*======================================================
+PLAYER PHOTO
+======================================================*/
+
+.photoEditor{
+
+display:flex;
+
+flex-direction:column;
+
+align-items:center;
+
+margin:30px 0;
+
+}
+
+.playerPhoto{
+
+width:180px;
+
+height:180px;
+
+border-radius:50%;
+
+object-fit:cover;
+
+display:none;
+
+border:5px solid var(--accent);
+
+}
+
+.playerPhotoDefault{
+
+width:180px;
+
+height:180px;
+
+border-radius:50%;
+
+background:#304156;
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+font-size:70px;
+
+border:5px solid var(--accent);
+
+}
+
+.secondaryButton{
 
 margin-top:20px;
 
+padding:12px 24px;
+
+border:none;
+
+border-radius:14px;
+
+background:#223247;
+
+color:white;
+
+cursor:pointer;
+
+font-size:16px;
+
+font-weight:600;
+
+transition:.25s;
+
 }
 
-.cards{
+.secondaryButton:hover{
 
-grid-template-columns:1fr;
+background:#304156;
 
 }
+.adminPlayer{
+
+display:flex;
+
+align-items:center;
+
+gap:18px;
+
+padding:18px;
+
+background:#182231;
+
+border-radius:18px;
+
+margin-bottom:15px;
+
+cursor:pointer;
+
+transition:.25s;
+
+}
+
+.adminPlayer:hover{
+
+background:#223247;
+
+}
+
+.adminPlayerAvatar{
+
+width:52px;
+
+height:52px;
+
+border-radius:50%;
+
+background:#304156;
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+font-size:24px;
+
+}
+
+.adminPlayerInfo{
+
+flex:1;
+
+}
+
+.adminPlayerName{
+
+font-weight:700;
+
+font-size:18px;
+
+}
+
+.adminPlayerPosition{
+
+font-size:14px;
+
+color:var(--text2);
+
+}
+
+.adminPlayerArrow{
+
+font-size:28px;
+
+color:var(--accent);
+
+}
+.editorSectionTitle{
+
+margin:30px 0 15px;
+
+font-size:20px;
+
+font-weight:700;
+
+}
+
+.adminInput{
+
+width:100%;
+
+height:54px;
+
+border:none;
+
+border-radius:16px;
+
+padding:0 18px;
+
+background:#223247;
+
+color:#fff;
+
+margin-bottom:15px;
+
+font-size:16px;
+
+}
+
+.statsEditor{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+
+gap:15px;
+
+margin-top:10px;
+
+}
+
+.statEditor{
+
+background:#182231;
+
+padding:18px;
+
+border-radius:18px;
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+}
+
+.adminInputSmall{
+
+width:70px;
+
+height:42px;
+
+border:none;
+
+border-radius:12px;
+
+background:#304156;
+
+color:#fff;
+
+text-align:center;
+
+font-size:16px;
+
+}
+
+.captainCheck{
+
+display:flex;
+
+align-items:center;
+
+gap:12px;
+
+margin:20px 0;
+
+font-size:18px;
+
+}
+
+#savePlayerBtn{
+
+background:#16A34A;
+
+}
+
+#deletePlayerBtn{
+
+background:#DC2626;
+
+color:white;
 
 }
 </style>
-
+<link
+rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
 </head>
 
 <body>
 
+<div id="app">
+<!-- ======================================================
+MENU LATERAL
+====================================================== -->
+
+<nav id="sideMenu">
+
+    <div class="clubHeader">
+
+        <div class="clubLogo">
+            RS
+        </div>
+
+        <div class="clubText">
+            <h2>Ramón Sicart</h2>
+            <p>Club Manager V8</p>
+        </div>
+
+    </div>
+
+    <div class="menuList">
+
+        <button class="menuItem active" data-page="home">
+            <div class="menuIcon">🏠</div>
+            <div class="menuInfo">
+                <h3>Inicio</h3>
+                <p>Resumen del club</p>
+            </div>
+            <div class="menuArrow">›</div>
+        </button>
+
+        <button class="menuItem" data-page="players">
+            <div class="menuIcon">👥</div>
+            <div class="menuInfo">
+                <h3>Plantilla</h3>
+                <p>Jugadores</p>
+            </div>
+            <div class="menuArrow">›</div>
+        </button>
+
+        <button class="menuItem" data-page="matches">
+            <div class="menuIcon">⚽</div>
+            <div class="menuInfo">
+                <h3>Partidos</h3>
+                <p>Calendario</p>
+            </div>
+            <div class="menuArrow">›</div>
+        </button>
+
+        <button class="menuItem" data-page="table">
+            <div class="menuIcon">🏆</div>
+            <div class="menuInfo">
+                <h3>Clasificación</h3>
+                <p>Liga</p>
+            </div>
+            <div class="menuArrow">›</div>
+        </button>
+
+        <button class="menuItem" data-page="news">
+            <div class="menuIcon">📰</div>
+            <div class="menuInfo">
+                <h3>Noticias</h3>
+                <p>Actualidad</p>
+            </div>
+            <div class="menuArrow">›</div>
+        </button>
+
+        <button class="menuItem" data-page="admin">
+            <div class="menuIcon">⚙️</div>
+            <div class="menuInfo">
+                <h3>Administración</h3>
+                <p>Panel de control</p>
+            </div>
+            <div class="menuArrow">›</div>
+        </button>
+
+    </div>
+
+</nav>
+
 <div id="overlay"></div>
 
-<div id="sideMenu">
 
-<h2>RS CLUB</h2>
-
-<button class="menuItem" data-page="home">🏠 Inicio</button>
-
-<button class="menuItem" data-page="players">👥 Plantilla</button>
-
-<button class="menuItem" data-page="matches">⚽ Partidos</button>
-
-<button class="menuItem" data-page="table">🏆 Clasificación</button>
-
-<button class="menuItem" data-page="admin">⚙ Administración</button>
-
-</div>
+<!-- ======================================================
+HEADER
+====================================================== -->
 
 <header>
 
-<button id="menuButton">☰</button>
+<button id="menuButton">
 
-<h2>CADETE S15</h2>
+☰
 
-<div></div>
+</button>
 
-</header>
 
-<div id="page-home" class="page active">
+<div class="logo">
 
-<div class="hero">
+<div class="logoShield">
 
-<div class="heroLeft">
-
-<div class="badge">
-
-PRÓXIMO PARTIDO
+RS
 
 </div>
 
+<div class="logoText">
+
 <h1>Ramón Sicart</h1>
 
-<h2>VS</h2>
+<p>Cadete S15</p>
 
-<h1>FC Barcelona</h1>
+</div>
 
-<p>
+</div>
 
-📅 Domingo 13 Septiembre
 
-</p>
+<div id="headerRight">
 
-<p>
+<div class="headerButton">
 
-🕕 18:30
+🔔
 
-</p>
+</div>
 
-<p>
+<div class="headerButton">
 
-📍 Municipal Llorenç
+👤
 
-</p>
+</div>
+
+</div>
+
+</header>
+
+
+<!-- ======================================================
+CONTENIDO
+====================================================== -->
+
+<main id="mainContent">
+
+
+<!-- ======================================================
+HOME
+====================================================== -->
+
+<section
+id="page-home"
+class="page active">
+
+<div class="heroCard">
+
+<div class="heroTop">
+
+<span class="badge">
+
+PRÓXIMO PARTIDO
+
+</span>
+
+</div>
+
+<h1>
+
+Ramón Sicart
+
+</h1>
+
+<div class="versus">
+
+VS
+
+</div>
+
+<h1>
+
+FC Barcelona
+
+</h1>
+
+<div class="heroInfo">
+
+<div>
+
+📅 Domingo
+
+</div>
+
+<div>
+
+🕖 19:00
+
+</div>
+
+<div>
+
+📍 Municipal
+
+</div>
+
+</div>
 
 <button class="primaryButton">
 
@@ -987,702 +1851,1399 @@ VER PARTIDO
 
 </div>
 
-<div class="heroRight">
 
-<div class="shield">
+<div class="homeGrid">
 
-RS
+    <section class="homeCard">
 
-</div>
+        <h2>🏆 Clasificación</h2>
 
-<div class="vs">
+        <div id="homeTable">
 
-VS
+        </div>
 
-</div>
+    </section>
 
-<div class="shield">
 
-FCB
+    <section class="homeCard">
 
-</div>
+        <h2>⚽ Goleadores</h2>
 
-</div>
+        <div id="homeScorers">
 
-</div>
+        </div>
 
-<div class="cards">
+    </section>
 
-<div class="card">
 
-<h3>🏆 Clasificación</h3>
+    <section class="homeCard">
 
-<p>Sin datos</p>
+        <h2>📅 Próximos partidos</h2>
 
-</div>
+        <div id="homeMatches">
 
-<div class="card">
+        </div>
 
-<h3>⚽ Goleadores</h3>
+    </section>
 
-<p>Sin datos</p>
 
-</div>
+    <section class="homeCard">
 
-<div class="card">
+        <h2>📰 Noticias</h2>
 
-<h3>📅 Último partido</h3>
+        <div id="homeNews">
 
-<p>Sin datos</p>
+        </div>
+
+    </section>
 
 </div>
 
-<div class="card">
+</section>
+<!-- ======================================================
+PLANTILLA
+====================================================== -->
 
-<h3>📊 Estadísticas</h3>
+<section id="page-players" class="page">
 
-<p>Sin datos</p>
+    <div class="pageTitle">
+
+        <h2>👥 Plantilla</h2>
+
+        <p>Cadete S15 · Temporada 2026 / 2027</p>
+
+    </div>
+<div class="teamStats">
+
+    <div class="teamStat">
+
+        <strong id="totalPlayers">
+
+            0
+
+        </strong>
+
+        <span>Jugadores</span>
+
+    </div>
+
+    <div class="teamStat">
+
+        <strong id="totalGoals">
+
+            0
+
+        </strong>
+
+        <span>Goles</span>
+
+    </div>
+
+    <div class="teamStat">
+
+        <strong id="totalAssists">
+
+            0
+
+        </strong>
+
+        <span>Asistencias</span>
+
+    </div>
 
 </div>
+    <div class="searchBox">
 
-</div>
+        <input
+            id="searchPlayer"
+            type="text"
+            placeholder="Buscar jugador...">
 
-</div>
+    </div>
 
-<div id="page-players" class="page">
+    <div id="playersGrid">
 
-<div class="pageHeader">
+    </div>
 
-<div>
+</section>
 
-<h1>👥 Plantilla</h1>
 
-<p>
 
-15 jugadores · Cadete S15
+<!-- ======================================================
+PARTIDOS
+====================================================== -->
 
-</p>
+<section id="page-matches" class="page">
 
-</div>
+    <div class="pageTitle">
 
-<div class="pageButtons">
+        <h2>⚽ Partidos</h2>
 
-<button id="btnFilter">
+        <p>Calendario de la temporada</p>
 
-🔍
+    </div>
+
+    <div id="matchesList">
+
+    </div>
+
+</section>
+
+
+
+<!-- ======================================================
+CLASIFICACIÓN
+====================================================== -->
+
+<section id="page-table" class="page">
+
+    <div class="pageTitle">
+
+        <h2>🏆 Clasificación</h2>
+
+        <p>Liga Cadete S15</p>
+
+    </div>
+
+    <div id="tableContainer">
+
+    </div>
+
+</section>
+
+
+
+<!-- ======================================================
+NOTICIAS
+====================================================== -->
+
+<section id="page-news" class="page">
+
+    <div class="pageTitle">
+
+        <h2>📰 Noticias</h2>
+
+        <p>Actualidad del club</p>
+
+    </div>
+
+    <div id="newsContainer">
+
+    </div>
+
+</section>
+
+
+
+<!-- ======================================================
+ADMINISTRACIÓN
+====================================================== -->
+<!-- ======================================================
+PLAYER DETAIL
+====================================================== -->
+
+<section id="page-player" class="page">
+
+<div class="playerHeader">
+
+<button id="backPlayersBtn" class="backButton">
+
+← Volver
 
 </button>
 
 </div>
-</div>
-<div class="search">
 
-<input
-id="searchPlayer"
-type="text"
-placeholder="Buscar jugador...">
+<div class="playerProfile">
 
-</div>
-
-<div id="playersGrid"></div>
-
-</div>
-
-<div id="page-matches" class="page">
-
-<h1>Partidos</h1>
-
-</div>
-
-<div id="page-table" class="page">
-
-<h1>Clasificación</h1>
-
-</div>
-<div id="adminPlayerModal">
-
-<div class="playerWindow">
-
-<h2>Jugador</h2>
-
-<input id="fName" placeholder="Nombre">
-
-<input id="fNumber" type="number" placeholder="Dorsal">
-
-<input id="fPosition" placeholder="Posición">
-
-<div class="adminButtons">
-
-<button id="savePlayer">
-
-Guardar
-
-</button>
-
-<button id="cancelPlayer">
-
-Cancelar
-
-</button>
-
-</div>
-
-</div>
-
-</div>
-<div id="playerModal">
-
-<div class="playerWindow">
-
-<button id="closePlayer">
-
-✕
-
-</button>
-
-<div id="playerContent">
-
-</div>
-
-</div>
-
-</div>
-<div id="page-admin" class="page">
-
-<div id="adminHome">
-
-<div class="pageHeader">
-
-<div>
-
-<h1>⚙ Administración</h1>
-
-<p>Gestión del equipo</p>
-
-</div>
-
-</div>
-
-<div class="adminGrid">
-
-<button class="adminCard" id="adminPlayers">
-👥
-<span>Jugadores</span>
-</button>
-
-<button class="adminCard">
-⚽
-<span>Partidos</span>
-</button>
-
-<button class="adminCard">
-🏆
-<span>Clasificación</span>
-</button>
-
-<button class="adminCard">
-📊
-<span>Estadísticas</span>
-</button>
-
-<button class="adminCard">
-📰
-<span>Noticias</span>
-</button>
-
-<button class="adminCard">
-⚙
-<span>Configuración</span>
-</button>
-
-</div>
-
-</div>
-<div id="adminPlayersPanel" style="display:none;">
-
-<div class="adminHeader">
-
-<button id="backAdmin">
-← Administración
-</button>
-
-<h2>👥 Gestión de jugadores</h2>
-
-<button id="newPlayer">
-➕ Nuevo
-</button>
-
-</div>
-
-<div class="adminSearch">
-
-<input
-id="adminSearchPlayer"
-type="text"
-placeholder="Buscar jugador...">
-
-</div>
-
-<div id="adminPlayersList"></div>
-
-</div>
-
-</div>
-
-
-<script>
-const App={
-
-club:{
-
-name:"Ramón Sicart",
-
-season:"2026/2027",
-
-category:"Cadete S15"
-
-},
-
-players:[],
-
-matches:[],
-
-table:[],
-
-stats:[],
-
-live:{},
-
-settings:{},
-
-selectedPlayer:null
-
-};
-
-const DemoPlayers=[
-
-{
-
-id:1,
-
-number:1,
-
-name:"Roger",
-
-position:"Portero",
-
-goals:0,
-
-matches:0,
-
-yellow:0,
-
-red:0
-
-},
-
-{
-
-id:2,
-
-number:10,
-
-name:"Gerard",
-
-position:"Delantero",
-
-goals:32,
-
-matches:28,
-
-yellow:1,
-
-red:0
-
-},
-
-{
-
-id:3,
-
-number:7,
-
-name:"Axel",
-
-position:"Extremo",
-
-goals:14,
-
-matches:27,
-
-yellow:3,
-
-red:0
-
-}
-
-];
-const menu=document.getElementById("sideMenu");
-const overlay=document.getElementById("overlay");
-
-document.getElementById("menuButton").onclick=()=>{
-
-menu.classList.add("open");
-overlay.classList.add("open");
-
-};
-
-overlay.onclick=()=>{
-
-menu.classList.remove("open");
-overlay.classList.remove("open");
-
-};
-
-function showPage(page){
-
-document.querySelectorAll(".page").forEach(p=>{
-
-p.classList.remove("active");
-
-});
-
-document.querySelectorAll(".menuItem").forEach(item=>{
-
-item.classList.remove("active");
-
-});
-
-document.getElementById("page-"+page).classList.add("active");
-
-document.querySelector('[data-page="'+page+'"]')?.classList.add("active");
-
-menu.classList.remove("open");
-
-overlay.classList.remove("open");
-
-}
-
-document.querySelectorAll(".menuItem").forEach(item=>{
-
-item.addEventListener("click",()=>{
-
-showPage(item.dataset.page);
-
-});
-
-});
-function startApp(){
-
-App.players=[...DemoPlayers];
-
-renderPlayers();
-showPage("home");
-
-}
-function renderPlayers(){
-
-const grid=document.getElementById("playersGrid");
-
-if(!grid) return;
-
-const text=document.getElementById("searchPlayer").value.toLowerCase();
-
-grid.innerHTML="";
-
-App.players
-
-.filter(player=>
-
-player.name.toLowerCase().includes(text)
-
-)
-
-.forEach(player=>{
-
-grid.innerHTML+=`
-
-<div class="player" onclick="openPlayer(${player.id})">
-
-<div class="playerPhoto">
+<div class="playerPhotoLarge">
 
 👤
 
 </div>
 
-<div class="playerNumber">
+<h1 id="detailName">
 
-${player.number}
+Jugador
 
-</div>
+</h1>
 
-<div class="playerName">
+<p id="detailPosition">
 
-${player.name}
+Posición
 
-</div>
+</p>
+<div id="captainBadge" class="captainBadge"></div>
 
-<div class="playerPosition">
+<div class="detailNumber"
 
-${player.position}
+id="detailNumber">
 
-</div>
-
-<div class="playerStats">
-
-<div>⚽<br>${player.goals}</div>
-
-<div>🏟<br>${player.matches}</div>
-
-<div>🟨<br>${player.yellow}</div>
-
-<div>🟥<br>${player.red}</div>
+10
 
 </div>
 
 </div>
 
-`;
+
+<div class="statsGrid">
+
+<div class="statCard">
+
+<h3>🏟</h3>
+
+<span>Partidos</span>
+
+<strong id="detailMatches">
+
+0
+
+</strong>
+
+</div>
+
+<div class="statCard">
+
+<h3>⚽</h3>
+
+<span>Goles</span>
+
+<strong id="detailGoals">
+
+0
+
+</strong>
+
+</div>
+
+<div class="statCard">
+
+<h3>🅰</h3>
+
+<span>Asistencias</span>
+
+<strong id="detailAssists">
+
+0
+
+</strong>
+
+</div>
+
+<div class="statCard">
+
+<h3>🟨</h3>
+
+<span>Amarillas</span>
+
+<strong id="detailYellow">
+
+0
+
+</strong>
+
+</div>
+
+<div class="statCard">
+
+<h3>🟥</h3>
+
+<span>Rojas</span>
+
+<strong id="detailRed">
+
+0
+
+</strong>
+
+</div>
+
+
+<!-- FOTO DEL JUGADOR -->
+
+<div class="photoEditor">
+
+    <img
+        id="playerPhoto"
+        src=""
+        class="playerPhoto"
+        alt="Jugador">
+
+    <div id="playerAvatarDefault" class="playerPhotoDefault">
+
+        👤
+
+    </div>
+
+    <input
+        type="file"
+        id="playerPhotoInput"
+        accept="image/*"
+        hidden>
+
+    <button
+        id="changePhotoButton"
+        class="secondaryButton"
+        style="display:none;">
+
+        📷 Cambiar foto
+
+    </button>
+
+</div>
+<button
+
+id="editPlayerButton"
+
+class="primaryButton"
+
+style="display:none;">
+
+Editar jugador
+
+</button>
+
+</section>
+<section id="page-admin" class="page">
+
+    <div id="adminHome">
+
+        <div class="pageTitle">
+
+            <h2>⚙ Administración</h2>
+
+            <p>Panel de control</p>
+
+        </div>
+
+        <div class="adminGrid">
+
+            <button class="adminCard" data-admin="players">
+
+                👥
+
+                <span>Jugadores</span>
+
+            </button>
+
+            <button class="adminCard" data-admin="matches">
+
+                ⚽
+
+                <span>Partidos</span>
+
+            </button>
+
+            <button class="adminCard" data-admin="table">
+
+                🏆
+
+                <span>Clasificación</span>
+
+            </button>
+
+            <button class="adminCard" data-admin="news">
+
+                📰
+
+                <span>Noticias</span>
+
+            </button>
+
+            <button class="adminCard" data-admin="settings">
+
+                ⚙️
+
+                <span>Configuración</span>
+
+            </button>
+
+        </div>
+
+    </div>
+<div id="adminPlayers" style="display:none;">
+
+    <div class="pageTitle">
+
+        <button id="adminBackBtn" class="backButton">
+
+            ← Volver
+
+        </button>
+
+        <h2 style="margin-top:20px;">👥 Jugadores</h2>
+
+        <p>Administración de la plantilla</p>
+
+    </div>
+
+    <button
+        id="newPlayerBtn"
+        class="primaryButton">
+
+        ➕ Nuevo jugador
+
+    </button>
+
+    <div
+        id="adminPlayersList"
+        style="margin-top:25px;">
+
+    </div>
+
+</div>
+<div id="adminPlayerEditor" style="display:none;">
+
+    <button id="editorBackBtn" class="backButton">
+
+        ← Volver
+
+    </button>
+
+    <div class="pageTitle">
+
+        <h2>Editar jugador</h2>
+
+        <p>Datos del jugador</p>
+
+    </div>
+
+    <div class="photoEditor">
+
+        <img id="adminPlayerPhoto"
+             class="playerPhoto"
+             src="">
+
+        <div id="adminPlayerAvatar"
+             class="playerPhotoDefault">
+
+            👤
+
+        </div>
+
+        <button
+            id="changePhotoAdmin"
+            class="secondaryButton">
+
+            📷 Cambiar foto
+
+        </button>
+
+    </div>
+
+    <input
+        id="editName"
+        class="adminInput"
+        placeholder="Nombre">
+
+    <input
+        id="editSurname"
+        class="adminInput"
+        placeholder="Apellido">
+
+    <input
+        id="editNumber"
+        class="adminInput"
+        type="number"
+        placeholder="Dorsal">
+
+    <select
+        id="editPosition"
+        class="adminInput">
+
+        <option value="POR">Portero</option>
+
+        <option value="LD">Lateral Derecho</option>
+
+        <option value="DFC">Defensa Central</option>
+
+        <option value="LI">Lateral Izquierdo</option>
+
+        <option value="MCD">Medio Defensivo</option>
+
+        <option value="MC">Medio Centro</option>
+
+        <option value="MCO">Media Punta</option>
+
+        <option value="ED">Extremo Derecho</option>
+
+        <option value="EI">Extremo Izquierdo</option>
+
+        <option value="DC">Delantero</option>
+
+    </select>
+
+    <label class="captainCheck">
+
+        <input
+            id="editCaptain"
+            type="checkbox">
+
+        Capitán
+
+</label>
+
+
+<h3 class="editorSectionTitle">📊 Estadísticas</h3>
+
+<div class="statsEditor">
+
+    <div class="statEditor">
+
+        <span>🏟 Partidos</span>
+
+        <input id="editMatches" type="number" min="0" class="adminInputSmall">
+
+    </div>
+
+    <div class="statEditor">
+
+        <span>⚽ Goles</span>
+
+        <input id="editGoals" type="number" min="0" class="adminInputSmall">
+
+    </div>
+
+    <div class="statEditor">
+
+        <span>🅰 Asistencias</span>
+
+        <input id="editAssists" type="number" min="0" class="adminInputSmall">
+
+    </div>
+
+    <div class="statEditor">
+
+        <span>🟨 Amarillas</span>
+
+        <input id="editYellow" type="number" min="0" class="adminInputSmall">
+
+    </div>
+
+    <div class="statEditor">
+
+        <span>🟥 Rojas</span>
+
+        <input id="editRed" type="number" min="0" class="adminInputSmall">
+
+    </div>
+
+</div>
+
+    <button
+        id="savePlayerBtn"
+        class="primaryButton">
+
+        💾 Guardar cambios
+
+    </button>
+
+    <button
+        id="deletePlayerBtn"
+        class="secondaryButton">
+
+        🗑 Eliminar jugador
+
+    </button>
+
+</div>
+</section>
+
+
+
+<!-- ======================================================
+MODALES
+====================================================== -->
+
+<div id="modalOverlay">
+
+</div>
+
+
+
+<div id="playerModal">
+
+</div>
+
+
+
+<div id="toast">
+
+</div>
+
+
+
+</main>
+
+</div>
+<script>
+
+/*======================================================
+CONFIGURACIÓN GENERAL
+======================================================*/
+
+const App={
+
+    version:"8.0",
+
+    club:{
+        name:"Ramón Sicart",
+        category:"Cadete S15",
+        season:"2026/2027"
+    },
+
+    firebase:null,
+
+    players:[],
+    matches:[],
+    standings:[],
+    news:[],
+
+    ui:{
+        page:"home",
+        admin:"home",
+        loading:false
+    }
+
+};
+
+/*======================================================
+SELECTORES
+======================================================*/
+
+const $=(selector)=>document.querySelector(selector);
+
+const $$=(selector)=>document.querySelectorAll(selector);
+
+/*======================================================
+ELEMENTOS
+======================================================*/
+
+const menu=$("#sideMenu");
+const overlay=$("#overlay");
+const menuButton=$("#menuButton");
+const pages=$$(".page");
+const menuItems=$$(".menuItem");
+/*======================================================
+ROUTER
+======================================================*/
+
+function showPage(page){
+
+    App.ui.page=page;
+
+    pages.forEach(p=>{
+
+        p.classList.remove("active");
+
+    });
+
+    const current=$("#page-"+page);
+
+    if(current){
+
+        current.classList.add("active");
+
+    }
+
+    menuItems.forEach(item=>{
+
+        item.classList.remove("active");
+
+        if(item.dataset.page===page){
+
+            item.classList.add("active");
+
+        }
+
+    });
+
+    menu.classList.remove("show");
+
+    overlay.classList.remove("show");
+
+}
+/*======================================================
+MENÚ
+======================================================*/
+
+menuButton.addEventListener("click",()=>{
+
+    menu.classList.add("show");
+
+    overlay.classList.add("show");
 
 });
 
-}
-startApp();
+overlay.addEventListener("click",()=>{
 
-document
+    menu.classList.remove("show");
 
-.getElementById("searchPlayer")
-
-.addEventListener(
-
-"input",
-
-renderPlayers
-
-);
-function openPlayer(id){
-
-const p=App.players.find(player=>player.id===id);
-
-document.getElementById("playerContent").innerHTML=`
-
-<div class="playerHeader">
-
-<div class="playerAvatar">👤</div>
-
-<h2>${p.name}</h2>
-
-<p>${p.position}</p>
-
-<div class="playerInfo">
-
-<div>⚽<h3>${p.goals}</h3></div>
-
-<div>🏟<h3>${p.matches}</h3></div>
-
-<div>🟨<h3>${p.yellow}</h3></div>
-
-<div>🟥<h3>${p.red}</h3></div>
-
-</div>
-
-</div>
-
-`;
-
-document.getElementById("playerModal").classList.add("open");
-
-}
-
-document.getElementById("closePlayer").onclick=()=>{
-
-document.getElementById("playerModal").classList.remove("open");
-
-};
-document.querySelectorAll(".adminCard").forEach(card=>{
-
-card.onclick=()=>{
-
-if(card.id==="adminPlayers"){
-
-document.getElementById("adminHome").style.display="none";
-
-document.getElementById("adminPlayersPanel").style.display="block";
-
-renderAdminPlayers();
-
-}
-};
+    overlay.classList.remove("show");
 
 });
+
+menuItems.forEach(item=>{
+
+    item.addEventListener("click",()=>{
+
+        showPage(item.dataset.page);
+
+    });
+
+});
+/*======================================================
+INICIALIZACIÓN
+======================================================*/
+
+function init(){
+
+    loadPlayers();
+
+    renderHome();
+
+    showPage("home");
+
+    $("#searchPlayer").addEventListener("input",filterPlayers);
 document
+.querySelector('[data-admin="players"]')
+.addEventListener("click",openAdminPlayers);
 
-.getElementById("cancelPlayer")
+$("#adminBackBtn")
+.addEventListener("click",closeAdminPlayers);
+$("#newPlayerBtn")
+.addEventListener("click",newPlayer);
 
-.onclick=()=>{
+$("#editorBackBtn")
+.addEventListener("click",closePlayerEditor);
+$("#savePlayerBtn")
+.addEventListener("click",savePlayer);
+$("#deletePlayerBtn")
+.addEventListener("click",deletePlayer);
+}
 
-document
+document.addEventListener("DOMContentLoaded",init);
+/*======================================================
+PLAYERS
+======================================================*/
 
-.getElementById("adminPlayerModal")
+const DemoPlayers=[
 
-.classList.remove("open");
+{
+    id:1,
+    number:1,
+    name:"Roger",
+    surname:"",
+    position:"POR",
+    photo:"",
+    captain:false,
+
+    matches:24,
+    goals:0,
+    assists:0,
+
+    yellow:0,
+    red:0
+},
+
+{
+    id:2,
+    number:7,
+    name:"Axel",
+    surname:"",
+    position:"ED",
+    photo:"",
+    captain:false,
+
+    matches:24,
+    goals:12,
+    assists:8,
+
+    yellow:2,
+    red:0
+},
+
+{
+    id:3,
+    number:10,
+    name:"Gerard",
+    surname:"Ródenes",
+    position:"DC",
+    photo:"",
+    captain:true,
+
+    matches:24,
+    goals:39,
+    assists:11,
+
+    yellow:2,
+    red:0
+}
+
+];
+const Positions={
+
+POR:"Portero",
+
+LD:"Lateral Derecho",
+
+DFC:"Defensa Central",
+
+LI:"Lateral Izquierdo",
+
+MCD:"Medio Defensivo",
+
+MC:"Medio Centro",
+
+MCO:"Media Punta",
+
+ED:"Extremo Derecho",
+
+EI:"Extremo Izquierdo",
+
+DC:"Delantero"
 
 };
+function loadPlayers(){
 
-document
+    App.players=[...DemoPlayers];
 
-.getElementById("savePlayer")
+    renderPlayers();
 
-.onclick=()=>{
+updateTeamStats();
 
-const player={
+}
+function renderPlayers(players=App.players){
 
-id:Date.now(),
+    const grid=$("#playersGrid");
 
-number:Number(fNumber.value),
+    if(!grid) return;
 
-name:fName.value,
+    grid.innerHTML="";
 
-position:fPosition.value,
+    players.forEach(player=>{
 
-goals:0,
+        grid.innerHTML+=`
 
-matches:0,
+        <div class="playerCard"
+     onclick="openPlayer(${player.id})">
 
-yellow:0,
+    <div class="playerAvatar">
 
-red:0
+        👤
 
-};
+    </div>
 
-App.players.push(player);
+    <div class="playerInfo">
 
-renderPlayers();
+        <div class="playerTop">
 
-document
+            <span class="playerNumber">
 
-.getElementById("adminPlayerModal")
+                #${player.number}
 
-.classList.remove("open");
+            </span>
 
-fName.value="";
+            <span class="playerArrow">
 
-fNumber.value="";
+                ›
 
-fPosition.value="";
+            </span>
 
-};
+        </div>
+
+        <div class="playerName">
+
+            ${player.name} ${player.surname}
+
+        </div>
+
+        <div class="playerPosition">
+
+            ${Positions[player.position]}
+
+        </div>
+
+        <div class="playerResume">
+
+            🏟 ${player.matches}
+
+            &nbsp;&nbsp;
+
+            ⚽ ${player.goals}
+
+            &nbsp;&nbsp;
+
+            🅰 ${player.assists}
+
+        </div>
+
+    </div>
+
+</div>
+
+        `;
+
+    });
+
+}
 function renderAdminPlayers(){
 
-const list=document.getElementById("adminPlayersList");
+    const list=$("#adminPlayersList");
 
-list.innerHTML="";
+    if(!list) return;
 
-const search=document
-.getElementById("adminSearchPlayer")
-?.value
-.toLowerCase() || "";
-App.players
+    list.innerHTML="";
 
-.filter(player=>
+    App.players.forEach(player=>{
 
-player.name.toLowerCase().includes(search)
+        list.innerHTML+=`
 
-)
+        <div
+            class="adminPlayer"
+            onclick="editPlayer(${player.id})">
 
-.forEach(player=>{
+            <div class="adminPlayerAvatar">
 
-list.innerHTML+=`
+                👤
 
-<div class="adminPlayer">
+            </div>
 
-<div class="adminPlayerInfo">
+            <div class="adminPlayerInfo">
 
-<div class="adminPlayerNumber">
+                <div class="adminPlayerName">
 
-${player.number}
+                    #${player.number}
+                    ${player.name}
+                    ${player.surname}
 
-</div>
+                    ${player.captain ? " 👑" : ""}
 
-<div>
+                </div>
 
-<strong>${player.name}</strong><br>
+                <div class="adminPlayerPosition">
 
-${player.position}
+                    ${Positions[player.position]}
 
-</div>
+                </div>
 
-</div>
+            </div>
 
-<div class="adminPlayerActions">
+            <div class="adminPlayerArrow">
 
-<button class="editPlayer">
+                ›
 
-✏️
+            </div>
 
-</button>
+        </div>
 
-<button class="deletePlayer">
+        `;
 
-🗑️
-
-</button>
-
-</div>
-
-</div>
-
-`;
-
-});
+    });
 
 }
-document.getElementById("backAdmin").onclick=()=>{
+let editingPlayerId=null;
 
-document.getElementById("adminPlayersPanel").style.display="none";
+function editPlayer(id){
 
-document.getElementById("adminHome").style.display="block";
+    const player=App.players.find(p=>p.id===id);
 
-};
-document
+    if(!player) return;
 
-.getElementById("adminSearchPlayer")
+    editingPlayerId=id;
 
-.addEventListener(
+    $("#adminPlayers").style.display="none";
 
-"input",
+    $("#adminPlayerEditor").style.display="block";
 
-renderAdminPlayers
+    $("#editName").value=player.name;
 
-);
-const Database={
+    $("#editSurname").value=player.surname;
 
-loadPlayers(){
+    $("#editNumber").value=player.number;
 
-return App.players;
+    $("#editPosition").value=player.position;
 
-},
+    $("#editCaptain").checked=player.captain;
+$("#editMatches").value=player.matches;
 
-savePlayers(){
+$("#editGoals").value=player.goals;
 
-console.log("Guardar jugadores");
+$("#editAssists").value=player.assists;
 
-},
+$("#editYellow").value=player.yellow;
 
-loadMatches(){
+$("#editRed").value=player.red;
 
-return App.matches;
+}
+function newPlayer(){
 
-},
+    editingPlayerId=null;
 
-saveMatches(){
+    $("#adminPlayers").style.display="none";
 
-console.log("Guardar partidos");
+    $("#adminPlayerEditor").style.display="block";
+
+    $("#editName").value="";
+
+    $("#editSurname").value="";
+
+    $("#editNumber").value="";
+
+    $("#editPosition").value="DC";
+
+    $("#editCaptain").checked=false;
+$("#editMatches").value=0;
+
+$("#editGoals").value=0;
+
+$("#editAssists").value=0;
+
+$("#editYellow").value=0;
+
+$("#editRed").value=0;
+
+}
+function closePlayerEditor(){
+
+    $("#adminPlayerEditor").style.display="none";
+
+    $("#adminPlayers").style.display="block";
+
+}
+function savePlayer(){
+
+    const playerData={
+
+        name:$("#editName").value.trim(),
+
+        surname:$("#editSurname").value.trim(),
+
+        number:Number($("#editNumber").value),
+
+        position:$("#editPosition").value,
+
+        captain:$("#editCaptain").checked,
+
+        photo:"",
+
+    matches:Number($("#editMatches").value),
+
+goals:Number($("#editGoals").value),
+
+assists:Number($("#editAssists").value),
+
+yellow:Number($("#editYellow").value),
+
+red:Number($("#editRed").value),
+
+    };
+
+    if(playerData.name===""){
+
+        alert("Introduce el nombre del jugador");
+
+        return;
+
+    }
+
+    if(editingPlayerId===null){
+
+        playerData.id=Date.now();
+
+       
+
+        App.players.push(playerData);
+
+    }else{
+
+        const player=App.players.find(p=>p.id===editingPlayerId);
+
+        if(!player) return;
+
+        Object.assign(player,playerData);
+
+    }
+
+    renderPlayers();
+
+    renderAdminPlayers();
+
+    updateTeamStats();
+
+    closePlayerEditor();
+
+}
+function deletePlayer(){
+
+    if(editingPlayerId===null){
+
+        closePlayerEditor();
+
+        return;
+
+    }
+
+    if(!confirm("¿Eliminar este jugador?")) return;
+
+    App.players=App.players.filter(
+
+        p=>p.id!==editingPlayerId
+
+    );
+
+    renderPlayers();
+
+    renderAdminPlayers();
+
+    updateTeamStats();
+
+    closePlayerEditor();
+
+}
+function openAdminPlayers(){
+
+    $("#adminHome").style.display="none";
+
+    $("#adminPlayers").style.display="block";
+
+    renderAdminPlayers();
 
 }
 
+function closeAdminPlayers(){
+
+    $("#adminPlayers").style.display="none";
+
+    $("#adminHome").style.display="block";
+
+}
+function updateTeamStats(){
+
+    $("#totalPlayers").textContent=App.players.length;
+
+    let goals=0;
+
+    let assists=0;
+
+    App.players.forEach(player=>{
+
+        goals+=player.goals;
+
+        assists+=player.assists;
+
+    });
+
+    $("#totalGoals").textContent=goals;
+
+    $("#totalAssists").textContent=assists;
+
+}
+/*======================================================
+BUSCADOR DE JUGADORES
+======================================================*/
+
+function filterPlayers(){
+
+    const text=$("#searchPlayer").value.toLowerCase().trim();
+
+    const players=text===""
+
+        ? App.players
+
+        : App.players.filter(player=>{
+
+            return (
+                player.name.toLowerCase().includes(text) ||
+                player.surname.toLowerCase().includes(text) ||
+                String(player.number).includes(text) ||
+                Positions[player.position].toLowerCase().includes(text)
+            );
+
+        });
+
+    renderPlayers(players);
+
+}
+/*======================================================
+PLAYER DETAIL
+======================================================*/
+
+function openPlayer(id){
+
+    const player=App.players.find(p=>p.id===id);
+
+    if(!player) return;
+
+    $("#detailName").textContent=
+        player.name+" "+player.surname;
+
+    $("#detailPosition").textContent=
+Positions[player.position];
+    $("#detailNumber").textContent=
+        player.number;
+
+    $("#detailMatches").textContent=
+        player.matches;
+
+    $("#detailGoals").textContent=
+        player.goals;
+
+    $("#detailYellow").textContent=
+        player.yellow;
+
+    $("#detailRed").textContent=
+        player.red;
+
+   const badge=$("#captainBadge");
+
+if(badge){
+
+    if(player.captain){
+
+        badge.innerHTML="👑 CAPITÁN";
+
+        badge.style.display="inline-flex";
+
+    }else{
+
+        badge.innerHTML="";
+
+        badge.style.display="none";
+
+    }
+
+}
+
+    showPage("player");
+
+}
+$("#backPlayersBtn").onclick=()=>{
+
+    showPage("players");
+
 };
+/*======================================================
+HOME
+======================================================*/
+
+function renderHome(){
+
+    renderHomeTable();
+
+    renderHomeScorers();
+
+    renderHomeMatches();
+
+    renderHomeNews();
+
+}
+
+function renderHomeTable(){
+
+    const box=$("#homeTable");
+
+    if(!box) return;
+
+    box.innerHTML=`
+
+        <div class="miniTable">
+
+            <div>🥇 Ramón Sicart</div>
+
+            <div>🥈 FC Barcelona</div>
+
+            <div>🥉 Nàstic</div>
+
+            <div>4️⃣ Espanyol</div>
+
+        </div>
+
+    `;
+
+}
+
+function renderHomeScorers(){
+
+    const box=$("#homeScorers");
+
+    if(!box) return;
+
+    box.innerHTML=`
+
+        <div class="miniList">
+
+            <div>
+
+                ⚽ Gerard
+
+                <strong>39</strong>
+
+            </div>
+
+            <div>
+
+                ⚽ Axel
+
+                <strong>12</strong>
+
+            </div>
+
+            <div>
+
+                ⚽ Roger
+
+                <strong>8</strong>
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+function renderHomeMatches(){
+
+    const box=$("#homeMatches");
+
+    if(!box) return;
+
+    box.innerHTML=`
+
+        <div class="miniMatch">
+
+            Ramón Sicart
+
+            <strong>VS</strong>
+
+            FC Barcelona
+
+        </div>
+
+    `;
+
+}
+
+function renderHomeNews(){
+
+    const box=$("#homeNews");
+
+    if(!box) return;
+
+    box.innerHTML=`
+
+        <div class="miniNews">
+
+            📢 Bienvenido al RS Club Manager V8
+
+        </div>
+
+    `;
+
+}
 </script>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 </body>
+
 </html>
