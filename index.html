@@ -1634,10 +1634,83 @@ background:#DC2626;
 color:white;
 
 }
+
+/* PLAYER CARD PREMIUM + PLAYER EDITOR PREMIUM */
+.player-editor-layout{display:grid;grid-template-columns:minmax(300px,420px) 1fr;gap:28px;align-items:start}
+.player-card-premium{position:relative;overflow:hidden;min-height:590px;border-radius:30px;background:radial-gradient(circle at 80% 10%,rgba(255,214,0,.18),transparent 34%),radial-gradient(circle at 10% 85%,rgba(210,35,42,.18),transparent 36%),linear-gradient(145deg,#111722 0%,#182231 55%,#0c1119 100%);border:1px solid rgba(255,214,0,.22);box-shadow:0 24px 55px rgba(0,0,0,.42);padding:18px;isolation:isolate}
+.player-card-premium:before{content:"";position:absolute;inset:-30% 45% 45% -25%;background:linear-gradient(135deg,rgba(255,214,0,.16),transparent 60%);transform:rotate(-12deg);z-index:-1}.player-card-premium:after{content:"";position:absolute;right:-80px;bottom:-100px;width:260px;height:260px;border-radius:50%;background:rgba(205,29,39,.14);filter:blur(5px);z-index:-1}
+.player-card-club{display:flex;justify-content:space-between;align-items:center;padding:5px 5px 12px;color:#f8fafc;font-size:11px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase}.player-card-club-mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(145deg,#ffd600,#d51f2d);display:grid;place-items:center;color:#111;font-weight:900;box-shadow:0 6px 18px rgba(0,0,0,.28)}
+.player-card-photo{position:relative;height:285px;border-radius:24px;overflow:hidden;background:linear-gradient(180deg,#273448,#111722);border:1px solid rgba(255,255,255,.08)}.player-card-photo img{width:100%;height:100%;object-fit:cover;display:block}.player-card-photo-default{height:100%;display:grid;place-items:center;font-size:88px;color:#a8b4c5}.player-card-number{position:absolute;right:16px;bottom:8px;font-size:92px;line-height:.8;font-weight:900;color:rgba(255,255,255,.13);letter-spacing:-7px;text-shadow:0 8px 25px rgba(0,0,0,.25)}
+.player-card-main{padding:18px 8px 10px}.player-card-name{font-size:28px;font-weight:900;line-height:.95;text-transform:uppercase;color:#fff}.player-card-surname{font-size:24px;font-weight:800;line-height:1.05;text-transform:uppercase;color:#ffd600;margin-top:4px}.player-card-position{font-size:13px;color:#aeb9c8;margin-top:9px;text-transform:uppercase;font-weight:800;letter-spacing:1px}.player-card-captain{display:none;margin-top:10px;width:max-content;padding:6px 10px;border-radius:999px;background:#ffd600;color:#111;font-size:11px;font-weight:900}.player-card-captain.show{display:inline-flex}.player-card-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:14px 6px 6px;border-top:1px solid rgba(255,255,255,.1);margin-top:8px}.player-card-stat{text-align:center}.player-card-stat strong{display:block;font-size:20px;color:#fff}.player-card-stat span{display:block;margin-top:3px;font-size:9px;color:#9eabba;text-transform:uppercase;font-weight:800}.player-card-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:0 7px;color:#9eabba;font-size:10px;text-transform:uppercase;letter-spacing:1.2px;font-weight:800}.player-card-footer strong{color:#fff}
+.player-editor-panel{background:rgba(24,34,49,.75);border:1px solid rgba(255,255,255,.07);border-radius:24px;padding:22px}.editor-field{margin-bottom:16px}.editor-field label{display:block;color:#aeb9c8;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;margin:0 0 7px 4px}.editor-field input,.editor-field select{width:100%;height:52px;border:1px solid rgba(255,255,255,.07);border-radius:15px;background:#182536;color:#fff;padding:0 15px;font-size:16px;outline:none}.editor-field input:focus,.editor-field select:focus{border-color:#ffd600;box-shadow:0 0 0 3px rgba(255,214,0,.1)}.editor-inline{display:grid;grid-template-columns:110px 1fr;gap:14px}
+.captain-row{display:flex;align-items:center;justify-content:space-between;background:#182536;border-radius:15px;padding:14px 16px;margin:5px 0 22px}.captain-row span{font-weight:800}.captain-switch{position:relative;width:52px;height:30px}.captain-switch input{opacity:0;width:0;height:0}.captain-slider{position:absolute;inset:0;border-radius:30px;background:#334155;cursor:pointer;transition:.2s}.captain-slider:before{content:"";position:absolute;width:22px;height:22px;left:4px;top:4px;border-radius:50%;background:#fff;transition:.2s}.captain-switch input:checked+.captain-slider{background:#ffd600}.captain-switch input:checked+.captain-slider:before{transform:translateX(22px);background:#111}
+.stats-editor-premium{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:22px}.stat-control{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;background:#182536;border:1px solid rgba(255,255,255,.05);border-radius:16px;padding:13px}.stat-control-label{font-size:12px;font-weight:800;color:#b5c0ce;text-transform:uppercase}.stat-control-value{display:flex;align-items:center;gap:7px}.stat-step{width:32px;height:32px;border:0;border-radius:10px;background:#26384e;color:#fff;font-size:20px;cursor:pointer}.stat-step:hover{background:#3a4e66}.stat-number{min-width:34px;text-align:center;font-size:19px;font-weight:900;color:#ffd600}.editor-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px}.editor-actions button{min-height:52px;border:0;border-radius:15px;font-size:15px;font-weight:900;cursor:pointer}.editor-save{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff}.editor-delete{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff}.editor-photo-actions{display:flex;gap:10px;margin-top:10px}.editor-photo-actions button{flex:1}@media(max-width:850px){.player-editor-layout{grid-template-columns:1fr}.player-card-premium{max-width:430px;margin:0 auto;width:100%}.player-editor-panel{padding:18px}.stats-editor-premium{grid-template-columns:1fr}}
+
+
+/*======================================================
+PHOTO CROP EDITOR V1
+======================================================*/
+.photo-crop-modal{position:fixed;inset:0;z-index:12000;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.78);backdrop-filter:blur(10px)}
+.photo-crop-modal.show{display:flex}
+.photo-crop-dialog{width:min(720px,100%);max-height:94vh;overflow:auto;background:#121B29;border:1px solid rgba(255,214,0,.22);border-radius:26px;box-shadow:0 30px 90px rgba(0,0,0,.55);padding:20px}
+.photo-crop-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.photo-crop-head h3{font-size:20px;margin:0}
+.photo-crop-close{width:42px;height:42px;border:0;border-radius:12px;background:#223247;color:#fff;font-size:22px;cursor:pointer}
+.photo-crop-stage{width:100%;height:min(58vh,500px);background:#080D15;border-radius:20px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.photo-crop-stage img{display:block;max-width:100%;max-height:100%;}
+.photo-crop-tools{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.photo-crop-tools button{height:48px;border:0;border-radius:14px;background:#223247;color:#fff;font-size:15px;font-weight:700;cursor:pointer}
+.photo-crop-tools button:hover{background:#304156}
+.photo-crop-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.photo-crop-actions button{height:54px;border:0;border-radius:16px;font-size:16px;font-weight:800;cursor:pointer}
+.photo-crop-cancel{background:#223247;color:#fff}
+.photo-crop-apply{background:#FFD600;color:#111}
+.editor-photo-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.editor-photo-actions .secondaryButton{margin-top:0;flex:1;min-width:170px}
+@media(max-width:600px){.photo-crop-modal{padding:10px}.photo-crop-dialog{padding:14px;border-radius:20px}.photo-crop-stage{height:54vh}.photo-crop-tools,.photo-crop-actions{grid-template-columns:1fr 1fr}.photo-crop-head h3{font-size:18px}}
+
+
+/* PLAYER CARD PREMIUM - REUSABLE V1 */
+.rs-player-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px;margin-top:22px}
+.rs-player-card{position:relative;overflow:hidden;min-height:360px;border-radius:24px;background:linear-gradient(145deg,#111722 0%,#1b2636 58%,#251b16 100%);border:1px solid rgba(255,214,0,.16);box-shadow:0 18px 45px rgba(0,0,0,.30);cursor:pointer;transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease}
+.rs-player-card:hover{transform:translateY(-5px);border-color:rgba(255,214,0,.45);box-shadow:0 25px 55px rgba(0,0,0,.42)}
+.rs-player-card:active{transform:scale(.985)}
+.rs-player-card:before{content:"";position:absolute;inset:auto -20% 35% -20%;height:150px;background:radial-gradient(circle,rgba(255,214,0,.18),transparent 65%);pointer-events:none}
+.rs-player-card:after{content:"";position:absolute;top:0;right:0;width:42%;height:3px;background:linear-gradient(90deg,#ffd600,#e53935);border-radius:0 0 0 8px}
+.rs-player-card-photo{position:relative;height:225px;overflow:hidden;background:linear-gradient(180deg,#26364b,#0e141e)}
+.rs-player-card-photo img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease}
+.rs-player-card:hover .rs-player-card-photo img{transform:scale(1.035)}
+.rs-player-card-default{height:100%;display:grid;place-items:center;font-size:76px;color:#8f9caf}
+.rs-player-card-number{position:absolute;right:13px;bottom:5px;font-size:78px;line-height:.8;font-weight:950;color:rgba(255,255,255,.14);letter-spacing:-6px;text-shadow:0 7px 20px rgba(0,0,0,.3)}
+.rs-player-card-body{position:relative;padding:15px 16px 12px}
+.rs-player-card-club{display:flex;align-items:center;justify-content:space-between;color:#ffd600;font-size:10px;font-weight:900;letter-spacing:1.2px;margin-bottom:7px}
+.rs-player-card-club-mark{display:grid;place-items:center;width:27px;height:27px;border-radius:9px;background:linear-gradient(135deg,#ffd600,#e53935);color:#111;font-size:9px}
+.rs-player-card-name{font-size:20px;font-weight:950;line-height:1.02;text-transform:uppercase;letter-spacing:-.3px}
+.rs-player-card-position{margin-top:6px;color:#b9c3d0;font-size:11px;font-weight:800;text-transform:uppercase}
+.rs-player-card-captain{display:inline-flex;margin-top:9px;padding:5px 8px;border-radius:9px;background:rgba(255,214,0,.12);color:#ffd600;font-size:10px;font-weight:900}
+.rs-player-card-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:11px 16px 14px;border-top:1px solid rgba(255,255,255,.07);margin-top:4px}
+.rs-player-card-stat{text-align:center}.rs-player-card-stat strong{display:block;font-size:16px;color:#fff}.rs-player-card-stat span{display:block;margin-top:2px;color:#8995a6;font-size:8px;font-weight:800;text-transform:uppercase}
+.rs-player-card-footer{display:flex;justify-content:space-between;align-items:center;padding:9px 16px 13px;color:#758195;font-size:8px;font-weight:900;letter-spacing:.8px}.rs-player-card-footer strong{color:#a9b3c2}
+@media(max-width:600px){.rs-player-card-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.rs-player-card{min-height:315px;border-radius:19px}.rs-player-card-photo{height:175px}.rs-player-card-number{font-size:62px}.rs-player-card-body{padding:12px}.rs-player-card-name{font-size:16px}.rs-player-card-stats{padding:9px 10px 11px}.rs-player-card-footer{padding:8px 12px 10px}}
+@media(max-width:390px){.rs-player-card-grid{grid-template-columns:1fr}.rs-player-card{max-width:330px;width:100%;margin:auto}}
+
 </style>
 <link
 rel="stylesheet"
 href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+
+<style id="firebase-storage-v1-css">
+.photoUploadStatus{
+    min-height:20px;
+    margin-top:8px;
+    font-size:13px;
+    color:var(--text2,#9aa6b2);
+    text-align:center;
+}
+.photoUploadStatus.success{color:#7ee787}
+.photoUploadStatus.error{color:#ff8b8b}
+</style>
+
 </head>
 
 <body>
@@ -2189,6 +2262,7 @@ id="detailNumber">
         📷 Cambiar foto
 
     </button>
+<div id="photoUploadStatus" class="photoUploadStatus" aria-live="polite"></div>
 
 </div>
 <button
@@ -2293,162 +2367,56 @@ Editar jugador
 
 </div>
 <div id="adminPlayerEditor" style="display:none;">
-
-    <button id="editorBackBtn" class="backButton">
-
-        ← Volver
-
-    </button>
-
-    <div class="pageTitle">
-
-        <h2>Editar jugador</h2>
-
-        <p>Datos del jugador</p>
-
-    </div>
-
-    <div class="photoEditor">
-
-        <img id="adminPlayerPhoto"
-             class="playerPhoto"
-             src="">
-
-        <div id="adminPlayerAvatar"
-             class="playerPhotoDefault">
-
-            👤
-
-        </div>
-
-        <button
-            id="changePhotoAdmin"
-            class="secondaryButton">
-
-            📷 Cambiar foto
-
-        </button>
-
-    </div>
-
-    <input
-        id="editName"
-        class="adminInput"
-        placeholder="Nombre">
-
-    <input
-        id="editSurname"
-        class="adminInput"
-        placeholder="Apellido">
-
-    <input
-        id="editNumber"
-        class="adminInput"
-        type="number"
-        placeholder="Dorsal">
-
-    <select
-        id="editPosition"
-        class="adminInput">
-
-        <option value="POR">Portero</option>
-
-        <option value="LD">Lateral Derecho</option>
-
-        <option value="DFC">Defensa Central</option>
-
-        <option value="LI">Lateral Izquierdo</option>
-
-        <option value="MCD">Medio Defensivo</option>
-
-        <option value="MC">Medio Centro</option>
-
-        <option value="MCO">Media Punta</option>
-
-        <option value="ED">Extremo Derecho</option>
-
-        <option value="EI">Extremo Izquierdo</option>
-
-        <option value="DC">Delantero</option>
-
-    </select>
-
-    <label class="captainCheck">
-
-        <input
-            id="editCaptain"
-            type="checkbox">
-
-        Capitán
-
-</label>
-
-
+<button id="editorBackBtn" class="backButton">← Volver</button>
+<div class="pageTitle"><h2 id="editorTitle">Nuevo jugador</h2><p>Editor Player Card Premium</p></div>
+<div class="player-editor-layout">
+<div class="player-card-premium" id="playerCardPreview">
+<div class="player-card-club"><span>RAMÓN SICART</span><span class="player-card-club-mark">RS</span></div>
+<div class="player-card-photo"><img id="cardPhoto" src="" alt="Jugador" style="display:none;"><div id="cardPhotoDefault" class="player-card-photo-default">👤</div><div id="cardNumber" class="player-card-number">0</div></div>
+<div class="player-card-main"><div id="cardName" class="player-card-name">NOMBRE</div><div id="cardSurname" class="player-card-surname">APELLIDO</div><div id="cardPosition" class="player-card-position">DELANTERO</div><div id="cardCaptain" class="player-card-captain">👑 CAPITÁN</div></div>
+<div class="player-card-stats"><div class="player-card-stat"><strong id="cardMatches">0</strong><span>Partidos</span></div><div class="player-card-stat"><strong id="cardGoals">0</strong><span>Goles</span></div><div class="player-card-stat"><strong id="cardAssists">0</strong><span>Asist.</span></div><div class="player-card-stat"><strong id="cardYellow">0</strong><span>Amarillas</span></div><div class="player-card-stat"><strong id="cardRed">0</strong><span>Rojas</span></div></div>
+<div class="player-card-footer"><span>PLAYER CARD</span><strong>RS CLUB MANAGER</strong></div>
+</div>
+<div class="player-editor-panel">
+<div class="editor-field"><label>Nombre</label><input id="editName" placeholder="Nombre" autocomplete="off"></div>
+<div class="editor-field"><label>Primer apellido</label><input id="editSurname" placeholder="Apellido" autocomplete="off"></div>
+<div class="editor-inline"><div class="editor-field"><label>Dorsal</label><input id="editNumber" type="number" min="0" max="99" placeholder="10"></div><div class="editor-field"><label>Posición</label><select id="editPosition"><option value="POR">Portero</option><option value="LD">Lateral Derecho</option><option value="DFC">Defensa Central</option><option value="LI">Lateral Izquierdo</option><option value="MCD">Medio Defensivo</option><option value="MC">Medio Centro</option><option value="MCO">Media Punta</option><option value="ED">Extremo Derecho</option><option value="EI">Extremo Izquierdo</option><option value="DC">Delantero</option></select></div></div>
+<div class="captain-row"><span>👑 Capitán</span><label class="captain-switch"><input id="editCaptain" type="checkbox"><span class="captain-slider"></span></label></div>
 <h3 class="editorSectionTitle">📊 Estadísticas</h3>
-
-<div class="statsEditor">
-
-    <div class="statEditor">
-
-        <span>🏟 Partidos</span>
-
-        <input id="editMatches" type="number" min="0" class="adminInputSmall">
-
-    </div>
-
-    <div class="statEditor">
-
-        <span>⚽ Goles</span>
-
-        <input id="editGoals" type="number" min="0" class="adminInputSmall">
-
-    </div>
-
-    <div class="statEditor">
-
-        <span>🅰 Asistencias</span>
-
-        <input id="editAssists" type="number" min="0" class="adminInputSmall">
-
-    </div>
-
-    <div class="statEditor">
-
-        <span>🟨 Amarillas</span>
-
-        <input id="editYellow" type="number" min="0" class="adminInputSmall">
-
-    </div>
-
-    <div class="statEditor">
-
-        <span>🟥 Rojas</span>
-
-        <input id="editRed" type="number" min="0" class="adminInputSmall">
-
-    </div>
-
-</div>
-
-    <button
-        id="savePlayerBtn"
-        class="primaryButton">
-
-        💾 Guardar cambios
-
-    </button>
-
-    <button
-        id="deletePlayerBtn"
-        class="secondaryButton">
-
-        🗑 Eliminar jugador
-
-    </button>
-
-</div>
+<div class="stats-editor-premium">
+<div class="stat-control"><span class="stat-control-label">🏟 Partidos</span><div class="stat-control-value"><button type="button" class="stat-step" data-stat="matches" data-step="-1">−</button><strong id="editMatchesValue" class="stat-number">0</strong><button type="button" class="stat-step" data-stat="matches" data-step="1">+</button></div></div>
+<div class="stat-control"><span class="stat-control-label">⚽ Goles</span><div class="stat-control-value"><button type="button" class="stat-step" data-stat="goals" data-step="-1">−</button><strong id="editGoalsValue" class="stat-number">0</strong><button type="button" class="stat-step" data-stat="goals" data-step="1">+</button></div></div>
+<div class="stat-control"><span class="stat-control-label">🅰 Asistencias</span><div class="stat-control-value"><button type="button" class="stat-step" data-stat="assists" data-step="-1">−</button><strong id="editAssistsValue" class="stat-number">0</strong><button type="button" class="stat-step" data-stat="assists" data-step="1">+</button></div></div>
+<div class="stat-control"><span class="stat-control-label">🟨 Amarillas</span><div class="stat-control-value"><button type="button" class="stat-step" data-stat="yellow" data-step="-1">−</button><strong id="editYellowValue" class="stat-number">0</strong><button type="button" class="stat-step" data-stat="yellow" data-step="1">+</button></div></div>
+<div class="stat-control"><span class="stat-control-label">🟥 Rojas</span><div class="stat-control-value"><button type="button" class="stat-step" data-stat="red" data-step="-1">−</button><strong id="editRedValue" class="stat-number">0</strong><button type="button" class="stat-step" data-stat="red" data-step="1">+</button></div></div></div>
+<input type="hidden" id="editMatches" value="0"><input type="hidden" id="editGoals" value="0"><input type="hidden" id="editAssists" value="0"><input type="hidden" id="editYellow" value="0"><input type="hidden" id="editRed" value="0"><input type="hidden" id="editPhoto" value="">
+<div class="editor-photo-actions"><button type="button" id="changePhotoAdmin" class="secondaryButton">📷 Cambiar foto</button><button type="button" id="removePhotoAdmin" class="secondaryButton">✕ Quitar foto</button></div><input type="file" id="playerPhotoInputAdmin" accept="image/*" hidden>
+<div class="editor-actions" style="margin-top:18px;"><button type="button" id="savePlayerBtn" class="editor-save">💾 Guardar cambios</button><button type="button" id="deletePlayerBtn" class="editor-delete">🗑 Eliminar jugador</button></div>
+</div></div></div>
 </section>
 
+
+
+
+<div id="photoCropModal" class="photo-crop-modal" aria-hidden="true">
+  <div class="photo-crop-dialog" role="dialog" aria-modal="true" aria-labelledby="photoCropTitle">
+    <div class="photo-crop-head">
+      <h3 id="photoCropTitle">📷 Encuadrar foto</h3>
+      <button type="button" id="photoCropClose" class="photo-crop-close" aria-label="Cerrar">×</button>
+    </div>
+    <div class="photo-crop-stage"><img id="photoCropImage" src="" alt="Vista previa de foto"></div>
+    <div class="photo-crop-tools">
+      <button type="button" id="photoZoomOut">− Alejar</button>
+      <button type="button" id="photoZoomIn">＋ Acercar</button>
+      <button type="button" id="photoRotateLeft">↶ Girar</button>
+      <button type="button" id="photoReset">↺ Restablecer</button>
+    </div>
+    <div class="photo-crop-actions">
+      <button type="button" id="photoCropCancel" class="photo-crop-cancel">Cancelar</button>
+      <button type="button" id="photoCropApply" class="photo-crop-apply">✓ Aplicar recorte</button>
+    </div>
+  </div>
+</div>
 
 
 <!-- ======================================================
@@ -2620,8 +2588,23 @@ $("#savePlayerBtn")
 .addEventListener("click",savePlayer);
 $("#deletePlayerBtn")
 .addEventListener("click",deletePlayer);
+    ["editName","editSurname","editNumber","editPosition","editCaptain"].forEach(id=>{$("#"+id).addEventListener("input",syncPlayerCardPreview);$("#"+id).addEventListener("change",syncPlayerCardPreview);});
+    document.querySelectorAll(".stat-step").forEach(button=>{button.addEventListener("click",()=>{const stat=button.dataset.stat,step=Number(button.dataset.step)||0,cap=stat.charAt(0).toUpperCase()+stat.slice(1),current=Number($("#edit"+cap).value)||0;setStat(stat,current+step);});});
+    $("#changePhotoAdmin").addEventListener("click",()=>$("#playerPhotoInputAdmin").click());
+    $("#removePhotoAdmin").addEventListener("click",()=>setEditorPhoto(""));
+    $("#playerPhotoInputAdmin").addEventListener("change",event=>{const file=event.target.files&&event.target.files[0];event.target.value="";if(file)openPhotoCropEditor(file);});
+    $("#photoCropClose").addEventListener("click",closePhotoCropEditor);
+    $("#photoCropCancel").addEventListener("click",closePhotoCropEditor);
+    $("#photoCropApply").addEventListener("click",applyPhotoCrop);
+    $("#photoZoomIn").addEventListener("click",()=>photoCropper&&photoCropper.zoom(.1));
+    $("#photoZoomOut").addEventListener("click",()=>photoCropper&&photoCropper.zoom(-.1));
+    $("#photoRotateLeft").addEventListener("click",()=>photoCropper&&photoCropper.rotate(-90));
+    $("#photoReset").addEventListener("click",()=>photoCropper&&photoCropper.reset());
+    $("#photoCropModal").addEventListener("click",e=>{if(e.target.id==="photoCropModal")closePhotoCropEditor();});
+
 }
 
+document.addEventListener("keydown",e=>{if(e.key==="Escape" && $("#photoCropModal")?.classList.contains("show"))closePhotoCropEditor();});
 document.addEventListener("DOMContentLoaded",init);
 /*======================================================
 PLAYERS
@@ -2713,294 +2696,111 @@ function loadPlayers(){
 updateTeamStats();
 
 }
+function playerCardPremiumHTML(player, action){
+    const photo=player.photo||"";
+    const name=(player.name||"Jugador").toUpperCase();
+    const surname=(player.surname||"").toUpperCase();
+    const position=(Positions[player.position]||player.position||"").toUpperCase();
+    const captain=player.captain?`<div class="rs-player-card-captain">👑 CAPITÁN</div>`:"";
+    const click=action||`openPlayer(${player.id})`;
+    return `<article class="rs-player-card" onclick="${click}" tabindex="0" role="button" aria-label="Abrir perfil de ${name} ${surname}">
+        <div class="rs-player-card-photo">
+            ${photo?`<img src="${photo}" alt="${name} ${surname}" loading="lazy">`:`<div class="rs-player-card-default">👤</div>`}
+            <div class="rs-player-card-number">${player.number??0}</div>
+        </div>
+        <div class="rs-player-card-body">
+            <div class="rs-player-card-club"><span>RAMÓN SICART</span><span class="rs-player-card-club-mark">RS</span></div>
+            <div class="rs-player-card-name">${name}${surname?`<br>${surname}`:""}</div>
+            <div class="rs-player-card-position">${position}</div>
+            ${captain}
+        </div>
+        <div class="rs-player-card-stats">
+            <div class="rs-player-card-stat"><strong>${Number(player.matches)||0}</strong><span>Partidos</span></div>
+            <div class="rs-player-card-stat"><strong>${Number(player.goals)||0}</strong><span>Goles</span></div>
+            <div class="rs-player-card-stat"><strong>${Number(player.assists)||0}</strong><span>Asist.</span></div>
+        </div>
+        <div class="rs-player-card-footer"><span>PLAYER CARD</span><strong>RS CLUB MANAGER</strong></div>
+    </article>`;
+}
 function renderPlayers(players=App.players){
-
-    const grid=$("#playersGrid");
-
-    if(!grid) return;
-
-    grid.innerHTML="";
-
-    players.forEach(player=>{
-
-        grid.innerHTML+=`
-
-        <div class="playerCard"
-     onclick="openPlayer(${player.id})">
-
-    <div class="playerAvatar">
-
-        👤
-
-    </div>
-
-    <div class="playerInfo">
-
-        <div class="playerTop">
-
-            <span class="playerNumber">
-
-                #${player.number}
-
-            </span>
-
-            <span class="playerArrow">
-
-                ›
-
-            </span>
-
-        </div>
-
-        <div class="playerName">
-
-            ${player.name} ${player.surname}
-
-        </div>
-
-        <div class="playerPosition">
-
-            ${Positions[player.position]}
-
-        </div>
-
-        <div class="playerResume">
-
-            🏟 ${player.matches}
-
-            &nbsp;&nbsp;
-
-            ⚽ ${player.goals}
-
-            &nbsp;&nbsp;
-
-            🅰 ${player.assists}
-
-        </div>
-
-    </div>
-
-</div>
-
-        `;
-
-    });
-
+    const grid=$("#playersGrid"); if(!grid) return; grid.innerHTML=""; grid.classList.add("rs-player-card-grid");
+    players.forEach(player=>grid.innerHTML+=playerCardPremiumHTML(player,`openPlayer(${player.id})`));
 }
 function renderAdminPlayers(){
-
-    const list=$("#adminPlayersList");
-
-    if(!list) return;
-
-    list.innerHTML="";
-
-    App.players.forEach(player=>{
-
-        list.innerHTML+=`
-
-        <div
-            class="adminPlayer"
-            onclick="editPlayer(${player.id})">
-
-            <div class="adminPlayerAvatar">
-
-                👤
-
-            </div>
-
-            <div class="adminPlayerInfo">
-
-                <div class="adminPlayerName">
-
-                    #${player.number}
-                    ${player.name}
-                    ${player.surname}
-
-                    ${player.captain ? " 👑" : ""}
-
-                </div>
-
-                <div class="adminPlayerPosition">
-
-                    ${Positions[player.position]}
-
-                </div>
-
-            </div>
-
-            <div class="adminPlayerArrow">
-
-                ›
-
-            </div>
-
-        </div>
-
-        `;
-
-    });
-
+    const list=$("#adminPlayersList"); if(!list) return; list.innerHTML=""; list.classList.add("rs-player-card-grid");
+    App.players.forEach(player=>list.innerHTML+=playerCardPremiumHTML(player,`editPlayer(${player.id})`));
 }
 let editingPlayerId=null;
 
-function editPlayer(id){
-
-    const player=App.players.find(p=>p.id===id);
-
-    if(!player) return;
-
-    editingPlayerId=id;
-
-    $("#adminPlayers").style.display="none";
-
-    $("#adminPlayerEditor").style.display="block";
-
-    $("#editName").value=player.name;
-
-    $("#editSurname").value=player.surname;
-
-    $("#editNumber").value=player.number;
-
-    $("#editPosition").value=player.position;
-
-    $("#editCaptain").checked=player.captain;
-$("#editMatches").value=player.matches;
-
-$("#editGoals").value=player.goals;
-
-$("#editAssists").value=player.assists;
-
-$("#editYellow").value=player.yellow;
-
-$("#editRed").value=player.red;
-
-}
-function newPlayer(){
-
-    editingPlayerId=null;
-
-    $("#adminPlayers").style.display="none";
-
-    $("#adminPlayerEditor").style.display="block";
-
-    $("#editName").value="";
-
-    $("#editSurname").value="";
-
-    $("#editNumber").value="";
-
-    $("#editPosition").value="DC";
-
-    $("#editCaptain").checked=false;
-$("#editMatches").value=0;
-
-$("#editGoals").value=0;
-
-$("#editAssists").value=0;
-
-$("#editYellow").value=0;
-
-$("#editRed").value=0;
-
-}
-function closePlayerEditor(){
-
-    $("#adminPlayerEditor").style.display="none";
-
-    $("#adminPlayers").style.display="block";
-
-}
-function savePlayer(){
-
-    const playerData={
-
-        name:$("#editName").value.trim(),
-
-        surname:$("#editSurname").value.trim(),
-
-        number:Number($("#editNumber").value),
-
-        position:$("#editPosition").value,
-
-        captain:$("#editCaptain").checked,
-
-        photo:"",
-
-    matches:Number($("#editMatches").value),
-
-goals:Number($("#editGoals").value),
-
-assists:Number($("#editAssists").value),
-
-yellow:Number($("#editYellow").value),
-
-red:Number($("#editRed").value),
-
+/*======================================================
+PHOTO CROP EDITOR V1
+======================================================*/
+let photoCropper=null;
+function openPhotoCropEditor(file){
+    const modal=$("#photoCropModal"), image=$("#photoCropImage");
+    if(!modal||!image||!file)return;
+    if(!file.type.startsWith("image/")){alert("Selecciona una imagen válida.");return;}
+    const reader=new FileReader();
+    reader.onload=e=>{
+        image.onload=()=>{
+            if(photoCropper) photoCropper.destroy();
+            photoCropper=new Cropper(image,{aspectRatio:3/4,viewMode:1,dragMode:"move",autoCropArea:.88,background:false,responsive:true,restore:false,checkOrientation:true,zoomOnWheel:true,zoomOnTouch:true,rotatable:true});
+            modal.classList.add("show");
+            modal.setAttribute("aria-hidden","false");
+        };
+        image.src=e.target.result;
     };
-
-    if(playerData.name===""){
-
-        alert("Introduce el nombre del jugador");
-
-        return;
-
-    }
-
-    if(editingPlayerId===null){
-
-        playerData.id=Date.now();
-
-       
-
-        App.players.push(playerData);
-
-    }else{
-
-        const player=App.players.find(p=>p.id===editingPlayerId);
-
-        if(!player) return;
-
-        Object.assign(player,playerData);
-
-    }
-
-    renderPlayers();
-
-    renderAdminPlayers();
-
-    updateTeamStats();
-
-    closePlayerEditor();
-
+    reader.readAsDataURL(file);
 }
-function deletePlayer(){
-
-    if(editingPlayerId===null){
-
-        closePlayerEditor();
-
-        return;
-
-    }
-
-    if(!confirm("¿Eliminar este jugador?")) return;
-
-    App.players=App.players.filter(
-
-        p=>p.id!==editingPlayerId
-
-    );
-
-    renderPlayers();
-
-    renderAdminPlayers();
-
-    updateTeamStats();
-
-    closePlayerEditor();
-
+function closePhotoCropEditor(){
+    const modal=$("#photoCropModal");
+    if(photoCropper){photoCropper.destroy();photoCropper=null;}
+    if(modal){modal.classList.remove("show");modal.setAttribute("aria-hidden","true");}
 }
+function applyPhotoCrop(){
+    if(!photoCropper)return;
+    const canvas=photoCropper.getCroppedCanvas({width:600,height:800,imageSmoothingEnabled:true,imageSmoothingQuality:"high"});
+    if(!canvas)return;
+    setEditorPhoto(canvas.toDataURL("image/jpeg",.88));
+    closePhotoCropEditor();
+}
+
+
+function syncPlayerCardPreview(){
+    const name=$("#editName").value.trim()||"NOMBRE", surname=$("#editSurname").value.trim()||"APELLIDO", number=$("#editNumber").value||"0", position=$("#editPosition").value;
+    $("#cardName").textContent=name.toUpperCase(); $("#cardSurname").textContent=surname.toUpperCase(); $("#cardNumber").textContent=number; $("#cardPosition").textContent=(Positions[position]||position||"").toUpperCase(); $("#cardCaptain").classList.toggle("show",$("#editCaptain").checked);
+    ["matches","goals","assists","yellow","red"].forEach(stat=>{const cap=stat.charAt(0).toUpperCase()+stat.slice(1); $("#card"+cap).textContent=Number($("#edit"+cap).value)||0;});
+}
+function setStat(stat,value){const cap=stat.charAt(0).toUpperCase()+stat.slice(1); value=Math.max(0,Number(value)||0); $("#edit"+cap).value=value; $("#edit"+cap+"Value").textContent=value; syncPlayerCardPreview();}
+function loadEditorStats(player){["matches","goals","assists","yellow","red"].forEach(stat=>setStat(stat,player[stat]||0));}
+function setEditorPhoto(photo){$("#editPhoto").value=photo||""; const img=$("#cardPhoto"),def=$("#cardPhotoDefault"); if(photo){img.src=photo;img.style.display="block";def.style.display="none";}else{img.removeAttribute("src");img.style.display="none";def.style.display="grid";}}
+function editPlayer(id){const player=App.players.find(p=>p.id===id);if(!player)return;editingPlayerId=id;$("#adminPlayers").style.display="none";$("#adminPlayerEditor").style.display="block";$("#editorTitle").textContent="Editar jugador";$("#editName").value=player.name||"";$("#editSurname").value=player.surname||"";$("#editNumber").value=player.number??"";$("#editPosition").value=player.position||"DC";$("#editCaptain").checked=!!player.captain;loadEditorStats(player);setEditorPhoto(player.photo||"");syncPlayerCardPreview();}
+function newPlayer(){editingPlayerId=null;$("#adminPlayers").style.display="none";$("#adminPlayerEditor").style.display="block";$("#editorTitle").textContent="Nuevo jugador";$("#editName").value="";$("#editSurname").value="";$("#editNumber").value="";$("#editPosition").value="DC";$("#editCaptain").checked=false;["matches","goals","assists","yellow","red"].forEach(stat=>setStat(stat,0));setEditorPhoto("");syncPlayerCardPreview();}
+function closePlayerEditor(){$("#adminPlayerEditor").style.display="none";$("#adminPlayers").style.display="block";}
+async function savePlayer(){
+const saveBtn=$("#savePlayerBtn");
+if(saveBtn){saveBtn.disabled=true;saveBtn.textContent="⏳ Guardando...";}
+const status=$("#photoUploadStatus");
+const photoData=$("#editPhoto").value||"";let photoUrl=photoData;
+try {
+    if(status) status.textContent=photoData ? "☁️ Subiendo foto..." : "";
+    if(photoData){
+        const uploadId = editingPlayerId || Date.now();
+        photoUrl = await RSClubStorage.uploadPlayerPhoto(uploadId, photoData);
+    }
+    if(status && photoData) status.textContent="✓ Foto guardada en Firebase Storage";
+} catch(error) {
+    console.error(error);
+    if(status){
+        status.textContent="⚠️ No se pudo subir la foto";
+        status.className="photoUploadStatus error";
+    }
+    alert("No se pudo guardar la foto en Firebase Storage. Revisa las reglas de Storage.");
+    if(saveBtn){saveBtn.disabled=false;saveBtn.textContent="💾 Guardar cambios";}
+    return;
+}
+const playerData={name:$("#editName").value.trim(),surname:$("#editSurname").value.trim(),number:Number($("#editNumber").value)||0,position:$("#editPosition").value,captain:$("#editCaptain").checked,photo:photoUrl,matches:Number($("#editMatches").value)||0,goals:Number($("#editGoals").value)||0,assists:Number($("#editAssists").value)||0,yellow:Number($("#editYellow").value)||0,red:Number($("#editRed").value)||0};if(!playerData.name){alert("Introduce el nombre del jugador");return;}if(editingPlayerId===null){playerData.id=Date.now();App.players.push(playerData);}else{const player=App.players.find(p=>p.id===editingPlayerId);if(!player)return;Object.assign(player,playerData);}renderPlayers();renderAdminPlayers();updateTeamStats();closePlayerEditor();if(saveBtn){saveBtn.disabled=false;saveBtn.textContent="💾 Guardar cambios";}if(status){status.className="photoUploadStatus";}}
+function deletePlayer(){if(editingPlayerId===null){closePlayerEditor();return;}if(!confirm("¿Eliminar este jugador?"))return;App.players=App.players.filter(p=>p.id!==editingPlayerId);renderPlayers();renderAdminPlayers();updateTeamStats();closePlayerEditor();}
 function openAdminPlayers(){
 
     $("#adminHome").style.display="none";
@@ -3244,6 +3044,67 @@ function renderHomeNews(){
 }
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
+<!-- RS CLUB MANAGER V8 · Firebase REAL · Storage -->
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyA2WgBQxFSPWTQMk3NTWBFPc8K5XyCOcDw",
+    authDomain: "club-manager-9a242.firebaseapp.com",
+    databaseURL: "https://club-manager-9a242-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "club-manager-9a242",
+    storageBucket: "club-manager-9a242.firebasestorage.app",
+    messagingSenderId: "931689419367",
+    appId: "1:931689419367:web:b638b313cf639ee8dd3ac2",
+    measurementId: "G-92X2B8ESXS"
+};
+
+let RSClubFirebaseApp = null;
+let RSClubFirebaseStorage = null;
+
+try {
+    if (window.firebase && typeof firebase.initializeApp === "function") {
+        RSClubFirebaseApp = firebase.apps && firebase.apps.length
+            ? firebase.app()
+            : firebase.initializeApp(firebaseConfig);
+
+        RSClubFirebaseStorage = firebase.storage(RSClubFirebaseApp);
+        console.log("RS Club Manager · Firebase Storage conectado");
+    }
+} catch (error) {
+    console.error("Firebase Storage no pudo inicializarse:", error);
+}
+</script>
+
+<script>
+window.RSClubStorage = window.RSClubStorage || {};
+
+RSClubStorage.uploadPlayerPhoto = async function(playerId, dataUrl) {
+
+    if (!dataUrl) return "";
+
+    if (!RSClubFirebaseStorage) {
+        throw new Error("Firebase Storage no está disponible.");
+    }
+
+    const response = await fetch(dataUrl);
+    const blob = await response.blob();
+
+    const ref = RSClubFirebaseStorage
+        .ref()
+        .child(`players/${playerId}/profile.jpg`);
+
+    await ref.put(blob, {
+        contentType: "image/jpeg",
+        cacheControl: "public,max-age=31536000"
+    });
+
+    return await ref.getDownloadURL();
+};
+</script>
+
+
 </body>
 
 </html>
