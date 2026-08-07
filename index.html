@@ -2564,9 +2564,9 @@ menuItems.forEach(item=>{
 INICIALIZACIÓN
 ======================================================*/
 
-function init(){
+async function init(){
 
-    loadPlayers();
+    await loadPlayers();
 
     renderHome();
 
@@ -2687,14 +2687,66 @@ EI:"Extremo Izquierdo",
 DC:"Delantero"
 
 };
-function loadPlayers(){
+async function loadPlayers(){
 
-    App.players=[...DemoPlayers];
+    try{
 
-    renderPlayers();
+        if(!Firebase.db) throw new Error("Firestore no está inicializado.");
 
-updateTeamStats();
+        const snapshot = await Firebase.db.collection("players").get();
 
+        if(snapshot.empty){
+
+            // Primera carga: persistimos la plantilla inicial existente.
+            const batch = Firebase.db.batch();
+
+            DemoPlayers.forEach(player=>{
+                const ref = Firebase.db.collection("players").doc(String(player.id));
+                batch.set(ref, player);
+            });
+
+            await batch.commit();
+
+            App.players = [...DemoPlayers];
+
+        }else{
+
+            App.players = snapshot.docs.map(doc=>({
+                ...doc.data(),
+                id: isNaN(Number(doc.id)) ? doc.id : Number(doc.id)
+            }));
+
+        }
+
+        renderPlayers();
+        renderAdminPlayers();
+        updateTeamStats();
+
+    }catch(error){
+
+        console.error("No se pudieron cargar los jugadores desde Firebase:", error);
+
+        // Fallback local para no dejar la aplicación vacía.
+        const cached = localStorage.getItem("rsClubManagerPlayers");
+
+        if(cached){
+
+            try{
+                App.players = JSON.parse(cached);
+            }catch{
+                App.players = [...DemoPlayers];
+            }
+
+        }else{
+
+            App.players = [...DemoPlayers];
+
+        }
+
+        renderPlayers();
+        renderAdminPlayers();
+        updateTeamStats();
+    }
 }
 function playerCardPremiumHTML(player, action){
     const photo=player.photo||"";
@@ -2777,6 +2829,37 @@ function setEditorPhoto(photo){$("#editPhoto").value=photo||""; const img=$("#ca
 function editPlayer(id){const player=App.players.find(p=>p.id===id);if(!player)return;editingPlayerId=id;$("#adminPlayers").style.display="none";$("#adminPlayerEditor").style.display="block";$("#editorTitle").textContent="Editar jugador";$("#editName").value=player.name||"";$("#editSurname").value=player.surname||"";$("#editNumber").value=player.number??"";$("#editPosition").value=player.position||"DC";$("#editCaptain").checked=!!player.captain;loadEditorStats(player);setEditorPhoto(player.photo||"");syncPlayerCardPreview();}
 function newPlayer(){editingPlayerId=null;$("#adminPlayers").style.display="none";$("#adminPlayerEditor").style.display="block";$("#editorTitle").textContent="Nuevo jugador";$("#editName").value="";$("#editSurname").value="";$("#editNumber").value="";$("#editPosition").value="DC";$("#editCaptain").checked=false;["matches","goals","assists","yellow","red"].forEach(stat=>setStat(stat,0));setEditorPhoto("");syncPlayerCardPreview();}
 function closePlayerEditor(){$("#adminPlayerEditor").style.display="none";$("#adminPlayers").style.display="block";}
+
+async function persistPlayerToFirebase(playerData){
+
+    if(!Firebase.db) throw new Error("Firestore no está inicializado.");
+
+    await Firebase.db
+        .collection("players")
+        .doc(String(playerData.id))
+        .set(playerData, {merge:true});
+
+    localStorage.setItem(
+        "rsClubManagerPlayers",
+        JSON.stringify(App.players)
+    );
+}
+
+async function deletePlayerFromFirebase(playerId){
+
+    if(!Firebase.db) throw new Error("Firestore no está inicializado.");
+
+    await Firebase.db
+        .collection("players")
+        .doc(String(playerId))
+        .delete();
+
+    localStorage.setItem(
+        "rsClubManagerPlayers",
+        JSON.stringify(App.players)
+    );
+}
+
 async function savePlayer(){
 const saveBtn=$("#savePlayerBtn");
 if(saveBtn){saveBtn.disabled=true;saveBtn.textContent="⏳ Guardando...";}
@@ -2799,8 +2882,80 @@ try {
     if(saveBtn){saveBtn.disabled=false;saveBtn.textContent="💾 Guardar cambios";}
     return;
 }
-const playerData={name:$("#editName").value.trim(),surname:$("#editSurname").value.trim(),number:Number($("#editNumber").value)||0,position:$("#editPosition").value,captain:$("#editCaptain").checked,photo:photoUrl,matches:Number($("#editMatches").value)||0,goals:Number($("#editGoals").value)||0,assists:Number($("#editAssists").value)||0,yellow:Number($("#editYellow").value)||0,red:Number($("#editRed").value)||0};if(!playerData.name){alert("Introduce el nombre del jugador");return;}if(editingPlayerId===null){playerData.id=Date.now();App.players.push(playerData);}else{const player=App.players.find(p=>p.id===editingPlayerId);if(!player)return;Object.assign(player,playerData);}renderPlayers();renderAdminPlayers();updateTeamStats();closePlayerEditor();if(saveBtn){saveBtn.disabled=false;saveBtn.textContent="💾 Guardar cambios";}if(status){status.className="photoUploadStatus";}}
-function deletePlayer(){if(editingPlayerId===null){closePlayerEditor();return;}if(!confirm("¿Eliminar este jugador?"))return;App.players=App.players.filter(p=>p.id!==editingPlayerId);renderPlayers();renderAdminPlayers();updateTeamStats();closePlayerEditor();}
+const playerData={name:$("#editName").value.trim(),surname:$("#editSurname").value.trim(),number:Number($("#editNumber").value)||0,position:$("#editPosition").value,captain:$("#editCaptain").checked,photo:photoUrl,matches:Number($("#editMatches").value)||0,goals:Number($("#editGoals").value)||0,assists:Number($("#editAssists").value)||0,yellow:Number($("#editYellow").value)||0,red:Number($("#editRed").value)||0};if(!playerData.name){alert("Introduce el nombre del jugador");return;}if(editingPlayerId===null){
+    playerData.id=Date.now();
+    App.players.push(playerData);
+}else{
+    const player=App.players.find(p=>p.id===editingPlayerId);
+    if(!player)return;
+    Object.assign(player,playerData);
+}
+
+try{
+
+    await persistPlayerToFirebase(playerData);
+
+}catch(error){
+
+    console.error("Error guardando jugador en Firebase:",error);
+
+    // Keep a local backup so a refresh does not immediately lose the edit.
+    localStorage.setItem(
+        "rsClubManagerPlayers",
+        JSON.stringify(App.players)
+    );
+
+    alert("El jugador se ha guardado localmente, pero Firebase no ha aceptado el cambio. Revisa las reglas de Firestore.");
+}
+
+renderPlayers();
+renderAdminPlayers();
+updateTeamStats();
+closePlayerEditor();
+
+if(saveBtn){
+    saveBtn.disabled=false;
+    saveBtn.textContent="💾 Guardar cambios";
+}
+
+if(status){
+    status.className="photoUploadStatus";
+}
+}
+async function deletePlayer(){
+
+    if(editingPlayerId===null){
+        closePlayerEditor();
+        return;
+    }
+
+    if(!confirm("¿Eliminar este jugador?")) return;
+
+    const deletedId = editingPlayerId;
+
+    App.players = App.players.filter(p=>p.id!==deletedId);
+
+    try{
+
+        await deletePlayerFromFirebase(deletedId);
+
+    }catch(error){
+
+        console.error("Error eliminando jugador de Firebase:",error);
+
+        localStorage.setItem(
+            "rsClubManagerPlayers",
+            JSON.stringify(App.players)
+        );
+
+        alert("El jugador se ha eliminado localmente, pero Firebase no ha aceptado el cambio.");
+    }
+
+    renderPlayers();
+    renderAdminPlayers();
+    updateTeamStats();
+    closePlayerEditor();
+}
 function openAdminPlayers(){
 
     $("#adminHome").style.display="none";
