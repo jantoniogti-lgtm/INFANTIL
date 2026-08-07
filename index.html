@@ -2566,43 +2566,82 @@ INICIALIZACIÓN
 
 async function init(){
 
-    await loadPlayers();
+    // Bind the UI first. Firebase must never block navigation.
+    const search = $("#searchPlayer");
+    if(search) search.addEventListener("input",filterPlayers);
 
+    const adminPlayersButton = document.querySelector('[data-admin="players"]');
+    if(adminPlayersButton) adminPlayersButton.addEventListener("click",openAdminPlayers);
+
+    const adminBack = $("#adminBackBtn");
+    if(adminBack) adminBack.addEventListener("click",closeAdminPlayers);
+
+    const newPlayerBtn = $("#newPlayerBtn");
+    if(newPlayerBtn) newPlayerBtn.addEventListener("click",newPlayer);
+
+    const editorBack = $("#editorBackBtn");
+    if(editorBack) editorBack.addEventListener("click",closePlayerEditor);
+
+    const saveBtn = $("#savePlayerBtn");
+    if(saveBtn) saveBtn.addEventListener("click",savePlayer);
+
+    const deleteBtn = $("#deletePlayerBtn");
+    if(deleteBtn) deleteBtn.addEventListener("click",deletePlayer);
+
+    ["editName","editSurname","editNumber","editPosition","editCaptain"].forEach(id=>{
+        const el=$("#"+id);
+        if(el){
+            el.addEventListener("input",syncPlayerCardPreview);
+            el.addEventListener("change",syncPlayerCardPreview);
+        }
+    });
+
+    document.querySelectorAll(".stat-step").forEach(button=>{
+        button.addEventListener("click",()=>{
+            const stat=button.dataset.stat;
+            const step=Number(button.dataset.step)||0;
+            const cap=stat.charAt(0).toUpperCase()+stat.slice(1);
+            const field=$("#edit"+cap);
+            if(!field) return;
+            const current=Number(field.value)||0;
+            setStat(stat,current+step);
+        });
+    });
+
+    const changePhoto=$("#changePhotoAdmin");
+    if(changePhoto) changePhoto.addEventListener("click",()=>$("#playerPhotoInputAdmin")?.click());
+
+    const removePhoto=$("#removePhotoAdmin");
+    if(removePhoto) removePhoto.addEventListener("click",()=>setEditorPhoto(""));
+
+    const photoInput=$("#playerPhotoInputAdmin");
+    if(photoInput) photoInput.addEventListener("change",event=>{
+        const file=event.target.files&&event.target.files[0];
+        event.target.value="";
+        if(file) openPhotoCropEditor(file);
+    });
+
+    $("#photoCropClose")?.addEventListener("click",closePhotoCropEditor);
+    $("#photoCropCancel")?.addEventListener("click",closePhotoCropEditor);
+    $("#photoCropApply")?.addEventListener("click",applyPhotoCrop);
+    $("#photoZoomIn")?.addEventListener("click",()=>photoCropper&&photoCropper.zoom(.1));
+    $("#photoZoomOut")?.addEventListener("click",()=>photoCropper&&photoCropper.zoom(-.1));
+    $("#photoRotateLeft")?.addEventListener("click",()=>photoCropper&&photoCropper.rotate(-90));
+    $("#photoReset")?.addEventListener("click",()=>photoCropper&&photoCropper.reset());
+    $("#photoCropModal")?.addEventListener("click",e=>{
+        if(e.target.id==="photoCropModal") closePhotoCropEditor();
+    });
+
+    renderPlayers();
+    renderAdminPlayers();
+    updateTeamStats();
     renderHome();
-
     showPage("home");
 
-    $("#searchPlayer").addEventListener("input",filterPlayers);
-document
-.querySelector('[data-admin="players"]')
-.addEventListener("click",openAdminPlayers);
-
-$("#adminBackBtn")
-.addEventListener("click",closeAdminPlayers);
-$("#newPlayerBtn")
-.addEventListener("click",newPlayer);
-
-$("#editorBackBtn")
-.addEventListener("click",closePlayerEditor);
-$("#savePlayerBtn")
-.addEventListener("click",savePlayer);
-$("#deletePlayerBtn")
-.addEventListener("click",deletePlayer);
-    ["editName","editSurname","editNumber","editPosition","editCaptain"].forEach(id=>{$("#"+id).addEventListener("input",syncPlayerCardPreview);$("#"+id).addEventListener("change",syncPlayerCardPreview);});
-    document.querySelectorAll(".stat-step").forEach(button=>{button.addEventListener("click",()=>{const stat=button.dataset.stat,step=Number(button.dataset.step)||0,cap=stat.charAt(0).toUpperCase()+stat.slice(1),current=Number($("#edit"+cap).value)||0;setStat(stat,current+step);});});
-    $("#changePhotoAdmin").addEventListener("click",()=>$("#playerPhotoInputAdmin").click());
-    $("#removePhotoAdmin").addEventListener("click",()=>setEditorPhoto(""));
-    $("#playerPhotoInputAdmin").addEventListener("change",event=>{const file=event.target.files&&event.target.files[0];event.target.value="";if(file)openPhotoCropEditor(file);});
-    $("#photoCropClose").addEventListener("click",closePhotoCropEditor);
-    $("#photoCropCancel").addEventListener("click",closePhotoCropEditor);
-    $("#photoCropApply").addEventListener("click",applyPhotoCrop);
-    $("#photoZoomIn").addEventListener("click",()=>photoCropper&&photoCropper.zoom(.1));
-    $("#photoZoomOut").addEventListener("click",()=>photoCropper&&photoCropper.zoom(-.1));
-    $("#photoRotateLeft").addEventListener("click",()=>photoCropper&&photoCropper.rotate(-90));
-    $("#photoReset").addEventListener("click",()=>photoCropper&&photoCropper.reset());
-    $("#photoCropModal").addEventListener("click",e=>{if(e.target.id==="photoCropModal")closePhotoCropEditor();});
-
+    // Load Firebase in the background; navigation remains usable.
+    await loadPlayers();
 }
+
 
 document.addEventListener("keydown",e=>{if(e.key==="Escape" && $("#photoCropModal")?.classList.contains("show"))closePhotoCropEditor();});
 document.addEventListener("DOMContentLoaded",init);
@@ -2611,58 +2650,216 @@ PLAYERS
 ======================================================*/
 
 const DemoPlayers=[
-
 {
     id:1,
     number:1,
-    name:"Roger",
+    name:"Arnau",
     surname:"",
     position:"POR",
     photo:"",
     captain:false,
-
-    matches:24,
+    matches:0,
     goals:0,
     assists:0,
-
     yellow:0,
     red:0
 },
-
 {
     id:2,
+    number:2,
+    name:"Amjad",
+    surname:"",
+    position:"DFC",
+    photo:"",
+    captain:false,
+    matches:0,
+    goals:0,
+    assists:0,
+    yellow:0,
+    red:0
+},
+{
+    id:3,
+    number:3,
+    name:"Adri",
+    surname:"",
+    position:"LI",
+    photo:"",
+    captain:false,
+    matches:0,
+    goals:0,
+    assists:0,
+    yellow:0,
+    red:0
+},
+{
+    id:4,
+    number:4,
+    name:"Alex",
+    surname:"",
+    position:"DFC",
+    photo:"",
+    captain:false,
+    matches:0,
+    goals:0,
+    assists:0,
+    yellow:0,
+    red:0
+},
+{
+    id:7,
     number:7,
     name:"Axel",
     surname:"",
     position:"ED",
     photo:"",
     captain:false,
-
-    matches:24,
-    goals:12,
-    assists:8,
-
-    yellow:2,
+    matches:0,
+    goals:0,
+    assists:0,
+    yellow:0,
     red:0
 },
-
 {
-    id:3,
+    id:9,
+    number:9,
+    name:"Roger",
+    surname:"",
+    position:"DC",
+    photo:"",
+    captain:false,
+    matches:0,
+    goals:0,
+    assists:0,
+    yellow:0,
+    red:0
+},
+{
+    id:10,
     number:10,
     name:"Gerard",
     surname:"Ródenes",
     position:"DC",
     photo:"",
     captain:true,
-
-    matches:24,
+    matches:0,
     goals:39,
     assists:11,
-
     yellow:2,
     red:0
-}
-
+},
+{
+    id:11,
+    number:11,
+    name:"Jimy",
+    surname:"",
+    position:"EI",
+    photo:"",
+    captain:false,
+    matches:0,
+    goals:0,
+    assists:0,
+    yellow:0,
+    red:0
+},
+{
+    id:12,
+    number:12,
+    name:"Luca",
+    surname:"",
+    position:"MC",
+    photo:"",
+    captain:false,
+    matches:0,
+    goals:0,
+    assists:0,
+    yellow:0,
+    red:0
+},
+{
+    id:14,
+    number:14,
+    name:"Eloy",
+    surname:"",
+    position:"MC",
+    photo:"",
+    captain:false,
+    matches:0,
+    goals:0,
+    assists:0,
+    yellow:0,
+    red:0
+},
+{
+    id:15,
+    number:15,
+    name:"Nico",
+    surname:"",
+    position:"DFC",
+    photo:"",
+    captain:false,
+    matches:0,
+    goals:0,
+    assists:0,
+    yellow:0,
+    red:0
+},
+{
+    id:19,
+    number:19,
+    name:"Nil",
+    surname:"",
+    position:"ED",
+    photo:"",
+    captain:false,
+    matches:0,
+    goals:0,
+    assists:0,
+    yellow:0,
+    red:0
+},
+{
+    id:20,
+    number:20,
+    name:"Pablo",
+    surname:"",
+    position:"MC",
+    photo:"",
+    captain:false,
+    matches:0,
+    goals:0,
+    assists:0,
+    yellow:0,
+    red:0
+},
+{
+    id:21,
+    number:21,
+    name:"Roger T.",
+    surname:"",
+    position:"EI",
+    photo:"",
+    captain:false,
+    matches:0,
+    goals:0,
+    assists:0,
+    yellow:0,
+    red:0
+},
+{
+    id:24,
+    number:24,
+    name:"Adrià S.",
+    surname:"",
+    position:"DFC",
+    photo:"",
+    captain:false,
+    matches:0,
+    goals:0,
+    assists:0,
+    yellow:0,
+    red:0
+},
 ];
 const Positions={
 
@@ -2689,20 +2886,43 @@ DC:"Delantero"
 };
 async function loadPlayers(){
 
+    // Paint something immediately so a Firebase/network delay can never
+    // leave Plantilla/Admin apparently empty.
+    const cached = localStorage.getItem("rsClubManagerPlayers");
+
+    if(cached){
+        try{
+            const parsed = JSON.parse(cached);
+            if(Array.isArray(parsed) && parsed.length){
+                App.players = parsed;
+                renderPlayers();
+                renderAdminPlayers();
+                updateTeamStats();
+            }
+        }catch(error){
+            console.warn("Cache local de jugadores inválida:", error);
+        }
+    }
+
     try{
 
         if(!Firebase.db) throw new Error("Firestore no está inicializado.");
 
         const snapshot = await Firebase.db.collection("players").get();
 
+        const remote = snapshot.docs.map(doc=>({
+            ...doc.data(),
+            id: isNaN(Number(doc.id)) ? doc.id : Number(doc.id)
+        }));
+
+        // If the database is empty, bootstrap the complete current squad.
         if(snapshot.empty){
 
-            // Primera carga: persistimos la plantilla inicial existente.
             const batch = Firebase.db.batch();
 
             DemoPlayers.forEach(player=>{
                 const ref = Firebase.db.collection("players").doc(String(player.id));
-                batch.set(ref, player);
+                batch.set(ref, player, {merge:true});
             });
 
             await batch.commit();
@@ -2711,43 +2931,61 @@ async function loadPlayers(){
 
         }else{
 
-            App.players = snapshot.docs.map(doc=>({
-                ...doc.data(),
-                id: isNaN(Number(doc.id)) ? doc.id : Number(doc.id)
-            }));
+            // Merge the existing Firebase data with the complete local
+            // squad. Existing Firebase records always win.
+            const byId = new Map(remote.map(p=>[String(p.id), p]));
 
+            DemoPlayers.forEach(base=>{
+                const key = String(base.id);
+                if(!byId.has(key)) byId.set(key, base);
+            });
+
+            App.players = [...byId.values()];
+
+            // Persist only missing bootstrap players. Never delete remote data.
+            const missing = DemoPlayers.filter(base =>
+                !remote.some(p=>String(p.id)===String(base.id))
+            );
+
+            if(missing.length){
+
+                const batch = Firebase.db.batch();
+
+                missing.forEach(player=>{
+                    const ref = Firebase.db.collection("players").doc(String(player.id));
+                    batch.set(ref, player, {merge:true});
+                });
+
+                await batch.commit();
+            }
         }
 
-        renderPlayers();
-        renderAdminPlayers();
-        updateTeamStats();
+        localStorage.setItem(
+            "rsClubManagerPlayers",
+            JSON.stringify(App.players)
+        );
 
     }catch(error){
 
-        console.error("No se pudieron cargar los jugadores desde Firebase:", error);
+        console.error("No se pudieron cargar los jugadores desde Firebase:",error);
 
-        // Fallback local para no dejar la aplicación vacía.
-        const cached = localStorage.getItem("rsClubManagerPlayers");
-
-        if(cached){
-
-            try{
-                App.players = JSON.parse(cached);
-            }catch{
-                App.players = [...DemoPlayers];
-            }
-
-        }else{
-
+        // If Firebase fails, retain the cache; otherwise restore the full
+        // bootstrap squad. This is only a fallback and never erases Firebase.
+        if(!App.players.length){
             App.players = [...DemoPlayers];
-
         }
 
-        renderPlayers();
-        renderAdminPlayers();
-        updateTeamStats();
+        localStorage.setItem(
+            "rsClubManagerPlayers",
+            JSON.stringify(App.players)
+        );
     }
+
+    renderPlayers();
+    renderAdminPlayers();
+    updateTeamStats();
 }
+
 function playerCardPremiumHTML(player, action){
     const photo=player.photo||"";
     const name=(player.name||"Jugador").toUpperCase();
@@ -2983,9 +3221,9 @@ function updateTeamStats(){
 
     App.players.forEach(player=>{
 
-        goals+=player.goals;
+        goals+=Number(player.goals)||0;
 
-        assists+=player.assists;
+        assists+=Number(player.assists)||0;
 
     });
 
