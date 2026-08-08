@@ -2887,24 +2887,17 @@ DC:"Delantero"
 async function loadPlayers(){
     const raw=localStorage.getItem("rsClubManagerPlayers");
     let localPlayers=[];
-
     try{
         const parsed=raw?JSON.parse(raw):[];
         if(Array.isArray(parsed)) localPlayers=parsed;
     }catch(e){}
 
-    if(localPlayers.length){
-        App.players=localPlayers;
-    }else{
-        App.players=[...DemoPlayers];
-        localStorage.setItem("rsClubManagerPlayers",JSON.stringify(App.players));
-    }
-
+    // Show local data immediately while Firebase loads.
+    App.players=localPlayers.length?localPlayers:[...DemoPlayers];
     renderPlayers();
     renderAdminPlayers();
     updateTeamStats();
 
-    // Firebase sync in background; never blank the UI.
     try{
         if(!Firebase.db) throw new Error("Firestore no está inicializado.");
 
@@ -2913,27 +2906,33 @@ async function loadPlayers(){
             new Promise((_,reject)=>setTimeout(()=>reject(new Error("FIREBASE_LOAD_TIMEOUT")),10000))
         ]);
 
-        const remote=snap.docs.map(d=>({...d.data(),id:isNaN(Number(d.id))?d.id:Number(d.id)}));
-        const localMap=new Map(App.players.map(p=>[String(p.id),p]));
+        // FIREBASE IS THE SOURCE OF TRUTH.
+        // Do not let another browser's old localStorage overwrite it.
+        if(!snap.empty){
+            App.players=snap.docs.map(d=>({
+                ...d.data(),
+                id:isNaN(Number(d.id))?d.id:Number(d.id)
+            }));
+        }else if(!localPlayers.length){
+            const batch=Firebase.db.batch();
+            DemoPlayers.forEach(player=>{
+                const ref=Firebase.db.collection("players").doc(String(player.id));
+                batch.set(ref,{...player,updatedAt:Date.now()},{merge:true});
+            });
+            await batch.commit();
+            App.players=[...DemoPlayers];
+        }
 
-        remote.forEach(r=>{
-            const l=localMap.get(String(r.id));
-            if(!l || Number(r.updatedAt||0)>=Number(l.updatedAt||0)){
-                localMap.set(String(r.id),r);
-            }
-        });
-
-        App.players=[...localMap.values()];
         localStorage.setItem("rsClubManagerPlayers",JSON.stringify(App.players));
-
         renderPlayers();
         renderAdminPlayers();
         updateTeamStats();
 
     }catch(error){
-        console.warn("Firebase no disponible; manteniendo jugadores locales.",error);
+        console.warn("Firebase no disponible; usando copia local.",error);
     }
 }
+
 function playerCardPremiumHTML(player, action){
     const photo=player.photo||"";
     const name=(player.name||"Jugador").toUpperCase();
@@ -3042,11 +3041,7 @@ async function deletePlayerFromFirebase(playerId){
 
 async function savePlayer(){
     const saveBtn=$("#savePlayerBtn");
-
-    if(saveBtn){
-        saveBtn.disabled=true;
-        saveBtn.textContent="⏳ Guardando...";
-    }
+    if(saveBtn){saveBtn.disabled=true;saveBtn.textContent="⏳ Guardando en Firebase...";}
 
     const playerData={
         name:$("#editName").value.trim(),
@@ -3069,41 +3064,76 @@ async function savePlayer(){
         return;
     }
 
-    if(editingPlayerId===null){
-        playerData.id=Date.now();
-        App.players.push(playerData);
-    }else{
-        playerData.id=editingPlayerId;
-        const player=App.players.find(p=>String(p.id)===String(editingPlayerId));
-        if(!player){
-            alert("No se ha encontrado el jugador.");
-            if(saveBtn){saveBtn.disabled=false;saveBtn.textContent="💾 Guardar cambios";}
-            return;
-        }
-        Object.assign(player,playerData);
-    }
+    if(editingPlayerId===null) playerData.id=Date.now();
+    else playerData.id=editingPlayerId;
 
-    // GUARDA LOCALMENTE Y ACTUALIZA LAS DOS PANTALLAS INMEDIATAMENTE.
-    localStorage.setItem("rsClubManagerPlayers",JSON.stringify(App.players));
-    renderPlayers();
-    renderAdminPlayers();
-    updateTeamStats();
-
-    closePlayerEditor();
-
-    if(saveBtn){
-        saveBtn.disabled=false;
-        saveBtn.textContent="💾 Guardar cambios";
-    }
-
-    // FIREBASE NO BLOQUEA EL GUARDADO LOCAL NI LA INTERFAZ.
     try{
-        await persistPlayerToFirebase(playerData);
-        console.log("✓ Jugador guardado en Firebase:",playerData.id);
+        if(!Firebase.db) throw new Error("Firestore no está inicializado.");
+
+        const ref=Firebase.db.collection("players").doc(String(playerData.id));
+
+        await Promise.race([
+            ref.set(playerData,{merge:true}),
+            new Promise((_,reject)=>setTimeout(()=>reject(new Error("FIREBASE_WRITE_TIMEOUT")),10000))
+        ]);
+
+        // Verify that Firestore really accepted the new values.
+        const check=await Promise.race([
+            ref.get(),
+            new Promise((_,reject)=>setTimeout(()=>reject(new Error("FIREBASE_VERIFY_TIMEOUT")),5000))
+        ]);
+
+        if(!check.exists) throw new Error("FIRESTORE_VERIFY_NOT_FOUND");
+
+        const saved=check.data();
+        if(
+            String(saved.name||"")!==String(playerData.name) ||
+            Number(saved.number||0)!==Number(playerData.number||0) ||
+            Number(saved.goals||0)!==Number(playerData.goals||0)
+        ){
+            throw new Error("FIRESTORE_VERIFY_MISMATCH");
+        }
+
+        const index=App.players.findIndex(p=>String(p.id)===String(playerData.id));
+        if(index>=0) App.players[index]={...App.players[index],...saved,id:playerData.id};
+        else App.players.push({...playerData,...saved});
+
+        localStorage.setItem("rsClubManagerPlayers",JSON.stringify(App.players));
+        renderPlayers();
+        renderAdminPlayers();
+        updateTeamStats();
+        closePlayerEditor();
+
+        if(saveBtn){saveBtn.disabled=false;saveBtn.textContent="💾 Guardar cambios";}
+
+        console.log("✓ Guardado y verificado en Firebase:",playerData.id);
+
     }catch(error){
-        console.warn("Firebase no pudo guardar ahora. Se conserva la copia local.",error);
+
+        console.error("❌ FIREBASE NO HA GUARDADO EL CAMBIO:",error);
+
+        // Keep current local change as fallback, but clearly tell the user
+        // that it is NOT synchronized to other browsers.
+        const index=App.players.findIndex(p=>String(p.id)===String(playerData.id));
+        if(index>=0) App.players[index]={...App.players[index],...playerData};
+        else App.players.push(playerData);
+
+        localStorage.setItem("rsClubManagerPlayers",JSON.stringify(App.players));
+        renderPlayers();
+        renderAdminPlayers();
+        updateTeamStats();
+
+        if(saveBtn){saveBtn.disabled=false;saveBtn.textContent="💾 Guardar cambios";}
+
+        alert(
+            "⚠️ EL CAMBIO NO SE HA SINCRONIZADO CON FIREBASE.\n\n"+
+            "Se ha guardado solo en este navegador.\n\n"+
+            "Error: "+error.message+
+            "\n\nNo cierres el editor todavía. Necesitamos revisar las reglas de Firestore."
+        );
     }
 }
+
 async function deletePlayer(){
 
     if(editingPlayerId===null){
