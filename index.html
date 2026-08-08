@@ -2885,107 +2885,55 @@ DC:"Delantero"
 
 };
 async function loadPlayers(){
-
-    // Paint something immediately so a Firebase/network delay can never
-    // leave Plantilla/Admin apparently empty.
-    const cached = localStorage.getItem("rsClubManagerPlayers");
-
-    if(cached){
-        try{
-            const parsed = JSON.parse(cached);
-            if(Array.isArray(parsed) && parsed.length){
-                App.players = parsed;
-                renderPlayers();
-                renderAdminPlayers();
-                updateTeamStats();
-            }
-        }catch(error){
-            console.warn("Cache local de jugadores inválida:", error);
-        }
-    }
+    const raw=localStorage.getItem("rsClubManagerPlayers");
+    let localPlayers=[];
 
     try{
+        const parsed=raw?JSON.parse(raw):[];
+        if(Array.isArray(parsed)) localPlayers=parsed;
+    }catch(e){}
 
-        if(!Firebase.db) throw new Error("Firestore no está inicializado.");
-
-        const snapshot = await Firebase.db.collection("players").get();
-
-        const remote = snapshot.docs.map(doc=>({
-            ...doc.data(),
-            id: isNaN(Number(doc.id)) ? doc.id : Number(doc.id)
-        }));
-
-        // If the database is empty, bootstrap the complete current squad.
-        if(snapshot.empty){
-
-            const batch = Firebase.db.batch();
-
-            DemoPlayers.forEach(player=>{
-                const ref = Firebase.db.collection("players").doc(String(player.id));
-                batch.set(ref, player, {merge:true});
-            });
-
-            await batch.commit();
-
-            App.players = [...DemoPlayers];
-
-        }else{
-
-            // Merge the existing Firebase data with the complete local
-            // squad. Existing Firebase records always win.
-            const byId = new Map(remote.map(p=>[String(p.id), p]));
-
-            DemoPlayers.forEach(base=>{
-                const key = String(base.id);
-                if(!byId.has(key)) byId.set(key, base);
-            });
-
-            App.players = [...byId.values()];
-
-            // Persist only missing bootstrap players. Never delete remote data.
-            const missing = DemoPlayers.filter(base =>
-                !remote.some(p=>String(p.id)===String(base.id))
-            );
-
-            if(missing.length){
-
-                const batch = Firebase.db.batch();
-
-                missing.forEach(player=>{
-                    const ref = Firebase.db.collection("players").doc(String(player.id));
-                    batch.set(ref, player, {merge:true});
-                });
-
-                await batch.commit();
-            }
-        }
-
-        localStorage.setItem(
-            "rsClubManagerPlayers",
-            JSON.stringify(App.players)
-        );
-
-    }catch(error){
-
-        console.error("No se pudieron cargar los jugadores desde Firebase:",error);
-
-        // If Firebase fails, retain the cache; otherwise restore the full
-        // bootstrap squad. This is only a fallback and never erases Firebase.
-        if(!App.players.length){
-            App.players = [...DemoPlayers];
-        }
-
-        localStorage.setItem(
-            "rsClubManagerPlayers",
-            JSON.stringify(App.players)
-        );
+    if(localPlayers.length){
+        App.players=localPlayers;
+    }else{
+        App.players=[...DemoPlayers];
+        localStorage.setItem("rsClubManagerPlayers",JSON.stringify(App.players));
     }
 
     renderPlayers();
     renderAdminPlayers();
     updateTeamStats();
-}
 
+    // Firebase sync in background; never blank the UI.
+    try{
+        if(!Firebase.db) throw new Error("Firestore no está inicializado.");
+
+        const snap=await Promise.race([
+            Firebase.db.collection("players").get(),
+            new Promise((_,reject)=>setTimeout(()=>reject(new Error("FIREBASE_LOAD_TIMEOUT")),10000))
+        ]);
+
+        const remote=snap.docs.map(d=>({...d.data(),id:isNaN(Number(d.id))?d.id:Number(d.id)}));
+        const localMap=new Map(App.players.map(p=>[String(p.id),p]));
+
+        remote.forEach(r=>{
+            const l=localMap.get(String(r.id));
+            if(!l || Number(r.updatedAt||0)>=Number(l.updatedAt||0)){
+                localMap.set(String(r.id),r);
+            }
+        });
+
+        App.players=[...localMap.values()];
+        localStorage.setItem("rsClubManagerPlayers",JSON.stringify(App.players));
+
+        renderPlayers();
+        renderAdminPlayers();
+        updateTeamStats();
+
+    }catch(error){
+        console.warn("Firebase no disponible; manteniendo jugadores locales.",error);
+    }
+}
 function playerCardPremiumHTML(player, action){
     const photo=player.photo||"";
     const name=(player.name||"Jugador").toUpperCase();
@@ -3069,20 +3017,14 @@ function newPlayer(){editingPlayerId=null;$("#adminPlayers").style.display="none
 function closePlayerEditor(){$("#adminPlayerEditor").style.display="none";$("#adminPlayers").style.display="block";}
 
 async function persistPlayerToFirebase(playerData){
-
     if(!Firebase.db) throw new Error("Firestore no está inicializado.");
-
-    await Firebase.db
-        .collection("players")
-        .doc(String(playerData.id))
-        .set(playerData, {merge:true});
-
-    localStorage.setItem(
-        "rsClubManagerPlayers",
-        JSON.stringify(App.players)
-    );
+    await Promise.race([
+        Firebase.db.collection("players").doc(String(playerData.id)).set(
+            {...playerData, updatedAt:Date.now()}, {merge:true}
+        ),
+        new Promise((_,reject)=>setTimeout(()=>reject(new Error("FIREBASE_TIMEOUT")),10000))
+    ]);
 }
-
 async function deletePlayerFromFirebase(playerId){
 
     if(!Firebase.db) throw new Error("Firestore no está inicializado.");
@@ -3099,9 +3041,7 @@ async function deletePlayerFromFirebase(playerId){
 }
 
 async function savePlayer(){
-
     const saveBtn=$("#savePlayerBtn");
-    const status=$("#photoUploadStatus");
 
     if(saveBtn){
         saveBtn.disabled=true;
@@ -3115,23 +3055,20 @@ async function savePlayer(){
         position:$("#editPosition").value,
         captain:$("#editCaptain").checked,
         photo:$("#editPhoto").value||"",
-        matches:Number($("#editMatches").value)||0,
-        goals:Number($("#editGoals").value)||0,
-        assists:Number($("#editAssists").value)||0,
-        yellow:Number($("#editYellow").value)||0,
-        red:Number($("#editRed").value)||0
+        matches:Number($("#editMatches")?.value)||0,
+        goals:Number($("#editGoals")?.value)||0,
+        assists:Number($("#editAssists")?.value)||0,
+        yellow:Number($("#editYellow")?.value)||0,
+        red:Number($("#editRed")?.value)||0,
+        updatedAt:Date.now()
     };
 
     if(!playerData.name){
-        alert("Introduce el nombre del jugador");
-        if(saveBtn){
-            saveBtn.disabled=false;
-            saveBtn.textContent="💾 Guardar cambios";
-        }
+        alert("Introduce el nombre del jugador.");
+        if(saveBtn){saveBtn.disabled=false;saveBtn.textContent="💾 Guardar cambios";}
         return;
     }
 
-    // New ID or existing ID.
     if(editingPlayerId===null){
         playerData.id=Date.now();
         App.players.push(playerData);
@@ -3140,123 +3077,14 @@ async function savePlayer(){
         const player=App.players.find(p=>String(p.id)===String(editingPlayerId));
         if(!player){
             alert("No se ha encontrado el jugador.");
-            if(saveBtn){
-                saveBtn.disabled=false;
-                saveBtn.textContent="💾 Guardar cambios";
-            }
+            if(saveBtn){saveBtn.disabled=false;saveBtn.textContent="💾 Guardar cambios";}
             return;
         }
         Object.assign(player,playerData);
     }
 
-    // FIRST: save the actual player data.
-    // This must never depend on Storage/CORS.
-    try{
-
-        await persistPlayerToFirebase(playerData);
-
-        localStorage.setItem(
-            "rsClubManagerPlayers",
-            JSON.stringify(App.players)
-        );
-
-    }catch(error){
-
-        console.error("Error guardando jugador en Firestore:",error);
-
-        localStorage.setItem(
-            "rsClubManagerPlayers",
-            JSON.stringify(App.players)
-        );
-
-        alert(
-            "Los cambios se han guardado en este dispositivo, " +
-            "pero Firebase no ha aceptado el cambio. " +
-            "Revisa las reglas de Firestore."
-        );
-
-        renderPlayers();
-        renderAdminPlayers();
-        updateTeamStats();
-
-        if(saveBtn){
-            saveBtn.disabled=false;
-            saveBtn.textContent="💾 Guardar cambios";
-        }
-
-        return;
-    }
-
-    // SECOND: upload the photo separately.
-    // A Storage/CORS error must NOT cancel the player save.
-    if(playerData.photo){
-
-        try{
-
-            if(status){
-                status.className="photoUploadStatus";
-                status.textContent="☁️ Subiendo foto...";
-            }
-
-            const uploadPromise=RSClubStorage.uploadPlayerPhoto(
-                playerData.id,
-                playerData.photo
-            );
-
-            const timeoutPromise=new Promise((_,reject)=>
-                setTimeout(
-                    ()=>reject(new Error("TIMEOUT_STORAGE")),
-                    12000
-                )
-            );
-
-            const photoUrl=await Promise.race([
-                uploadPromise,
-                timeoutPromise
-            ]);
-
-            if(photoUrl && photoUrl!==playerData.photo){
-
-                playerData.photo=photoUrl;
-
-                const player=App.players.find(
-                    p=>String(p.id)===String(playerData.id)
-                );
-
-                if(player) player.photo=photoUrl;
-
-                // Update ONLY the photo URL after successful Storage upload.
-                await persistPlayerToFirebase({
-                    id:playerData.id,
-                    photo:photoUrl
-                });
-
-                localStorage.setItem(
-                    "rsClubManagerPlayers",
-                    JSON.stringify(App.players)
-                );
-            }
-
-            if(status){
-                status.className="photoUploadStatus success";
-                status.textContent="✓ Foto guardada";
-            }
-
-        }catch(error){
-
-            console.warn(
-                "La foto no pudo subirse a Firebase Storage:",
-                error
-            );
-
-            // Player data remains saved.
-            if(status){
-                status.className="photoUploadStatus error";
-                status.textContent="⚠️ Jugador guardado · foto pendiente";
-            }
-        }
-    }
-
+    // GUARDA LOCALMENTE Y ACTUALIZA LAS DOS PANTALLAS INMEDIATAMENTE.
+    localStorage.setItem("rsClubManagerPlayers",JSON.stringify(App.players));
     renderPlayers();
     renderAdminPlayers();
     updateTeamStats();
@@ -3267,8 +3095,15 @@ async function savePlayer(){
         saveBtn.disabled=false;
         saveBtn.textContent="💾 Guardar cambios";
     }
-}
 
+    // FIREBASE NO BLOQUEA EL GUARDADO LOCAL NI LA INTERFAZ.
+    try{
+        await persistPlayerToFirebase(playerData);
+        console.log("✓ Jugador guardado en Firebase:",playerData.id);
+    }catch(error){
+        console.warn("Firebase no pudo guardar ahora. Se conserva la copia local.",error);
+    }
+}
 async function deletePlayer(){
 
     if(editingPlayerId===null){
