@@ -2884,52 +2884,144 @@ EI:"Extremo Izquierdo",
 DC:"Delantero"
 
 };
+let playersRealtimeBound = false;
+
+function applyPlayersFromRemote(value){
+    if(!value) return;
+
+    const remote = Array.isArray(value)
+        ? value.filter(Boolean)
+        : Object.values(value).filter(Boolean);
+
+    if(!remote.length) return;
+
+    App.players = remote.map(p=>({
+        ...p,
+        id:isNaN(Number(p.id)) ? p.id : Number(p.id)
+    })).sort((a,b)=>(Number(a.number)||0)-(Number(b.number)||0));
+
+    localStorage.setItem(
+        "rsClubManagerPlayers",
+        JSON.stringify(App.players)
+    );
+
+    renderPlayers();
+    renderAdminPlayers();
+    updateTeamStats();
+}
+
+async function migrateFirestorePlayersToRTDB(){
+    if(!Firebase.db || !Firebase.playersRef) return false;
+
+    const snap = await Firebase.db.collection("players").get();
+    if(snap.empty) return false;
+
+    const remote = {};
+    snap.docs.forEach(doc=>{
+        const data = doc.data();
+        const id = isNaN(Number(doc.id)) ? doc.id : Number(doc.id);
+        remote[String(id)] = {...data,id:id};
+    });
+
+    await Firebase.playersRef.set(remote);
+    applyPlayersFromRemote(remote);
+    console.log("✓ Jugadores migrados de Firestore a Realtime Database.");
+    return true;
+}
+
+function startPlayersRealtimeSync(){
+
+    if(playersRealtimeBound || !Firebase.playersRef) return;
+
+    playersRealtimeBound = true;
+
+    Firebase.playersRef.on("value", snapshot=>{
+
+        if(!snapshot.exists()){
+            return;
+        }
+
+        applyPlayersFromRemote(snapshot.val());
+
+        console.log("✓ Plantilla sincronizada desde Firebase Realtime Database.");
+
+    }, error=>{
+        console.error("Realtime Database error:",error);
+    });
+}
+
 async function loadPlayers(){
+
+    // Immediate local display while Firebase loads.
     const raw=localStorage.getItem("rsClubManagerPlayers");
     let localPlayers=[];
+
     try{
         const parsed=raw?JSON.parse(raw):[];
         if(Array.isArray(parsed)) localPlayers=parsed;
     }catch(e){}
 
-    // Show local data immediately while Firebase loads.
-    App.players=localPlayers.length?localPlayers:[...DemoPlayers];
+    App.players=localPlayers.length ? localPlayers : [...DemoPlayers];
+
     renderPlayers();
     renderAdminPlayers();
     updateTeamStats();
 
     try{
-        if(!Firebase.db) throw new Error("Firestore no está inicializado.");
 
-        const snap=await Promise.race([
-            Firebase.db.collection("players").get(),
-            new Promise((_,reject)=>setTimeout(()=>reject(new Error("FIREBASE_LOAD_TIMEOUT")),10000))
+        if(!Firebase.playersRef)
+            throw new Error("Realtime Database no está inicializado.");
+
+        const snapshot=await Promise.race([
+            Firebase.playersRef.once("value"),
+            new Promise((_,reject)=>
+                setTimeout(()=>reject(new Error("RTDB_LOAD_TIMEOUT")),10000)
+            )
         ]);
 
-        // FIREBASE IS THE SOURCE OF TRUTH.
-        // Do not let another browser's old localStorage overwrite it.
-        if(!snap.empty){
-            App.players=snap.docs.map(d=>({
-                ...d.data(),
-                id:isNaN(Number(d.id))?d.id:Number(d.id)
-            }));
-        }else if(!localPlayers.length){
-            const batch=Firebase.db.batch();
-            DemoPlayers.forEach(player=>{
-                const ref=Firebase.db.collection("players").doc(String(player.id));
-                batch.set(ref,{...player,updatedAt:Date.now()},{merge:true});
-            });
-            await batch.commit();
-            App.players=[...DemoPlayers];
+        if(snapshot.exists()){
+
+            // Firebase RTDB is authoritative across every browser/device.
+            applyPlayersFromRemote(snapshot.val());
+
+        }else{
+
+            // First V8 load: migrate existing Firestore players if available.
+            let migrated=false;
+
+            try{
+                migrated=await migrateFirestorePlayersToRTDB();
+            }catch(migrationError){
+                console.warn("No se pudo migrar Firestore a RTDB:",migrationError);
+            }
+
+            if(!migrated){
+
+                const bootstrap={};
+
+                DemoPlayers.forEach(player=>{
+                    bootstrap[String(player.id)]={
+                        ...player,
+                        updatedAt:Date.now()
+                    };
+                });
+
+                await Firebase.playersRef.set(bootstrap);
+                applyPlayersFromRemote(bootstrap);
+            }
         }
 
-        localStorage.setItem("rsClubManagerPlayers",JSON.stringify(App.players));
-        renderPlayers();
-        renderAdminPlayers();
-        updateTeamStats();
+        startPlayersRealtimeSync();
 
     }catch(error){
-        console.warn("Firebase no disponible; usando copia local.",error);
+
+        console.error("Firebase Realtime Database no disponible:",error);
+
+        // Local fallback only if Firebase is unavailable.
+        localStorage.setItem(
+            "rsClubManagerPlayers",
+            JSON.stringify(App.players)
+        );
     }
 }
 
@@ -3016,22 +3108,45 @@ function newPlayer(){editingPlayerId=null;$("#adminPlayers").style.display="none
 function closePlayerEditor(){$("#adminPlayerEditor").style.display="none";$("#adminPlayers").style.display="block";}
 
 async function persistPlayerToFirebase(playerData){
-    if(!Firebase.db) throw new Error("Firestore no está inicializado.");
+
+    if(!Firebase.playersRef)
+        throw new Error("Realtime Database no está inicializado.");
+
+    const id=String(playerData.id);
+
     await Promise.race([
-        Firebase.db.collection("players").doc(String(playerData.id)).set(
-            {...playerData, updatedAt:Date.now()}, {merge:true}
-        ),
-        new Promise((_,reject)=>setTimeout(()=>reject(new Error("FIREBASE_TIMEOUT")),10000))
+        Firebase.playersRef.child(id).set({
+            ...playerData,
+            id:playerData.id,
+            updatedAt:Date.now()
+        }),
+        new Promise((_,reject)=>
+            setTimeout(()=>reject(new Error("RTDB_WRITE_TIMEOUT")),10000)
+        )
     ]);
+
+    // Verify the exact record in RTDB.
+    const check=await Promise.race([
+        Firebase.playersRef.child(id).once("value"),
+        new Promise((_,reject)=>
+            setTimeout(()=>reject(new Error("RTDB_VERIFY_TIMEOUT")),5000)
+        )
+    ]);
+
+    if(!check.exists())
+        throw new Error("RTDB_VERIFY_NOT_FOUND");
+
+    return check.val();
 }
+
 async function deletePlayerFromFirebase(playerId){
 
-    if(!Firebase.db) throw new Error("Firestore no está inicializado.");
+    if(!Firebase.playersRef)
+        throw new Error("Realtime Database no está inicializado.");
 
-    await Firebase.db
-        .collection("players")
-        .doc(String(playerId))
-        .delete();
+    await Firebase.playersRef
+        .child(String(playerId))
+        .remove();
 
     localStorage.setItem(
         "rsClubManagerPlayers",
@@ -3040,8 +3155,13 @@ async function deletePlayerFromFirebase(playerId){
 }
 
 async function savePlayer(){
+
     const saveBtn=$("#savePlayerBtn");
-    if(saveBtn){saveBtn.disabled=true;saveBtn.textContent="⏳ Guardando en Firebase...";}
+
+    if(saveBtn){
+        saveBtn.disabled=true;
+        saveBtn.textContent="⏳ Guardando en Firebase...";
+    }
 
     const playerData={
         name:$("#editName").value.trim(),
@@ -3060,77 +3180,81 @@ async function savePlayer(){
 
     if(!playerData.name){
         alert("Introduce el nombre del jugador.");
-        if(saveBtn){saveBtn.disabled=false;saveBtn.textContent="💾 Guardar cambios";}
+        if(saveBtn){
+            saveBtn.disabled=false;
+            saveBtn.textContent="💾 Guardar cambios";
+        }
         return;
     }
 
-    if(editingPlayerId===null) playerData.id=Date.now();
-    else playerData.id=editingPlayerId;
+    playerData.id =
+        editingPlayerId===null
+        ? Date.now()
+        : editingPlayerId;
 
     try{
-        if(!Firebase.db) throw new Error("Firestore no está inicializado.");
 
-        const ref=Firebase.db.collection("players").doc(String(playerData.id));
+        // RTDB FIRST. Only after this succeeds do we update the UI.
+        const saved=await persistPlayerToFirebase(playerData);
 
-        await Promise.race([
-            ref.set(playerData,{merge:true}),
-            new Promise((_,reject)=>setTimeout(()=>reject(new Error("FIREBASE_WRITE_TIMEOUT")),10000))
-        ]);
+        const index=App.players.findIndex(
+            p=>String(p.id)===String(playerData.id)
+        );
 
-        // Verify that Firestore really accepted the new values.
-        const check=await Promise.race([
-            ref.get(),
-            new Promise((_,reject)=>setTimeout(()=>reject(new Error("FIREBASE_VERIFY_TIMEOUT")),5000))
-        ]);
+        const finalPlayer={
+            ...(index>=0?App.players[index]:{}),
+            ...saved,
+            id:playerData.id
+        };
 
-        if(!check.exists) throw new Error("FIRESTORE_VERIFY_NOT_FOUND");
+        if(index>=0) App.players[index]=finalPlayer;
+        else App.players.push(finalPlayer);
 
-        const saved=check.data();
-        if(
-            String(saved.name||"")!==String(playerData.name) ||
-            Number(saved.number||0)!==Number(playerData.number||0) ||
-            Number(saved.goals||0)!==Number(playerData.goals||0)
-        ){
-            throw new Error("FIRESTORE_VERIFY_MISMATCH");
-        }
+        App.players.sort(
+            (a,b)=>(Number(a.number)||0)-(Number(b.number)||0)
+        );
 
-        const index=App.players.findIndex(p=>String(p.id)===String(playerData.id));
-        if(index>=0) App.players[index]={...App.players[index],...saved,id:playerData.id};
-        else App.players.push({...playerData,...saved});
+        localStorage.setItem(
+            "rsClubManagerPlayers",
+            JSON.stringify(App.players)
+        );
 
-        localStorage.setItem("rsClubManagerPlayers",JSON.stringify(App.players));
         renderPlayers();
         renderAdminPlayers();
         updateTeamStats();
+
         closePlayerEditor();
 
-        if(saveBtn){saveBtn.disabled=false;saveBtn.textContent="💾 Guardar cambios";}
+        if(saveBtn){
+            saveBtn.disabled=false;
+            saveBtn.textContent="💾 Guardar cambios";
+        }
 
-        console.log("✓ Guardado y verificado en Firebase:",playerData.id);
+        console.log(
+            "✓ JUGADOR GUARDADO Y VERIFICADO EN REALTIME DATABASE:",
+            playerData.id
+        );
 
     }catch(error){
 
-        console.error("❌ FIREBASE NO HA GUARDADO EL CAMBIO:",error);
+        console.error(
+            "❌ ERROR REALTIME DATABASE AL GUARDAR:",
+            error
+        );
 
-        // Keep current local change as fallback, but clearly tell the user
-        // that it is NOT synchronized to other browsers.
-        const index=App.players.findIndex(p=>String(p.id)===String(playerData.id));
-        if(index>=0) App.players[index]={...App.players[index],...playerData};
-        else App.players.push(playerData);
-
-        localStorage.setItem("rsClubManagerPlayers",JSON.stringify(App.players));
-        renderPlayers();
-        renderAdminPlayers();
-        updateTeamStats();
-
-        if(saveBtn){saveBtn.disabled=false;saveBtn.textContent="💾 Guardar cambios";}
+        if(saveBtn){
+            saveBtn.disabled=false;
+            saveBtn.textContent="💾 Guardar cambios";
+        }
 
         alert(
-            "⚠️ EL CAMBIO NO SE HA SINCRONIZADO CON FIREBASE.\n\n"+
-            "Se ha guardado solo en este navegador.\n\n"+
-            "Error: "+error.message+
-            "\n\nNo cierres el editor todavía. Necesitamos revisar las reglas de Firestore."
+            "⚠️ Firebase no ha podido guardar el jugador.\\n\\n"+
+            "Ahora el error es el REAL de Firebase:\\n\\n"+
+            error.message+
+            "\\n\\nNo se ha hecho pasar por un guardado local."
         );
+
+        return;
     }
 }
 
@@ -3415,6 +3539,7 @@ function renderHomeNews(){
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <!-- RS CLUB MANAGER V8 · Firebase setup basado en versión funcional -->
 <script>
@@ -3431,11 +3556,21 @@ const firebaseConfig = {
 
 const Firebase = {
   db: null,
+  rtdb: null,
   storage: null,
+  playersRef: null,
   init() {
     if (!window.firebase) throw new Error("Firebase SDK no cargado.");
     if (!firebase.apps || !firebase.apps.length) firebase.initializeApp(firebaseConfig);
+
+    // Firestore is kept for compatibility/migration.
     this.db = firebase.firestore();
+
+    // IMPORTANT: player synchronization uses Realtime Database,
+    // exactly like the older working RS Club Manager.
+    this.rtdb = firebase.database();
+    this.playersRef = this.rtdb.ref("clubManagerV8/players");
+
     this.storage = firebase.storage();
   }
 };
