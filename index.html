@@ -3099,67 +3099,176 @@ async function deletePlayerFromFirebase(playerId){
 }
 
 async function savePlayer(){
-const saveBtn=$("#savePlayerBtn");
-if(saveBtn){saveBtn.disabled=true;saveBtn.textContent="⏳ Guardando...";}
-const status=$("#photoUploadStatus");
-const photoData=$("#editPhoto").value||"";let photoUrl=photoData;
-try {
-    if(status) status.textContent=photoData ? "☁️ Subiendo foto..." : "";
-    if(photoData){
-        const uploadId = editingPlayerId || Date.now();
-        photoUrl = await RSClubStorage.uploadPlayerPhoto(uploadId, photoData);
+
+    const saveBtn=$("#savePlayerBtn");
+    const status=$("#photoUploadStatus");
+
+    if(saveBtn){
+        saveBtn.disabled=true;
+        saveBtn.textContent="⏳ Guardando...";
     }
-    if(status && photoData) status.textContent="✓ Foto guardada en Firebase Storage";
-} catch(error) {
-    console.error(error);
-    if(status){
-        status.textContent="⚠️ No se pudo subir la foto";
-        status.className="photoUploadStatus error";
+
+    const playerData={
+        name:$("#editName").value.trim(),
+        surname:$("#editSurname").value.trim(),
+        number:Number($("#editNumber").value)||0,
+        position:$("#editPosition").value,
+        captain:$("#editCaptain").checked,
+        photo:$("#editPhoto").value||"",
+        matches:Number($("#editMatches").value)||0,
+        goals:Number($("#editGoals").value)||0,
+        assists:Number($("#editAssists").value)||0,
+        yellow:Number($("#editYellow").value)||0,
+        red:Number($("#editRed").value)||0
+    };
+
+    if(!playerData.name){
+        alert("Introduce el nombre del jugador");
+        if(saveBtn){
+            saveBtn.disabled=false;
+            saveBtn.textContent="💾 Guardar cambios";
+        }
+        return;
     }
-    alert("No se pudo guardar la foto en Firebase Storage. Revisa las reglas de Storage.");
-    if(saveBtn){saveBtn.disabled=false;saveBtn.textContent="💾 Guardar cambios";}
-    return;
+
+    // New ID or existing ID.
+    if(editingPlayerId===null){
+        playerData.id=Date.now();
+        App.players.push(playerData);
+    }else{
+        playerData.id=editingPlayerId;
+        const player=App.players.find(p=>String(p.id)===String(editingPlayerId));
+        if(!player){
+            alert("No se ha encontrado el jugador.");
+            if(saveBtn){
+                saveBtn.disabled=false;
+                saveBtn.textContent="💾 Guardar cambios";
+            }
+            return;
+        }
+        Object.assign(player,playerData);
+    }
+
+    // FIRST: save the actual player data.
+    // This must never depend on Storage/CORS.
+    try{
+
+        await persistPlayerToFirebase(playerData);
+
+        localStorage.setItem(
+            "rsClubManagerPlayers",
+            JSON.stringify(App.players)
+        );
+
+    }catch(error){
+
+        console.error("Error guardando jugador en Firestore:",error);
+
+        localStorage.setItem(
+            "rsClubManagerPlayers",
+            JSON.stringify(App.players)
+        );
+
+        alert(
+            "Los cambios se han guardado en este dispositivo, " +
+            "pero Firebase no ha aceptado el cambio. " +
+            "Revisa las reglas de Firestore."
+        );
+
+        renderPlayers();
+        renderAdminPlayers();
+        updateTeamStats();
+
+        if(saveBtn){
+            saveBtn.disabled=false;
+            saveBtn.textContent="💾 Guardar cambios";
+        }
+
+        return;
+    }
+
+    // SECOND: upload the photo separately.
+    // A Storage/CORS error must NOT cancel the player save.
+    if(playerData.photo){
+
+        try{
+
+            if(status){
+                status.className="photoUploadStatus";
+                status.textContent="☁️ Subiendo foto...";
+            }
+
+            const uploadPromise=RSClubStorage.uploadPlayerPhoto(
+                playerData.id,
+                playerData.photo
+            );
+
+            const timeoutPromise=new Promise((_,reject)=>
+                setTimeout(
+                    ()=>reject(new Error("TIMEOUT_STORAGE")),
+                    12000
+                )
+            );
+
+            const photoUrl=await Promise.race([
+                uploadPromise,
+                timeoutPromise
+            ]);
+
+            if(photoUrl && photoUrl!==playerData.photo){
+
+                playerData.photo=photoUrl;
+
+                const player=App.players.find(
+                    p=>String(p.id)===String(playerData.id)
+                );
+
+                if(player) player.photo=photoUrl;
+
+                // Update ONLY the photo URL after successful Storage upload.
+                await persistPlayerToFirebase({
+                    id:playerData.id,
+                    photo:photoUrl
+                });
+
+                localStorage.setItem(
+                    "rsClubManagerPlayers",
+                    JSON.stringify(App.players)
+                );
+            }
+
+            if(status){
+                status.className="photoUploadStatus success";
+                status.textContent="✓ Foto guardada";
+            }
+
+        }catch(error){
+
+            console.warn(
+                "La foto no pudo subirse a Firebase Storage:",
+                error
+            );
+
+            // Player data remains saved.
+            if(status){
+                status.className="photoUploadStatus error";
+                status.textContent="⚠️ Jugador guardado · foto pendiente";
+            }
+        }
+    }
+
+    renderPlayers();
+    renderAdminPlayers();
+    updateTeamStats();
+
+    closePlayerEditor();
+
+    if(saveBtn){
+        saveBtn.disabled=false;
+        saveBtn.textContent="💾 Guardar cambios";
+    }
 }
-const playerData={name:$("#editName").value.trim(),surname:$("#editSurname").value.trim(),number:Number($("#editNumber").value)||0,position:$("#editPosition").value,captain:$("#editCaptain").checked,photo:photoUrl,matches:Number($("#editMatches").value)||0,goals:Number($("#editGoals").value)||0,assists:Number($("#editAssists").value)||0,yellow:Number($("#editYellow").value)||0,red:Number($("#editRed").value)||0};if(!playerData.name){alert("Introduce el nombre del jugador");return;}if(editingPlayerId===null){
-    playerData.id=Date.now();
-    App.players.push(playerData);
-}else{
-    const player=App.players.find(p=>p.id===editingPlayerId);
-    if(!player)return;
-    Object.assign(player,playerData);
-}
 
-try{
-
-    await persistPlayerToFirebase(playerData);
-
-}catch(error){
-
-    console.error("Error guardando jugador en Firebase:",error);
-
-    // Keep a local backup so a refresh does not immediately lose the edit.
-    localStorage.setItem(
-        "rsClubManagerPlayers",
-        JSON.stringify(App.players)
-    );
-
-    alert("El jugador se ha guardado localmente, pero Firebase no ha aceptado el cambio. Revisa las reglas de Firestore.");
-}
-
-renderPlayers();
-renderAdminPlayers();
-updateTeamStats();
-closePlayerEditor();
-
-if(saveBtn){
-    saveBtn.disabled=false;
-    saveBtn.textContent="💾 Guardar cambios";
-}
-
-if(status){
-    status.className="photoUploadStatus";
-}
-}
 async function deletePlayer(){
 
     if(editingPlayerId===null){
