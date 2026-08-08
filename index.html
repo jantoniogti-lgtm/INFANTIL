@@ -3157,11 +3157,14 @@ async function deletePlayerFromFirebase(playerId){
 async function savePlayer(){
 
     const saveBtn=$("#savePlayerBtn");
+    const status=$("#photoUploadStatus");
 
     if(saveBtn){
         saveBtn.disabled=true;
-        saveBtn.textContent="⏳ Guardando en Firebase...";
+        saveBtn.textContent="⏳ Guardando...";
     }
+
+    const selectedPhoto=$("#editPhoto").value||"";
 
     const playerData={
         name:$("#editName").value.trim(),
@@ -3169,7 +3172,7 @@ async function savePlayer(){
         number:Number($("#editNumber").value)||0,
         position:$("#editPosition").value,
         captain:$("#editCaptain").checked,
-        photo:$("#editPhoto").value||"",
+        photo:"",
         matches:Number($("#editMatches")?.value)||0,
         goals:Number($("#editGoals")?.value)||0,
         assists:Number($("#editAssists")?.value)||0,
@@ -3194,8 +3197,93 @@ async function savePlayer(){
 
     try{
 
-        // RTDB FIRST. Only after this succeeds do we update the UI.
+        /*
+         * PASO 1
+         * Guardamos primero los datos del jugador en Realtime Database.
+         * La imagen NO se mete dentro de RTDB como Base64.
+         */
+        let existingPhoto="";
+
+        const existing=App.players.find(
+            p=>String(p.id)===String(playerData.id)
+        );
+
+        if(existing) existingPhoto=existing.photo||"";
+
+        if(!selectedPhoto && existingPhoto){
+            playerData.photo=existingPhoto;
+        }
+
         const saved=await persistPlayerToFirebase(playerData);
+
+        /*
+         * PASO 2
+         * Si hay una foto nueva recortada, la subimos a Storage.
+         */
+        if(selectedPhoto){
+
+            if(status){
+                status.className="photoUploadStatus";
+                status.textContent="☁️ Subiendo foto...";
+            }
+
+            try{
+
+                const photoUrl=await Promise.race([
+                    RSClubStorage.uploadPlayerPhoto(
+                        playerData.id,
+                        selectedPhoto
+                    ),
+                    new Promise((_,reject)=>
+                        setTimeout(
+                            ()=>reject(new Error("STORAGE_UPLOAD_TIMEOUT")),
+                            20000
+                        )
+                    )
+                ]);
+
+                if(photoUrl){
+
+                    playerData.photo=photoUrl;
+
+                    /*
+                     * PASO 3
+                     * Guardamos SOLO la URL de Storage en RTDB.
+                     */
+                    const savedWithPhoto=
+                        await persistPlayerToFirebase(playerData);
+
+                    Object.assign(saved,savedWithPhoto);
+
+                    if(status){
+                        status.className="photoUploadStatus success";
+                        status.textContent="✓ Foto subida y guardada";
+                    }
+                }
+
+            }catch(photoError){
+
+                console.error(
+                    "❌ No se pudo subir la foto a Firebase Storage:",
+                    photoError
+                );
+
+                /*
+                 * El jugador ya está guardado.
+                 * Solo la foto queda pendiente.
+                 */
+                if(status){
+                    status.className="photoUploadStatus error";
+                    status.textContent="⚠️ Jugador guardado · foto pendiente";
+                }
+
+                alert(
+                    "El jugador se ha guardado correctamente, "+
+                    "pero la foto no ha podido subirse a Firebase Storage.\n\n"+
+                    "Error: "+photoError.message
+                );
+            }
+        }
 
         const index=App.players.findIndex(
             p=>String(p.id)===String(playerData.id)
@@ -3203,7 +3291,7 @@ async function savePlayer(){
 
         const finalPlayer={
             ...(index>=0?App.players[index]:{}),
-            ...saved,
+            ...playerData,
             id:playerData.id
         };
 
@@ -3211,7 +3299,7 @@ async function savePlayer(){
         else App.players.push(finalPlayer);
 
         App.players.sort(
-            (a,b)=>(Number(a.number)||0)-(Number(b.number)||0)
+            (x,y)=>(Number(x.number)||0)-(Number(y.number)||0)
         );
 
         localStorage.setItem(
@@ -3231,14 +3319,14 @@ async function savePlayer(){
         }
 
         console.log(
-            "✓ JUGADOR GUARDADO Y VERIFICADO EN REALTIME DATABASE:",
+            "✓ JUGADOR + FOTO PROCESADOS:",
             playerData.id
         );
 
     }catch(error){
 
         console.error(
-            "❌ ERROR REALTIME DATABASE AL GUARDAR:",
+            "❌ ERROR GUARDANDO JUGADOR:",
             error
         );
 
@@ -3248,13 +3336,9 @@ async function savePlayer(){
         }
 
         alert(
-            "⚠️ Firebase no ha podido guardar el jugador.\\n\\n"+
-            "Ahora el error es el REAL de Firebase:\\n\\n"+
-            error.message+
-            "\\n\\nNo se ha hecho pasar por un guardado local."
+            "⚠️ No se ha podido guardar el jugador en Firebase.\n\n"+
+            error.message
         );
-
-        return;
     }
 }
 
@@ -3587,20 +3671,34 @@ try {
 window.RSClubStorage = window.RSClubStorage || {};
 
 RSClubStorage.uploadPlayerPhoto = async function(playerId, dataUrl) {
+
   if (!dataUrl) return "";
-  if (!Firebase.storage) throw new Error("Firebase Storage no está inicializado.");
+
+  if (!Firebase.storage)
+    throw new Error("Firebase Storage no está inicializado.");
+
+  if (!String(dataUrl).startsWith("data:image/"))
+    throw new Error("La imagen recortada no es válida.");
 
   const response = await fetch(dataUrl);
   const blob = await response.blob();
 
-  const ref = Firebase.storage.ref().child(`players/${playerId}/profile.jpg`);
+  if (!blob || !blob.size)
+    throw new Error("La imagen está vacía.");
 
-  await ref.put(blob, {
-    contentType: "image/jpeg",
-    cacheControl: "public,max-age=31536000"
+  const ref = Firebase.storage
+    .ref()
+    .child(`players/${playerId}/profile.jpg`);
+
+  const upload=await ref.put(blob,{
+    contentType:"image/jpeg",
+    cacheControl:"public,max-age=31536000"
   });
 
-  return await ref.getDownloadURL();
+  if(!upload || !upload.ref)
+    throw new Error("Firebase Storage no confirmó la subida.");
+
+  return await upload.ref.getDownloadURL();
 };
 </script>
 
