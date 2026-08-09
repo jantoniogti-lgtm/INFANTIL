@@ -3132,19 +3132,6 @@ async function init(){
 document.addEventListener("keydown",e=>{if(e.key==="Escape" && $("#photoCropModal")?.classList.contains("show"))closePhotoCropEditor();});
 document.addEventListener("DOMContentLoaded",init);
 
-/* V24 editor stat controls */
-document.addEventListener("DOMContentLoaded",()=>{
-    document.querySelectorAll(".stat-step").forEach(btn=>{
-        btn.addEventListener("click",()=>{
-            const stat=btn.dataset.stat;
-            const step=Number(btn.dataset.step)||0;
-            const input=$("#edit"+stat.charAt(0).toUpperCase()+stat.slice(1));
-            const current=Number(input?.value)||0;
-            setStat(stat,current+step);
-        });
-    });
-});
-
 /*======================================================
 PLAYERS
 ======================================================*/
@@ -3386,19 +3373,170 @@ DC:"Delantero"
 };
 let playersRealtimeBound = false;
 
+function normalizeFirebasePlayer(raw,index){
+
+    if(!raw) return null;
+
+    const fullName=String(
+        raw.nombre ?? raw.name ?? ""
+    ).trim();
+
+    let name=String(raw.name ?? "").trim();
+    let surname=String(raw.surname ?? "").trim();
+
+    // Existing Firebase uses one "nombre" field with full name.
+    if(!name && fullName){
+
+        const parts=fullName.split(/\s+/);
+
+        name=parts.shift()||"";
+        surname=parts.join(" ");
+
+    }
+
+    const positionMap={
+        "Portero":"POR",
+        "Defensa":"DFC",
+        "Centrocampista":"MC",
+        "Delantero":"DC",
+        "Extremo":"ED",
+        "Medio":"MC"
+    };
+
+    const rawPosition=String(
+        raw.position ?? raw.posicion ?? ""
+    ).trim();
+
+    return {
+        ...raw,
+
+        id: raw.id ?? index,
+        firebaseIndex:index,
+
+        name,
+        surname,
+
+        number:Number(
+            raw.number ?? raw.dorsal ?? 0
+        )||0,
+
+        position:
+            positionMap[rawPosition] ||
+            rawPosition ||
+            "DC",
+
+        captain:Boolean(
+            raw.captain ?? raw.capitan ?? false
+        ),
+
+        photo:String(
+            raw.photo ?? raw.foto ?? ""
+        ),
+
+        matches:Number(
+            raw.matches ?? raw.partidos ?? 0
+        )||0,
+
+        goals:Number(
+            raw.goals ?? raw.goles ?? 0
+        )||0,
+
+        yellow:Number(
+            raw.yellow ?? raw.amarillas ?? 0
+        )||0,
+
+        red:Number(
+            raw.red ?? raw.rojas ?? 0
+        )||0
+    };
+}
+
+function playersToFirebaseArray(players){
+
+    const current=[];
+
+    players.forEach((p,index)=>{
+
+        if(!p) return;
+
+        const firebaseIndex=
+            Number.isInteger(p.firebaseIndex)
+            ? p.firebaseIndex
+            : index;
+
+        current[firebaseIndex]={
+            ...(p.firebaseRaw||{}),
+
+            id:p.id,
+            nombre:
+                `${p.name||""} ${p.surname||""}`
+                .trim(),
+
+            dorsal:Number(p.number)||0,
+
+            posicion:
+                Positions[p.position] ||
+                p.position ||
+                "Delantero",
+
+            capitan:Boolean(p.captain),
+
+            foto:p.photo||"",
+
+            goles:Number(p.goals)||0,
+            amarillas:Number(p.yellow)||0,
+            rojas:Number(p.red)||0,
+
+            // Keep the existing legacy fields.
+            asistencias:Number(
+                p.assists ?? p.asistencias ?? 0
+            )||0,
+
+            convocado:Boolean(
+                p.convocado ?? true
+            ),
+
+            fechaNacimiento:p.fechaNacimiento||"",
+            lesionado:Boolean(p.lesionado),
+            minutos:Number(p.minutos)||0,
+            sancionado:Boolean(p.sancionado),
+
+            updatedAt:p.updatedAt||Date.now()
+        };
+    });
+
+    return current;
+}
+
 function applyPlayersFromRemote(value){
+
     if(!value) return;
 
-    const remote = Array.isArray(value)
-        ? value.filter(Boolean)
-        : Object.values(value).filter(Boolean);
+    const source=Array.isArray(value)
+        ? value
+        : Object.values(value);
+
+    const remote=[];
+
+    source.forEach((raw,index)=>{
+
+        if(!raw) return;
+
+        const p=normalizeFirebasePlayer(raw,index);
+
+        if(p){
+            p.firebaseRaw=raw;
+            remote.push(p);
+        }
+    });
 
     if(!remote.length) return;
 
-    App.players = remote.map(p=>({
-        ...p,
-        id:isNaN(Number(p.id)) ? p.id : Number(p.id)
-    })).sort((a,b)=>(Number(a.number)||0)-(Number(b.number)||0));
+    App.players=remote.sort(
+        (a,b)=>
+            (Number(a.number)||0)-
+            (Number(b.number)||0)
+    );
 
     localStorage.setItem(
         "rsClubManagerPlayers",
@@ -3408,30 +3546,14 @@ function applyPlayersFromRemote(value){
     renderPlayers();
     renderAdminPlayers();
     updateTeamStats();
-
-    // Firebase has just supplied the real player data.
-    // Refresh the Top 3 immediately so the home screen never
-    // remains on the initial "no goals" state.
     renderHomeScorers();
 }
 
+
 async function migrateFirestorePlayersToRTDB(){
-    if(!Firebase.db || !Firebase.playersRef) return false;
-
-    const snap = await Firebase.db.collection("players").get();
-    if(snap.empty) return false;
-
-    const remote = {};
-    snap.docs.forEach(doc=>{
-        const data = doc.data();
-        const id = isNaN(Number(doc.id)) ? doc.id : Number(doc.id);
-        remote[String(id)] = {...data,id:id};
-    });
-
-    await Firebase.playersRef.set(remote);
-    applyPlayersFromRemote(remote);
-    console.log("✓ Jugadores migrados de Firestore a Realtime Database.");
-    return true;
+    // Legacy Firebase path is clubManager/jugadores.
+    // Kept only for compatibility; never overwrites player data.
+    return false;
 }
 
 function startPlayersRealtimeSync(){
@@ -3467,8 +3589,10 @@ async function loadPlayers(){
         console.warn("No se pudo leer la plantilla local:",e);
     }
 
-    // Solo como pantalla provisional mientras Firebase responde.
-    App.players=localPlayers.length ? localPlayers : [...DemoPlayers];
+    // UI provisional. Firebase decide después.
+    App.players=localPlayers.length
+        ? localPlayers
+        : [...DemoPlayers];
 
     renderPlayers();
     renderAdminPlayers();
@@ -3478,27 +3602,52 @@ async function loadPlayers(){
     try{
 
         if(!Firebase.playersRef)
-            throw new Error("Realtime Database no está inicializado.");
+            throw new Error("Firebase Realtime Database no está inicializado.");
 
         const snapshot=await Firebase.playersRef.once("value");
+        const remoteValue=snapshot.val();
 
         if(snapshot.exists()){
 
-            const remoteValue=snapshot.val();
+            const source=Array.isArray(remoteValue)
+                ? remoteValue
+                : Object.values(remoteValue||{});
 
-            const remotePlayers=Array.isArray(remoteValue)
-                ? remoteValue.filter(Boolean)
-                : (
-                    remoteValue &&
-                    typeof remoteValue==="object"
-                    ? Object.values(remoteValue).filter(Boolean)
-                    : []
-                );
+            const remotePlayers=source.filter(Boolean);
 
             if(remotePlayers.length){
 
-                // RTDB contiene la plantilla real: esta es la fuente principal.
-                applyPlayersFromRemote(remoteValue);
+                /*
+                 * Si tenemos cambios locales recientes, son los cambios
+                 * que el usuario acaba de guardar y que todavía no estaban
+                 * en la base antigua. Los sincronizamos una sola vez.
+                 */
+                const localHasRecentChanges=
+                    localPlayers.length &&
+                    localPlayers.some(
+                        p=>Number(p.updatedAt)>0
+                    );
+
+                if(localHasRecentChanges){
+
+                    const localArray=playersToFirebaseArray(localPlayers);
+
+                    await Firebase.playersRef.set(localArray);
+
+                    applyPlayersFromRemote(localArray);
+
+                    console.log(
+                        "✓ Cambios locales recientes sincronizados con Firebase."
+                    );
+
+                }else{
+
+                    applyPlayersFromRemote(remoteValue);
+
+                    console.log(
+                        "✓ Plantilla cargada desde clubManager/jugadores."
+                    );
+                }
 
                 startPlayersRealtimeSync();
                 return;
@@ -3506,97 +3655,41 @@ async function loadPlayers(){
         }
 
         /*
-         * RTDB está vacío. Antes de usar DemoPlayers buscamos la plantilla
-         * antigua en Firestore, porque las versiones anteriores podían
-         * tener los jugadores allí.
+         * No hay plantilla en Firebase. Solo entonces usamos la plantilla
+         * local si existe. NO escribimos DemoPlayers automáticamente.
          */
-        let recovered=false;
+        if(localPlayers.length){
 
-        if(Firebase.db){
+            const localArray=playersToFirebaseArray(localPlayers);
 
-            try{
+            await Firebase.playersRef.set(localArray);
 
-                const snap=await Firebase.db
-                    .collection("players")
-                    .get();
+            applyPlayersFromRemote(localArray);
 
-                if(!snap.empty){
+            startPlayersRealtimeSync();
 
-                    const remote={};
+            console.log(
+                "✓ Plantilla local recuperada y guardada en Firebase."
+            );
 
-                    snap.docs.forEach(doc=>{
-
-                        const data=doc.data()||{};
-                        const id=isNaN(Number(doc.id))
-                            ? doc.id
-                            : Number(doc.id);
-
-                        remote[String(id)]={
-                            ...data,
-                            id:id
-                        };
-                    });
-
-                    if(Object.keys(remote).length){
-
-                        /*
-                         * Recuperamos la plantilla antigua en RTDB para que,
-                         * desde ahora, todos los navegadores lean el mismo sitio.
-                         */
-                        await Firebase.playersRef.set(remote);
-
-                        applyPlayersFromRemote(remote);
-
-                        recovered=true;
-
-                        console.log(
-                            "✓ Plantilla recuperada de Firestore y sincronizada con RTDB."
-                        );
-                    }
-                }
-
-            }catch(firestoreError){
-
-                console.warn(
-                    "No se pudo recuperar Firestore:",
-                    firestoreError
-                );
-            }
+            return;
         }
 
-        /*
-         * Si no existe plantilla ni en RTDB ni en Firestore, mantenemos la
-         * plantilla local solamente. NO escribimos DemoPlayers a Firebase.
-         */
-        if(!recovered){
-
-            if(!localPlayers.length){
-
-                console.warn(
-                    "No hay plantilla guardada todavía en Firebase."
-                );
-
-            }else{
-
-                App.players=localPlayers;
-
-                renderPlayers();
-                renderAdminPlayers();
-                updateTeamStats();
-                renderHomeScorers();
-            }
-        }
+        console.warn(
+            "Firebase no contiene jugadores todavía."
+        );
 
         startPlayersRealtimeSync();
 
     }catch(error){
 
         console.error(
-            "Error cargando la plantilla desde Firebase:",
+            "❌ Error cargando/guardando plantilla:",
             error
         );
 
         if(localPlayers.length){
+
             App.players=localPlayers;
 
             renderPlayers();
@@ -3715,42 +3808,114 @@ function closePlayerEditor(){$("#adminPlayerEditor").style.display="none";$("#ad
 async function persistPlayerToFirebase(playerData){
 
     if(!Firebase.playersRef)
-        throw new Error("Realtime Database no está inicializado.");
+        throw new Error("Firebase Realtime Database no está inicializado.");
 
-    const id=String(playerData.id);
+    let firebaseIndex=Number.isInteger(playerData.firebaseIndex)
+        ? playerData.firebaseIndex
+        : null;
+
+    if(firebaseIndex===null){
+
+        const current=await Firebase.playersRef.once("value");
+        const arr=Array.isArray(current.val())
+            ? current.val()
+            : [];
+
+        firebaseIndex=arr.length;
+
+        while(
+            firebaseIndex>0 &&
+            arr[firebaseIndex-1]==null
+        ){
+            firebaseIndex--;
+        }
+
+        playerData.firebaseIndex=firebaseIndex;
+    }
+
+    const legacy={
+        id:playerData.id,
+
+        nombre:
+            `${playerData.name||""} ${playerData.surname||""}`
+            .trim(),
+
+        dorsal:Number(playerData.number)||0,
+
+        posicion:
+            Positions[playerData.position] ||
+            playerData.position ||
+            "Delantero",
+
+        capitan:Boolean(playerData.captain),
+
+        foto:playerData.photo||"",
+
+        goles:Number(playerData.goals)||0,
+        amarillas:Number(playerData.yellow)||0,
+        rojas:Number(playerData.red)||0,
+
+        asistencias:0,
+        convocado:true,
+        fechaNacimiento:"",
+        lesionado:false,
+        minutos:0,
+        sancionado:false,
+
+        updatedAt:Date.now()
+    };
 
     await Promise.race([
-        Firebase.playersRef.child(id).set({
-            ...playerData,
-            id:playerData.id,
-            updatedAt:Date.now()
-        }),
+        Firebase.playersRef
+            .child(String(firebaseIndex))
+            .set(legacy),
+
         new Promise((_,reject)=>
-            setTimeout(()=>reject(new Error("RTDB_WRITE_TIMEOUT")),10000)
+            setTimeout(
+                ()=>reject(
+                    new Error("RTDB_WRITE_TIMEOUT")
+                ),
+                10000
+            )
         )
     ]);
 
-    // Verify the exact record in RTDB.
-    const check=await Promise.race([
-        Firebase.playersRef.child(id).once("value"),
-        new Promise((_,reject)=>
-            setTimeout(()=>reject(new Error("RTDB_VERIFY_TIMEOUT")),5000)
-        )
-    ]);
+    const check=await Firebase.playersRef
+        .child(String(firebaseIndex))
+        .once("value");
 
     if(!check.exists())
         throw new Error("RTDB_VERIFY_NOT_FOUND");
 
-    return check.val();
+    return {
+        ...playerData,
+        firebaseIndex,
+        firebaseRaw:check.val()
+    };
 }
+
 
 async function deletePlayerFromFirebase(playerId){
 
     if(!Firebase.playersRef)
-        throw new Error("Realtime Database no está inicializado.");
+        throw new Error("Firebase Realtime Database no está inicializado.");
+
+    const player=App.players.find(
+        p=>String(p.id)===String(playerId)
+    );
+
+    if(!player)
+        return;
+
+    const index=Number.isInteger(player.firebaseIndex)
+        ? player.firebaseIndex
+        : null;
+
+    if(index===null)
+        throw new Error("No se ha podido localizar el jugador en Firebase.");
 
     await Firebase.playersRef
-        .child(String(playerId))
+        .child(String(index))
         .remove();
 
     localStorage.setItem(
@@ -3758,6 +3923,7 @@ async function deletePlayerFromFirebase(playerId){
         JSON.stringify(App.players)
     );
 }
+
 
 async function savePlayer(){
 
@@ -3798,6 +3964,14 @@ async function savePlayer(){
         editingPlayerId===null
         ? Date.now()
         : editingPlayerId;
+
+    const existingPlayer=App.players.find(
+        p=>String(p.id)===String(playerData.id)
+    );
+
+    if(existingPlayer && Number.isInteger(existingPlayer.firebaseIndex)){
+        playerData.firebaseIndex=existingPlayer.firebaseIndex;
+    }
 
     try{
 
@@ -4581,7 +4755,7 @@ const Firebase = {
     // IMPORTANT: player synchronization uses Realtime Database,
     // exactly like the older working RS Club Manager.
     this.rtdb = firebase.database();
-    this.playersRef = this.rtdb.ref("clubManagerV8/players");
+    this.playersRef = this.rtdb.ref("clubManager/jugadores");
 
     this.storage = firebase.storage();
   }
