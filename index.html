@@ -2961,6 +2961,12 @@ async function init(){
         if(e.target.id==="photoCropModal") closePhotoCropEditor();
     });
 
+    // Show the complete built-in roster immediately. Firebase will replace it
+    // automatically when the real data arrives. This prevents a blank roster.
+    if(!Array.isArray(App.players) || !App.players.length){
+        App.players=[...DemoPlayers];
+    }
+
     renderPlayers();
     renderHomeScorers();
     renderAdminPlayers();
@@ -3320,7 +3326,19 @@ async function loadPlayers(){
         if(snapshot.exists()){
 
             // Firebase RTDB is authoritative across every browser/device.
-            applyPlayersFromRemote(snapshot.val());
+            // Never replace the visible roster with an empty node.
+            const remoteValue=snapshot.val();
+            const remotePlayers=Array.isArray(remoteValue)
+                ? remoteValue.filter(Boolean)
+                : (remoteValue && typeof remoteValue === "object"
+                    ? Object.values(remoteValue).filter(Boolean)
+                    : []);
+
+            if(remotePlayers.length){
+                applyPlayersFromRemote(remoteValue);
+            }else{
+                console.warn("Firebase players node vacío; se mantiene la plantilla local.");
+            }
 
         }else{
 
