@@ -3443,52 +3443,88 @@ PLAYER DETAIL
 
 function openPlayer(id){
 
-    const player=App.players.find(p=>p.id===id);
+    const player=App.players.find(
+        p=>String(p.id)===String(id)
+    );
 
     if(!player) return;
 
     $("#detailName").textContent=
-        player.name+" "+player.surname;
+        (player.name||"Jugador")+" "+(player.surname||"");
 
     $("#detailPosition").textContent=
-Positions[player.position];
+        Positions[player.position]||player.position||"";
+
     $("#detailNumber").textContent=
-        player.number;
+        player.number??0;
 
     $("#detailMatches").textContent=
-        player.matches;
+        Number(player.matches)||0;
 
     $("#detailGoals").textContent=
-        player.goals;
+        Number(player.goals)||0;
+
+    $("#detailAssists").textContent=
+        Number(player.assists)||0;
 
     $("#detailYellow").textContent=
-        player.yellow;
+        Number(player.yellow)||0;
 
     $("#detailRed").textContent=
-        player.red;
+        Number(player.red)||0;
 
-   const badge=$("#captainBadge");
+    /*
+     * PLAYER DETAIL PHOTO
+     *
+     * The photo can now be either:
+     * - Firebase Storage URL
+     * - compressed data URL stored in Realtime Database
+     */
+    const photo=$("#playerPhoto");
+    const defaultPhoto=$("#playerAvatarDefault");
 
-if(badge){
+    if(photo && defaultPhoto){
 
-    if(player.captain){
+        if(player.photo){
 
-        badge.innerHTML="👑 CAPITÁN";
+            photo.onload=()=>{
+                photo.style.display="block";
+                defaultPhoto.style.display="none";
+            };
 
-        badge.style.display="inline-flex";
+            photo.onerror=()=>{
+                photo.removeAttribute("src");
+                photo.style.display="none";
+                defaultPhoto.style.display="grid";
+            };
 
-    }else{
+            photo.src=player.photo;
 
-        badge.innerHTML="";
+        }else{
 
-        badge.style.display="none";
-
+            photo.removeAttribute("src");
+            photo.style.display="none";
+            defaultPhoto.style.display="grid";
+        }
     }
 
-}
+    const badge=$("#captainBadge");
+
+    if(badge){
+
+        if(player.captain){
+
+            badge.innerHTML="👑 CAPITÁN";
+            badge.style.display="inline-flex";
+
+        }else{
+
+            badge.innerHTML="";
+            badge.style.display="none";
+        }
+    }
 
     showPage("player");
-
 }
 $("#backPlayersBtn").onclick=()=>{
 
