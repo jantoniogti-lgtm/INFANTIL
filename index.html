@@ -4271,9 +4271,9 @@ function renderHomeNews(){
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <!-- RS CLUB MANAGER V8 · Firebase setup basado en versión funcional -->
 
-/* Wire the new admin module. */
+<script>
+/* Wire the new admin module AFTER Firebase has initialized. */
 document.addEventListener("DOMContentLoaded",()=>{
-
     document.querySelectorAll('.adminCard[data-admin="matchday"]').forEach(btn=>{
         btn.addEventListener("click",openAdminMatchday);
     });
@@ -4286,6 +4286,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
     loadMatchday();
 });
+</script>
 
 <script>
 const firebaseConfig = {
