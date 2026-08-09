@@ -3295,15 +3295,25 @@ function startPlayersRealtimeSync(){
 
 async function loadPlayers(){
 
-    // Immediate local display while Firebase loads.
+    /*
+     * V23 — CARGA SEGURA DE PLANTILLA
+     *
+     * Firebase es la fuente principal.
+     * IMPORTANTE: esta carga NO vuelve a escribir DemoPlayers sobre Firebase.
+     * Si RTDB está vacío, se intenta recuperar Firestore antes de usar la demo.
+     */
+
     const raw=localStorage.getItem("rsClubManagerPlayers");
     let localPlayers=[];
 
     try{
         const parsed=raw?JSON.parse(raw):[];
         if(Array.isArray(parsed)) localPlayers=parsed;
-    }catch(e){}
+    }catch(e){
+        console.warn("No se pudo leer la plantilla local:",e);
+    }
 
+    // Mostrar algo mientras Firebase responde.
     App.players=localPlayers.length ? localPlayers : [...DemoPlayers];
 
     renderPlayers();
@@ -3325,61 +3335,152 @@ async function loadPlayers(){
 
         if(snapshot.exists()){
 
-            // Firebase RTDB is authoritative across every browser/device.
-            // Never replace the visible roster with an empty node.
             const remoteValue=snapshot.val();
+
             const remotePlayers=Array.isArray(remoteValue)
                 ? remoteValue.filter(Boolean)
-                : (remoteValue && typeof remoteValue === "object"
+                : (
+                    remoteValue &&
+                    typeof remoteValue==="object"
                     ? Object.values(remoteValue).filter(Boolean)
-                    : []);
+                    : []
+                );
 
             if(remotePlayers.length){
+
+                /*
+                 * Firebase tiene datos: son los que mandan.
+                 */
                 applyPlayersFromRemote(remoteValue);
+
             }else{
-                console.warn("Firebase players node vacío; se mantiene la plantilla local.");
+
+                console.warn(
+                    "Firebase players existe pero está vacío; no se modifica Firebase."
+                );
             }
 
         }else{
 
-            // First V8 load: migrate existing Firestore players if available.
-            let migrated=false;
+            /*
+             * RTDB no tiene plantilla.
+             * NO hacemos bootstrap con DemoPlayers porque eso podría
+             * sobrescribir/romper una plantilla que ya exista en otro
+             * almacenamiento.
+             *
+             * Primero intentamos recuperar la plantilla antigua de Firestore.
+             */
+            let recovered=false;
 
             try{
-                migrated=await migrateFirestorePlayersToRTDB();
-            }catch(migrationError){
-                console.warn("No se pudo migrar Firestore a RTDB:",migrationError);
+
+                if(Firebase.db){
+
+                    const snap=await Firebase.db
+                        .collection("players")
+                        .get();
+
+                    if(!snap.empty){
+
+                        const recoveredPlayers=[];
+
+                        snap.docs.forEach(doc=>{
+
+                            const data=doc.data()||{};
+                            const id=isNaN(Number(doc.id))
+                                ? doc.id
+                                : Number(doc.id);
+
+                            recoveredPlayers.push({
+                                ...data,
+                                id:id
+                            });
+
+                        });
+
+                        if(recoveredPlayers.length){
+
+                            recoveredPlayers.sort(
+                                (a,b)=>
+                                    (Number(a.number)||0)-
+                                    (Number(b.number)||0)
+                            );
+
+                            App.players=recoveredPlayers;
+
+                            localStorage.setItem(
+                                "rsClubManagerPlayers",
+                                JSON.stringify(App.players)
+                            );
+
+                            renderPlayers();
+                            renderAdminPlayers();
+                            updateTeamStats();
+                            renderHomeScorers();
+
+                            recovered=true;
+
+                            console.log(
+                                "✓ Plantilla recuperada desde Firestore."
+                            );
+                        }
+                    }
+                }
+
+            }catch(firestoreError){
+
+                console.warn(
+                    "No se pudo recuperar Firestore:",
+                    firestoreError
+                );
             }
 
-            if(!migrated){
+            /*
+             * Si tampoco hay datos antiguos, conservamos la plantilla
+             * local/demo solamente en pantalla. NO escribimos nada
+             * automáticamente en Firebase.
+             */
+            if(!recovered){
 
-                const bootstrap={};
+                console.warn(
+                    "No existe plantilla remota. Se mantiene la plantilla local."
+                );
 
-                DemoPlayers.forEach(player=>{
-                    bootstrap[String(player.id)]={
-                        ...player,
-                        updatedAt:Date.now()
-                    };
-                });
-
-                await Firebase.playersRef.set(bootstrap);
-                applyPlayersFromRemote(bootstrap);
+                localStorage.setItem(
+                    "rsClubManagerPlayers",
+                    JSON.stringify(App.players)
+                );
             }
         }
 
+        /*
+         * A partir de aquí escuchamos cambios reales de Firebase.
+         * Nunca escribimos DemoPlayers automáticamente.
+         */
         startPlayersRealtimeSync();
 
     }catch(error){
 
-        console.error("Firebase Realtime Database no disponible:",error);
-
-        // Local fallback only if Firebase is unavailable.
-        localStorage.setItem(
-            "rsClubManagerPlayers",
-            JSON.stringify(App.players)
+        console.error(
+            "Firebase no disponible al cargar jugadores:",
+            error
         );
+
+        /*
+         * Firebase ha fallado: mantenemos la última plantilla local.
+         * No la sustituimos por DemoPlayers.
+         */
+        if(localPlayers.length){
+            App.players=localPlayers;
+        }
+
+        renderPlayers();
+        renderAdminPlayers();
+        updateTeamStats();
+        renderHomeScorers();
     }
 }
+
 
 function playerCardPremiumHTML(player, action){
     const photo=player.photo||"";
