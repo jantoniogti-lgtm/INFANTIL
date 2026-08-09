@@ -3026,6 +3026,11 @@ function applyPlayersFromRemote(value){
     renderPlayers();
     renderAdminPlayers();
     updateTeamStats();
+
+    // Firebase has just supplied the real player data.
+    // Refresh the Top 3 immediately so the home screen never
+    // remains on the initial "no goals" state.
+    renderHomeScorers();
 }
 
 async function migrateFirestorePlayersToRTDB(){
@@ -3084,6 +3089,7 @@ async function loadPlayers(){
     renderPlayers();
     renderAdminPlayers();
     updateTeamStats();
+    renderHomeScorers();
 
     try{
 
