@@ -1995,6 +1995,72 @@ PHOTO CROP EDITOR V1
     }
 }
 
+
+/* V24 — EDITOR COMPLETO DE JUGADOR */
+.player-editor-panel{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+}
+
+.editor-field{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+}
+
+.editor-field label,
+.editor-stats-title{
+    color:#cbd5e1;
+    font-size:13px;
+    font-weight:800;
+}
+
+.editor-field input,
+.editor-field select{
+    width:100%;
+    box-sizing:border-box;
+    min-height:48px;
+    padding:12px 14px;
+    border:1px solid #334155;
+    border-radius:12px;
+    background:#223247;
+    color:#fff;
+    font:inherit;
+    outline:none;
+}
+
+.editor-field input:focus,
+.editor-field select:focus{
+    border-color:#ffd21a;
+    box-shadow:0 0 0 3px rgba(255,210,26,.10);
+}
+
+.editor-captain-toggle{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:12px 14px;
+    border:1px solid #334155;
+    border-radius:12px;
+    background:#223247;
+    color:#fff;
+    font-weight:800;
+}
+
+.editor-captain-toggle input{
+    width:20px;
+    height:20px;
+    accent-color:#ffd21a;
+}
+
+.editor-stats-title{
+    margin-top:8px;
+    padding-top:16px;
+    border-top:1px solid rgba(255,210,26,.2);
+    color:#ffd21a;
+}
+
 </style>
 <link
 rel="stylesheet"
@@ -2711,10 +2777,92 @@ Editar jugador
 <div class="player-card-club"><span>RAMÓN SICART</span><span class="player-card-club-mark">RS</span></div>
 <div class="player-card-photo"><img id="cardPhoto" src="" alt="Jugador" style="display:none;"><div id="cardPhotoDefault" class="player-card-photo-default">👤</div><div id="cardNumber" class="player-card-number">0</div></div>
 <div class="player-card-main"><div id="cardName" class="player-card-name">NOMBRE</div><div id="cardSurname" class="player-card-surname">APELLIDO</div><div id="cardPosition" class="player-card-position">DELANTERO</div><div id="cardCaptain" class="player-card-captain">👑 CAPITÁN</div></div>
-<div class="player-card-stats"><div class="player-card-stat"><strong id="cardMatches">0</strong><span>Partidos</span></div><div class="player-card-stat"><strong id="cardGoals">0</strong><span>Goles</span></div><div class="player-card-stat"><strong id="cardAssists">0</strong><span>Asist.</span></div><div class="player-card-stat"><strong id="cardYellow">0</strong><span>Amarillas</span></div><div class="player-card-stat"><strong id="cardRed">0</strong><span>Rojas</span></div></div>
+<div class="player-card-stats"><div class="player-card-stat"><strong id="cardMatches">0</strong><span>Partidos</span></div><div class="player-card-stat"><strong id="cardGoals">0</strong><span>Goles</span></div><div class="player-card-stat"><strong id="cardYellow">0</strong><span>Amarillas</span></div><div class="player-card-stat"><strong id="cardRed">0</strong><span>Rojas</span></div></div>
 <div class="player-card-footer"><span>PLAYER CARD</span><strong>RS CLUB MANAGER</strong></div>
 </div>
 <div class="player-editor-panel">
+
+    <div class="editor-field">
+        <label for="editName">Nombre</label>
+        <input id="editName" type="text" autocomplete="off" placeholder="Nombre del jugador">
+    </div>
+
+    <div class="editor-field">
+        <label for="editSurname">Apellidos</label>
+        <input id="editSurname" type="text" autocomplete="off" placeholder="Apellidos del jugador">
+    </div>
+
+    <div class="editor-field">
+        <label for="editNumber">Dorsal</label>
+        <input id="editNumber" type="number" min="0" inputmode="numeric" placeholder="Dorsal">
+    </div>
+
+    <div class="editor-field">
+        <label for="editPosition">Posición</label>
+        <select id="editPosition">
+            <option value="POR">Portero</option>
+            <option value="LD">Lateral Derecho</option>
+            <option value="DFC">Defensa Central</option>
+            <option value="LI">Lateral Izquierdo</option>
+            <option value="MCD">Medio Defensivo</option>
+            <option value="MC">Medio Centro</option>
+            <option value="MCO">Media Punta</option>
+            <option value="ED">Extremo Derecho</option>
+            <option value="EI">Extremo Izquierdo</option>
+            <option value="DC">Delantero</option>
+        </select>
+    </div>
+
+    <label class="editor-captain-toggle">
+        <input id="editCaptain" type="checkbox">
+        <span>👑 Capitán</span>
+    </label>
+
+    <div class="editor-stats-title">ESTADÍSTICAS</div>
+
+    <div class="stat-control">
+        <span class="stat-control-label">🏟️ Partidos</span>
+        <div class="stat-control-value">
+            <button type="button" class="stat-step" data-stat="matches" data-step="-1">−</button>
+            <strong id="editMatchesValue" class="stat-number">0</strong>
+            <button type="button" class="stat-step" data-stat="matches" data-step="1">+</button>
+        </div>
+    </div>
+
+    <div class="stat-control">
+        <span class="stat-control-label">⚽ Goles</span>
+        <div class="stat-control-value">
+            <button type="button" class="stat-step" data-stat="goals" data-step="-1">−</button>
+            <strong id="editGoalsValue" class="stat-number">0</strong>
+            <button type="button" class="stat-step" data-stat="goals" data-step="1">+</button>
+        </div>
+    </div>
+
+    <div class="stat-control">
+        <span class="stat-control-label">🟨 Amarillas</span>
+        <div class="stat-control-value">
+            <button type="button" class="stat-step" data-stat="yellow" data-step="-1">−</button>
+            <strong id="editYellowValue" class="stat-number">0</strong>
+            <button type="button" class="stat-step" data-stat="yellow" data-step="1">+</button>
+        </div>
+    </div>
+
+    <div class="stat-control">
+        <span class="stat-control-label">🟥 Rojas</span>
+        <div class="stat-control-value">
+            <button type="button" class="stat-step" data-stat="red" data-step="-1">−</button>
+            <strong id="editRedValue" class="stat-number">0</strong>
+            <button type="button" class="stat-step" data-stat="red" data-step="1">+</button>
+        </div>
+    </div>
+
+    <input type="hidden" id="editMatches" value="0">
+    <input type="hidden" id="editGoals" value="0">
+    <input type="hidden" id="editAssists" value="0">
+    <input type="hidden" id="editYellow" value="0">
+    <input type="hidden" id="editRed" value="0">
+    <input type="hidden" id="editPhoto" value="">
+
 </div>
 <div class="stat-control"><span class="stat-control-label">🟨 Amarillas</span><div class="stat-control-value"><button type="button" class="stat-step" data-stat="yellow" data-step="-1">−</button><strong id="editYellowValue" class="stat-number">0</strong><button type="button" class="stat-step" data-stat="yellow" data-step="1">+</button></div></div>
 <div class="stat-control"><span class="stat-control-label">🟥 Rojas</span><div class="stat-control-value"><button type="button" class="stat-step" data-stat="red" data-step="-1">−</button><strong id="editRedValue" class="stat-number">0</strong><button type="button" class="stat-step" data-stat="red" data-step="1">+</button></div></div></div>
@@ -2983,6 +3131,20 @@ async function init(){
 
 document.addEventListener("keydown",e=>{if(e.key==="Escape" && $("#photoCropModal")?.classList.contains("show"))closePhotoCropEditor();});
 document.addEventListener("DOMContentLoaded",init);
+
+/* V24 editor stat controls */
+document.addEventListener("DOMContentLoaded",()=>{
+    document.querySelectorAll(".stat-step").forEach(btn=>{
+        btn.addEventListener("click",()=>{
+            const stat=btn.dataset.stat;
+            const step=Number(btn.dataset.step)||0;
+            const input=$("#edit"+stat.charAt(0).toUpperCase()+stat.slice(1));
+            const current=Number(input?.value)||0;
+            setStat(stat,current+step);
+        });
+    });
+});
+
 /*======================================================
 PLAYERS
 ======================================================*/
@@ -3295,14 +3457,6 @@ function startPlayersRealtimeSync(){
 
 async function loadPlayers(){
 
-    /*
-     * V23 — CARGA SEGURA DE PLANTILLA
-     *
-     * Firebase es la fuente principal.
-     * IMPORTANTE: esta carga NO vuelve a escribir DemoPlayers sobre Firebase.
-     * Si RTDB está vacío, se intenta recuperar Firestore antes de usar la demo.
-     */
-
     const raw=localStorage.getItem("rsClubManagerPlayers");
     let localPlayers=[];
 
@@ -3313,7 +3467,7 @@ async function loadPlayers(){
         console.warn("No se pudo leer la plantilla local:",e);
     }
 
-    // Mostrar algo mientras Firebase responde.
+    // Solo como pantalla provisional mientras Firebase responde.
     App.players=localPlayers.length ? localPlayers : [...DemoPlayers];
 
     renderPlayers();
@@ -3326,12 +3480,7 @@ async function loadPlayers(){
         if(!Firebase.playersRef)
             throw new Error("Realtime Database no está inicializado.");
 
-        const snapshot=await Promise.race([
-            Firebase.playersRef.once("value"),
-            new Promise((_,reject)=>
-                setTimeout(()=>reject(new Error("RTDB_LOAD_TIMEOUT")),10000)
-            )
-        ]);
+        const snapshot=await Firebase.playersRef.once("value");
 
         if(snapshot.exists()){
 
@@ -3348,82 +3497,61 @@ async function loadPlayers(){
 
             if(remotePlayers.length){
 
-                /*
-                 * Firebase tiene datos: son los que mandan.
-                 */
+                // RTDB contiene la plantilla real: esta es la fuente principal.
                 applyPlayersFromRemote(remoteValue);
 
-            }else{
-
-                console.warn(
-                    "Firebase players existe pero está vacío; no se modifica Firebase."
-                );
+                startPlayersRealtimeSync();
+                return;
             }
+        }
 
-        }else{
+        /*
+         * RTDB está vacío. Antes de usar DemoPlayers buscamos la plantilla
+         * antigua en Firestore, porque las versiones anteriores podían
+         * tener los jugadores allí.
+         */
+        let recovered=false;
 
-            /*
-             * RTDB no tiene plantilla.
-             * NO hacemos bootstrap con DemoPlayers porque eso podría
-             * sobrescribir/romper una plantilla que ya exista en otro
-             * almacenamiento.
-             *
-             * Primero intentamos recuperar la plantilla antigua de Firestore.
-             */
-            let recovered=false;
+        if(Firebase.db){
 
             try{
 
-                if(Firebase.db){
+                const snap=await Firebase.db
+                    .collection("players")
+                    .get();
 
-                    const snap=await Firebase.db
-                        .collection("players")
-                        .get();
+                if(!snap.empty){
 
-                    if(!snap.empty){
+                    const remote={};
 
-                        const recoveredPlayers=[];
+                    snap.docs.forEach(doc=>{
 
-                        snap.docs.forEach(doc=>{
+                        const data=doc.data()||{};
+                        const id=isNaN(Number(doc.id))
+                            ? doc.id
+                            : Number(doc.id);
 
-                            const data=doc.data()||{};
-                            const id=isNaN(Number(doc.id))
-                                ? doc.id
-                                : Number(doc.id);
+                        remote[String(id)]={
+                            ...data,
+                            id:id
+                        };
+                    });
 
-                            recoveredPlayers.push({
-                                ...data,
-                                id:id
-                            });
+                    if(Object.keys(remote).length){
 
-                        });
+                        /*
+                         * Recuperamos la plantilla antigua en RTDB para que,
+                         * desde ahora, todos los navegadores lean el mismo sitio.
+                         */
+                        await Firebase.playersRef.set(remote);
 
-                        if(recoveredPlayers.length){
+                        applyPlayersFromRemote(remote);
 
-                            recoveredPlayers.sort(
-                                (a,b)=>
-                                    (Number(a.number)||0)-
-                                    (Number(b.number)||0)
-                            );
+                        recovered=true;
 
-                            App.players=recoveredPlayers;
-
-                            localStorage.setItem(
-                                "rsClubManagerPlayers",
-                                JSON.stringify(App.players)
-                            );
-
-                            renderPlayers();
-                            renderAdminPlayers();
-                            updateTeamStats();
-                            renderHomeScorers();
-
-                            recovered=true;
-
-                            console.log(
-                                "✓ Plantilla recuperada desde Firestore."
-                            );
-                        }
+                        console.log(
+                            "✓ Plantilla recuperada de Firestore y sincronizada con RTDB."
+                        );
                     }
                 }
 
@@ -3434,50 +3562,48 @@ async function loadPlayers(){
                     firestoreError
                 );
             }
-
-            /*
-             * Si tampoco hay datos antiguos, conservamos la plantilla
-             * local/demo solamente en pantalla. NO escribimos nada
-             * automáticamente en Firebase.
-             */
-            if(!recovered){
-
-                console.warn(
-                    "No existe plantilla remota. Se mantiene la plantilla local."
-                );
-
-                localStorage.setItem(
-                    "rsClubManagerPlayers",
-                    JSON.stringify(App.players)
-                );
-            }
         }
 
         /*
-         * A partir de aquí escuchamos cambios reales de Firebase.
-         * Nunca escribimos DemoPlayers automáticamente.
+         * Si no existe plantilla ni en RTDB ni en Firestore, mantenemos la
+         * plantilla local solamente. NO escribimos DemoPlayers a Firebase.
          */
+        if(!recovered){
+
+            if(!localPlayers.length){
+
+                console.warn(
+                    "No hay plantilla guardada todavía en Firebase."
+                );
+
+            }else{
+
+                App.players=localPlayers;
+
+                renderPlayers();
+                renderAdminPlayers();
+                updateTeamStats();
+                renderHomeScorers();
+            }
+        }
+
         startPlayersRealtimeSync();
 
     }catch(error){
 
         console.error(
-            "Firebase no disponible al cargar jugadores:",
+            "Error cargando la plantilla desde Firebase:",
             error
         );
 
-        /*
-         * Firebase ha fallado: mantenemos la última plantilla local.
-         * No la sustituimos por DemoPlayers.
-         */
         if(localPlayers.length){
             App.players=localPlayers;
-        }
 
-        renderPlayers();
-        renderAdminPlayers();
-        updateTeamStats();
-        renderHomeScorers();
+            renderPlayers();
+            renderAdminPlayers();
+            updateTeamStats();
+            renderHomeScorers();
+        }
     }
 }
 
@@ -3553,15 +3679,37 @@ function applyPhotoCrop(){
 
 
 function syncPlayerCardPreview(){
-    const name=$("#editName").value.trim()||"NOMBRE", surname=$("#editSurname").value.trim()||"APELLIDO", number=$("#editNumber").value||"0", position=$("#editPosition").value;
-    $("#cardName").textContent=name.toUpperCase(); $("#cardSurname").textContent=surname.toUpperCase(); $("#cardNumber").textContent=number; $("#cardPosition").textContent=(Positions[position]||position||"").toUpperCase(); $("#cardCaptain").classList.toggle("show",$("#editCaptain").checked);
-    ["matches","goals","assists","yellow","red"].forEach(stat=>{const cap=stat.charAt(0).toUpperCase()+stat.slice(1); $("#card"+cap).textContent=Number($("#edit"+cap).value)||0;});
+    const name=$("#editName").value.trim()||"NOMBRE";
+    const surname=$("#editSurname").value.trim()||"APELLIDO";
+    const number=$("#editNumber").value||"0";
+    const position=$("#editPosition").value;
+
+    $("#cardName").textContent=name.toUpperCase();
+    $("#cardSurname").textContent=surname.toUpperCase();
+    $("#cardNumber").textContent=number;
+    $("#cardPosition").textContent=
+        (Positions[position]||position||"").toUpperCase();
+
+    $("#cardCaptain").classList.toggle(
+        "show",
+        $("#editCaptain").checked
+    );
+
+    ["matches","goals","yellow","red"].forEach(stat=>{
+        const cap=stat.charAt(0).toUpperCase()+stat.slice(1);
+        const card=$("#card"+cap);
+        const input=$("#edit"+cap);
+
+        if(card && input){
+            card.textContent=Number(input.value)||0;
+        }
+    });
 }
 function setStat(stat,value){const cap=stat.charAt(0).toUpperCase()+stat.slice(1); value=Math.max(0,Number(value)||0); $("#edit"+cap).value=value; $("#edit"+cap+"Value").textContent=value; syncPlayerCardPreview();}
-function loadEditorStats(player){["matches","goals","assists","yellow","red"].forEach(stat=>setStat(stat,player[stat]||0));}
+function loadEditorStats(player){["matches","goals","yellow","red"].forEach(stat=>setStat(stat,player[stat]||0));}
 function setEditorPhoto(photo){$("#editPhoto").value=photo||""; const img=$("#cardPhoto"),def=$("#cardPhotoDefault"); if(photo){img.src=photo;img.style.display="block";def.style.display="none";}else{img.removeAttribute("src");img.style.display="none";def.style.display="grid";}}
 function editPlayer(id){const player=App.players.find(p=>p.id===id);if(!player)return;editingPlayerId=id;$("#adminPlayers").style.display="none";$("#adminPlayerEditor").style.display="block";$("#editorTitle").textContent="Editar jugador";$("#editName").value=player.name||"";$("#editSurname").value=player.surname||"";$("#editNumber").value=player.number??"";$("#editPosition").value=player.position||"DC";$("#editCaptain").checked=!!player.captain;loadEditorStats(player);setEditorPhoto(player.photo||"");syncPlayerCardPreview();}
-function newPlayer(){editingPlayerId=null;$("#adminPlayers").style.display="none";$("#adminPlayerEditor").style.display="block";$("#editorTitle").textContent="Nuevo jugador";$("#editName").value="";$("#editSurname").value="";$("#editNumber").value="";$("#editPosition").value="DC";$("#editCaptain").checked=false;["matches","goals","assists","yellow","red"].forEach(stat=>setStat(stat,0));setEditorPhoto("");syncPlayerCardPreview();}
+function newPlayer(){editingPlayerId=null;$("#adminPlayers").style.display="none";$("#adminPlayerEditor").style.display="block";$("#editorTitle").textContent="Nuevo jugador";$("#editName").value="";$("#editSurname").value="";$("#editNumber").value="";$("#editPosition").value="DC";$("#editCaptain").checked=false;["matches","goals","yellow","red"].forEach(stat=>setStat(stat,0));setEditorPhoto("");syncPlayerCardPreview();}
 function closePlayerEditor(){$("#adminPlayerEditor").style.display="none";$("#adminPlayers").style.display="block";}
 
 async function persistPlayerToFirebase(playerData){
@@ -3632,7 +3780,6 @@ async function savePlayer(){
         photo:"",
         matches:Number($("#editMatches")?.value)||0,
         goals:Number($("#editGoals")?.value)||0,
-        assists:Number($("#editAssists")?.value)||0,
         yellow:Number($("#editYellow")?.value)||0,
         red:Number($("#editRed")?.value)||0,
         updatedAt:Date.now()
