@@ -1694,6 +1694,152 @@ PHOTO CROP EDITOR V1
 @media(max-width:600px){.rs-player-card-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.rs-player-card{min-height:315px;border-radius:19px}.rs-player-card-photo{height:175px}.rs-player-card-number{font-size:62px}.rs-player-card-body{padding:12px}.rs-player-card-name{font-size:16px}.rs-player-card-stats{padding:9px 10px 11px}.rs-player-card-footer{padding:8px 12px 10px}}
 @media(max-width:390px){.rs-player-card-grid{grid-template-columns:1fr}.rs-player-card{max-width:330px;width:100%;margin:auto}}
 
+
+/* V14 — foto única del jugador en la cabecera principal */
+.player-main-photo{
+    position:relative;
+    width:190px;
+    height:190px;
+    margin:0 auto 24px;
+    border-radius:50%;
+    overflow:hidden;
+    border:7px solid #ffd21a;
+    background:#31445b;
+    box-shadow:0 12px 35px rgba(0,0,0,.35);
+}
+.player-main-photo .playerPhoto{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:none;
+}
+.player-main-photo .playerPhotoDefault{
+    width:100%;
+    height:100%;
+    display:grid;
+    place-items:center;
+    font-size:76px;
+}
+@media(max-width:600px){
+    .player-main-photo{
+        width:155px;
+        height:155px;
+        border-width:6px;
+    }
+}
+
+
+/* ======================================================
+   HOME · TOP 3 GOLEADORES AUTOMÁTICOS
+   ====================================================== */
+
+.homeScorerItem{
+    width:100%;
+    border:0;
+    border-radius:18px;
+    background:rgba(255,255,255,.035);
+    color:inherit;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px;
+    margin-bottom:10px;
+    cursor:pointer;
+    text-align:left;
+    transition:transform .2s ease,background .2s ease;
+}
+
+.homeScorerItem:hover{
+    transform:translateY(-2px);
+    background:rgba(255,210,26,.08);
+}
+
+.homeScorerItem:active{
+    transform:scale(.98);
+}
+
+.homeScorerRank{
+    width:30px;
+    min-width:30px;
+    text-align:center;
+    font-size:21px;
+}
+
+.homeScorerAvatar{
+    width:52px;
+    height:52px;
+    min-width:52px;
+    border-radius:50%;
+    overflow:hidden;
+    border:2px solid #ffd21a;
+    background:#31445b;
+    display:grid;
+    place-items:center;
+}
+
+.homeScorerPhoto{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.homeScorerDefault{
+    width:100%;
+    height:100%;
+    display:grid;
+    place-items:center;
+    font-size:25px;
+}
+
+.homeScorerInfo{
+    min-width:0;
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+}
+
+.homeScorerInfo strong{
+    font-size:15px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.homeScorerInfo span{
+    color:#94a3b8;
+    font-size:12px;
+}
+
+.homeScorerGoals{
+    min-width:55px;
+    text-align:center;
+    display:flex;
+    flex-direction:column;
+}
+
+.homeScorerGoals strong{
+    color:#ffd21a;
+    font-size:25px;
+    line-height:1;
+}
+
+.homeScorerGoals span{
+    color:#94a3b8;
+    font-size:9px;
+    margin-top:4px;
+    letter-spacing:.5px;
+}
+
+.emptyScorers{
+    padding:20px;
+}
+
+.emptyScorersText{
+    color:#94a3b8;
+    text-align:center;
+}
+
 </style>
 <link
 rel="stylesheet"
@@ -2129,10 +2275,9 @@ PLAYER DETAIL
 
 <div class="playerProfile">
 
-<div class="playerPhotoLarge">
-
-👤
-
+<div class="playerPhotoLarge player-main-photo">
+    <img id="playerPhoto" src="" class="playerPhoto" alt="Jugador">
+    <div id="playerAvatarDefault" class="playerPhotoDefault">👤</div>
 </div>
 
 <h1 id="detailName">
@@ -2232,37 +2377,7 @@ id="detailNumber">
 </div>
 
 
-<!-- FOTO DEL JUGADOR -->
 
-<div class="photoEditor">
-
-    <img
-        id="playerPhoto"
-        src=""
-        class="playerPhoto"
-        alt="Jugador">
-
-    <div id="playerAvatarDefault" class="playerPhotoDefault">
-
-        👤
-
-    </div>
-
-    <input
-        type="file"
-        id="playerPhotoInput"
-        accept="image/*"
-        hidden>
-
-    <button
-        id="changePhotoButton"
-        class="secondaryButton"
-        style="display:none;">
-
-        📷 Cambiar foto
-
-    </button>
-<div id="photoUploadStatus" class="photoUploadStatus" aria-live="polite"></div>
 
 </div>
 <button
@@ -2633,8 +2748,11 @@ async function init(){
     });
 
     renderPlayers();
+    renderHomeScorers();
     renderAdminPlayers();
+    renderHomeScorers();
     updateTeamStats();
+    renderHomeScorers();
     renderHome();
     showPage("home");
 
@@ -3574,43 +3692,79 @@ function renderHomeTable(){
 function renderHomeScorers(){
 
     const box=$("#homeScorers");
-
     if(!box) return;
 
-    box.innerHTML=`
+    const players=Array.isArray(App.players)
+        ? App.players.slice()
+        : [];
 
-        <div class="miniList">
+    const top3=players
+        .map(p=>({
+            ...p,
+            goals:Number(p.goals)||0
+        }))
+        .filter(p=>p.goals>0)
+        .sort((a,b)=>{
+            if(b.goals!==a.goals) return b.goals-a.goals;
+            return (Number(a.number)||999)-(Number(b.number)||999);
+        })
+        .slice(0,3);
 
-            <div>
+    if(!top3.length){
 
-                ⚽ Gerard
-
-                <strong>39</strong>
-
+        box.innerHTML=`
+            <div class="miniList emptyScorers">
+                <div class="emptyScorersText">
+                    ⚽ Aún no hay goles registrados
+                </div>
             </div>
+        `;
 
-            <div>
+        return;
+    }
 
-                ⚽ Axel
+    const medals=["🥇","🥈","🥉"];
 
-                <strong>12</strong>
+    box.innerHTML=top3.map((player,index)=>{
 
-            </div>
+        const fullName=
+            `${player.name||""} ${player.surname||""}`.trim()
+            ||"Jugador";
 
-            <div>
+        const photo=player.photo
+            ? `<img src="${player.photo}" alt="${fullName}" class="homeScorerPhoto"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='grid';">`
+            : "";
 
-                ⚽ Roger
+        return `
+            <button class="homeScorerItem" type="button"
+                onclick="openPlayer(${JSON.stringify(player.id)})">
 
-                <strong>8</strong>
+                <div class="homeScorerRank">
+                    ${medals[index]}
+                </div>
 
-            </div>
+                <div class="homeScorerAvatar">
+                    ${photo}
+                    <span class="homeScorerDefault"
+                          style="${player.photo?'display:none':''}">👤</span>
+                </div>
 
-        </div>
+                <div class="homeScorerInfo">
+                    <strong>${fullName}</strong>
+                    <span>Dorsal ${Number(player.number)||"-"}</span>
+                </div>
 
-    `;
+                <div class="homeScorerGoals">
+                    <strong>${player.goals}</strong>
+                    <span>GOLES</span>
+                </div>
+
+            </button>
+        `;
+    }).join("");
 
 }
-
 function renderHomeMatches(){
 
     const box=$("#homeMatches");
