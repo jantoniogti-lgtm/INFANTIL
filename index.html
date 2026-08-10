@@ -118,6 +118,21 @@ button{cursor:pointer}
 .playerFormV6{display:grid;gap:9px;background:#081525;border:1px solid #1b3046;border-radius:16px;padding:14px;position:sticky;top:12px}.playerFormV6 input,.playerFormV6 select{width:100%}.photoPreviewV6{width:92px;height:92px;border-radius:15px;object-fit:cover;background:#12243a;border:1px solid #29445e}
 @media(max-width:900px){.squadV6{grid-template-columns:1fr}.playerFormV6{position:static}.squadListV6{grid-template-columns:1fr}}
 
+
+/* ===== V7 FREE POSITIONING ===== */
+.freePosHintV7{font-size:9px;color:#8194a8;margin:-5px 0 10px}
+.lePitchV5{touch-action:none}
+.leSlotV5{touch-action:none;user-select:none}
+.leSlotV5.dragging{z-index:20;filter:drop-shadow(0 10px 12px #0008);transform:translate(-50%,-50%) scale(1.08)}
+.positionBadgeV7{position:absolute;top:8px;right:8px;background:#07111ddd;color:#f1d600;border:1px solid #ffffff33;border-radius:7px;padding:5px 7px;font-size:8px;font-weight:1000;z-index:5}
+
+
+/* V8 — Eventos integrados dentro del partido */
+#publicLiveConsole,
+#publicEventsSection,
+#standaloneEvents,
+#eventsSectionBottom{display:none!important}
+
 </style>
 </head>
 <body>
@@ -454,6 +469,123 @@ document.getElementById("deletePlayerV6")?.addEventListener("click",()=>{
 const oldRenderAdminLiveV6=renderAdminLive;
 renderAdminLive=function(){oldRenderAdminLiveV6();renderLineupEditorV5();renderSquadV6()};
 setTimeout(renderSquadV6,120);
+
+
+/* ===== V7 FREE PLAYER POSITIONING ===== */
+const defaultPositionsV7={
+ "4-3-3":[[50,91],[18,73],[39,77],[61,77],[82,73],[25,54],[50,57],[75,54],[22,28],[50,24],[78,28]],
+ "4-4-2":[[50,91],[18,73],[39,77],[61,77],[82,73],[18,51],[39,54],[61,54],[82,51],[35,27],[65,27]],
+ "4-2-3-1":[[50,91],[18,73],[39,77],[61,77],[82,73],[35,57],[65,57],[22,33],[50,29],[78,33],[50,17]],
+ "4-1-4-1":[[50,91],[18,73],[39,77],[61,77],[82,73],[50,64],[18,48],[39,52],[61,52],[82,48],[50,25]],
+ "3-5-2":[[50,91],[25,76],[50,79],[75,76],[18,54],[36,57],[50,48],[64,57],[82,54],[36,25],[64,25]]
+};
+function ensurePositionsV7(){
+ if(!Live.playerPositions) Live.playerPositions={};
+ const formation=Live.formation||"4-3-3";
+ const pos=defaultPositionsV7[formation]||defaultPositionsV7["4-3-3"];
+ (Live.lineup||[]).forEach((n,i)=>{
+   const k=String(n);
+   if(!Live.playerPositions[k]) Live.playerPositions[k]={x:pos[i]?.[0]||50,y:pos[i]?.[1]||50};
+ });
+}
+function renderLineupEditorV5(){
+ const form=document.getElementById("lineupFormationV5");if(!form)return;
+ const formation=Live.formation||"4-3-3";form.value=formation;
+ ensurePositionsV7();
+ const pitch=document.getElementById("lePitchV5");
+ pitch.querySelectorAll(".leSlotV5").forEach(x=>x.remove());
+ (Live.lineup||[]).forEach((n,i)=>{
+   const p=mcPlayer(n); if(!p)return;
+   const xy=Live.playerPositions[String(n)]||{x:50,y:50};
+   pitch.insertAdjacentHTML("beforeend",`<div class="leSlotV5" data-n="${p.number}" style="left:${xy.x}%;top:${xy.y}%">
+     <div class="shirt"><b>${p.number}</b></div><div class="slotName">${esc(p.name)}</div>
+   </div>`);
+ });
+ pitch.querySelectorAll(".leSlotV5").forEach(makeDraggableV7);
+ renderRosterV5();
+}
+function makeDraggableV7(el){
+ let dragging=false, moved=false;
+ const start=(clientX,clientY)=>{
+   dragging=true;moved=false;el.classList.add("dragging");
+   el._start={x:clientX,y:clientY};
+ };
+ const move=(clientX,clientY)=>{
+   if(!dragging)return;
+   if(Math.abs(clientX-el._start.x)+Math.abs(clientY-el._start.y)>3)moved=true;
+   const r=document.getElementById("lePitchV5").getBoundingClientRect();
+   let x=((clientX-r.left)/r.width)*100, y=((clientY-r.top)/r.height)*100;
+   x=Math.max(5,Math.min(95,x)); y=Math.max(5,Math.min(95,y));
+   el.style.left=x+"%";el.style.top=y+"%";
+   Live.playerPositions[String(el.dataset.n)]={x,y};
+ };
+ const end=()=>{
+   if(!dragging)return;dragging=false;el.classList.remove("dragging");
+ };
+ el.addEventListener("pointerdown",e=>{e.preventDefault();el.setPointerCapture?.(e.pointerId);start(e.clientX,e.clientY)});
+ el.addEventListener("pointermove",e=>move(e.clientX,e.clientY));
+ el.addEventListener("pointerup",end);el.addEventListener("pointercancel",end);
+}
+document.getElementById("resetPositionsV7")?.addEventListener("click",()=>{
+ const formation=document.getElementById("lineupFormationV5").value||"4-3-3";
+ const pos=defaultPositionsV7[formation]||defaultPositionsV7["4-3-3"];
+ Live.playerPositions={};
+ (Live.lineup||[]).forEach((n,i)=>{Live.playerPositions[String(n)]={x:pos[i]?.[0]||50,y:pos[i]?.[1]||50}});
+ renderLineupEditorV5();toast("Formación recolocada");
+});
+document.getElementById("lineupFormationV5")?.addEventListener("change",e=>{
+ Live.formation=e.target.value;
+ const pos=defaultPositionsV7[Live.formation]||defaultPositionsV7["4-3-3"];
+ Live.playerPositions={};
+ (Live.lineup||[]).forEach((n,i)=>{Live.playerPositions[String(n)]={x:pos[i]?.[0]||50,y:pos[i]?.[1]||50}});
+ renderLineupEditorV5();
+});
+document.getElementById("saveLineupV5")?.addEventListener("click",()=>{
+ const clean=(Live.lineup||[]).filter(n=>n!=null).map(Number);
+ if(clean.length!==11){toast("Debes colocar 11 jugadores");return}
+ if(new Set(clean).size!==11){toast("No puede haber jugadores repetidos");return}
+ ensurePositionsV7();save();renderAll();toast("Alineación y posiciones publicadas 👕");
+});
+/* Public field uses the exact saved positions instead of generic formation coordinates. */
+function renderMcPitch(){
+ const pitch=document.getElementById("mcPitch");if(!pitch)return;
+ ensurePositionsV7();
+ pitch.querySelectorAll(".mcPlayer").forEach(x=>x.remove());
+ (Live.lineup||[]).map(n=>mcPlayer(n)).filter(Boolean).forEach(p=>{
+   const xy=Live.playerPositions[String(p.number)]||{x:50,y:50};
+   pitch.insertAdjacentHTML("beforeend",`<div class="mcPlayer" style="left:${xy.x}%;top:${xy.y}%"><div class="mcShirt"><span class="mcNumber">${p.number}</span></div><div class="mcPlayerName">${esc(p.name)}</div></div>`);
+ });
+ const starters=(Live.lineup||[]).map(n=>mcPlayer(n)).filter(Boolean);
+ const bench=App.players.filter(p=>!starters.some(s=>Number(s.number)===Number(p.number))).slice(0,8);
+ document.getElementById("mcBench").innerHTML=bench.length?bench.map(p=>`<div class="mcBenchItem"><b>#${p.number}</b>${esc(p.name)}</div>`).join(""):`<div style="color:#71869c;font-size:10px">Configura la plantilla y el XI inicial.</div>`;
+}
+
+
+/* V8: force all public event rendering into the Match Center */
+function renderIntegratedMatchEventsV8(){
+  const events=[...(Live.events||[])].sort((a,b)=>Number(a.minute||0)-Number(b.minute||0));
+  const m=activeMatch();
+  const home=m?mcTeamData(m.home):{name:"LOCAL"};
+  const away=m?mcTeamData(m.away):{name:"VISITANTE"};
+  const el=document.getElementById("mcEvents");
+  const all=document.getElementById("mcAllEvents");
+  const make=events.length?events.map(e=>{
+    const side=e.team==="home"?home.name:away.name;
+    const player=e.playerName||"Evento";
+    return `<div class="mcEvent">
+      <div class="mcMinute">${e.minute||0}'</div>
+      <div class="mcEventText"><b>${esc(player)}</b><br><span style="color:#71869c;font-size:8px">${esc(side)}</span></div>
+      <div class="mcEventSide">${mcEventIcon(e)}</div>
+    </div>`;
+  }).join(""):`<div style="padding:24px;text-align:center;color:#6f8298;font-size:10px">El partido todavía no tiene eventos</div>`;
+  if(el)el.innerHTML=make;
+  if(all)all.innerHTML=make;
+}
+const oldRenderMCV8=renderMatchCenterV4;
+renderMatchCenterV4=function(){
+  oldRenderMCV8();
+  renderIntegratedMatchEventsV8();
+};
 
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
