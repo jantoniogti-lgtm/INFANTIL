@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b0b0b">
-<title>RS CLUB LIVE V7 — Ramón Sicart</title>
+<title>RS CLUB LIVE V9 — Ramón Sicart</title>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
 <style>
@@ -23,9 +23,39 @@ button,input,select{font:inherit}button{cursor:pointer}
 .bottom{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#0b0b0bf5;border-top:1px solid #333;display:flex;justify-content:center;gap:5px;padding:8px env(safe-area-inset-right) calc(8px + env(safe-area-inset-bottom)) env(safe-area-inset-left);backdrop-filter:blur(10px)}.bottom button{background:transparent;color:#bbb;border:0;padding:5px 13px;font-size:11px}.bottom button.active{color:var(--yellow)}
 .pinbox{display:none;position:fixed;inset:0;z-index:100;background:#000b;place-items:center}.pinbox.show{display:grid}.pin{width:min(350px,90vw);background:#151515;border:1px solid #555;border-radius:16px;padding:20px}.pin h3{margin-top:0;color:var(--yellow)}.pin input{width:100%;padding:12px;background:#090909;border:1px solid #555;color:#fff;border-radius:8px;margin-bottom:8px}
 @media(max-width:800px){.pitch{aspect-ratio:1.55}.content{grid-template-columns:1fr}.teams{grid-template-columns:1fr 130px 1fr}.score{font-size:52px}.teamcrest{width:65px;height:65px}.teamname{font-size:14px}.matchhead{font-size:12px}.matchhead .time{font-size:15px}.grid{grid-template-columns:1fr}.rosterrow{grid-template-columns:45px 1fr 80px 80px 40px}.tabs{display:none}.brand b{font-size:15px}.player{width:62px}.shirt{width:36px;height:41px}.playername{font-size:9px}.paneltitle{font-size:15px}}
+
+.hamburgerBtn{position:fixed;left:12px;top:12px;z-index:10001;width:44px;height:44px;border:1px solid #333;border-radius:12px;background:#111;color:#ffd33d;font-size:25px;font-weight:900;box-shadow:0 5px 20px #0008}
+.sideMenu{position:fixed;left:0;top:0;bottom:0;width:min(310px,86vw);background:#101010;z-index:10000;transform:translateX(-105%);transition:.25s ease;box-shadow:8px 0 35px #000b;padding:14px;overflow-y:auto}
+.sideMenu.open{transform:translateX(0)}
+.sideMenuOverlay{display:none;position:fixed;inset:0;background:#0009;z-index:9999}
+.sideMenuOverlay.open{display:block}
+.sideMenuHead{display:flex;justify-content:space-between;align-items:center;color:#ffd33d;font-size:18px;padding:8px 4px 16px;border-bottom:1px solid #333;margin-bottom:8px}
+.sideMenuHead button{background:none;border:0;color:#fff;font-size:30px}
+.sideMenu>button{width:100%;padding:15px 10px;margin:3px 0;border:0;border-bottom:1px solid #272727;background:transparent;color:#fff;text-align:left;font-weight:900;font-size:14px;border-radius:9px}
+.sideMenu>button:hover{background:#1d1d1d}
+.menuSection.menuOpen{display:block!important}
+@media(max-width:600px){
+ .pitch{aspect-ratio:1.52}
+ .player{width:24%;max-width:70px}
+ .shirt{width:42px;height:48px}
+ .playername{font-size:8px;white-space:nowrap;max-width:70px;overflow:hidden;text-overflow:ellipsis}
+}
+
 </style>
 </head>
 <body>
+<button id="hamburgerBtn" class="hamburgerBtn" onclick="toggleMenu()" aria-label="Abrir menú">☰</button>
+<div id="sideMenuOverlay" class="sideMenuOverlay" onclick="toggleMenu()"></div>
+<aside id="sideMenu" class="sideMenu">
+  <div class="sideMenuHead"><b>RS CLUB LIVE</b><button onclick="toggleMenu()">×</button></div>
+  <button onclick="menuGo('directo')">🔴 <span>Partido en directo</span></button>
+  <button onclick="menuGo('eventos')">☷ <span>Eventos del partido</span></button>
+  <button onclick="menuGo('goleadores')">🏅 <span>Goleadores</span></button>
+  <button onclick="menuGo('clasificacion')">🏆 <span>Clasificación</span></button>
+  <button onclick="menuGo('historial')">🗓️ <span>Historial</span></button>
+  <button onclick="menuGo('plantilla')">👥 <span>Plantilla</span></button>
+  <button onclick="openAdmin();toggleMenu()">⚙️ <span>Administración</span></button>
+</aside>
 <div class="app">
 <header class="topbar">
   <div class="brand"><div class="crest">RS</div><div><b>RS CLUB LIVE</b><small>RAMÓN SICART · DIRECTO</small></div></div>
@@ -49,8 +79,8 @@ button,input,select{font:inherit}button{cursor:pointer}
 </section>
 
 <div class="content">
-  <section class="panel" id="eventos"><div class="paneltitle">☷ EVENTOS DEL PARTIDO <span id="liveLabel"></span></div>
-<div id="liveTicker" style="display:none;padding:10px 14px;background:#1b1604;border-bottom:1px solid #493a0b;color:#ffd33d;font-weight:900;text-align:center"></div><div class="panelbody events" id="eventsList"><div class="empty">Los eventos del partido aparecerán aquí</div></div></section>
+  <section class="panel menuSection" id="eventos" style="display:none"><div class="paneltitle">☷ EVENTOS DEL PARTIDO <span id="liveLabel"></span></div>
+<div id="liveTicker" style="display:none"></div><div class="panelbody events" id="eventsList"><div class="empty">Los eventos del partido aparecerán aquí</div></div></section>
   <section class="panel" id="alineacion"><div class="paneltitle">⚽ ALINEACIÓN RAMÓN SICART <span style="font-size:10px;color:#aaa">CAMPO HORIZONTAL</span></div><div class="panelbody">
     <div class="pitch"><div class="circle"></div><div class="box left"></div><div class="box right"></div><div id="pitchPlayers"></div></div>
     <div style="text-align:center;color:var(--yellow);font-weight:900;margin-top:10px">SUPLENTES</div>
@@ -58,25 +88,13 @@ button,input,select{font:inherit}button{cursor:pointer}
   </div></section>
 </div>
 
-<section class="panel" id="stats" style="margin:12px 14px">
-  <div class="paneltitle">📊 DATOS DEL PARTIDO</div>
-  <div class="panelbody" id="matchStats">
-    <div class="grid">
-      <div style="text-align:center;padding:12px;border:1px solid #333;border-radius:12px"><b id="statGoalsHome">0</b><small style="display:block;color:#999">GOLES</small></div>
-      <div style="text-align:center;padding:12px;border:1px solid #333;border-radius:12px"><b id="statGoalsAway">0</b><small style="display:block;color:#999">GOLES RIVAL</small></div>
-      <div style="text-align:center;padding:12px;border:1px solid #333;border-radius:12px"><b id="statEvents">0</b><small style="display:block;color:#999">EVENTOS</small></div>
-      <div style="text-align:center;padding:12px;border:1px solid #333;border-radius:12px"><b id="statStarters">0</b><small style="display:block;color:#999">TITULARES</small></div>
-    </div>
-  </div>
-</section>
+<section class="panel menuSection" id="clasificacion" style="display:none" style="margin:12px 14px"><div class="paneltitle">🏆 CLASIFICACIÓN</div><div class="tablewrap"><table class="table"><thead><tr><th>POS</th><th>EQUIPO</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th><th>GF</th><th>GC</th><th>PTS</th></tr></thead><tbody id="standings"></tbody></table></div></section>
 
-<section class="panel" id="clasificacion" style="margin:12px 14px"><div class="paneltitle">🏆 CLASIFICACIÓN</div><div class="tablewrap"><table class="table"><thead><tr><th>POS</th><th>EQUIPO</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th><th>GF</th><th>GC</th><th>PTS</th></tr></thead><tbody id="standings"></tbody></table></div></section>
+<section class="panel menuSection" id="historial" style="display:none" style="margin:12px 14px"><div class="paneltitle">🗓️ HISTORIAL DE PARTIDOS</div><div class="panelbody" id="historyPublic"><div class="empty">Aún no hay partidos guardados</div></div></section>
 
-<section class="panel" id="historial" style="margin:12px 14px"><div class="paneltitle">🗓️ HISTORIAL DE PARTIDOS</div><div class="panelbody" id="historyPublic"><div class="empty">Aún no hay partidos guardados</div></div></section>
+<section class="panel menuSection" id="goleadores" style="display:none" style="margin:12px 14px"><div class="paneltitle">🏅 GOLEADORES</div><div class="panelbody" id="scorersPublic"><div class="empty">Los goleadores aparecerán aquí durante la temporada</div></div></section>
 
-<section class="panel" id="goleadores" style="margin:12px 14px"><div class="paneltitle">🏅 GOLEADORES</div><div class="panelbody" id="scorersPublic"><div class="empty">Los goleadores aparecerán aquí durante la temporada</div></div></section>
-
-<section class="panel" id="plantilla" style="margin:12px 14px"><div class="paneltitle">👥 PLANTILLA</div><div class="panelbody"><div id="rosterPublic"></div></div></section>
+<section class="panel menuSection" id="plantilla" style="margin:12px 14px;display:none"><div class="paneltitle">👥 PLANTILLA</div><div class="panelbody"><div id="rosterPublic"></div></div></section>
 
 <section id="admin" class="admin">
   <h2>⚙ PANEL DE CONTROL</h2><div style="color:#aaa;font-size:12px;margin-bottom:10px">Solo el administrador modifica el directo. Los espectadores reciben los cambios desde Firebase sin actualizar la página.</div>
@@ -304,7 +322,18 @@ function loadLocal(){
   try{const ps=JSON.parse(localStorage.getItem("rs_playerStats"));if(ps)state.playerStats=ps;const h=JSON.parse(localStorage.getItem("rs_history"));if(h)state.history=h;const m=JSON.parse(localStorage.getItem("rs_match"));if(m)state.match={...state.match,...m};const p=JSON.parse(localStorage.getItem("rs_players"));if(p)state.players=p;const e=JSON.parse(localStorage.getItem("rs_events"));if(e)state.events=e;const s=JSON.parse(localStorage.getItem("rs_standings"));if(s)state.standings=s}catch(e){}
 }
 function commitAll(){if(firebaseOK)db.ref("rsClubLive").set(state);else{setLocal("match",state.match);setLocal("players",state.players);setLocal("events",state.events);setLocal("history",state.history);setLocal("playerStats",state.playerStats);setLocal("standings",state.standings)}}
-function renderAll(){renderMatch();renderEvents();renderPitch();renderRoster();renderStandings();renderHistory();renderMatchStats();renderScorers();renderEditor();fillGoalPlayers();fillEventPlayers();}
+function renderAll(){cleanupExpiredEvents();renderMatch();renderEvents();renderPitch();renderRoster();renderStandings();renderHistory();renderMatchStats();renderScorers();renderEditor();fillGoalPlayers();fillEventPlayers();}
+function cleanupExpiredEvents(){
+ const m=state.match||{};
+ if(m.status==="finished" && m.finishedAt && Date.now()-Number(m.finishedAt)>=24*60*60*1000){
+   state.events=[];
+   if(firebaseOK)db.ref("rsClubLive/events").remove();
+   else setLocal("events",[]);
+ }
+}
+function markFinishedAt(){
+ if(state.match.status==="finished" && !state.match.finishedAt) state.match.finishedAt=Date.now();
+}
 function renderMatch(){
  const m=state.match;
  document.getElementById("homeName").textContent=m.home||"RAMÓN SICART";
@@ -315,7 +344,7 @@ function renderMatch(){
  document.querySelector(".matchhead div:last-child").textContent="🏆 "+(m.round||"JORNADA");
  const phase=m.status==="finished"?"TERMINADO":m.status==="paused"?"PAUSADO":m.status==="running"?(m.period===1?"1ª PARTE":"2ª PARTE"):(m.period===2?"2ª PARTE":"PARTIDO SIN INICIAR");
  document.getElementById("phase").innerHTML=(m.status==="running"?'<span class="live-dot"></span>':'')+phase;
- document.getElementById("clock").textContent=formatTime(currentElapsed());
+ document.getElementById("clock").textContent=displayMatchMinute(currentElapsed());
  document.getElementById("liveLabel").textContent=m.status==="running"?"🔴 EN DIRECTO":"";
  const last=state.events.slice(-3).reverse();document.getElementById("miniEvents").innerHTML=last.length?last.map(e=>`<div class="event-mini">${e.type==="goal"?"⚽":e.icon||"•"} <span>${e.minute||""}</span> <span class="${e.type==="goal"?"goal":""}">${esc(e.text)}</span></div>`).join(""):'<div class="event-mini">Aún no hay eventos</div>';
 }
@@ -328,7 +357,7 @@ let autoBoundaryLock="";
 setInterval(()=>{
   if(state.match.status==="running"){
     const elapsed=currentElapsed();
-    document.getElementById("clock").textContent=formatTime(elapsed);
+    document.getElementById("clock").textContent=displayMatchMinute(elapsed);
     const limit=(Number(state.match.periodMinutes)||25)*60;
     const boundaryKey=state.match.period+":"+limit;
     if(elapsed>=limit && autoBoundaryLock!==boundaryKey){
@@ -341,8 +370,9 @@ setInterval(()=>{
         addEvent("⏸","DESCANSO",formatTime(limit));
       }else{
         state.match.status="finished";
+        state.match.finishedAt=Date.now();
         save("match",state.match);
-        addEvent("🏁","PARTIDO TERMINADO",formatTime(limit));
+        addEvent("🏁","PARTIDO TERMINADO · FINALIZADO","80:00");
       }
       renderAll();
     }
@@ -439,10 +469,11 @@ function renderMatchStats(){
 function renderScorers(){
  const box=document.getElementById("scorersPublic");if(!box)return;
  const stats=state.playerStats||{};
- const rows=Object.values(stats).filter(x=>x.goals>0).sort((a,b)=>b.goals-a.goals||a.name.localeCompare(b.name));
- if(!rows.length){box.innerHTML='<div class="empty">Todavía no hay goles registrados por jugador</div>';return}
- box.innerHTML=rows.map((p,i)=>`<div class="eventrow"><div class="eventtime">#${esc(p.num||"")}</div><div class="eventicon">${i<3?"🏅":"⚽"}</div><div class="eventdesc"><b>${esc(p.name)}</b><br><small>${p.goals} ${p.goals===1?"gol":"goles"}</small></div></div>`).join("");
+ const rows=Object.values(stats).filter(x=>x.goals>0).sort((a,b)=>b.goals-a.goals||a.name.localeCompare(b.name)).slice(0,3);
+ if(!rows.length){box.innerHTML='<div class="empty">Todavía no hay goles registrados</div>';return}
+ box.innerHTML=rows.map((p,i)=>`<div class="eventrow"><div class="eventtime">${i+1}º</div><div class="eventicon">🏅</div><div class="eventdesc"><b>#${esc(p.num||"")} ${esc(p.name)}</b><br><small>${p.goals} ${p.goals===1?"gol":"goles"}</small></div></div>`).join("");
 }
+
 function registerGoalScorer(playerName){
  if(!playerName)return;
  const p=state.players.find(x=>String(x.name)===String(playerName));if(!p)return;
@@ -453,16 +484,12 @@ function registerGoalScorer(playerName){
  if(firebaseOK)db.ref("rsClubLive/playerStats").set(state.playerStats);else setLocal("playerStats",state.playerStats);
 }
 function renderHistory(){
- const box=document.getElementById("historyPublic");
- if(!box)return;
- if(!state.history.length){box.innerHTML='<div class="empty">Aún no hay partidos guardados</div>';return}
- box.innerHTML=state.history.slice().reverse().map((m,i)=>`
- <div class="eventrow">
-   <div class="eventtime">${esc(m.date||"")}</div>
-   <div class="eventicon">⚽</div>
-   <div class="eventdesc"><b>${esc(m.home)} ${m.homeScore} - ${m.awayScore} ${esc(m.away)}</b><br><small>${esc(m.round||"")} · ${esc(m.time||"")}</small></div>
- </div>`).join("");
+ const box=document.getElementById("historyPublic");if(!box)return;
+ const rows=(state.history||[]).slice().sort((a,b)=>(b.savedAt||0)-(a.savedAt||0)).slice(0,3);
+ if(!rows.length){box.innerHTML='<div class="empty">Aún no hay partidos guardados</div>';return}
+ box.innerHTML=rows.map(m=>`<div class="eventrow"><div class="eventtime">${esc(m.date||"")}</div><div class="eventicon">⚽</div><div class="eventdesc"><b>${esc(m.home)} ${m.homeScore} - ${m.awayScore} ${esc(m.away)}</b><br><small>${esc(m.round||"")} · ${esc(m.time||"")}</small></div></div>`).join("");
 }
+
 function fillReplacePlayer(){
  const s=document.getElementById("replacePlayerSelect");if(!s)return;
  s.innerHTML='<option value="">Seleccionar jugador</option>'+state.players.map(p=>`<option value="${escAttr(p.id)}">#${escAttr(p.num)} ${esc(p.name)}</option>`).join("");
@@ -483,14 +510,14 @@ function fillEventPlayers(){
 }
 function quickGoal(team){
  document.getElementById("goalTeam").value=team;
- const minute=formatTime(currentElapsed());
+ const minute=displayMatchMinute(currentElapsed());
  const player=document.getElementById("goalPlayer").value;
  const text=team==="home"?`Gol Ramón Sicart${player?" · "+player:""}`:`Gol rival`;
  if(team==="home"){state.match.homeScore++;registerGoalScorer(player);}else state.match.awayScore++;
  state.events.push({id:Date.now(),type:"goal",icon:"⚽",text,minute});
  commitAll();renderAll();
  const score=document.querySelector(".score");if(score){score.classList.remove("flash");void score.offsetWidth;score.classList.add("flash");}
- showTicker("⚽ "+text+" · "+minute);
+ // Los eventos se muestran únicamente en la sección "EVENTOS DEL PARTIDO".
 }
 function quickEvent(type){
  document.getElementById("eventType").value=type;
@@ -504,7 +531,7 @@ function showTicker(text){
 }
 function addGenericEvent(){
  const type=document.getElementById("eventType").value;
- const minute=document.getElementById("eventMinute").value||formatTime(currentElapsed());
+ const minute=document.getElementById("eventMinute").value||displayMatchMinute(currentElapsed());
  const player=document.getElementById("eventPlayer").value;
  const extra=document.getElementById("eventText").value.trim();
  const icons={goal:"⚽",yellow:"🟨",red:"🟥",sub:"🔄",injury:"🩹",info:"ℹ️"};
@@ -552,7 +579,7 @@ function applyFormation(){
  if(!starters.length)return;
  if(starters.length>10)starters=starters.slice(0,10);
  const layouts={
-  "4-1-2-2":[[7,50],[25,18],[25,39],[25,61],[25,82],[48,50],[68,25],[68,75],[89,35],[89,65]],
+  "4-1-2-2":[[7,50],[28,16],[28,39],[28,61],[28,84],[50,50],[70,28],[70,72],[90,35],[90,65]],
   "4-3-2":[[7,50],[25,18],[25,39],[25,61],[25,82],[52,25],[52,50],[52,75],[82,38],[82,62]],
   "3-2-3":[[7,50],[28,25],[28,50],[28,75],[52,35],[52,65],[78,22],[78,50],[78,78]],
   "4-2-3":[[7,50],[25,18],[25,39],[25,61],[25,82],[50,35],[50,65],[80,20],[80,50],[80,80]]
@@ -570,9 +597,22 @@ function loadFormationControls(){
  if(o)o.value=state.match.orientation||"left";
 }
 function renderStandings(){
- const arr=[...state.standings].sort((a,b)=>b.pts-a.pts||((b.gf-b.gc)-(a.gf-a.gc))||b.gf-a.gf);
- document.getElementById("standings").innerHTML=arr.map((t,i)=>`<tr><td>${i+1}</td><td>${esc(t.name)}</td><td>${t.pj}</td><td>${t.pg}</td><td>${t.pe}</td><td>${t.pp}</td><td>${t.gf}</td><td>${t.gc}</td><td class="pts">${t.pts}</td></tr>`).join("");
+ const box=document.getElementById("standingsPublic");if(!box)return;
+ let teams=[...(state.standings||[])];
+ const rs=teams.find(t=>/RAMON|RAMÓN|SICART/i.test(t.name));
+ const others=teams.filter(t=>t!==rs).sort((a,b)=>(b.pts-a.pts)||(b.gf-b.gc)-(a.gf-a.gc)||b.gf-a.gf);
+ let shown=[];
+ if(rs)shown.push(rs);
+ shown=shown.concat(others.filter(t=>t!==rs).slice(0,4));
+ // If there are fewer than 5 configured teams, show placeholders.
+ while(shown.length<5) shown.push({name:shown.length===0?"RAMON SICART":"Equipo "+(shown.length+1),pj:0,pg:0,pe:0,pp:0,gf:0,gc:0,pts:0,placeholder:true});
+ // Order by points while ensuring Ramon Sicart remains present.
+ shown.sort((a,b)=>(b.pts-a.pts)||(b.gf-b.gc)-(a.gf-a.gc)||b.gf-a.gf);
+ box.innerHTML=`<div class="table"><div class="tr th"><span>#</span><span>EQUIPO</span><span>PTS</span><span>PJ</span><span>GF</span><span>GC</span></div>`+
+ shown.slice(0,5).map((t,i)=>`<div class="tr ${/RAMON|RAMÓN|SICART/i.test(t.name)?"highlight":""}"><span>${i+1}</span><span>${esc(t.name)}</span><span><b>${t.pts||0}</b></span><span>${t.pj||0}</span><span>${t.gf||0}</span><span>${t.gc||0}</span></div>`).join("")+
+ `</div>`;
 }
+
 function renderEditor(){
  const box=document.getElementById("rosterEditor");
  box.innerHTML=state.players.map((p,i)=>`<div class="rosterrow" data-i="${i}">
@@ -605,7 +645,16 @@ function saveMatchSettings(){
 }
 function startMatch(){if(state.match.status==="finished")return;autoBoundaryLock="";state.match.status="running";state.match.startAt=Date.now();save("match",state.match);addEvent("▶","Inicio de la "+(state.match.period===1?"1ª":"2ª")+" parte",formatTime(currentElapsed()).replace("00:","")+"'" )}
 function pauseMatch(){if(state.match.status!=="running")return;state.match.elapsed=currentElapsed();state.match.startAt=null;state.match.status="paused";save("match",state.match);addEvent("Ⅱ","Partido pausado",formatTime(state.match.elapsed))}
-function nextPeriod(){state.match.elapsed=0;state.match.startAt=null;state.match.period=2;state.match.status="paused";autoBoundaryLock="";save("match",state.match);addEvent("▶","2ª PARTE preparada","")}
+function nextPeriod(){
+  state.match.elapsed=0;
+  state.match.startAt=null;
+  state.match.period=2;
+  state.match.status="paused";
+  autoBoundaryLock="";
+  save("match",state.match);
+  addEvent("▶","2ª PARTE · COMIENZA EN 40:00","40:00");
+  renderAll();
+}
 function finishMatch(){if(state.match.status==="running")state.match.elapsed=currentElapsed();state.match.startAt=null;state.match.status="finished";save("match",state.match);addEvent("■","Partido terminado",formatTime(state.match.elapsed))}
 function resetMatch(){autoBoundaryLock="";state.match={...state.match,homeScore:0,awayScore:0,status:"idle",period:1,elapsed:0,startAt:null};state.events=[];save("match",state.match);save("events",state.events);renderAll()}
 function addEvent(icon,text,minute){const e={id:Date.now(),type:"event",icon,text,minute};state.events.push(e);save("events",state.events);renderEvents()}
@@ -625,6 +674,20 @@ function updateStandingsLive(){
 function openAdmin(){document.getElementById("pinbox").classList.add("show");document.getElementById("pinInput").focus()}
 function closePin(){document.getElementById("pinbox").classList.remove("show")}
 function checkPin(){if(document.getElementById("pinInput").value===ADMIN_PIN){closePin();document.getElementById("admin").classList.add("show");scrollToId("admin")}else document.getElementById("pinError").textContent="PIN incorrecto"}
+function toggleMenu(){
+ const m=document.getElementById("sideMenu"),o=document.getElementById("sideMenuOverlay");
+ if(!m||!o)return;
+ m.classList.toggle("open");o.classList.toggle("open");
+}
+function menuGo(id){
+ toggleMenu();
+ const el=document.getElementById(id);if(!el)return;
+ if(id!=="directo"){
+   el.style.display="block";
+   el.classList.add("menuOpen");
+ }
+ setTimeout(()=>el.scrollIntoView({behavior:"smooth",block:"start"}),80);
+}
 function scrollToId(id){document.getElementById(id).scrollIntoView({behavior:"smooth",block:"start"})}
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
 function escAttr(s){return esc(s)}
