@@ -141,6 +141,7 @@ button{cursor:pointer}
 
 /* Public live events: visible on the main match screen */
 #publicLiveConsole{display:block!important;margin-top:16px!important}
+#publicLiveConsole>.sectionTitle{display:flex!important}
 #publicEvents{display:grid;gap:9px}
 #publicEvents .event{
   display:grid;
@@ -220,40 +221,95 @@ button{cursor:pointer}
 }
 
 
-/* ===== V12 — EVENTOS DENTRO DEL DIRECTO ===== */
-.integratedLiveEventsV12{
+/* ===== V13 — PUBLIC MATCH XI, STRUCTURE FIX ===== */
+.integratedEventsV13{
   margin-top:14px;
+  padding-top:14px;
   border-top:1px solid #203854;
-  padding-top:13px;
 }
-.integratedEventsTitleV12{
+.integratedEventsHeadV13{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  gap:10px;
-  margin-bottom:9px;
-  color:#fff;
+  gap:8px;
+  margin-bottom:10px;
   font-size:10px;
+}
+.integratedEventsHeadV13 strong{color:#fff}
+.integratedEventsHeadV13>span:last-child{color:#71869c;font-size:8px}
+.liveDotV13{
+  display:inline-block;width:7px;height:7px;border-radius:50%;
+  background:#21e36a;box-shadow:0 0 8px #21e36a;margin-right:5px
+}
+.publicTeamV11{margin-top:16px}
+.publicPitchV11{
+  position:relative;min-height:650px;border-radius:20px;overflow:hidden;
+  background:repeating-linear-gradient(90deg,#237d4e 0,#237d4e 12%,#1f7449 12%,#1f7449 24%);
+  border:5px solid #dcebc7;
+  box-shadow:0 0 0 2px #9fc18f inset;
+}
+.publicPitchV11:before{
+  content:"";position:absolute;inset:2.5%;
+  border:3px solid #ffffffcc;border-radius:5px;
+}
+.publicPitchV11:after{
+  content:"";position:absolute;left:50%;top:2.5%;bottom:2.5%;
+  width:3px;background:#ffffffcc;transform:translateX(-50%);
+}
+.publicCircleV11{
+  position:absolute;left:50%;top:50%;width:105px;height:105px;
+  border:3px solid #ffffffaa;border-radius:50%;transform:translate(-50%,-50%);
+}
+.publicPlayerV11{
+  position:absolute;transform:translate(-50%,-50%);
+  width:105px;text-align:center;z-index:2;
+}
+.publicShirtV11{
+  width:54px;height:60px;margin:auto;position:relative;
+  border-radius:10px 10px 15px 15px;
+  background:repeating-linear-gradient(90deg,#f1c900 0 13px,#e52f35 13px 26px);
+  border:2px solid #fff;box-shadow:0 6px 12px #0007;
+  clip-path:polygon(20% 0,38% 0,50% 12%,62% 0,80% 0,100% 20%,83% 30%,83% 100%,17% 100%,17% 30%,0 20%);
+}
+.publicShirtV11 b{
+  position:absolute;left:0;right:0;top:20px;color:#111;font-size:18px;
+  font-weight:1000;text-shadow:0 1px #fff8;
+}
+.publicNameV11{
+  margin-top:5px;background:#061a10ee;color:#fff;border-radius:14px;
+  padding:6px 8px;font-size:11px;font-weight:1000;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.publicPlayerV11 .benchPosV11,
+.publicPlayerV11:after{
+  font-size:9px;color:#fff;font-weight:800;
+}
+.publicPlayerV11 small{display:block}
+.benchV11{
+  margin-top:13px;padding:13px;background:#081827;
+  border:1px solid #203854;border-radius:15px;
+}
+.benchTitleV11{font-size:10px;color:#f1d600;font-weight:1000;margin-bottom:9px}
+.benchGridV11{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.benchPlayerV11{
+  display:flex;align-items:center;gap:7px;padding:9px;background:#0c1d2f;
+  border:1px solid #1c3550;border-radius:10px;
+}
+.benchShirtV11{
+  width:30px;height:32px;flex:0 0 30px;border-radius:6px 6px 8px 8px;
+  background:repeating-linear-gradient(90deg,#f1c900 0 7px,#e52f35 7px 14px);
+  border:1px solid #fff8;display:grid;place-items:center;color:#111;font-size:9px;
   font-weight:1000;
 }
-.integratedEventsTitleV12>span:last-child{
-  color:#71869c;
-  font-size:8px;
-  font-weight:700;
-}
-.liveDotV12{
-  display:inline-block;
-  width:7px;height:7px;border-radius:50%;
-  background:#25e36a;
-  margin-right:5px;
-  box-shadow:0 0 9px #25e36a;
-}
-.integratedLiveEventsV12 #publicEvents{
-  display:grid;
-  gap:8px;
-}
-.integratedLiveEventsV12 #publicEvents .event{
-  margin:0;
+.benchNameV11{font-size:9px;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.benchPosV11{font-size:7px;color:#71869c;margin-top:2px}
+@media(max-width:700px){
+  .publicPitchV11{min-height:570px}
+  .publicPlayerV11{width:82px}
+  .publicShirtV11{width:45px;height:51px}
+  .publicShirtV11 b{top:17px;font-size:15px}
+  .publicNameV11{font-size:8px;padding:5px 6px}
+  .benchGridV11{grid-template-columns:repeat(2,1fr)}
 }
 
 </style>
@@ -289,16 +345,26 @@ button{cursor:pointer}
       <span id="matchHalfInfo">⏱ 1ª PARTE</span>
     </div>
     <div id="goalsBox" class="goals" style="display:none"><h3>GOLES</h3><div class="goalGrid"><div id="homeGoals" class="goalCol"></div><div class="goalDivider"></div><div id="awayGoals" class="goalCol"></div></div></div>
-    <div class="integratedLiveEventsV12" id="publicLiveConsole">
-      <div class="integratedEventsTitleV12">
-        <div><span class="liveDotV12"></span> DIRECTO · EVENTOS DEL PARTIDO</div>
-        <span id="publicLiveHint">Actualización en tiempo real</span>
+  </div></div>
+    <div class="integratedEventsV13" id="publicLiveConsole">
+      <div class="integratedEventsHeadV13">
+        <strong><span class="liveDotV13"></span> EVENTOS DEL PARTIDO</strong>
+        <span id="publicLiveHint">EN DIRECTO</span>
       </div>
       <div id="publicEvents" class="eventTimeline"></div>
     </div>
 
-  </div></div>
-
+<section class="card publicTeamV11" id="publicTeamV11">
+  <div class="sectionTitle">
+    <h2>👕 Ramón Sicart · Alineación</h2>
+    <p id="publicFormationV11">Once titular y suplentes</p>
+  </div>
+  <div class="publicPitchV11" id="publicPitchV11"></div>
+  <div class="benchV11">
+    <div class="benchTitleV11">🪑 SUPLENTES</div>
+    <div class="benchGridV11" id="publicBenchV11"></div>
+  </div>
+</section>
 </section>
 
 <section id="squad" class="page">
@@ -402,17 +468,6 @@ button{cursor:pointer}
 </section>
 </main>
 
-<section class="card publicTeamV11" id="publicTeamV11">
-  <div class="sectionTitle">
-    <h2>👕 Ramón Sicart · Alineación</h2>
-    <p id="publicFormationV11">Once titular y suplentes</p>
-  </div>
-  <div class="publicPitchV11" id="publicPitchV11"></div>
-  <div class="benchV11">
-    <div class="benchTitleV11">🪑 SUPLENTES</div>
-    <div class="benchGridV11" id="publicBenchV11"></div>
-  </div>
-</section>
 <footer style="width:min(1400px,100%);margin:-55px auto 0;padding:0 20px 35px;text-align:center;color:#5f728a;font-size:10px;letter-spacing:.5px">
   RS LIVE · Ramón Sicart · Datos sincronizados en tiempo real
 </footer>
@@ -1097,7 +1152,7 @@ function renderAdminXI10(){
 
   pitch.querySelectorAll(".adminPitchPlayerV10").forEach(x=>x.remove());
   nums.forEach((n,i)=>{
-    const p=App.players.find(x=>Number(x.number)===n);
+    const p=safePlayers.find(x=>Number(x.number)===n);
     if(!p)return;
     const xy=pos[i]||[50,50];
     pitch.insertAdjacentHTML("beforeend",`<div class="adminPitchPlayerV10" style="left:${xy[0]}%;top:${xy[1]}%">
@@ -1194,6 +1249,7 @@ function renderPublicTeamV11(){
   if(!pitch||!bench)return;
 
   const lineup=App.lineup||{formation:"4-3-3",players:[]};
+  const safePlayers=Array.isArray(App.players)?App.players:[];
   const nums=(lineup.players||[]).map(Number).slice(0,11);
   const formation=lineup.formation||"4-3-3";
   const pos=positions(formation);
@@ -1211,7 +1267,7 @@ function renderPublicTeamV11(){
   });
 
   const starters=new Set(nums);
-  const subs=App.players
+  const subs=safePlayers
     .filter(p=>!starters.has(Number(p.number)))
     .slice()
     .sort((a,b)=>Number(a.number)-Number(b.number));
@@ -1235,18 +1291,6 @@ renderAll=function(){
   renderPublicTeamV11();
 };
 setTimeout(renderPublicTeamV11,180);
-</script>
-
-
-<script>
-/* V12: los eventos forman parte del Match Center/Directo, nunca una sección independiente. */
-function enforceIntegratedEventsV12(){
-  const ev=document.getElementById("publicLiveConsole");
-  if(!ev)return;
-  const parent=ev.closest(".liveCard, .matchCard, .card, section");
-  if(parent) ev.style.display="block";
-}
-setTimeout(enforceIntegratedEventsV12,100);
 </script>
 
 </body>
