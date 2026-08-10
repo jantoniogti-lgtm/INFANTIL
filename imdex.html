@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0b">
+<title>RS CLUB LIVE V9 — Ramón Sicart</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+<style>
+:root{--bg:#080808;--panel:#111;--panel2:#151515;--line:#3a3a3a;--yellow:#f4b900;--yellow2:#ffd33d;--red:#c91522;--text:#f4f4f4;--muted:#aaa}
+*{box-sizing:border-box}html,body{margin:0;background:radial-gradient(circle at top,#191919 0,#080808 42%,#050505 100%);color:var(--text);font-family:Arial,Helvetica,sans-serif}
+button,input,select{font:inherit}button{cursor:pointer}
+.app{max-width:1200px;margin:auto;padding-bottom:82px}
+.topbar{position:sticky;top:0;z-index:20;background:#0b0b0bf2;border-bottom:1px solid #333;backdrop-filter:blur(10px);padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px}.crest{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--yellow) 0 48%,var(--red) 48%);display:grid;place-items:center;color:#111;font-weight:900}.brand b{font-size:18px}.brand small{display:block;color:#aaa;font-size:10px;letter-spacing:1px}
+.tabs{display:flex;gap:7px}.tab{background:#151515;border:1px solid #333;color:#ddd;padding:9px 12px;border-radius:10px;font-weight:700}.tab.active,.tab:hover{border-color:var(--yellow);color:var(--yellow)}
+.hero{margin:14px;border:1px solid #3c3c3c;border-radius:18px;overflow:hidden;background:#101010;box-shadow:0 10px 40px #0008}
+.matchhead{background:linear-gradient(90deg,#e6a900,#ffd13a,#e6a900);color:#111;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:9px 14px;font-weight:900;text-transform:uppercase}.matchhead div{text-align:center}.matchhead .time{font-size:20px}.matchbody{padding:20px 18px 12px}.teams{display:grid;grid-template-columns:1fr 230px 1fr;align-items:center;gap:10px}.team{text-align:center}.teamname{font-weight:900;font-size:18px;margin-top:10px}.teamcrest{width:90px;height:90px;margin:auto;border-radius:50%;display:grid;place-items:center;border:2px solid #777;background:#181818;font-weight:900;font-size:13px}.teamcrest.home{background:linear-gradient(135deg,#1f5c95,#0e2439)}.teamcrest.away{background:#f5f5f5;color:#187045;border-color:#1c7a4b}.score{font-size:76px;font-weight:1000;letter-spacing:5px;text-align:center}.matchdate{text-align:center;color:#aaa;font-size:12px;font-weight:800;margin:3px 0 2px;text-transform:uppercase}.clock{text-align:center;color:var(--yellow);font-size:38px;font-weight:1000;margin-top:0}.phase{text-align:center;color:#ddd;font-weight:800;font-size:12px;margin-bottom:3px}.live-dot{display:inline-block;width:8px;height:8px;background:#e21b2d;border-radius:50%;margin-right:5px;box-shadow:0 0 10px #e21b2d}.events-strip{border-top:1px solid #292929;margin-top:15px;padding:10px 0 0;min-height:38px}.event-mini{display:flex;justify-content:center;gap:12px;font-size:13px;color:#ddd}.goal{color:#fff;font-weight:900}.goal b{color:var(--yellow)}@keyframes scoreFlash{0%{transform:scale(1)}35%{transform:scale(1.12)}100%{transform:scale(1)}}.score.flash{animation:scoreFlash .55s ease}
+.content{display:grid;grid-template-columns:1.05fr .95fr;gap:12px;padding:0 14px}.panel{background:linear-gradient(180deg,#121212,#0d0d0d);border:1px solid #393939;border-radius:16px;overflow:hidden}.paneltitle{padding:13px 15px;border-bottom:1px solid #333;color:var(--yellow);font-size:18px;font-weight:900;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}.panelbody{padding:12px}.events{min-height:280px}.eventrow{display:flex;gap:10px;align-items:center;border-bottom:1px solid #2b2b2b;padding:10px 4px}.eventtime{width:46px;color:var(--yellow);font-weight:900}.eventicon{width:28px;text-align:center}.eventdesc{flex:1}.empty{text-align:center;color:#999;padding:70px 15px}
+.pitch{position:relative;aspect-ratio:1.9;background:linear-gradient(90deg,#0f6d2b,#15823a,#0f6d2b);border:3px solid #ddd;overflow:hidden;border-radius:3px}.pitch:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 13%,#fff1 13% 13.2%)}.pitch:after{content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;background:#fff9;transform:translateX(-50%)}.circle{position:absolute;left:50%;top:50%;width:18%;aspect-ratio:1;border:2px solid #fff9;border-radius:50%;transform:translate(-50%,-50%)}.box{position:absolute;top:24%;bottom:24%;width:17%;border:2px solid #fff9}.box.left{left:0}.box.right{right:0}.box.left:after,.box.right:after{content:"";position:absolute;top:35%;bottom:35%;width:35%;border:2px solid #fff8}.box.left:after{left:0;border-left:0}.box.right:after{right:0;border-right:0}.player{position:absolute;transform:translate(-50%,-50%);z-index:2;text-align:center;width:70px;touch-action:none;user-select:none;cursor:grab}.player.dragging{cursor:grabbing;z-index:20;filter:drop-shadow(0 0 7px var(--yellow))}.player.selected .shirt{filter:drop-shadow(0 0 7px var(--yellow));outline:2px solid var(--yellow);outline-offset:2px}.shirt{width:42px;height:48px;margin:auto;position:relative;background:repeating-linear-gradient(90deg,var(--red) 0 9px,var(--yellow) 9px 18px);clip-path:polygon(24% 0,39% 0,50% 10%,61% 0,76% 0,100% 24%,84% 39%,78% 28%,78% 100%,22% 100%,22% 28%,16% 39%,0 24%);filter:drop-shadow(0 2px 2px #0009)}.playernum{position:absolute;top:17px;left:0;right:0;text-align:center;font-weight:1000;color:#111;font-size:15px}.playername{background:#090909e8;padding:3px 5px;border-radius:3px;margin-top:-2px;font-size:11px;font-weight:900;white-space:nowrap}.sublist{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.sub{border:1px solid #3a3a3a;border-radius:8px;padding:7px 9px;font-size:12px;background:#141414}.tablewrap{overflow:auto}.table{width:100%;border-collapse:collapse;font-size:13px}.table th,.table td{padding:10px 7px;border-bottom:1px solid #2b2b2b;text-align:center}.table th{color:var(--yellow);font-size:11px}.table td:nth-child(2){text-align:left;font-weight:800}.pts{color:var(--yellow);font-weight:1000}
+.admin{display:none;margin:14px;padding:14px;border:1px solid #6b5100;background:#101010;border-radius:16px}.admin.show{display:block}.admin h2{margin:0 0 12px;color:var(--yellow)}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.field{display:flex;flex-direction:column;gap:5px}.field label{font-size:11px;color:#aaa;text-transform:uppercase}.field input,.field select{background:#0a0a0a;color:#fff;border:1px solid #444;border-radius:8px;padding:10px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.btn{border:1px solid #555;background:#191919;color:#fff;border-radius:9px;padding:10px 13px;font-weight:800}.btn.yellow{background:var(--yellow);color:#111;border-color:var(--yellow)}.btn.red{background:#55131a;border-color:#8c222d}.btn.green{background:#123f22;border-color:#287d44}.section{margin-top:15px;padding-top:15px;border-top:1px solid #333}.rosterrow{display:grid;grid-template-columns:55px 1fr 100px 90px 45px;gap:6px;align-items:center;margin-bottom:6px}.rosterrow input,.rosterrow select{min-width:0;background:#0a0a0a;color:#fff;border:1px solid #3c3c3c;padding:8px;border-radius:7px}.status{margin-top:8px;color:#aaa;font-size:12px}
+.bottom{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#0b0b0bf5;border-top:1px solid #333;display:flex;justify-content:center;gap:5px;padding:8px env(safe-area-inset-right) calc(8px + env(safe-area-inset-bottom)) env(safe-area-inset-left);backdrop-filter:blur(10px)}.bottom button{background:transparent;color:#bbb;border:0;padding:5px 13px;font-size:11px}.bottom button.active{color:var(--yellow)}
+.pinbox{display:none;position:fixed;inset:0;z-index:100;background:#000b;place-items:center}.pinbox.show{display:grid}.pin{width:min(350px,90vw);background:#151515;border:1px solid #555;border-radius:16px;padding:20px}.pin h3{margin-top:0;color:var(--yellow)}.pin input{width:100%;padding:12px;background:#090909;border:1px solid #555;color:#fff;border-radius:8px;margin-bottom:8px}
+@media(max-width:800px){.pitch{aspect-ratio:1.55}.content{grid-template-columns:1fr}.teams{grid-template-columns:1fr 130px 1fr}.score{font-size:52px}.teamcrest{width:65px;height:65px}.teamname{font-size:14px}.matchhead{font-size:12px}.matchhead .time{font-size:15px}.grid{grid-template-columns:1fr}.rosterrow{grid-template-columns:45px 1fr 80px 80px 40px}.tabs{display:none}.brand b{font-size:15px}.player{width:62px}.shirt{width:36px;height:41px}.playername{font-size:9px}.paneltitle{font-size:15px}}
+
+.hamburgerBtn{position:fixed;left:12px;top:12px;z-index:10001;width:44px;height:44px;border:1px solid #333;border-radius:12px;background:#111;color:#ffd33d;font-size:25px;font-weight:900;box-shadow:0 5px 20px #0008}
+.sideMenu{position:fixed;left:0;top:0;bottom:0;width:min(310px,86vw);background:#101010;z-index:10000;transform:translateX(-105%);transition:.25s ease;box-shadow:8px 0 35px #000b;padding:14px;overflow-y:auto}
+.sideMenu.open{transform:translateX(0)}
+.sideMenuOverlay{display:none;position:fixed;inset:0;background:#0009;z-index:9999}
+.sideMenuOverlay.open{display:block}
+.sideMenuHead{display:flex;justify-content:space-between;align-items:center;color:#ffd33d;font-size:18px;padding:8px 4px 16px;border-bottom:1px solid #333;margin-bottom:8px}
+.sideMenuHead button{background:none;border:0;color:#fff;font-size:30px}
+.sideMenu>button{width:100%;padding:15px 10px;margin:3px 0;border:0;border-bottom:1px solid #272727;background:transparent;color:#fff;text-align:left;font-weight:900;font-size:14px;border-radius:9px}
+.sideMenu>button:hover{background:#1d1d1d}
+.menuSection.menuOpen{display:block!important}
+@media(max-width:600px){
+ .pitch{aspect-ratio:1.52}
+ .player{width:24%;max-width:70px}
+ .shirt{width:42px;height:48px}
+ .playername{font-size:8px;white-space:nowrap;max-width:70px;overflow:hidden;text-overflow:ellipsis}
+}
+
+</style>
+</head>
+<body>
+<button id="hamburgerBtn" class="hamburgerBtn" onclick="toggleMenu()" aria-label="Abrir menú">☰</button>
+<div id="sideMenuOverlay" class="sideMenuOverlay" onclick="toggleMenu()"></div>
+<aside id="sideMenu" class="sideMenu">
+  <div class="sideMenuHead"><b>RS CLUB LIVE</b><button onclick="toggleMenu()">×</button></div>
+  <button onclick="menuGo('directo')">🔴 <span>Partido en directo</span></button>
+  <button onclick="menuGo('eventos')">☷ <span>Eventos del partido</span></button>
+  <button onclick="menuGo('goleadores')">🏅 <span>Goleadores</span></button>
+  <button onclick="menuGo('clasificacion')">🏆 <span>Clasificación</span></button>
+  <button onclick="menuGo('historial')">🗓️ <span>Historial</span></button>
+  <button onclick="menuGo('plantilla')">👥 <span>Plantilla</span></button>
+  <button onclick="openAdmin();toggleMenu()">⚙️ <span>Administración</span></button>
+</aside>
+<div class="app">
+<header class="topbar">
+  <div class="brand"><div class="crest">RS</div><div><b>RS CLUB LIVE</b><small>RAMÓN SICART · DIRECTO</small></div></div>
+  <div class="tabs"><button class="tab active" onclick="scrollToId('directo')">DIRECTO</button><button class="tab" onclick="scrollToId('plantilla')">PLANTILLA</button><button class="tab" onclick="openAdmin()">⚙ ADMIN</button></div>
+</header>
+
+<section id="directo" class="hero">
+  <div id="publicStatus" style="display:none;text-align:center;padding:7px;background:#181818;color:#bbb;font-size:11px;font-weight:900;letter-spacing:.6px"></div>
+  <div class="matchhead"><div>⚽ FÚTBOL · RAMÓN SICART</div><div class="time" id="matchTime">10:00</div><div>🏆 JORNADA 1</div></div>
+  <div class="matchbody">
+    <div class="teams">
+      <div class="team"><div class="teamcrest home">RS</div><div class="teamname" id="homeName">AERS RAMON SICART</div></div>
+      <div><div class="score"><span id="homeScore">0</span> - <span id="awayScore">0</span></div><div class="phase" id="phase"><span class="live-dot"></span>PARTIDO SIN INICIAR</div>
+<div id="syncBadge" style="text-align:center;font-size:10px;color:#777;margin-bottom:2px">● SINCRONIZACIÓN LOCAL</div>
+<div class="matchdate" id="matchDate"></div>
+<div class="clock" id="clock">00:00</div></div>
+      <div class="team"><div class="teamcrest away" id="awayCrest">RIVAL</div><div class="teamname" id="awayName">KOPSE P2012</div></div>
+    </div>
+    <div class="events-strip" id="miniEvents"><div class="event-mini">Aún no hay eventos</div></div>
+  </div>
+</section>
+
+<div class="content">
+  <section class="panel menuSection" id="eventos" style="display:none"><div class="paneltitle">☷ EVENTOS DEL PARTIDO <span id="liveLabel"></span></div>
+<div id="liveTicker" style="display:none"></div><div class="panelbody events" id="eventsList"><div class="empty">Los eventos del partido aparecerán aquí</div></div></section>
+  <section class="panel" id="alineacion"><div class="paneltitle">⚽ ALINEACIÓN RAMÓN SICART <span style="font-size:10px;color:#aaa">CAMPO HORIZONTAL</span></div><div class="panelbody">
+    <div class="pitch"><div class="circle"></div><div class="box left"></div><div class="box right"></div><div id="pitchPlayers"></div></div>
+    <div style="text-align:center;color:var(--yellow);font-weight:900;margin-top:10px">SUPLENTES</div>
+    <div class="sublist" id="subs"></div>
+  </div></section>
+</div>
+
+<section class="panel menuSection" id="clasificacion" style="display:none" style="margin:12px 14px"><div class="paneltitle">🏆 CLASIFICACIÓN</div><div class="tablewrap"><table class="table"><thead><tr><th>POS</th><th>EQUIPO</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th><th>GF</th><th>GC</th><th>PTS</th></tr></thead><tbody id="standings"></tbody></table></div></section>
+
+<section class="panel menuSection" id="historial" style="display:none" style="margin:12px 14px"><div class="paneltitle">🗓️ HISTORIAL DE PARTIDOS</div><div class="panelbody" id="historyPublic"><div class="empty">Aún no hay partidos guardados</div></div></section>
+
+<section class="panel menuSection" id="goleadores" style="display:none" style="margin:12px 14px"><div class="paneltitle">🏅 GOLEADORES</div><div class="panelbody" id="scorersPublic"><div class="empty">Los goleadores aparecerán aquí durante la temporada</div></div></section>
+
+<section class="panel menuSection" id="plantilla" style="margin:12px 14px;display:none"><div class="paneltitle">👥 PLANTILLA</div><div class="panelbody"><div id="rosterPublic"></div></div></section>
+
+<section id="admin" class="admin">
+  <h2>⚙ PANEL DE CONTROL</h2><div style="color:#aaa;font-size:12px;margin-bottom:10px">Solo el administrador modifica el directo. Los espectadores reciben los cambios desde Firebase sin actualizar la página.</div>
+  <div class="grid">
+    <div class="field"><label>Rival</label><input id="aAway" value="KOPSE P2012"></div>
+    <div class="field"><label>Fecha del partido</label><input id="aDate" type="date"></div>
+    <div class="field"><label>Hora</label><input id="aTime" value="10:00"></div>
+    <div class="field"><label>Duración de cada parte (min)</label><input id="aPeriod" type="number" value="25" min="1"></div>
+    <div class="field"><label>Jornada</label><input id="aRound" value="JORNADA 1"></div>
+  </div>
+  <div class="actions">
+    <button class="btn yellow" onclick="saveMatchSettings()">GUARDAR PARTIDO</button>
+    <button class="btn" onclick="prepareNextMatch()">🗓️ PREPARAR NUEVO PARTIDO</button>
+    <button class="btn green" onclick="startMatch()">▶ INICIAR / REANUDAR</button>
+    <button class="btn" onclick="pauseMatch()">Ⅱ PAUSAR</button>
+    <button class="btn" onclick="nextPeriod()">SIGUIENTE PARTE</button>
+    <button class="btn red" onclick="finishMatch()">■ TERMINAR</button>
+    <button class="btn green" onclick="saveFinishedMatch()">💾 GUARDAR RESULTADO</button>
+    <button class="btn" onclick="resetMatch()">↺ REINICIAR</button>
+  </div>
+
+  <div class="section">
+    <h3>🎛️ CONSOLA RÁPIDA · PARTIDO</h3>
+    <div class="actions" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+      <button class="btn yellow" style="min-height:54px" onclick="quickGoal('home')">⚽ GOL RAMÓN SICART</button>
+      <button class="btn" style="min-height:54px" onclick="quickGoal('away')">⚽ GOL RIVAL</button>
+      <button class="btn" style="min-height:54px" onclick="quickEvent('yellow')">🟨 AMARILLA</button>
+      <button class="btn red" style="min-height:54px" onclick="quickEvent('red')">🟥 ROJA</button>
+      <button class="btn" style="min-height:54px" onclick="quickEvent('sub')">🔄 CAMBIO</button>
+      <button class="btn" style="min-height:54px" onclick="quickEvent('injury')">🩹 LESIÓN</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>📋 GESTIÓN DE EVENTOS</h3>
+    <div class="grid">
+      <div class="field"><label>Tipo de evento</label><select id="eventType">
+        <option value="goal">⚽ Gol</option>
+        <option value="yellow">🟨 Tarjeta amarilla</option>
+        <option value="red">🟥 Tarjeta roja</option>
+        <option value="sub">🔄 Cambio</option>
+        <option value="injury">🩹 Lesión</option>
+        <option value="info">ℹ️ Información</option>
+      </select></div>
+      <div class="field"><label>Minuto</label><input id="eventMinute" placeholder="12'"></div>
+      <div class="field"><label>Jugador</label><select id="eventPlayer"></select></div>
+      <div class="field"><label>Jugador que entra (cambio)</label><select id="eventIncoming"></select></div>
+      <div class="field"><label>Texto adicional</label><input id="eventText" placeholder="Descripción"></div>
+    </div>
+    <div class="actions">
+      <button class="btn yellow" onclick="addGenericEvent()">AÑADIR EVENTO</button>
+      <button class="btn red" onclick="clearEvents()">BORRAR EVENTOS</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>⚽ AÑADIR GOL</h3>
+    <div class="grid">
+      <div class="field"><label>Equipo</label><select id="goalTeam"><option value="home">RAMÓN SICART</option><option value="away">RIVAL</option></select></div>
+      <div class="field"><label>Minuto</label><input id="goalMinute" placeholder="25'"></div>
+      <div class="field"><label>Jugador Ramón Sicart</label><select id="goalPlayer"></select></div>
+      <div class="field"><label>Descripción rival</label><input id="goalAwayText" placeholder="Jugador rival (opcional)"></div>
+    </div>
+    <div class="actions"><button class="btn yellow" onclick="addGoal()">⚽ AÑADIR GOL</button></div>
+  </div>
+
+  <div class="section">
+    <h3>🧩 EDITOR VISUAL DE ALINEACIÓN</h3>
+    <div class="status">Arrastra una camiseta con el dedo o ratón para colocarla. Toca una camiseta para cambiar el jugador.</div>
+    <div class="actions">
+      <button class="btn" onclick="centerSelectedPlayer()">🎯 CENTRAR SELECCIONADO</button>
+      <button class="btn" onclick="autoArrangeFormation()">✨ COLOCAR FORMACIÓN</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>🧩 FORMACIÓN DEL PARTIDO</h3>
+    <div class="grid">
+      <div class="field"><label>Formación</label><select id="formationSelect" onchange="applyFormation()">
+        <option value="4-1-2-2">4-1-2-2</option>
+        <option value="4-3-2">4-3-2</option>
+        <option value="3-2-3">3-2-3</option>
+        <option value="4-2-3">4-2-3</option>
+      </select></div>
+      <div class="field"><label>Orientación</label><select id="orientationSelect" onchange="applyFormation()">
+        <option value="left">Ataque hacia la derecha →</option>
+        <option value="right">Ataque hacia la izquierda ←</option>
+      </select></div>
+    </div>
+    <div class="status">La formación se guarda en Firebase y todos los espectadores la verán al instante.</div>
+    <div id="selectedPlayerInfo" style="margin-top:8px;padding:9px;border:1px solid #333;border-radius:8px;color:#aaa">Ningún jugador seleccionado.</div>
+    <div class="grid" style="margin-top:8px">
+      <div class="field"><label>Cambiar jugador seleccionado</label><select id="replacePlayerSelect"><option value="">Selecciona una camiseta primero</option></select></div>
+      <div class="actions" style="align-items:end"><button class="btn yellow" onclick="replaceSelectedPlayer()">CAMBIAR JUGADOR</button></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>🧹 DATOS DE TEMPORADA</h3>
+    <div class="actions"><button class="btn red" onclick="clearPlayerStats()">BORRAR PICHICHI</button><button class="btn red" onclick="clearStandings()">BORRAR CLASIFICACIÓN</button></div>
+  </div>
+
+  <div class="section">
+    <h3>👥 GESTIÓN DE PLANTILLA</h3>
+    <div id="rosterEditor"></div>
+    <div class="actions"><button class="btn" onclick="addPlayerRow()">+ AÑADIR JUGADOR</button><button class="btn yellow" onclick="saveRoster()">GUARDAR PLANTILLA</button><button class="btn red" onclick="clearHistory()">BORRAR HISTORIAL</button></div>
+  </div>
+  <div class="section">
+    <h3>🔥 FIREBASE · SINCRONIZACIÓN EN TIEMPO REAL</h3>
+    <div class="grid">
+      <div class="field"><label>API Key</label><input id="fbApiKey" placeholder="AIza..."></div>
+      <div class="field"><label>Auth Domain</label><input id="fbAuthDomain" placeholder="tu-proyecto.firebaseapp.com"></div>
+      <div class="field"><label>Database URL</label><input id="fbDatabaseURL" placeholder="https://tu-proyecto-default-rtdb..."></div>
+      <div class="field"><label>Project ID</label><input id="fbProjectId" placeholder="tu-proyecto"></div>
+      <div class="field"><label>Storage Bucket</label><input id="fbStorageBucket" placeholder="tu-proyecto.firebasestorage.app"></div>
+      <div class="field"><label>Messaging Sender ID</label><input id="fbMessagingSenderId" placeholder="123456789"></div>
+      <div class="field"><label>App ID</label><input id="fbAppId" placeholder="1:123...:web:..."></div>
+    </div>
+    <div class="actions">
+      <button class="btn yellow" onclick="saveFirebaseConfig()">GUARDAR CONFIGURACIÓN FIREBASE</button>
+      <button class="btn" onclick="clearFirebaseConfig()">BORRAR CONFIGURACIÓN</button>
+    </div>
+    <div class="status" id="firebaseStatus">Firebase: configurando…</div>
+  </div>
+</section>
+</div>
+
+<div class="bottom"><button class="active" onclick="scrollToId('directo')">⚽<br>PARTIDO</button><button onclick="scrollToId('alineacion')">⚽<br>ALINEACIÓN</button><button onclick="scrollToId('eventos')">☷<br>EVENTOS</button><button onclick="scrollToId('clasificacion')">🏆<br>CLASIFICACIÓN</button><button onclick="scrollToId('goleadores')">🏅<br>GOLES</button><button onclick="openAdmin()">⚙<br>ADMIN</button></div>
+
+<div class="pinbox" id="pinbox"><div class="pin"><h3>ACCESO ADMIN</h3><input id="pinInput" type="password" placeholder="PIN"><button class="btn yellow" style="width:100%" onclick="checkPin()">ENTRAR</button><button class="btn" style="width:100%;margin-top:7px" onclick="closePin()">CANCELAR</button><div id="pinError" style="color:#f66;margin-top:7px;font-size:12px"></div></div></div>
+
+<script>
+/* =========================================================
+   RS CLUB LIVE - UN SOLO HTML
+   1) Sustituye firebaseConfig por los datos de tu proyecto.
+   2) Realtime Database debe estar habilitada.
+   ========================================================= */
+const firebaseConfig = {
+  apiKey: "PON_AQUI_API_KEY",
+  authDomain: "TU-PROYECTO.firebaseapp.com",
+  databaseURL: "https://TU-PROYECTO-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "TU-PROYECTO",
+  storageBucket: "TU-PROYECTO.firebasestorage.app",
+  messagingSenderId: "PON_AQUI",
+  appId: "PON_AQUI"
+};
+
+const ADMIN_PIN = "1983"; // Cambia este PIN.
+let db = null, firebaseOK = false;
+let state = {
+  match:{home:"AERS RAMON SICART",away:"KOPSE P2012",homeScore:0,awayScore:0,round:"JORNADA 1",date:"",time:"10:00",periodMinutes:25,status:"idle",period:1,elapsed:0,startAt:null},
+  players:[
+    {id:"1",num:1,name:"ARNAU",pos:"POR",starter:true,x:7,y:50},
+    {id:"2",num:2,name:"AMJAD",pos:"DEF",starter:true,x:25,y:20},
+    {id:"3",num:3,name:"NICO",pos:"DEF",starter:true,x:25,y:50},
+    {id:"12",num:12,name:"LUCA",pos:"DEF",starter:true,x:25,y:80},
+    {id:"4",num:4,name:"ALEX",pos:"DEF",starter:true,x:25,y:35},
+    {id:"6",num:6,name:"JIMY",pos:"MED",starter:true,x:48,y:50},
+    {id:"7",num:7,name:"ELOY",pos:"ATA",starter:true,x:70,y:22},
+    {id:"11",num:11,name:"AXEL",pos:"ATA",starter:true,x:70,y:78},
+    {id:"8",num:8,name:"GERARD",pos:"ATA",starter:true,x:88,y:35},
+    {id:"9",num:9,name:"NIL",pos:"ATA",starter:true,x:88,y:65},
+    {id:"13",num:13,name:"PABLO",pos:"",starter:false,x:0,y:0},
+    {id:"14",num:14,name:"ROGER T.",pos:"",starter:false,x:0,y:0},
+    {id:"15",num:15,name:"ADRIA",pos:"",starter:false,x:0,y:0},
+    {id:"20",num:20,name:"ROGER",pos:"",starter:false,x:0,y:0}
+  ],
+  events:[],
+  history:[],
+  playerStats:{},
+  standings:[
+    {name:"AERS RAMON SICART",pj:0,pg:0,pe:0,pp:0,gf:0,gc:0,pts:0},
+    {name:"KOPSE P2012",pj:0,pg:0,pe:0,pp:0,gf:0,gc:0,pts:0},
+    {name:"ALL STARS",pj:0,pg:0,pe:0,pp:0,gf:0,gc:0,pts:0},
+    {name:"GIMNÀSTIC MANRESA",pj:0,pg:0,pe:0,pp:0,gf:0,gc:0,pts:0}
+  ]
+};
+
+function loadSavedFirebaseConfig(){
+  try{
+    const saved=JSON.parse(localStorage.getItem("rs_firebase_config"));
+    if(saved && saved.apiKey){
+      Object.assign(firebaseConfig,saved);
+    }
+  }catch(e){}
+}
+function fillFirebaseFields(){
+  const ids=["apiKey","authDomain","databaseURL","projectId","storageBucket","messagingSenderId","appId"];
+  ids.forEach(k=>{const el=document.getElementById("fb"+k.charAt(0).toUpperCase()+k.slice(1));if(el)el.value=firebaseConfig[k]||""});
+}
+function saveFirebaseConfig(){
+  const keys=["apiKey","authDomain","databaseURL","projectId","storageBucket","messagingSenderId","appId"];
+  const cfg={}; keys.forEach(k=>{const id="fb"+k.charAt(0).toUpperCase()+k.slice(1);cfg[k]=document.getElementById(id).value.trim()});
+  localStorage.setItem("rs_firebase_config",JSON.stringify(cfg));
+  alert("Configuración guardada. La página se recargará para conectar Firebase.");
+  location.reload();
+}
+function clearFirebaseConfig(){
+  localStorage.removeItem("rs_firebase_config");
+  alert("Configuración Firebase eliminada.");
+  location.reload();
+}
+
+function hasFirebaseConfig(){
+  return firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("PON_") && !firebaseConfig.databaseURL.includes("TU-PROYECTO");
+}
+function initFirebase(){
+  loadSavedFirebaseConfig();
+  fillFirebaseFields();
+  if(!hasFirebaseConfig()){document.getElementById("firebaseStatus").textContent="Firebase: falta introducir la configuración del proyecto.";document.getElementById("syncBadge").textContent="● SINCRONIZACIÓN LOCAL"; renderAll(); return;}
+  try{
+    firebase.initializeApp(firebaseConfig); db=firebase.database(); firebaseOK=true;
+    document.getElementById("firebaseStatus").textContent="Firebase: conectado · sincronización en tiempo real activa.";
+    document.getElementById("syncBadge").textContent="● FIREBASE · EN TIEMPO REAL";
+    db.ref("rsClubLive").on("value", snap=>{const v=snap.val(); if(v){state={...state,...v,match:{...state.match,...(v.match||{})}}; renderAll();}});
+  }catch(e){document.getElementById("firebaseStatus").textContent="Firebase: error de configuración.";
+    document.getElementById("syncBadge").textContent="● ERROR FIREBASE"; console.error(e)}
+}
+function save(path,value){
+  if(firebaseOK) return db.ref("rsClubLive/"+path).set(value);
+  setLocal(path,value); renderAll();
+}
+function setLocal(path,value){localStorage.setItem("rs_"+path,JSON.stringify(value));}
+function loadLocal(){
+  try{const ps=JSON.parse(localStorage.getItem("rs_playerStats"));if(ps)state.playerStats=ps;const h=JSON.parse(localStorage.getItem("rs_history"));if(h)state.history=h;const m=JSON.parse(localStorage.getItem("rs_match"));if(m)state.match={...state.match,...m};const p=JSON.parse(localStorage.getItem("rs_players"));if(p)state.players=p;const e=JSON.parse(localStorage.getItem("rs_events"));if(e)state.events=e;const s=JSON.parse(localStorage.getItem("rs_standings"));if(s)state.standings=s}catch(e){}
+}
+function commitAll(){if(firebaseOK)db.ref("rsClubLive").set(state);else{setLocal("match",state.match);setLocal("players",state.players);setLocal("events",state.events);setLocal("history",state.history);setLocal("playerStats",state.playerStats);setLocal("standings",state.standings)}}
+function renderAll(){cleanupExpiredEvents();renderMatch();renderEvents();renderPitch();renderRoster();renderStandings();renderHistory();renderMatchStats();renderScorers();renderEditor();fillGoalPlayers();fillEventPlayers();}
+function cleanupExpiredEvents(){
+ const m=state.match||{};
+ if(m.status==="finished" && m.finishedAt && Date.now()-Number(m.finishedAt)>=24*60*60*1000){
+   state.events=[];
+   if(firebaseOK)db.ref("rsClubLive/events").remove();
+   else setLocal("events",[]);
+ }
+}
+function markFinishedAt(){
+ if(state.match.status==="finished" && !state.match.finishedAt) state.match.finishedAt=Date.now();
+}
+function renderMatch(){
+ const m=state.match;
+ document.getElementById("homeName").textContent=m.home||"RAMÓN SICART";
+ document.getElementById("awayName").textContent=m.away||"RIVAL";
+ document.getElementById("homeScore").textContent=m.homeScore||0;document.getElementById("awayScore").textContent=m.awayScore||0;
+ document.getElementById("matchTime").textContent=m.time||"--:--";
+ document.getElementById("matchDate").textContent=m.date?formatDate(m.date):"FECHA SIN DEFINIR";
+ document.querySelector(".matchhead div:last-child").textContent="🏆 "+(m.round||"JORNADA");
+ const phase=m.status==="finished"?"TERMINADO":m.status==="paused"?"PAUSADO":m.status==="running"?(m.period===1?"1ª PARTE":"2ª PARTE"):(m.period===2?"2ª PARTE":"PARTIDO SIN INICIAR");
+ document.getElementById("phase").innerHTML=(m.status==="running"?'<span class="live-dot"></span>':'')+phase;
+ document.getElementById("clock").textContent=displayMatchMinute(currentElapsed());
+ document.getElementById("liveLabel").textContent=m.status==="running"?"🔴 EN DIRECTO":"";
+ const last=state.events.slice(-3).reverse();document.getElementById("miniEvents").innerHTML=last.length?last.map(e=>`<div class="event-mini">${e.type==="goal"?"⚽":e.icon||"•"} <span>${e.minute||""}</span> <span class="${e.type==="goal"?"goal":""}">${esc(e.text)}</span></div>`).join(""):'<div class="event-mini">Aún no hay eventos</div>';
+}
+function currentElapsed(){
+ const m=state.match;if(m.status==="running"&&m.startAt)return Math.max(0,Math.floor(m.elapsed+(Date.now()-m.startAt)/1000));
+ return m.elapsed||0;
+}
+function formatTime(sec){sec=Math.max(0,Math.floor(sec));return String(Math.floor(sec/60)).padStart(2,"0")+":"+String(sec%60).padStart(2,"0")}
+let autoBoundaryLock="";
+setInterval(()=>{
+  if(state.match.status==="running"){
+    const elapsed=currentElapsed();
+    document.getElementById("clock").textContent=displayMatchMinute(elapsed);
+    const limit=(Number(state.match.periodMinutes)||25)*60;
+    const boundaryKey=state.match.period+":"+limit;
+    if(elapsed>=limit && autoBoundaryLock!==boundaryKey){
+      autoBoundaryLock=boundaryKey;
+      state.match.elapsed=limit;
+      state.match.startAt=null;
+      if(state.match.period===1){
+        state.match.status="paused";
+        save("match",state.match);
+        addEvent("⏸","DESCANSO",formatTime(limit));
+      }else{
+        state.match.status="finished";
+        state.match.finishedAt=Date.now();
+        save("match",state.match);
+        addEvent("🏁","PARTIDO TERMINADO · FINALIZADO","80:00");
+      }
+      renderAll();
+    }
+  }
+},500);
+
+function renderEvents(){
+ const box=document.getElementById("eventsList");if(!state.events.length){box.innerHTML='<div class="empty">Aún no hay eventos<br><small>Los goles y cambios aparecerán aquí</small></div>';return}
+ box.innerHTML=state.events.slice().reverse().map(e=>`<div class="eventrow"><div class="eventtime">${esc(e.minute||"")}</div><div class="eventicon">${e.icon||"•"}</div><div class="eventdesc">${esc(e.text)}</div></div>`).join("");
+}
+function renderPitch(){
+ const starts=state.players.filter(p=>p.starter);document.getElementById("pitchPlayers").innerHTML=starts.map(p=>`<div class="player" data-player-id="${escAttr(p.id)}" draggable="true" style="left:${p.x||50}%;top:${p.y||50}%"><div class="shirt"><span class="playernum">${esc(p.num)}</span></div><div class="playername">${esc(p.name)}</div></div>`).join("");
+ bindPitchEditor();
+ const subs=state.players.filter(p=>!p.starter);document.getElementById("subs").innerHTML=subs.length?subs.map(p=>`<div class="sub"><b>${esc(p.num)}</b> ${esc(p.name)}</div>`).join(""):"—";
+}
+let selectedPlayerId=null;
+let dragData=null;
+
+function getPitchPoint(clientX,clientY){
+ const pitch=document.querySelector(".pitch"); if(!pitch)return null;
+ const r=pitch.getBoundingClientRect();
+ let x=((clientX-r.left)/r.width)*100;
+ let y=((clientY-r.top)/r.height)*100;
+ x=Math.max(5,Math.min(95,x)); y=Math.max(8,Math.min(92,y));
+ return {x,y};
+}
+function selectPitchPlayer(id){
+ selectedPlayerId=id;
+ document.querySelectorAll(".player").forEach(el=>el.classList.toggle("selected",el.dataset.playerId===String(id)));
+ const p=state.players.find(x=>String(x.id)===String(id));
+ const box=document.getElementById("selectedPlayerInfo");
+ if(box)box.innerHTML=p?`Seleccionado: <b style="color:#fff">#${esc(p.num)} ${esc(p.name)}</b> · ${esc(p.pos||"")}`:"Ningún jugador seleccionado.";
+}
+function bindPitchEditor(){
+ document.querySelectorAll(".player").forEach(el=>{
+   el.addEventListener("click",()=>selectPitchPlayer(el.dataset.playerId));
+   el.addEventListener("dragstart",ev=>{
+     dragData={id:el.dataset.playerId};
+     el.classList.add("dragging");
+     if(ev.dataTransfer)ev.dataTransfer.setData("text/plain",el.dataset.playerId);
+   });
+   el.addEventListener("dragend",()=>{
+     el.classList.remove("dragging");dragData=null;
+   });
+   el.addEventListener("touchstart",ev=>{
+     const t=ev.touches[0];
+     dragData={id:el.dataset.playerId};
+     selectPitchPlayer(el.dataset.playerId);
+     el.classList.add("dragging");
+     ev.preventDefault();
+   },{passive:false});
+   el.addEventListener("touchmove",ev=>{
+     if(!dragData)return;
+     const t=ev.touches[0],pt=getPitchPoint(t.clientX,t.clientY);
+     if(!pt)return;
+     const p=state.players.find(x=>String(x.id)===String(dragData.id));
+     if(p){p.x=pt.x;p.y=pt.y;el.style.left=p.x+"%";el.style.top=p.y+"%";}
+     ev.preventDefault();
+   },{passive:false});
+   el.addEventListener("touchend",()=>{
+     if(dragData){const p=state.players.find(x=>String(x.id)===String(dragData.id));if(p)save("players",state.players);}
+     el.classList.remove("dragging");dragData=null;renderPitch();selectPitchPlayer(selectedPlayerId);
+   });
+ });
+ const pitch=document.querySelector(".pitch");
+ if(pitch){
+   pitch.ondragover=e=>e.preventDefault();
+   pitch.ondrop=e=>{
+     e.preventDefault();
+     const id=(e.dataTransfer&&e.dataTransfer.getData("text/plain"))||dragData?.id;
+     const pt=getPitchPoint(e.clientX,e.clientY);
+     const p=state.players.find(x=>String(x.id)===String(id));
+     if(p&&pt){p.x=pt.x;p.y=pt.y;save("players",state.players);renderPitch();selectPitchPlayer(p.id);}
+   };
+ }
+}
+function centerSelectedPlayer(){
+ const p=state.players.find(x=>String(x.id)===String(selectedPlayerId));if(!p)return;
+ p.x=50;p.y=50;save("players",state.players);renderPitch();selectPitchPlayer(p.id);
+}
+function autoArrangeFormation(){
+ applyFormation();
+}
+function renderRoster(){
+ document.getElementById("rosterPublic").innerHTML=state.players.map(p=>{const st=(state.playerStats||{})[p.id]||{goals:0};return `<div class="sub" style="display:inline-block;margin:4px;min-width:125px"><b style="color:var(--yellow)">#${esc(p.num)}</b> · <b>${esc(p.name)}</b><br><small>${esc(p.pos||"")} · ⚽ ${st.goals||0}</small></div>`}).join("");
+}
+function renderMatchStats(){
+ const h=document.getElementById("statGoalsHome"),a=document.getElementById("statGoalsAway"),e=document.getElementById("statEvents"),s=document.getElementById("statStarters");
+ if(h)h.textContent=state.match.homeScore||0;
+ if(a)a.textContent=state.match.awayScore||0;
+ if(e)e.textContent=state.events.length;
+ if(s)s.textContent=state.players.filter(p=>p.starter).length;
+}
+function renderScorers(){
+ const box=document.getElementById("scorersPublic");if(!box)return;
+ const stats=state.playerStats||{};
+ const rows=Object.values(stats).filter(x=>x.goals>0).sort((a,b)=>b.goals-a.goals||a.name.localeCompare(b.name)).slice(0,3);
+ if(!rows.length){box.innerHTML='<div class="empty">Todavía no hay goles registrados</div>';return}
+ box.innerHTML=rows.map((p,i)=>`<div class="eventrow"><div class="eventtime">${i+1}º</div><div class="eventicon">🏅</div><div class="eventdesc"><b>#${esc(p.num||"")} ${esc(p.name)}</b><br><small>${p.goals} ${p.goals===1?"gol":"goles"}</small></div></div>`).join("");
+}
+
+function registerGoalScorer(playerName){
+ if(!playerName)return;
+ const p=state.players.find(x=>String(x.name)===String(playerName));if(!p)return;
+ state.playerStats=state.playerStats||{};
+ const key=String(p.id);
+ state.playerStats[key]=state.playerStats[key]||{name:p.name,num:p.num,goals:0};
+ state.playerStats[key].name=p.name;state.playerStats[key].num=p.num;state.playerStats[key].goals++;
+ if(firebaseOK)db.ref("rsClubLive/playerStats").set(state.playerStats);else setLocal("playerStats",state.playerStats);
+}
+function renderHistory(){
+ const box=document.getElementById("historyPublic");if(!box)return;
+ const rows=(state.history||[]).slice().sort((a,b)=>(b.savedAt||0)-(a.savedAt||0)).slice(0,3);
+ if(!rows.length){box.innerHTML='<div class="empty">Aún no hay partidos guardados</div>';return}
+ box.innerHTML=rows.map(m=>`<div class="eventrow"><div class="eventtime">${esc(m.date||"")}</div><div class="eventicon">⚽</div><div class="eventdesc"><b>${esc(m.home)} ${m.homeScore} - ${m.awayScore} ${esc(m.away)}</b><br><small>${esc(m.round||"")} · ${esc(m.time||"")}</small></div></div>`).join("");
+}
+
+function fillReplacePlayer(){
+ const s=document.getElementById("replacePlayerSelect");if(!s)return;
+ s.innerHTML='<option value="">Seleccionar jugador</option>'+state.players.map(p=>`<option value="${escAttr(p.id)}">#${escAttr(p.num)} ${esc(p.name)}</option>`).join("");
+}
+function replaceSelectedPlayer(){
+ const current=state.players.find(x=>String(x.id)===String(selectedPlayerId));
+ const replacementId=document.getElementById("replacePlayerSelect")?.value;
+ const replacement=state.players.find(x=>String(x.id)===String(replacementId));
+ if(!current||!replacement||current.id===replacement.id)return;
+ const pos={x:current.x,y:current.y,starter:true};
+ current.starter=false; replacement.starter=true; replacement.x=pos.x;replacement.y=pos.y;
+ save("players",state.players);renderAll();selectPitchPlayer(replacement.id);
+}
+function fillEventPlayers(){
+ const options='<option value="">Sin jugador</option>'+state.players.map(p=>`<option value="${escAttr(p.name)}">#${escAttr(p.num)} ${esc(p.name)}</option>`).join("");
+ const s=document.getElementById("eventPlayer");if(s)s.innerHTML=options;
+ const incoming=document.getElementById("eventIncoming");if(incoming)incoming.innerHTML=options;
+}
+function quickGoal(team){
+ document.getElementById("goalTeam").value=team;
+ const minute=displayMatchMinute(currentElapsed());
+ const player=document.getElementById("goalPlayer").value;
+ const text=team==="home"?`Gol Ramón Sicart${player?" · "+player:""}`:`Gol rival`;
+ if(team==="home"){state.match.homeScore++;registerGoalScorer(player);}else state.match.awayScore++;
+ state.events.push({id:Date.now(),type:"goal",icon:"⚽",text,minute});
+ commitAll();renderAll();
+ const score=document.querySelector(".score");if(score){score.classList.remove("flash");void score.offsetWidth;score.classList.add("flash");}
+ // Los eventos se muestran únicamente en la sección "EVENTOS DEL PARTIDO".
+}
+function quickEvent(type){
+ document.getElementById("eventType").value=type;
+ addGenericEvent();
+}
+function showTicker(text){
+ const t=document.getElementById("liveTicker");if(!t)return;
+ t.textContent=text;t.style.display="block";
+ clearTimeout(window._tickerTimer);
+ window._tickerTimer=setTimeout(()=>t.style.display="none",3500);
+}
+function addGenericEvent(){
+ const type=document.getElementById("eventType").value;
+ const minute=document.getElementById("eventMinute").value||displayMatchMinute(currentElapsed());
+ const player=document.getElementById("eventPlayer").value;
+ const extra=document.getElementById("eventText").value.trim();
+ const icons={goal:"⚽",yellow:"🟨",red:"🟥",sub:"🔄",injury:"🩹",info:"ℹ️"};
+ const names={goal:"Gol",yellow:"Tarjeta amarilla",red:"Tarjeta roja",sub:"Cambio",injury:"Lesión",info:"Información"};
+ let incoming=document.getElementById("eventIncoming")?.value||"";
+ let text=names[type]+(player?" · "+player:"")+(type==="sub"&&incoming?" → ENTRA "+incoming:"")+(extra?" · "+extra:"");
+ if(type==="goal"){
+   const team=document.getElementById("goalTeam").value;
+   if(team==="home"){state.match.homeScore++;registerGoalScorer(player);}
+   else state.match.awayScore++;
+ }
+ state.events.push({id:Date.now(),type,icon:icons[type],text,minute});
+ commitAll();renderAll();
+ document.getElementById("eventMinute").value="";document.getElementById("eventText").value="";
+}
+function clearEvents(){
+ if(!confirm("¿Borrar todos los eventos de este partido?"))return;
+ state.events=[];state.match.homeScore=0;state.match.awayScore=0;commitAll();renderAll();
+}
+function saveFinishedMatch(){
+ const m={...state.match,events:[...state.events],savedAt:Date.now()};
+ state.history=state.history||[];
+ const existing=state.history.findIndex(x=>x.date===m.date&&x.time===m.time&&x.away===m.away&&x.homeScore===m.homeScore&&x.awayScore===m.awayScore);
+ if(existing<0)state.history.push(m);else state.history[existing]=m;
+ if(firebaseOK)db.ref("rsClubLive/history").set(state.history);else setLocal("history",state.history);
+ updateStandingsFromFinal(m);
+ renderAll();
+}
+function updateStandingsFromFinal(m){
+ const home=state.standings.find(t=>t.name===m.home);
+ const away=state.standings.find(t=>t.name===m.away);
+ if(!home||!away)return;
+ home.pj++;away.pj++;
+ home.gf+=Number(m.homeScore)||0;home.gc+=Number(m.awayScore)||0;
+ away.gf+=Number(m.awayScore)||0;away.gc+=Number(m.homeScore)||0;
+ if(m.homeScore>m.awayScore){home.pg++;home.pts+=3;away.pp++}
+ else if(m.homeScore<m.awayScore){away.pg++;away.pts+=3;home.pp++}
+ else {home.pe++;away.pe++;home.pts++;away.pts++}
+ save("standings",state.standings);
+}
+function applyFormation(){
+ const formation=document.getElementById("formationSelect").value;
+ const orientation=document.getElementById("orientationSelect").value;
+ let starters=state.players.filter(p=>p.starter);
+ if(!starters.length)return;
+ if(starters.length>10)starters=starters.slice(0,10);
+ const layouts={
+  "4-1-2-2":[[7,50],[28,16],[28,39],[28,61],[28,84],[50,50],[70,28],[70,72],[90,35],[90,65]],
+  "4-3-2":[[7,50],[25,18],[25,39],[25,61],[25,82],[52,25],[52,50],[52,75],[82,38],[82,62]],
+  "3-2-3":[[7,50],[28,25],[28,50],[28,75],[52,35],[52,65],[78,22],[78,50],[78,78]],
+  "4-2-3":[[7,50],[25,18],[25,39],[25,61],[25,82],[50,35],[50,65],[80,20],[80,50],[80,80]]
+ };
+ const pos=layouts[formation]||layouts["4-1-2-2"];
+ starters.forEach((p,i)=>{
+   const xy=pos[i%pos.length];p.x=orientation==="left"?xy[0]:100-xy[0];p.y=xy[1];
+ });
+ state.match.formation=formation;state.match.orientation=orientation;
+ commitAll();renderAll();
+}
+function loadFormationControls(){
+ const f=document.getElementById("formationSelect"),o=document.getElementById("orientationSelect");
+ if(f)f.value=state.match.formation||"4-1-2-2";
+ if(o)o.value=state.match.orientation||"left";
+}
+function renderStandings(){
+ const box=document.getElementById("standingsPublic");if(!box)return;
+ let teams=[...(state.standings||[])];
+ const rs=teams.find(t=>/RAMON|RAMÓN|SICART/i.test(t.name));
+ const others=teams.filter(t=>t!==rs).sort((a,b)=>(b.pts-a.pts)||(b.gf-b.gc)-(a.gf-a.gc)||b.gf-a.gf);
+ let shown=[];
+ if(rs)shown.push(rs);
+ shown=shown.concat(others.filter(t=>t!==rs).slice(0,4));
+ // If there are fewer than 5 configured teams, show placeholders.
+ while(shown.length<5) shown.push({name:shown.length===0?"RAMON SICART":"Equipo "+(shown.length+1),pj:0,pg:0,pe:0,pp:0,gf:0,gc:0,pts:0,placeholder:true});
+ // Order by points while ensuring Ramon Sicart remains present.
+ shown.sort((a,b)=>(b.pts-a.pts)||(b.gf-b.gc)-(a.gf-a.gc)||b.gf-a.gf);
+ box.innerHTML=`<div class="table"><div class="tr th"><span>#</span><span>EQUIPO</span><span>PTS</span><span>PJ</span><span>GF</span><span>GC</span></div>`+
+ shown.slice(0,5).map((t,i)=>`<div class="tr ${/RAMON|RAMÓN|SICART/i.test(t.name)?"highlight":""}"><span>${i+1}</span><span>${esc(t.name)}</span><span><b>${t.pts||0}</b></span><span>${t.pj||0}</span><span>${t.gf||0}</span><span>${t.gc||0}</span></div>`).join("")+
+ `</div>`;
+}
+
+function renderEditor(){
+ const box=document.getElementById("rosterEditor");
+ box.innerHTML=state.players.map((p,i)=>`<div class="rosterrow" data-i="${i}">
+ <input value="${escAttr(p.num)}" data-k="num" placeholder="#">
+ <input value="${escAttr(p.name)}" data-k="name" placeholder="Nombre">
+ <select data-k="pos"><option ${p.pos==="POR"?"selected":""}>POR</option><option ${p.pos==="DEF"?"selected":""}>DEF</option><option ${p.pos==="MED"?"selected":""}>MED</option><option ${p.pos==="ATA"?"selected":""}>ATA</option></select>
+ <select data-k="starter"><option value="1" ${p.starter?"selected":""}>TITULAR</option><option value="0" ${!p.starter?"selected":""}>SUPLENTE</option></select>
+ <button class="btn red" onclick="deletePlayer(${i})">×</button></div>`).join("");
+}
+function fillGoalPlayers(){
+ const s=document.getElementById("goalPlayer");s.innerHTML='<option value="">Sin goleador</option>'+state.players.map(p=>`<option value="${escAttr(p.name)}">#${escAttr(p.num)} ${esc(p.name)}</option>`).join("");
+}
+function addPlayerRow(){state.players.push({id:Date.now().toString(),num:"",name:"NUEVO JUGADOR",pos:"DEF",starter:false,x:50,y:50});renderEditor()}
+function deletePlayer(i){state.players.splice(i,1);renderEditor()}
+function clearPlayerStats(){if(!confirm("¿Borrar todos los goles del Pichichi?"))return;state.playerStats={};if(firebaseOK)db.ref("rsClubLive/playerStats").set({});else setLocal("playerStats",{});renderAll()}
+function clearStandings(){if(!confirm("¿Borrar la clasificación?"))return;state.standings=state.standings.map(t=>({...t,pj:0,pg:0,pe:0,pp:0,gf:0,gc:0,pts:0}));save("standings",state.standings);renderAll()}
+function clearHistory(){if(!confirm("¿Borrar el historial de partidos?"))return;state.history=[];if(firebaseOK)db.ref("rsClubLive/history").remove();else setLocal("history",[]);renderAll()}
+function saveRoster(){
+ document.querySelectorAll(".rosterrow").forEach((row,i)=>{const p=state.players[i];row.querySelectorAll("[data-k]").forEach(el=>{const k=el.dataset.k;p[k]=k==="starter"?el.value==="1":(k==="num"?Number(el.value)||el.value:el.value)});});
+ save("players",state.players);fillGoalPlayers();renderAll();
+}
+function prepareNextMatch(){
+ state.match={home:"AERS RAMON SICART",away:"NUEVO RIVAL",homeScore:0,awayScore:0,round:"JORNADA 1",date:"",time:"10:00",periodMinutes:25,status:"idle",period:1,elapsed:0,startAt:null,formation:"4-1-2-2",orientation:"left"};
+ state.events=[];
+ commitAll();renderAll();
+}
+function saveMatchSettings(){
+ state.match.home="AERS RAMON SICART";state.match.away=document.getElementById("aAway").value;state.match.date=document.getElementById("aDate").value;state.match.time=document.getElementById("aTime").value;state.match.periodMinutes=Number(document.getElementById("aPeriod").value)||25;state.match.round=document.getElementById("aRound").value;
+ save("match",state.match);
+}
+function startMatch(){if(state.match.status==="finished")return;autoBoundaryLock="";state.match.status="running";state.match.startAt=Date.now();save("match",state.match);addEvent("▶","Inicio de la "+(state.match.period===1?"1ª":"2ª")+" parte",formatTime(currentElapsed()).replace("00:","")+"'" )}
+function pauseMatch(){if(state.match.status!=="running")return;state.match.elapsed=currentElapsed();state.match.startAt=null;state.match.status="paused";save("match",state.match);addEvent("Ⅱ","Partido pausado",formatTime(state.match.elapsed))}
+function nextPeriod(){
+  state.match.elapsed=0;
+  state.match.startAt=null;
+  state.match.period=2;
+  state.match.status="paused";
+  autoBoundaryLock="";
+  save("match",state.match);
+  addEvent("▶","2ª PARTE · COMIENZA EN 40:00","40:00");
+  renderAll();
+}
+function finishMatch(){if(state.match.status==="running")state.match.elapsed=currentElapsed();state.match.startAt=null;state.match.status="finished";save("match",state.match);addEvent("■","Partido terminado",formatTime(state.match.elapsed))}
+function resetMatch(){autoBoundaryLock="";state.match={...state.match,homeScore:0,awayScore:0,status:"idle",period:1,elapsed:0,startAt:null};state.events=[];save("match",state.match);save("events",state.events);renderAll()}
+function addEvent(icon,text,minute){const e={id:Date.now(),type:"event",icon,text,minute};state.events.push(e);save("events",state.events);renderEvents()}
+function addGoal(){
+ const team=document.getElementById("goalTeam").value, player=document.getElementById("goalPlayer").value, minute=document.getElementById("goalMinute").value||formatTime(currentElapsed());
+ let text="";
+ if(team==="home"){state.match.homeScore++;text=`Gol Ramón Sicart${player?" · "+player:""}`;registerGoalScorer(player);updateStandingsLive();}
+ else {state.match.awayScore++;text=`Gol rival${document.getElementById("goalAwayText").value?" · "+document.getElementById("goalAwayText").value:""}`;updateStandingsLive();}
+ state.events.push({id:Date.now(),type:"goal",icon:"⚽",text,minute});commitAll();renderAll();
+ document.getElementById("goalMinute").value="";document.getElementById("goalAwayText").value="";
+}
+function updateStandingsLive(){
+ const home=state.standings.find(t=>t.name===state.match.home),away=state.standings.find(t=>t.name===state.match.away);
+ if(!home||!away)return;
+ // Se actualiza de forma provisional solo si se marca el resultado; se recalcula al terminar.
+}
+function openAdmin(){document.getElementById("pinbox").classList.add("show");document.getElementById("pinInput").focus()}
+function closePin(){document.getElementById("pinbox").classList.remove("show")}
+function checkPin(){if(document.getElementById("pinInput").value===ADMIN_PIN){closePin();document.getElementById("admin").classList.add("show");scrollToId("admin")}else document.getElementById("pinError").textContent="PIN incorrecto"}
+function toggleMenu(){
+ const m=document.getElementById("sideMenu"),o=document.getElementById("sideMenuOverlay");
+ if(!m||!o)return;
+ m.classList.toggle("open");o.classList.toggle("open");
+}
+function menuGo(id){
+ toggleMenu();
+ const el=document.getElementById(id);if(!el)return;
+ if(id!=="directo"){
+   el.style.display="block";
+   el.classList.add("menuOpen");
+ }
+ setTimeout(()=>el.scrollIntoView({behavior:"smooth",block:"start"}),80);
+}
+function scrollToId(id){document.getElementById(id).scrollIntoView({behavior:"smooth",block:"start"})}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+function escAttr(s){return esc(s)}
+loadLocal();loadSavedFirebaseConfig();state.history=state.history||[];state.match.formation=state.match.formation||"4-1-2-2";state.match.orientation=state.match.orientation||"left";initFirebase();renderAll();
+</script>
+</body>
+</html>
