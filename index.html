@@ -4123,9 +4123,9 @@ document.addEventListener("click",function(e){
 
 
 <style id="v39-chronicle-final">
-#chronicleV20{font-size:34px!important;line-height:1.65!important;font-weight:600!important;color:#edf3f9!important}
+#chronicleV20{font-size:50px!important;line-height:1.55!important;font-weight:700!important;color:#edf3f9!important}
 .matchChronicleV20 h3{font-size:28px!important}
-@media(max-width:700px){#chronicleV20{font-size:25px!important;line-height:1.62!important}.matchChronicleV20 h3{font-size:23px!important}}
+@media(max-width:700px){#chronicleV20{font-size:44px!important;line-height:1.52!important;font-weight:700!important}.matchChronicleV20 h3{font-size:23px!important}}
 </style>
 
 
@@ -4275,5 +4275,108 @@ document.addEventListener("click",function(e){
   }
   window.renderMatches=v40RenderMatches;
   setTimeout(v40RenderMatches,0);
+})();
+</script>
+
+<!-- V44 — histórico de partidos protegido + edición/eliminación desde administrador -->
+<style id="v44-admin-matches-style">
+  .v44MatchAdmin{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;margin:8px 0;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(7,20,34,.72)}
+  .v44MatchAdminInfo{min-width:0}.v44MatchAdminInfo b{font-size:14px}.v44MatchAdminInfo small{display:block;margin-top:4px;color:var(--muted)}
+  .v44MatchActions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.v44MatchActions .btn{white-space:nowrap}
+  .v44EditModal{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;padding:18px}
+  .v44EditModal.open{display:flex}.v44EditBox{width:min(560px,100%);max-height:90vh;overflow:auto;background:#0b1b2d;border:1px solid #29476a;border-radius:20px;padding:20px;box-shadow:0 20px 70px rgba(0,0,0,.5)}
+  .v44EditBox h3{margin:0 0 16px;font-size:22px}.v44Grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.v44Grid .full{grid-column:1/-1}.v44EditBox label{display:block;font-size:12px;color:var(--muted);margin:0 0 5px}.v44EditBox input,.v44EditBox select{width:100%;box-sizing:border-box}
+  .v44EditButtons{display:flex;gap:10px;margin-top:16px}.v44EditButtons .btn{flex:1}
+  @media(max-width:600px){.v44MatchAdmin{align-items:flex-start;flex-direction:column}.v44MatchActions{width:100%;justify-content:flex-start}.v44Grid{grid-template-columns:1fr}.v44Grid .full{grid-column:auto}}
+</style>
+<script id="v44-history-protection-script">
+(function(){
+  function v44Sort(a,b){
+    return String(b.date||'').localeCompare(String(a.date||'')) || String(b.hour||'').localeCompare(String(a.hour||''));
+  }
+  function v44EnsureModal(){
+    if(document.getElementById('v44EditMatchModal')) return;
+    const d=document.createElement('div'); d.id='v44EditMatchModal'; d.className='v44EditModal';
+    d.innerHTML=`<div class="v44EditBox">
+      <h3>✏️ Editar partido</h3>
+      <input type="hidden" id="v44EditId">
+      <div class="v44Grid">
+        <div><label>Equipo local</label><select id="v44EditHome"></select></div>
+        <div><label>Equipo visitante</label><select id="v44EditAway"></select></div>
+        <div><label>Fecha</label><input id="v44EditDate" type="date"></div>
+        <div><label>Hora</label><input id="v44EditHour" type="time"></div>
+        <div class="full"><label>Competición / jornada</label><input id="v44EditCompetition" type="text"></div>
+        <div class="full"><label>Campo</label><input id="v44EditField" type="text"></div>
+      </div>
+      <div class="v44EditButtons"><button class="btn dark" type="button" onclick="v44CloseEditMatch()">Cancelar</button><button class="btn green" type="button" onclick="v44SaveEditMatch()">💾 Guardar cambios</button></div>
+    </div>`;
+    d.addEventListener('click',e=>{if(e.target===d)v44CloseEditMatch()}); document.body.appendChild(d);
+  }
+  function v44FillTeams(){
+    const h=document.getElementById('v44EditHome'),a=document.getElementById('v44EditAway'); if(!h||!a)return;
+    const opts=(App.teams||[]).map(t=>`<option value="${Number(t.id)}">${esc(t.name)}</option>`).join(''); h.innerHTML=opts;a.innerHTML=opts;
+  }
+  window.v44OpenEditMatch=function(id){
+    const m=(App.matches||[]).find(x=>String(x.id)===String(id)); if(!m)return;
+    v44EnsureModal(); v44FillTeams();
+    document.getElementById('v44EditId').value=String(m.id);
+    document.getElementById('v44EditHome').value=String(m.home);
+    document.getElementById('v44EditAway').value=String(m.away);
+    document.getElementById('v44EditDate').value=m.date||'';
+    document.getElementById('v44EditHour').value=m.hour||'';
+    document.getElementById('v44EditCompetition').value=m.competition||'Liga';
+    document.getElementById('v44EditField').value=m.field||'';
+    document.getElementById('v44EditMatchModal').classList.add('open');
+  };
+  window.v44CloseEditMatch=function(){document.getElementById('v44EditMatchModal')?.classList.remove('open')};
+  window.v44SaveEditMatch=function(){
+    const id=document.getElementById('v44EditId')?.value, m=(App.matches||[]).find(x=>String(x.id)===String(id)); if(!m)return;
+    const home=Number(document.getElementById('v44EditHome').value),away=Number(document.getElementById('v44EditAway').value);
+    if(home===away){toast('Local y visitante deben ser diferentes');return}
+    m.home=home;m.away=away;m.date=document.getElementById('v44EditDate').value;m.hour=document.getElementById('v44EditHour').value;m.competition=document.getElementById('v44EditCompetition').value.trim()||'Liga';m.field=document.getElementById('v44EditField').value.trim();
+    if(m.status==='FINISHED' && typeof window.v26RecalcStats==='function'){try{window.v26RecalcStats()}catch(e){}}
+    v44CloseEditMatch(); save(); renderAll(); toast('Partido actualizado y guardado');
+  };
+  // Reiniciar SOLO la consola. Nunca toca App.matches ni elimina históricos.
+  window.resetLive=function(ask=true){
+    const m=activeMatch();
+    const msg=m?.status==='FINISHED'
+      ? 'El partido ya está FINALIZADO y se conservará íntegramente. Solo se reiniciará la consola para poder preparar otro partido. ¿Continuar?'
+      : 'Se reiniciará únicamente la consola del partido activo. Los demás partidos y partidos finalizados NO se borrarán. ¿Continuar?';
+    if(ask&&!confirm(msg))return;
+    App.activeMatch=null;
+    Live.state='PREMATCH'; Live.half=1; Live.homeScore=0; Live.awayScore=0; Live.events=[]; Live.lineup=[]; Live.formation='4-3-3'; Live.startTimestamp=null; Live.pausedSeconds=0; Live.manualMinute=0;
+    // Importante: NO modificar App.matches.
+    save(); renderAll(); toast('Consola reiniciada. El histórico de partidos se ha conservado.');
+  };
+  function v44RenderAdminMatches(){
+    const admin=document.getElementById('adminMatches'); if(!admin)return;
+    const rows=[...(App.matches||[])].sort(v44Sort);
+    admin.innerHTML=rows.length?rows.map(m=>{
+      const h=team(m.home),a=team(m.away),fin=m.status==='FINISHED';
+      const score=fin?` · ${Number(m.homeScore||0)}-${Number(m.awayScore||0)}`:'';
+      return `<div class="v44MatchAdmin">
+        <div class="v44MatchAdminInfo"><b>${esc(h.name)} vs ${esc(a.name)}</b><small>${formatDate(m.date)} ${esc(m.hour||'')} · ${esc(m.competition||'Liga')}${fin?' · 🏁 FINALIZADO':''}${score}</small></div>
+        <div class="v44MatchActions">
+          <button class="btn small ${String(m.id)===String(App.activeMatch)?'green':'dark'}" onclick="setActive(${m.id})">${String(m.id)===String(App.activeMatch)?'Activo':'Activar'}</button>
+          <button class="btn small dark" onclick="v44OpenEditMatch(${m.id})">✏️ Editar</button>
+          <button class="btn small red" onclick="deleteMatch(${m.id})">🗑 Eliminar</button>
+        </div>
+      </div>`;
+    }).join(''):'<div class="empty">No hay partidos creados.</div>';
+  }
+  // El render público mantiene el diseño V40; el administrador usa SIEMPRE el listado completo.
+  const oldRenderMatches=window.renderMatches;
+  window.renderMatches=function(){ if(oldRenderMatches)oldRenderMatches(); v44RenderAdminMatches(); };
+  // Borrado explícito: solo elimina el partido elegido, nunca el resto del histórico.
+  window.deleteMatch=function(id){
+    const m=(App.matches||[]).find(x=>String(x.id)===String(id)); if(!m)return;
+    const name=`${team(m.home).name} vs ${team(m.away).name}`;
+    if(!confirm(`¿Eliminar definitivamente el partido ${name}?\n\nEsta acción solo eliminará ESTE partido y sus eventos.`))return;
+    App.matches=App.matches.filter(x=>String(x.id)!==String(id));
+    if(String(App.activeMatch)===String(id)){App.activeMatch=null;Live.state='PREMATCH';Live.homeScore=0;Live.awayScore=0;Live.events=[];Live.lineup=[];Live.startTimestamp=null;Live.pausedSeconds=0;Live.manualMinute=0;}
+    save();renderAll();toast('Partido eliminado');
+  };
+  setTimeout(()=>{v44EnsureModal();v44RenderAdminMatches()},100);
 })();
 </script>
