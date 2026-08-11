@@ -362,6 +362,12 @@ button{cursor:pointer}
   .pitch,.adminPitchV10,.publicPitchV11{min-height:620px}
 }
 
+
+/* V18 — escudo del equipo en cada evento */
+.eventTeamLineV18{display:flex!important;align-items:center;gap:6px!important;min-height:18px}
+.eventTeamLogoV18{width:18px;height:18px;object-fit:contain;display:inline-block;vertical-align:middle;background:#fff1;border-radius:4px;padding:1px}
+.eventTeamLogoFallbackV18{width:18px;height:18px;display:inline-grid;place-items:center;border-radius:4px;background:#1d334a;color:#f1d600;font-size:7px;font-weight:1000;flex:0 0 18px}
+
 </style>
 </head>
 <body>
@@ -622,7 +628,7 @@ const Live={
   state:"PREMATCH",half:1,homeScore:0,awayScore:0,events:[],
   startTimestamp:null,pausedSeconds:0,manualMinute:0
 };
-let editPlayerId=null, eventType=null, eventTeam=null, eventMinuteOffset=0, clockTimer=null, ignoreRemote=false;
+let editPlayerId=null, editTeamId=null, eventType=null, eventTeam=null, eventMinuteOffset=0, clockTimer=null, ignoreRemote=false;
 
 const defaultPlayers=[
  {id:1,number:1,name:"Arnau",surname:"",position:"Portero",captain:false,photo:""},
@@ -669,16 +675,24 @@ function save(){
     throw err;
   });
 }
+function firebaseList(value){
+  if(Array.isArray(value)) return value;
+  if(value && typeof value === "object") return Object.values(value);
+  return [];
+}
 function applyData(data){
   if(!data)return;
   if(data.app){
-    App.teams=Array.isArray(data.app.teams)&&data.app.teams.length?data.app.teams:App.teams;
-    if(Array.isArray(data.app.players)&&data.app.players.length) App.players=data.app.players;
-    if(Array.isArray(data.app.teams)&&data.app.teams.length) App.teams=data.app.teams;
-    if(Array.isArray(data.app.matches)) App.matches=data.app.matches;
+    const remotePlayers=firebaseList(data.app.players);
+    const remoteTeams=firebaseList(data.app.teams);
+    const remoteMatches=firebaseList(data.app.matches);
+    if(remotePlayers.length) App.players=remotePlayers;
+    if(remoteTeams.length) App.teams=remoteTeams;
+    if(remoteMatches.length || Array.isArray(data.app.matches)) App.matches=remoteMatches;
     if(data.app.activeMatch!==undefined && data.app.activeMatch!==null) App.activeMatch=data.app.activeMatch;
-    if(data.app.lineup && Array.isArray(data.app.lineup.players)){
-      App.lineup={formation:data.app.lineup.formation||"4-3-3",players:data.app.lineup.players.map(Number)};
+    if(data.app.lineup && data.app.lineup.players!=null){
+      const lp=firebaseList(data.app.lineup.players);
+      App.lineup={formation:data.app.lineup.formation||"4-3-3",players:lp.map(Number)};
     }
   }
   if(data.liveMatch)Object.assign(Live,data.liveMatch);
@@ -745,10 +759,20 @@ function renderPitch(id){
  ps.forEach((pl,i)=>{const [x,y]=pos[i]||[50,50];const el=document.createElement("div");el.className="formationPlayer";el.style.left=x+"%";el.style.top=y+"%";el.innerHTML=`<div class="jersey">${pl.number}</div><b>${esc(pl.name)}</b><small>${esc(pl.position)}</small>`;p.appendChild(el)})
 }
 function eventIcon(e){return e.type==="goal"?"⚽":e.type==="yellow"?"🟨":e.type==="red"?"🟥":"🔄"}
+function eventTeamObj(e){
+ const m=activeMatch();
+ if(!m)return null;
+ return e.team==="home"?team(m.home):team(m.away);
+}
+function eventTeamMarkup(e){
+ const t=eventTeamObj(e);
+ const logo=t?.logo?`<img class="eventTeamLogoV18" src="${esc(t.logo)}" alt="">`:`<span class="eventTeamLogoFallbackV18">${esc((t?.short||t?.name||"?").slice(0,2).toUpperCase())}</span>`;
+ return `${logo}<span>${esc(t?.name||"Equipo")}</span>`;
+}
 function renderEvents(id){
  const box=document.getElementById(id);if(!box)return;
  const ev=[...Live.events].sort((a,b)=>b.minute-a.minute);
- box.innerHTML=ev.length?ev.map(e=>`<div class="event"><div class="eventMinute">${e.minute}'</div><div class="eventIcon">${eventIcon(e)}</div><div class="eventText"><b>${esc(e.playerName||"Evento")}</b><small>${e.team==="home"?team(activeMatch()?.home).name:team(activeMatch()?.away).name}</small></div><div>${e.type==="goal"?esc(e.score||""):e.type==="change"?"↕":""}</div></div>`).join(""):'<div class="empty">Todavía no hay eventos.</div>';
+ box.innerHTML=ev.length?ev.map(e=>`<div class="event"><div class="eventMinute">${e.minute}'</div><div class="eventIcon">${eventIcon(e)}</div><div class="eventText"><b>${esc(e.playerName||"Evento")}</b><small class="eventTeamLineV18">${eventTeamMarkup(e)}</small></div><div>${e.type==="goal"?esc(e.score||""):e.type==="change"?"↕":""}</div></div>`).join(""):'<div class="empty">Todavía no hay eventos.</div>';
 }
 function renderPlayers(){
  const box=document.getElementById("players");document.getElementById("squadCount").textContent=App.players.length+" jugadores";
@@ -764,7 +788,7 @@ function renderAdminPlayers(){
  document.getElementById("adminPlayers").innerHTML=App.players.slice().sort((a,b)=>a.number-b.number).map(p=>`<div class="adminItem"><div><b>#${p.number} ${esc(p.name)} ${p.captain?"⭐":""}</b><br><small style="color:var(--muted)">${esc(p.surname||"")} • ${esc(p.position)}</small></div><div class="actions"><button class="btn small dark" onclick="editPlayer(${p.id})">✏️</button><button class="btn small red" onclick="deletePlayer(${p.id})">🗑</button></div></div>`).join("")||'<div class="empty" style="margin-top:10px">Sin jugadores.</div>';
 }
 function renderTeams(){
- document.getElementById("adminTeams").innerHTML=App.teams.map(t=>`<div class="adminItem"><div style="display:flex;align-items:center;gap:10px">${t.logo?`<img src="${esc(t.logo)}" class="logoPreview" style="width:45px;height:45px">`:"⚽"}<b>${esc(t.name)}</b></div><div class="actions">${t.id!==1?`<button class="btn small red" onclick="deleteTeam(${t.id})">🗑</button>`:""}</div></div>`).join("");
+ document.getElementById("adminTeams").innerHTML=App.teams.map(t=>`<div class="adminItem"><div style="display:flex;align-items:center;gap:10px">${t.logo?`<img src="${esc(t.logo)}" class="logoPreview" style="width:45px;height:45px">`:"⚽"}<div><b>${esc(t.name)}</b>${Number(t.id)===1?`<br><small style="color:var(--muted)">Equipo local · editable</small>`:""}</div></div><div class="actions"><button class="btn small dark" onclick="editTeam(${t.id})">✏️</button>${Number(t.id)!==1?`<button class="btn small red" onclick="deleteTeam(${t.id})">🗑</button>`:""}</div></div>`).join("");
  const hs=document.getElementById("matchHome"),as=document.getElementById("matchAway");hs.innerHTML="";as.innerHTML="";
  App.teams.forEach(t=>{hs.innerHTML+=`<option value="${t.id}">${esc(t.name)}</option>`;as.innerHTML+=`<option value="${t.id}">${esc(t.name)}</option>`});
 }
@@ -926,9 +950,29 @@ async function savePlayer(){
  App.players.sort((a,b)=>a.number-b.number);closeModal("playerModal");save();renderAll();toast("Jugador guardado")
 }
 function deletePlayer(id){if(!confirm("¿Eliminar jugador?"))return;App.players=App.players.filter(p=>p.id!==id);App.lineup.players=(App.lineup.players||[]).filter(n=>Number(n)!==Number(App.players.find(p=>p.id===id)?.number));save();renderAll()}
+function editTeam(id){
+ const t=App.teams.find(x=>Number(x.id)===Number(id)); if(!t)return;
+ editTeamId=t.id;
+ document.getElementById("teamNameInput").value=t.name||"";
+ document.getElementById("teamLogoInput").value="";
+ const btn=document.getElementById("addTeamBtn"); if(btn)btn.textContent="💾 Guardar cambios";
+ toast(`Editando ${t.name}`);
+}
 async function addTeam(){
  const name=document.getElementById("teamNameInput").value.trim();if(!name){toast("Escribe el nombre");return}
- const t={id:Date.now(),name,short:name.slice(0,3).toUpperCase(),logo:"",protected:false};const file=document.getElementById("teamLogoInput").files[0];if(file){toast("Subiendo escudo…");t.logo=await uploadFile(file,"teams")}
+ const file=document.getElementById("teamLogoInput").files[0];
+ if(editTeamId!==null){
+   const t=App.teams.find(x=>Number(x.id)===Number(editTeamId));
+   if(!t)return;
+   t.name=name;t.short=(t.short||name.slice(0,3)).toUpperCase();
+   if(file){toast("Subiendo escudo…");t.logo=await uploadFile(file,"teams")}
+   editTeamId=null;
+   document.getElementById("teamNameInput").value="";document.getElementById("teamLogoInput").value="";
+   const btn=document.getElementById("addTeamBtn");if(btn)btn.textContent="Guardar equipo";
+   save();renderAll();toast("Equipo actualizado");return;
+ }
+ const t={id:Date.now(),name,short:name.slice(0,3).toUpperCase(),logo:"",protected:false};
+ if(file){toast("Subiendo escudo…");t.logo=await uploadFile(file,"teams")}
  App.teams.push(t);document.getElementById("teamNameInput").value="";document.getElementById("teamLogoInput").value="";save();renderAll();toast("Equipo guardado")
 }
 function deleteTeam(id){if(!confirm("¿Eliminar equipo?"))return;App.teams=App.teams.filter(t=>Number(t.id)!==Number(id));App.matches=App.matches.filter(m=>Number(m.home)!==Number(id)&&Number(m.away)!==Number(id));save();renderAll()}
@@ -1004,10 +1048,12 @@ function renderPublicEventsV10(){
     else if(e.type==="yellow"||e.type==="red")cls="cardEventPublic";
     else if(e.type==="change")cls="changeEventPublic";
     const score=e.type==="goal"?(e.score||""):"";
+    const et=e.team==="home"?team(m?.home):team(m?.away);
+    const logo=et?.logo?`<img class="eventTeamLogoV18" src="${esc(et.logo)}" alt="">`:`<span class="eventTeamLogoFallbackV18">${esc((et?.short||et?.name||"?").slice(0,2).toUpperCase())}</span>`;
     return `<div class="event ${cls}">
       <div class="eventMinute">${e.minute||0}'</div>
       <div class="eventIcon">${icon}</div>
-      <div class="eventText"><b>${esc(e.playerName||"Evento")}</b><small>${esc(side)}</small></div>
+      <div class="eventText"><b>${esc(e.playerName||"Evento")}</b><small class="eventTeamLineV18">${logo}<span>${esc(et?.name||side)}</span></small></div>
       <div>${esc(score)}</div>
     </div>`;
   }).join(""):'<div class="empty">Todavía no hay eventos.</div>';
