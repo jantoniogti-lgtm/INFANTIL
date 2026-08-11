@@ -546,6 +546,14 @@ button{cursor:pointer}
 }
 </style>
 
+
+<style id="v25-css">
+/* V25 */
+.v25-chronicle{font-size:10px;line-height:1.65;color:#dce6f2}
+.v25-chronicle b{color:#fff}
+.v25-chronicle .highlight{color:#ffd400;font-weight:1000}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -1746,6 +1754,244 @@ document.addEventListener("click",function(e){
     v24ShowDetails(match[1]);
   }
 },true);
+</script>
+
+
+<script>
+/* =========================================================
+   V25 — HISTORIAL FINAL: EVENTOS REALES + RESULTADO + CRÓNICA
+   ========================================================= */
+(function(){
+  function v25Type(e){return String(e?.type||e?.eventType||e?.kind||"").toLowerCase().trim();}
+  function v25Goal(e){return ["goal","gol"].includes(v25Type(e));}
+  function v25Card(e){return ["yellow","red","yellow_card","red_card","amarilla","roja"].includes(v25Type(e));}
+  function v25Change(e){
+    const t=v25Type(e);
+    return ["change","substitution","substitute","cambio"].includes(t) ||
+      !!(e?.playerInName||e?.playerOutName||e?.playerIn||e?.playerOut);
+  }
+
+  function v25Events(m){
+    let ev=Array.isArray(m?.events)?m.events.slice():[];
+
+    /* Si es el partido que sigue siendo el activo, el directo es la fuente
+       más reciente. Esto permite ver los eventos reales aunque el snapshot
+       del partido todavía no los tenga. */
+    if((!ev.length || String(m.id)===String(App.activeMatch)) &&
+       String(m.id)===String(App.activeMatch) &&
+       Array.isArray(Live?.events) && Live.events.length){
+      ev=Live.events.slice();
+    }
+
+    return ev.sort((a,b)=>Number(a.minute||0)-Number(b.minute||0));
+  }
+
+  function v25Score(m,ev){
+    let hs=Number(m.homeScore), as=Number(m.awayScore);
+
+    /* Si el histórico quedó con 0-0 pero tiene marcador en los eventos,
+       utiliza el último marcador real. */
+    const scored=ev.filter(v25Goal).map(e=>String(e.score||"").match(/^(\d+)\s*-\s*(\d+)$/)).filter(Boolean);
+    if((hs===0 && as===0) && scored.length){
+      const last=scored[scored.length-1];
+      hs=Number(last[1]); as=Number(last[2]);
+    }
+
+    /* Último recurso: contar goles por equipo. */
+    if((hs===0 && as===0) && ev.some(v25Goal)){
+      hs=ev.filter(e=>v25Goal(e)&&e.team==="home").length;
+      as=ev.filter(e=>v25Goal(e)&&e.team==="away").length;
+    }
+
+    /* Si el directo es este partido, su marcador manda. */
+    if(String(m.id)===String(App.activeMatch) && Live.state==="FINISHED"){
+      hs=Number(Live.homeScore); as=Number(Live.awayScore);
+    }
+    return {hs,as};
+  }
+
+  function v25Player(e,m){
+    let n=String(e?.playerName||e?.player||e?.name||"").trim();
+    const h=team(m.home),a=team(m.away);
+    const teamNames=[h.name,h.short,a.name,a.short].filter(Boolean).map(x=>String(x).toLowerCase());
+    if(!n || teamNames.includes(n.toLowerCase()) || ["rival","ramon sicart","ramón sicart"].includes(n.toLowerCase())){
+      const p=App.players.find(x=>Number(x.number)===Number(e?.playerNumber));
+      if(p)n=p.name;
+    }
+    return n || "Jugador";
+  }
+
+  function v25Crest(e,m){
+    const t=e?.team==="home"?team(m.home):team(m.away);
+    const logo=t?.logo||t?.crest||"";
+    return logo
+      ? `<img class="eventCrestOnlyV24" src="${esc(logo)}" alt="">`
+      : `<span class="eventCrestOnlyV24 eventCrestFallbackV24">⚽</span>`;
+  }
+
+  function v25Row(e,m,kind){
+    const type=v25Type(e);
+    const icon=kind==="goal"?"⚽":kind==="card"?(["red","roja","red_card"].includes(type)?"🟥":"🟨"):"🔄";
+    let body="";
+    if(kind==="change"){
+      const out=e.playerOutName||e.outPlayerName||e.playerOut||e.leftPlayer||"";
+      const inn=e.playerInName||e.inPlayerName||e.playerIn||e.enteredPlayer||"";
+      body=`<div class="v24ChangeNames">
+        ${out?`<span class="out">↓ ${esc(out)}</span>`:""}
+        ${inn?`<span class="in">↑ ${esc(inn)}</span>`:""}
+      </div>`;
+    }else{
+      body=`<div class="detailPlayerV20">${esc(v25Player(e,m))}</div>`;
+    }
+    const score=kind==="goal" && e.score ? `<div class="detailScoreV24">${esc(e.score)}</div>`:"";
+    return `<div class="detailEventV20 detailEventV24">
+      <div class="detailMinuteV20">${Number(e.minute||0)}'</div>
+      <div class="detailEventIconV20">${icon}</div>
+      ${v25Crest(e,m)}
+      ${body}${score}
+    </div>`;
+  }
+
+  function v25Chronicle(m,ev,hs,as){
+    const h=team(m.home),a=team(m.away);
+    const goals=ev.filter(v25Goal);
+    const cards=ev.filter(v25Card);
+    const changes=ev.filter(v25Change);
+
+    if(!goals.length && !cards.length && !changes.length)
+      return `<div class="v25-chronicle">Partido finalizado entre <b>${esc(h.name)}</b> y <b>${esc(a.name)}</b>, con un resultado de <b>${hs}-${as}</b>. No hay eventos detallados registrados para elaborar una crónica más precisa.</div>`;
+
+    const winner=hs>as?h:as>hs?a:null;
+    const loser=winner?(winner===h?a:h):null;
+
+    let text=`<div class="v25-chronicle">`;
+    if(winner){
+      text+=`<b>${esc(h.name)}</b> y <b>${esc(a.name)}</b> completaron un partido que terminó con victoria de <b>${esc(winner.name)}</b> por <b>${hs}-${as}</b>. `;
+    }else{
+      text+=`<b>${esc(h.name)}</b> y <b>${esc(a.name)}</b> firmaron un empate <b>${hs}-${as}</b> en un encuentro con alternativas. `;
+    }
+
+    if(goals.length){
+      const scorerCount={};
+      goals.forEach(e=>{
+        const n=v25Player(e,m);
+        scorerCount[n]=(scorerCount[n]||0)+1;
+      });
+      const top=Object.entries(scorerCount).sort((x,y)=>y[1]-x[1])[0];
+
+      const goalText=goals.map(e=>{
+        const n=v25Player(e,m);
+        const side=e.team==="home"?h.name:a.name;
+        return `<b>${Number(e.minute||0)}'</b>, ${esc(n)} puso el ${esc(e.score||"el marcador")} para ${esc(side)}`;
+      });
+      text+=goalText.join(". ")+`. `;
+
+      if(top && top[1]>=2){
+        text+=`La actuación más destacada fue la de <span class="highlight">${esc(top[0])}</span>, autor de <span class="highlight">${top[1]} goles</span>. `;
+      }
+
+      /* Detecta si el goleador había entrado desde el banquillo antes de marcar. */
+      const subIns={};
+      changes.forEach(c=>{
+        const inn=c.playerInName||c.inPlayerName||c.playerIn||c.enteredPlayer;
+        if(inn) subIns[String(inn).toLowerCase()] = Number(c.minute||0);
+      });
+      const benchGoal=goals.find(g=>{
+        const n=v25Player(g,m);
+        return subIns[String(n).toLowerCase()]!=null &&
+               Number(subIns[String(n).toLowerCase()])<=Number(g.minute||0);
+      });
+      if(benchGoal){
+        const n=v25Player(benchGoal,m);
+        const sm=subIns[String(n).toLowerCase()];
+        text+=`Mención especial para <span class="highlight">${esc(n)}</span>, que salió desde el banquillo en el minuto ${sm}' y terminó siendo decisivo al marcar en el ${Number(benchGoal.minute||0)}'. `;
+      }
+
+      if(winner){
+        const winningGoal=goals.filter(g=>Number((g.score||"0-0").split("-")[0])===hs ||
+          Number((g.score||"0-0").split("-")[1])===as).slice(-1)[0];
+        if(winningGoal && hs!==as){
+          const n=v25Player(winningGoal,m);
+          text+=`Ese tanto terminó siendo especialmente importante en el desenlace y ayudó a asegurar los tres puntos para ${esc(winner.name)}. `;
+        }
+      }
+    }else{
+      text+=`El marcador no se movió y no hubo goles registrados. `;
+    }
+
+    if(cards.length){
+      text+=`El encuentro dejó ${cards.length===1?"una tarjeta":" "+cards.length+" tarjetas"} en el apartado disciplinario. `;
+    }
+    if(changes.length){
+      text+=`Además, se realizaron ${changes.length===1?"un cambio":" "+changes.length+" cambios"} durante el partido.`;
+    }
+    text+=`</div>`;
+    return text;
+  }
+
+  window.v25ShowDetails=function(id){
+    const m=(App.matches||[]).find(x=>String(x.id)===String(id));
+    if(!m)return;
+    const ev=v25Events(m);
+    const sc=v25Score(m,ev);
+    const goals=ev.filter(v25Goal),cards=ev.filter(v25Card),changes=ev.filter(v25Change);
+    const h=team(m.home),a=team(m.away);
+
+    const title=document.getElementById("completedTitleV20");
+    const score=document.getElementById("completedScoreV20");
+    if(title)title.textContent=`${h.name} vs ${a.name}`;
+    if(score)score.innerHTML=
+      `${h.logo?`<img src="${esc(h.logo)}" alt="">`:""}<span>${esc(h.name)}</span>
+       <strong>${sc.hs} - ${sc.as}</strong>
+       <span>${esc(a.name)}</span>${a.logo?`<img src="${esc(a.logo)}" alt="">`:""}`;
+
+    document.getElementById("detailGoalsV20").innerHTML=goals.length
+      ? `<div class="detailTimelineV20">${goals.map(e=>v25Row(e,m,"goal")).join("")}</div>`
+      : '<div class="detailEmptyV20">Sin goles registrados.</div>';
+
+    document.getElementById("detailCardsV20").innerHTML=cards.length
+      ? `<div class="detailTimelineV20">${cards.map(e=>v25Row(e,m,"card")).join("")}</div>`
+      : '<div class="detailEmptyV20">Sin tarjetas registradas.</div>';
+
+    document.getElementById("detailChangesV20").innerHTML=changes.length
+      ? `<div class="detailTimelineV20">${changes.map(e=>v25Row(e,m,"change")).join("")}</div>`
+      : '<div class="detailEmptyV20">Sin cambios registrados.</div>';
+
+    const chron=document.getElementById("chronicleV20");
+    if(chron)chron.innerHTML=v25Chronicle(m,ev,sc.hs,sc.as);
+
+    const details=document.getElementById("completedDetailsV20");
+    if(details){
+      details.style.display="block";
+      details.scrollIntoView({behavior:"smooth",block:"start"});
+    }
+  };
+
+  /* Partido finalizado: nunca mostrar 0-0 si el histórico tiene marcador real. */
+  window.renderMatchesV25=function(){
+    const box=document.getElementById("matchList"),admin=document.getElementById("adminMatches");
+    const rows=App.matches.slice().sort((a,b)=>(a.date+a.hour).localeCompare(b.date+b.hour));
+    box.innerHTML=rows.length?rows.map(m=>{
+      const h=team(m.home),a=team(m.away);
+      const isActive=String(m.id)===String(App.activeMatch);
+      const isFinished=m.status==="FINISHED" || (isActive && Live.state==="FINISHED");
+      const isLive=isActive && (Live.state==="FIRST_HALF"||Live.state==="SECOND_HALF");
+      const ev=v25Events(m), sc=v25Score(m,ev);
+      const score=isFinished?`${sc.hs} - ${sc.as}`:(isLive?`${Number(Live.homeScore||0)} - ${Number(Live.awayScore||0)}`:"—");
+      const badge=isFinished?`<span class="finalBadgeV20">⚪ FINALIZADO</span>`:(isLive?`<span class="liveBadgeV23">🔴 DIRECTO</span>`:`<span class="pendingBadgeV23">PRÓXIMO</span>`);
+      const details=isFinished?`<button class="btn small dark" onclick="v25ShowDetails(${m.id})">👁 Ver detalles</button>`:"";
+      return `<div class="matchRow matchRowV23">
+        <div class="matchDate">${formatDate(m.date)}<br>${m.hour||""}</div>
+        <div class="matchTeams"><b>${esc(h.name)}</b><span>vs</span><b>${esc(a.name)}</b><br><small style="color:var(--muted)">${esc(m.competition||"Liga")}</small></div>
+        <div class="matchResultV23"><strong>${score}</strong>${badge}${details}</div>
+      </div>`;
+    }).join(""):'<div class="empty">No hay partidos creados.</div>';
+    admin.innerHTML=rows.map(m=>`<div class="adminItem"><div><b>${esc(team(m.home).name)} vs ${esc(team(m.away).name)}</b><br><small style="color:var(--muted)">${formatDate(m.date)} ${m.hour||""} ${m.status==="FINISHED"?" · FINALIZADO":""}</small></div><div class="actions"><button class="btn small ${String(m.id)===String(App.activeMatch)?"green":"dark"}" onclick="setActive(${m.id})">${String(m.id)===String(App.activeMatch)?"Activo":"Activar"}</button><button class="btn small red" onclick="deleteMatch(${m.id})">🗑</button></div></div>`).join("");
+  };
+
+  /* Reemplaza el render anterior. */
+  renderMatches=renderMatchesV25;
+})();
 </script>
 
 </body>
