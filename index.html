@@ -335,6 +335,33 @@ button{cursor:pointer}
 #home .publicTeamV11{display:block!important}
 #home .adminCard,#home #adminPanel,#home #lineupChecks{display:none!important}
 
+
+/* ===== V17 — CAMPO VERTICAL + DIRECTO SOLO EVENTOS ===== */
+.pitch,.adminPitchV10,.publicPitchV11{
+  min-height:680px;
+  background:repeating-linear-gradient(180deg,#237d4e 0,#237d4e 12%,#1f7449 12%,#1f7449 24%) !important;
+}
+.pitch:before,.adminPitchV10:before,.publicPitchV11:before{
+  inset:2.5% !important;
+}
+.pitch .halfLine,.adminPitchV10 .halfLine,.publicPitchV11 .halfLine{
+  top:50%;left:2.5%;right:2.5%;width:auto;height:0;border-top:3px solid #ffffffaa;
+}
+.pitch .centerCircle,.adminPitchV10 .adminPitchCircleV10,.publicPitchV11 .publicCircleV11{
+  left:50%;top:50%;
+}
+.pitch .boxTop,.pitch .boxBottom,.adminPitchV10 .boxTop,.adminPitchV10 .boxBottom{
+  left:25%;right:25%;width:auto;height:17%;
+}
+.publicPitchV11:after,.adminPitchV10:after{
+  left:2.5%;right:2.5%;top:50%;bottom:auto;width:auto;height:3px;
+  background:#ffffffcc;transform:translateY(-50%);
+}
+#goalsBox{display:none !important}
+@media(max-width:700px){
+  .pitch,.adminPitchV10,.publicPitchV11{min-height:620px}
+}
+
 </style>
 </head>
 <body>
@@ -378,7 +405,6 @@ button{cursor:pointer}
       <span id="matchField">📍 —</span>
       <span id="matchHalfInfo">⏱ 1ª PARTE</span>
     </div>
-    <div id="goalsBox" class="goals" style="display:none"><h3>GOLES</h3><div class="goalGrid"><div id="homeGoals" class="goalCol"></div><div class="goalDivider"></div><div id="awayGoals" class="goalCol"></div></div></div>
     <div class="integratedEventsV13" id="publicLiveConsole">
       <div class="integratedEventsHeadV13">
         <strong><span class="liveDotV13"></span> EVENTOS DEL PARTIDO</strong>
@@ -623,11 +649,16 @@ function activeMatch(){return App.matches.find(m=>String(m.id)===String(App.acti
 function formatDate(d){if(!d)return"—";const p=d.split("-");return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:d}
 function nowMinute(){return Math.floor(currentSeconds()/60)}
 function currentSeconds(){
-  if((Live.state==="FIRST_HALF"||Live.state==="SECOND_HALF")&&Live.startTimestamp)
-    return Math.max(0,Math.floor((Date.now()-Live.startTimestamp)/1000));
-  return Live.pausedSeconds||Live.manualMinute*60||0;
+  const HALF=40*60, FULL=80*60;
+  if(Live.state==="HALFTIME") return HALF;
+  if(Live.state==="FINISHED") return FULL;
+  if((Live.state==="FIRST_HALF"||Live.state==="SECOND_HALF")&&Live.startTimestamp){
+    const elapsed=Math.max(0,Math.floor((Date.now()-Live.startTimestamp)/1000));
+    return Math.min(FULL, elapsed);
+  }
+  return Math.min(FULL,Math.max(0,Number(Live.pausedSeconds||Live.manualMinute*60||0)));
 }
-function displayMinute(){return Math.max(0,Math.floor(currentSeconds()/60))}
+function displayMinute(){return Math.min(80,Math.max(0,Math.floor(currentSeconds()/60)))}
 function save(){
   if(ignoreRemote)return Promise.resolve();
   return dbRef.set({app:App,liveMatch:Live}).catch(err=>{
@@ -642,12 +673,17 @@ function applyData(data){
   if(!data)return;
   if(data.app){
     App.teams=Array.isArray(data.app.teams)&&data.app.teams.length?data.app.teams:App.teams;
-    App.players=Array.isArray(data.app.players)&&data.app.players.length?data.app.players:App.players;
-    App.matches=Array.isArray(data.app.matches)?data.app.matches:App.matches;
-    App.activeMatch=data.app.activeMatch??App.activeMatch;
-    App.lineup=data.app.lineup||App.lineup||{formation:"4-3-3",players:[]};
+    if(Array.isArray(data.app.players)&&data.app.players.length) App.players=data.app.players;
+    if(Array.isArray(data.app.teams)&&data.app.teams.length) App.teams=data.app.teams;
+    if(Array.isArray(data.app.matches)) App.matches=data.app.matches;
+    if(data.app.activeMatch!==undefined && data.app.activeMatch!==null) App.activeMatch=data.app.activeMatch;
+    if(data.app.lineup && Array.isArray(data.app.lineup.players)){
+      App.lineup={formation:data.app.lineup.formation||"4-3-3",players:data.app.lineup.players.map(Number)};
+    }
   }
   if(data.liveMatch)Object.assign(Live,data.liveMatch);
+  if(Live.state==="HALFTIME"){Live.pausedSeconds=40*60;Live.manualMinute=40;Live.startTimestamp=null;}
+  if(Live.state==="FINISHED"){Live.pausedSeconds=80*60;Live.manualMinute=80;Live.startTimestamp=null;}
   renderAll();
 }
 function startRealtime(){
@@ -689,15 +725,10 @@ function renderHome(){
   document.getElementById("state").textContent=label;
   document.getElementById("clock").textContent=clockText();
   document.getElementById("matchHalfInfo").textContent = Live.half===2 ? "⏱ 2ª PARTE" : "⏱ 1ª PARTE";
-  renderGoals();renderPitch("pitch");renderEvents("publicEvents");
+  renderPitch("pitch");renderEvents("publicEvents");
 }
 function clockText(){const sec=currentSeconds();return String(Math.floor(sec/60)).padStart(2,"0")+":"+String(sec%60).padStart(2,"0")}
-function renderGoals(){
- const gb=document.getElementById("goalsBox"),hg=document.getElementById("homeGoals"),ag=document.getElementById("awayGoals");
- const goals=Live.events.filter(e=>e.type==="goal").sort((a,b)=>a.minute-b.minute);
- gb.style.display=goals.length?"block":"none";hg.innerHTML="";ag.innerHTML="";
- goals.forEach(e=>{const x=`<div class="goalItem ${e.team==="home"?"left":""}">⚽ ${esc(e.playerName||"Gol")} <span style="color:var(--muted)">(${e.minute}')</span></div>`;(e.team==="home"?hg:ag).innerHTML+=x})
-}
+function renderGoals(){ return; }
 function positions(formation){
  const maps={
  "4-3-3":[[50,91],[18,74],[38,78],[62,78],[82,74],[28,55],[50,61],[72,55],[22,30],[50,24],[78,30]],
@@ -767,11 +798,55 @@ function resetLive(ask=true){
  if(ask&&!confirm("¿Reiniciar marcador, cronómetro y eventos?"))return;
  Live.state="PREMATCH";Live.half=1;Live.homeScore=0;Live.awayScore=0;Live.events=[];Live.startTimestamp=null;Live.pausedSeconds=0;Live.manualMinute=0;save();renderAll()
 }
-function startMatch(){if(!activeMatch()){toast("Crea o activa un partido primero");return}Live.state=Live.half===2?"SECOND_HALF":"FIRST_HALF";Live.startTimestamp=Date.now()-(Live.pausedSeconds||0)*1000;save();renderAll()}
-function halftime(){if(Live.state!=="FIRST_HALF")return;Live.pausedSeconds=currentSeconds();Live.startTimestamp=null;Live.state="HALFTIME";save();renderAll()}
-function secondHalf(){Live.half=2;Live.state="SECOND_HALF";Live.pausedSeconds=Math.max(0,Live.pausedSeconds||40*60);Live.startTimestamp=Date.now()-Live.pausedSeconds*1000;save();renderAll()}
-function finish(){Live.state="FINISHED";Live.pausedSeconds=currentSeconds();Live.startTimestamp=null;save();renderAll()}
-function adjustMinute(n){Live.manualMinute=Math.max(0,displayMinute()+n);if(Live.state==="HALFTIME"||Live.state==="PREMATCH"||Live.state==="FINISHED")Live.pausedSeconds=Live.manualMinute*60;save();renderAll()}
+function startMatch(){
+  if(!activeMatch()){toast("Crea o activa un partido primero");return}
+  Live.half=1;
+  Live.state="FIRST_HALF";
+  Live.pausedSeconds=0;
+  Live.manualMinute=0;
+  Live.startTimestamp=Date.now();
+  save();renderAll();
+}
+function halftime(){
+  if(Live.state!=="FIRST_HALF")return;
+  Live.pausedSeconds=40*60;
+  Live.manualMinute=40;
+  Live.startTimestamp=null;
+  Live.state="HALFTIME";
+  save();renderAll();
+}
+function secondHalf(){
+  if(!activeMatch()){toast("Crea o activa un partido primero");return}
+  Live.half=2;
+  Live.state="SECOND_HALF";
+  Live.pausedSeconds=40*60;
+  Live.manualMinute=40;
+  Live.startTimestamp=Date.now()-(40*60*1000);
+  save();renderAll();
+}
+function finish(){
+  Live.half=2;
+  Live.state="FINISHED";
+  Live.pausedSeconds=80*60;
+  Live.manualMinute=80;
+  Live.startTimestamp=null;
+  save();renderAll();
+}
+function adjustMinute(n){
+  const next=Math.min(80,Math.max(0,displayMinute()+n));
+  Live.manualMinute=next;
+  if(Live.state==="HALFTIME"){
+    Live.pausedSeconds=40*60;
+  }else if(Live.state==="FINISHED"){
+    Live.pausedSeconds=80*60;
+  }else if(Live.state==="PREMATCH"){
+    Live.pausedSeconds=next*60;
+  }else if(Live.state==="FIRST_HALF"||Live.state==="SECOND_HALF"){
+    Live.pausedSeconds=next*60;
+    Live.startTimestamp=Date.now()-Live.pausedSeconds*1000;
+  }
+  save();renderAll();
+}
 function quickGoal(side){
   if(!activeMatch()){toast("Activa un partido");return}
   const isHome=side==="home";
@@ -887,7 +962,7 @@ setInterval(()=>{
       document.getElementById("adminMinute").textContent=displayMinute()+"'";
       if(Live.state==="FIRST_HALF"||Live.state==="SECOND_HALF"){
         const m=displayMinute();
-        if(m>=50){ finish(); }
+        if(m>=80){ finish(); }
       }
     },1000);
 
@@ -947,7 +1022,9 @@ function renderAdminXI10(){
   const safePlayers=Array.isArray(App.players)?App.players:[];
   App.lineup=App.lineup||{formation:"4-3-3",players:[]};
   form.value=App.lineup.formation||"4-3-3";
-  const currentXI=(App.lineup?.players?.length?App.lineup.players:(Live.lineup||[]));
+  let localXI=[];
+  try{localXI=JSON.parse(localStorage.getItem("rs_lineup")||"{}").players||[]}catch(e){}
+  const currentXI=(App.lineup?.players?.length?App.lineup.players:((Live.lineup||[]).length?Live.lineup:localXI));
   const nums=currentXI.map(Number).slice(0,11);
   const pos=positions(App.lineup.formation||"4-3-3");
 
@@ -985,14 +1062,14 @@ function toggleXI10(n){
   let a=(App.lineup.players||[]).map(Number);
   if(a.includes(Number(n)))a=a.filter(x=>x!==Number(n));
   else{if(a.length>=11){toast("Ya tienes 11 jugadores en el XI");return}a.push(Number(n))}
-  App.lineup.players=a; Live.lineup=a.slice(); Live.formation=App.lineup.formation||"4-3-3"; renderAdminXI10();
+  App.lineup.players=a; Live.lineup=a.slice(); Live.formation=App.lineup.formation||"4-3-3"; localStorage.setItem("rs_lineup",JSON.stringify({formation:App.lineup.formation,players:a})); renderAdminXI10();
 }
-function removeXI10(n){App.lineup.players=(App.lineup.players||[]).filter(x=>Number(x)!==Number(n));renderAdminXI10()}
+function removeXI10(n){App.lineup.players=(App.lineup.players||[]).filter(x=>Number(x)!==Number(n));localStorage.setItem("rs_lineup",JSON.stringify({formation:App.lineup.formation||"4-3-3",players:App.lineup.players}));renderAdminXI10()}
 function moveXI10(i,dir){
   const a=(App.lineup.players||[]).slice(0,11),j=i+dir;
   if(j<0||j>=a.length)return;
   [a[i],a[j]]=[a[j],a[i]];
-  App.lineup.players=a; Live.lineup=a.slice();
+  App.lineup.players=a; Live.lineup=a.slice(); localStorage.setItem("rs_lineup",JSON.stringify({formation:App.lineup.formation||"4-3-3",players:a}));
   renderAdminXI10();
 }
 document.getElementById("formationV10")?.addEventListener("change",e=>{
@@ -1002,7 +1079,7 @@ document.getElementById("formationV10")?.addEventListener("change",e=>{
 });
 document.getElementById("clearXI10")?.addEventListener("click",()=>{
   App.lineup=App.lineup||{formation:"4-3-3",players:[]};
-  App.lineup.players=[]; Live.lineup=[];
+  App.lineup.players=[]; Live.lineup=[]; localStorage.setItem("rs_lineup",JSON.stringify({formation:App.lineup.formation||"4-3-3",players:[]}));
   renderAdminXI10();
 });
 document.getElementById("saveXI10")?.addEventListener("click",()=>{
@@ -1010,7 +1087,9 @@ document.getElementById("saveXI10")?.addEventListener("click",()=>{
   const a=(App.lineup.players||[]).map(Number);
   if(a.length!==11){toast("Debes seleccionar 11 jugadores");return}
   if(new Set(a).size!==11){toast("No puede haber jugadores repetidos");return}
-  Live.lineup=a.slice(); Live.formation=App.lineup.formation||"4-3-3"; save();renderAll();renderAdminXI10();renderPublicTeamV11();toast("Once guardado y publicado 👕");
+  Live.lineup=a.slice(); Live.formation=App.lineup.formation||"4-3-3";
+  localStorage.setItem("rs_lineup",JSON.stringify({formation:App.lineup.formation,players:a}));
+  save();renderAll();renderAdminXI10();renderPublicTeamV11();toast("Once guardado y publicado 👕");
 });
 
 /* V15: render general estable. */
@@ -1036,8 +1115,9 @@ function renderPublicTeamV11(){
   const safePlayers=Array.isArray(App.players)?App.players:[];
   const stored=Array.isArray(App.lineup?.players)?App.lineup.players:[];
   const liveXI=Array.isArray(Live.lineup)?Live.lineup:[];
-  const fallbackXI=[1,2,3,4,7,11,14,9,10,12,15];
-  const sourceXI=stored.length?stored:(liveXI.length?liveXI:fallbackXI);
+  let localXI=[];
+  try{ localXI=JSON.parse(localStorage.getItem("rs_lineup")||"{}").players||[]; }catch(e){}
+  const sourceXI=stored.length?stored:(liveXI.length?liveXI:localXI);
   const nums=sourceXI.map(Number).filter(n=>safePlayers.some(p=>Number(p.number)===n)).slice(0,11);
   const lineup={formation:App.lineup?.formation||Live.formation||"4-3-3",players:nums};
   const formation=lineup.formation||"4-3-3";
@@ -1134,6 +1214,12 @@ window.rsFirebaseRetry=function(){
   try{renderAll();}catch(e){console.error("RS LIVE render bootstrap",e)}
   try{renderAdminXI10();}catch(e){}
   try{renderPublicTeamV11();}catch(e){}
+  try{
+    const savedXI=JSON.parse(localStorage.getItem("rs_lineup")||"{}");
+    if(!App.lineup?.players?.length && savedXI.players?.length){
+      App.lineup={formation:savedXI.formation||"4-3-3",players:savedXI.players.map(Number)};
+    }
+  }catch(e){}
   try{startRealtime();}catch(e){console.error("RS LIVE Firebase start",e)}
 })();
 </script>
