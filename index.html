@@ -554,6 +554,13 @@ button{cursor:pointer}
 .v25-chronicle .highlight{color:#ffd400;font-weight:1000}
 </style>
 
+
+<style id="v26-css">
+.v26Dashboard{margin-top:18px}.v26DashGrid{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:14px}.v26DashCard{padding:16px;min-width:0}.v26DashCard .sectionTitle{margin:0 0 10px}.v26MiniList{display:grid;gap:8px}.v26MiniRow{display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:8px;padding:10px 8px;border:1px solid var(--line);border-radius:13px;background:#0b192a}.v26MiniRow b{font-size:12px}.v26MiniRow small{color:var(--muted);font-size:10px}.v26Score{font-weight:1000;font-size:16px;color:var(--yellow)}.v26Rank{width:24px;height:24px;border-radius:8px;background:#17283e;display:grid;place-items:center;font-weight:1000;color:var(--yellow);font-size:11px}.v26StatLine{display:flex;gap:7px;flex-wrap:wrap;margin-top:5px;color:var(--muted);font-size:10px}.v26PlayerStats{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;margin-top:9px}.v26Stat{background:#13243a;border:1px solid var(--line);border-radius:999px;padding:4px 7px;color:#cbd6e4;font-size:9px;font-weight:900}.v26AdminStats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}.v26AdminStats input{min-width:0}.v26EventEditor{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}.v26EventEditRow{display:grid;grid-template-columns:48px 70px 90px 1fr auto;gap:7px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(32,51,77,.65)}.v26EventEditRow input,.v26EventEditRow select{width:100%;background:#091727;color:var(--white);border:1px solid var(--line);border-radius:9px;padding:7px;font-size:11px}.v26EventEditIcon{font-size:18px;text-align:center}.v26EventActions{display:flex;gap:5px}.v26EventActions button{padding:7px 9px;border-radius:8px;border:1px solid var(--line);background:#13243a;color:#fff}.v26EventActions .danger{background:#4b1820}.v26EventHint{font-size:10px;color:var(--muted);margin-bottom:10px}.eventCrestOnlyV26{width:22px;height:22px;object-fit:contain;display:inline-block;vertical-align:middle;margin-right:8px}.v26PublicEvent{display:grid;grid-template-columns:45px 30px 1fr auto;align-items:center;gap:8px;padding:11px 13px;border:1px solid var(--line);border-radius:14px;background:#0b192a}.v26PublicEvent+.v26PublicEvent{margin-top:8px}.v26PublicEvent .minute{color:var(--yellow);font-weight:1000}.v26PublicEvent .player{display:flex;align-items:center;min-width:0}.v26PublicEvent .player b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.v26PublicEvent .score{font-size:15px}.v26EditModal .form{gap:9px}.v26ChangeFields{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+@media(max-width:1050px){.v26DashGrid{grid-template-columns:1fr}.v26AdminStats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:650px){.v26EventEditRow{grid-template-columns:35px 55px 75px 1fr auto}.v26EventEditRow .eventTeamSelect{display:none}.v26AdminStats{grid-template-columns:repeat(2,1fr)}.v26PublicEvent{grid-template-columns:38px 26px 1fr auto}}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -616,6 +623,14 @@ button{cursor:pointer}
     <div class="benchGridV11" id="publicBenchV11"></div>
   </div>
 </section>
+</section>
+
+<section class="v26Dashboard" id="homeDashboardV26">
+  <div class="v26DashGrid">
+    <div class="card v26DashCard"><div class="sectionTitle"><h2>📅 Partidos</h2><p>Últimos y próximos</p></div><div id="homeMatchesV26"></div></div>
+    <div class="card v26DashCard"><div class="sectionTitle"><h2>🏆 Clasificación</h2><p>Top 5</p></div><div id="homeTableV26"></div></div>
+    <div class="card v26DashCard"><div class="sectionTitle"><h2>⚽ Goleadores</h2><p>Top 3</p></div><div id="homeScorersV26"></div></div>
+  </div>
 </section>
 
 <section id="squad" class="page">
@@ -1991,6 +2006,173 @@ document.addEventListener("click",function(e){
 
   /* Reemplaza el render anterior. */
   renderMatches=renderMatchesV25;
+})();
+</script>
+
+
+<script id="v26-script">
+(function(){
+  const oldFinish=window.finish;
+  const oldApplyData=window.applyData;
+  const oldRenderHome=window.renderHome;
+
+  function v26Events(m){
+    if(!m)return [];
+    if(Array.isArray(m.events))return m.events;
+    return [];
+  }
+  function v26Side(m){return Number(m?.home)===1?'home':Number(m?.away)===1?'away':null}
+  function v26PlayerByNumber(n){return (App.players||[]).find(p=>Number(p.number)===Number(n))}
+  function v26EventPlayer(e){
+    if(e?.playerName && !/ram[oó]n\s*sicart|rival/i.test(String(e.playerName)))return String(e.playerName);
+    const p=v26PlayerByNumber(e?.playerNumber);return p?.name||e?.playerName||'Jugador';
+  }
+  function v26TeamLogo(m,side){const t=team(side==='home'?m.home:m.away);return t?.logo||t?.crest||''}
+  function v26Icon(e){const t=String(e?.type||'').toLowerCase();return t==='goal'?'⚽':t==='yellow'?'🟨':t==='red'?'🟥':t==='change'?'🔄':'•'}
+  function v26Sort(ev){return [...(ev||[])].sort((a,b)=>Number(a.minute||0)-Number(b.minute||0)||Number(a.id||0)-Number(b.id||0))}
+  function v26IsRamon(m,side){return Number(side==='home'?m.home:m.away)===1}
+
+  function v26RebuildScores(ev){
+    let h=0,a=0;
+    v26Sort(ev).forEach(e=>{if(String(e.type).toLowerCase()==='goal'){if(e.team==='home')h++;else if(e.team==='away')a++;e.score=`${h}-${a}`;}});
+    return {homeScore:h,awayScore:a};
+  }
+
+  function v26RecalcStats(){
+    const calc={};
+    (App.players||[]).forEach(p=>{calc[p.id]={goals:0,yellow:0,red:0,starts:0,appearances:0}});
+    (App.matches||[]).filter(m=>m.status==='FINISHED').forEach(m=>{
+      const side=v26Side(m); if(!side)return;
+      const lineup=Array.isArray(m.lineup)?m.lineup.map(Number):[];
+      lineup.forEach(n=>{const p=(App.players||[]).find(x=>Number(x.number)===n);if(p&&calc[p.id]){calc[p.id].starts++;calc[p.id].appearances++;}});
+      v26Events(m).forEach(e=>{
+        if(e.team!==side)return;
+        const p=v26PlayerByNumber(e.playerNumber);
+        if(!p||!calc[p.id])return;
+        if(e.type==='goal')calc[p.id].goals++;
+        if(e.type==='yellow')calc[p.id].yellow++;
+        if(e.type==='red')calc[p.id].red++;
+        if(e.type==='change' && e.playerInNumber!=null && Number(e.playerInNumber)===Number(p.number))calc[p.id].appearances++;
+      });
+    });
+    (App.players||[]).forEach(p=>{
+      const c=calc[p.id]||{goals:0,yellow:0,red:0,starts:0,appearances:0};
+      const adj=p.statAdjust||{};
+      p.goals=c.goals+Number(adj.goals||0);p.yellow=c.yellow+Number(adj.yellow||0);p.red=c.red+Number(adj.red||0);p.starts=c.starts+Number(adj.starts||0);p.appearances=c.appearances+Number(adj.appearances||0);
+    });
+  }
+
+  window.recalculateSeasonStatsV26=function(saveIt){v26RecalcStats();if(saveIt)save();renderPlayers();renderHomeDashboardV26();renderAdminPlayers();}
+
+  function v26PublicEvents(){
+    const box=document.getElementById('publicEvents');if(!box)return;
+    const m=activeMatch();if(!m){box.innerHTML='<div class="empty">No hay partido activo.</div>';return;}
+    const ev=v26Sort(Live.events||[]);const home=team(m.home),away=team(m.away);
+    box.innerHTML=ev.length?ev.map(e=>{
+      const logo=v26TeamLogo(m,e.team);const crest=logo?`<img class="eventCrestOnlyV26" src="${esc(logo)}" alt="">`:`<span class="eventCrestOnlyV26">🛡️</span>`;
+      return `<div class="v26PublicEvent"><div class="minute">${Number(e.minute||0)}'</div><div>${v26Icon(e)}</div><div class="player">${crest}<b>${esc(v26EventPlayer(e))}</b></div><div class="score">${e.type==='goal'?esc(e.score||''):''}</div></div>`;
+    }).join(''):'<div class="empty">Todavía no hay eventos.</div>';
+  }
+
+  function v26RenderDashboard(){
+    const matches=document.getElementById('homeMatchesV26'),table=document.getElementById('homeTableV26'),scorers=document.getElementById('homeScorersV26');
+    if(!matches||!table||!scorers)return;
+    const rows=[...(App.matches||[])].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||String(b.hour||'').localeCompare(String(a.hour||''))).slice(0,3);
+    matches.innerHTML=rows.length?`<div class="v26MiniList">${rows.map(m=>{const h=team(m.home),a=team(m.away);const fin=m.status==='FINISHED';const live=String(m.id)===String(App.activeMatch)&&['FIRST_HALF','SECOND_HALF'].includes(Live.state);const sc=fin?`${m.homeScore??0} - ${m.awayScore??0}`:live?`${Live.homeScore} - ${Live.awayScore}`:'—';return `<div class="v26MiniRow"><div><small>${formatDate(m.date)}<br>${esc(m.hour||'')}</small></div><div><b>${esc(h.name)} vs ${esc(a.name)}</b><div class="v26StatLine">${fin?'FINALIZADO':live?'🔴 DIRECTO':esc(m.competition||'Liga')}</div></div><div class="v26Score">${sc}</div></div>`}).join('')}</div>`:'<div class="empty">No hay partidos.</div>';
+
+    const stats={};(App.teams||[]).forEach(t=>stats[t.id]={team:t,played:0,w:0,d:0,l:0,gf:0,ga:0,pts:0});
+    (App.matches||[]).filter(m=>m.status==='FINISHED').forEach(m=>{if(!stats[m.home]||!stats[m.away])return;const h=Number(m.homeScore||0),a=Number(m.awayScore||0);const H=stats[m.home],A=stats[m.away];H.played++;A.played++;H.gf+=h;H.ga+=a;A.gf+=a;A.ga+=h;if(h>a){H.w++;A.l++;H.pts+=3}else if(a>h){A.w++;H.l++;A.pts+=3}else{H.d++;A.d++;H.pts++;A.pts++}});
+    const standings=Object.values(stats).sort((x,y)=>y.pts-x.pts||(y.gf-y.ga)-(x.gf-x.ga)||y.gf-x.gf).slice(0,5);
+    table.innerHTML=standings.length?`<div class="v26MiniList">${standings.map((r,i)=>`<div class="v26MiniRow"><div class="v26Rank">${i+1}</div><div><b>${esc(r.team.name)}</b><div class="v26StatLine">PJ ${r.played} · G ${r.w} · E ${r.d} · P ${r.l}</div></div><div><div class="v26Score">${r.pts} pts</div><small>${r.gf}:${r.ga}</small></div></div>`).join('')}</div>`:'<div class="empty">Sin clasificación todavía.</div>';
+
+    const top=(App.players||[]).filter(p=>Number(p.goals||0)>0).sort((a,b)=>Number(b.goals||0)-Number(a.goals||0)).slice(0,3);
+    scorers.innerHTML=top.length?`<div class="v26MiniList">${top.map((p,i)=>`<div class="v26MiniRow"><div class="v26Rank">${i+1}</div><div><b>${esc(p.name)}</b><div class="v26StatLine">#${p.number} · ${esc(p.position||'')}</div></div><div class="v26Score">${p.goals} ⚽</div></div>`).join('')}</div>`:'<div class="empty">Todavía no hay goles.</div>';
+  }
+  window.renderHomeDashboardV26=v26RenderDashboard;
+
+  window.renderHome=function(){
+    if(oldRenderHome)oldRenderHome();
+    v26PublicEvents();v26RenderDashboard();
+  };
+
+  window.renderPlayers=function(){
+    const box=document.getElementById('players');if(!box)return;document.getElementById('squadCount').textContent=(App.players||[]).length+' jugadores';
+    box.innerHTML=(App.players||[]).slice().sort((a,b)=>a.number-b.number).map(p=>`<div class="playerCard">${p.photo?`<img class="playerPhoto" src="${esc(p.photo)}">`:`<div class="playerPhoto" style="display:grid;place-items:center;font-size:32px">👤</div>`}<div class="shirtMini">${p.number}</div><div class="playerNumber">${p.number}</div><div class="playerName">${esc(p.name)} ${p.captain?'⭐':''}</div><div class="playerPos">${esc(p.position||'')}</div><div class="v26PlayerStats"><span class="v26Stat">⚽ ${p.goals||0}</span><span class="v26Stat">🟨 ${p.yellow||0}</span><span class="v26Stat">🟥 ${p.red||0}</span><span class="v26Stat">👕 ${p.starts||0} titular</span><span class="v26Stat">🎽 ${p.appearances||0} PJ</span></div></div>`).join('')||'<div class="empty">No hay jugadores.</div>';
+  };
+
+  function v26EnsurePlayerStatsFields(){
+    const form=document.querySelector('#playerModal .form');if(!form||document.getElementById('v26PlayerStatsFields'))return;
+    const wrap=document.createElement('div');wrap.id='v26PlayerStatsFields';wrap.innerHTML=`<div style="font-size:11px;color:var(--yellow);font-weight:900;margin-top:4px">📊 ESTADÍSTICAS / AJUSTES MANUALES</div><div class="v26AdminStats"><div><label>Goles</label><input id="pGoals" type="number" min="0" value="0"></div><div><label>Amarillas</label><input id="pYellow" type="number" min="0" value="0"></div><div><label>Rojas</label><input id="pRed" type="number" min="0" value="0"></div><div><label>Titular</label><input id="pStarts" type="number" min="0" value="0"></div><div><label>Partidos</label><input id="pApps" type="number" min="0" value="0"></div></div><div class="v26EventHint">Los partidos finalizados actualizan automáticamente estas estadísticas. Estos campos sirven para corregir datos históricos.</div>`;form.insertBefore(wrap,form.querySelector('#savePlayerBtn'));
+  }
+  window.openPlayer=function(id){v26EnsurePlayerStatsFields();editPlayerId=id;const p=App.players.find(x=>x.id===id);if(!p)return;document.getElementById('playerModalTitle').textContent='Editar jugador';document.getElementById('pNumber').value=p.number??'';document.getElementById('pName').value=p.name||'';document.getElementById('pSurname').value=p.surname||'';document.getElementById('pPosition').value=p.position||'Defensa';document.getElementById('pCaptain').checked=!!p.captain;document.getElementById('pStatus').value=p.status||'Disponible';document.getElementById('pPhoto').value='';document.getElementById('pGoals').value=p.goals||0;document.getElementById('pYellow').value=p.yellow||0;document.getElementById('pRed').value=p.red||0;document.getElementById('pStarts').value=p.starts||0;document.getElementById('pApps').value=p.appearances||0;document.getElementById('playerModal').classList.add('open');};
+  window.savePlayer=async function(){v26EnsurePlayerStatsFields();const num=Number(document.getElementById('pNumber').value),name=document.getElementById('pName').value.trim();if(!num||!name){toast('Dorsal y nombre son obligatorios');return}let p=App.players.find(x=>x.id===editPlayerId);if(!p){p={id:Date.now(),number:num,name,surname:'',position:'Defensa',captain:false,photo:'',goals:0,yellow:0,red:0,starts:0,appearances:0};App.players.push(p)}p.number=num;p.name=name;p.surname=document.getElementById('pSurname').value.trim();p.position=document.getElementById('pPosition').value;p.captain=document.getElementById('pCaptain').checked;p.status=document.getElementById('pStatus').value;p.statAdjust={goals:Number(document.getElementById('pGoals').value||0),yellow:Number(document.getElementById('pYellow').value||0),red:Number(document.getElementById('pRed').value||0),starts:Number(document.getElementById('pStarts').value||0),appearances:Number(document.getElementById('pApps').value||0)};const file=document.getElementById('pPhoto').files[0];if(file){toast('Subiendo foto…');p.photo=await uploadFile(file,'players')}App.players.sort((a,b)=>a.number-b.number);closeModal('playerModal');save();renderAll();toast('Jugador guardado');};
+
+  window.renderAdminPlayers=function(){const box=document.getElementById('adminPlayers');if(!box)return;box.innerHTML=(App.players||[]).slice().sort((a,b)=>a.number-b.number).map(p=>`<div class="adminItem"><div><b>#${p.number} ${esc(p.name)} ${p.captain?'⭐':''}</b><br><small style="color:var(--muted)">${esc(p.surname||'')} · ${esc(p.position||'')} · ⚽ ${p.goals||0} · 🟨 ${p.yellow||0} · 🟥 ${p.red||0} · 👕 ${p.starts||0}</small></div><div class="actions"><button class="btn small dark" onclick="openPlayer(${p.id})">✏️ Editar</button><button class="btn small red" onclick="deletePlayer(${p.id})">🗑</button></div></div>`).join('')||'<div class="empty">Sin jugadores.</div>';};
+
+  function v26AdminEvents(){
+    const box=document.getElementById('adminEvents');if(!box)return;const m=activeMatch();if(!m){box.innerHTML='<div class="empty">No hay partido activo.</div>';return}
+    const ev=(m.status==='FINISHED'?v26Events(m):(Live.events||[]));
+    box.innerHTML=ev.length?ev.slice().sort((a,b)=>Number(a.minute||0)-Number(b.minute||0)).map((e,i)=>`<div class="v26EventEditRow"><div class="v26EventEditIcon">${v26Icon(e)}</div><input id="v26min_${i}" type="number" min="0" max="80" value="${Number(e.minute||0)}"><select class="eventTeamSelect" id="v26team_${i}"><option value="home" ${e.team==='home'?'selected':''}>LOCAL</option><option value="away" ${e.team==='away'?'selected':''}>VISIT.</option></select><input id="v26name_${i}" value="${esc(v26EventPlayer(e))}" placeholder="Jugador"><div class="v26EventActions"><button onclick="v26EditEvent(${i})">✏️</button><button class="danger" onclick="v26DeleteEvent(${i})">🗑</button></div></div>`).join(''):'<div class="empty">No hay eventos registrados.</div>';
+    const head=m.status==='FINISHED'?'<div class="v26EventHint"><b>Partido finalizado:</b> puedes editar o eliminar cualquier evento. El marcador y las estadísticas se recalculan automáticamente.</div>':'<div class="v26EventHint">Puedes corregir los eventos del directo desde aquí. Los cambios se guardan en Firebase.</div>';
+    box.innerHTML=head+box.innerHTML+`<div style="margin-top:10px"><button class="btn small" onclick="v26NewEvent()">＋ Añadir evento</button></div>`;
+  }
+  window.v26EditEvent=function(i){const m=activeMatch();if(!m)return;const ev=m.status==='FINISHED'?v26Events(m):(Live.events||[]);const e=ev.slice().sort((a,b)=>Number(a.minute||0)-Number(b.minute||0))[i];if(!e)return;v26OpenEventEditor(e,i);};
+  window.v26NewEvent=function(){const m=activeMatch();if(!m)return;v26OpenEventEditor({id:Date.now(),type:'goal',team:'home',minute:displayMinute(),playerName:'',playerNumber:null,score:''},-1);};
+  function v26OpenEventEditor(e,index){
+    let modal=document.getElementById('v26EventModal');if(!modal){modal=document.createElement('div');modal.id='v26EventModal';modal.className='modal v26EditModal';modal.innerHTML=`<div class="modalBox"><div class="modalHead"><h2>✏️ Editar evento</h2><button class="close" onclick="closeModal('v26EventModal')">×</button></div><div class="form"><label>Tipo</label><select id="v26Type"><option value="goal">⚽ Gol</option><option value="yellow">🟨 Amarilla</option><option value="red">🟥 Roja</option><option value="change">🔄 Cambio</option></select><div class="row"><div><label>Minuto</label><input id="v26Minute" type="number" min="0" max="80"></div><div><label>Equipo</label><select id="v26Team"><option value="home">Local</option><option value="away">Visitante</option></select></div></div><label>Jugador</label><input id="v26Player"><div class="v26ChangeFields"><div><label>Entra</label><input id="v26In"></div><div><label>Sale</label><input id="v26Out"></div></div><input type="hidden" id="v26Index"><button class="btn green" onclick="v26SaveEventEditor()">💾 Guardar evento</button></div></div>`;document.body.appendChild(modal)}
+    document.getElementById('v26Type').value=e.type||'goal';document.getElementById('v26Minute').value=Number(e.minute||0);document.getElementById('v26Team').value=e.team||'home';document.getElementById('v26Player').value=v26EventPlayer(e);document.getElementById('v26In').value=e.playerInName||'';document.getElementById('v26Out').value=e.playerOutName||'';document.getElementById('v26Index').value=String(index);modal.classList.add('open');
+  }
+  window.v26SaveEventEditor=function(){const m=activeMatch();if(!m)return;const finished=m.status==='FINISHED';const ev=finished?v26Events(m):Live.events||[];const sorted=ev.slice().sort((a,b)=>Number(a.minute||0)-Number(b.minute||0));const idx=Number(document.getElementById('v26Index').value);const old=idx>=0?sorted[idx]:null;const e=old||{id:Date.now()};e.type=document.getElementById('v26Type').value;e.minute=Math.max(0,Math.min(80,Number(document.getElementById('v26Minute').value||0)));e.team=document.getElementById('v26Team').value;e.playerName=document.getElementById('v26Player').value.trim();e.playerInName=document.getElementById('v26In').value.trim();e.playerOutName=document.getElementById('v26Out').value.trim();e.score='';if(idx<0)ev.push(e);const scores=v26RebuildScores(ev);if(finished){m.events=ev;m.homeScore=scores.homeScore;m.awayScore=scores.awayScore}else{Live.events=ev;Live.homeScore=scores.homeScore;Live.awayScore=scores.awayScore}v26RecalcStats();closeModal('v26EventModal');save();renderAll();toast('Evento actualizado');};
+  window.v26DeleteEvent=function(i){const m=activeMatch();if(!m)return;if(!confirm('¿Eliminar este evento?'))return;const finished=m.status==='FINISHED';const ev=(finished?v26Events(m):Live.events||[]).slice().sort((a,b)=>Number(a.minute||0)-Number(b.minute||0));ev.splice(i,1);const scores=v26RebuildScores(ev);if(finished){m.events=ev;m.homeScore=scores.homeScore;m.awayScore=scores.awayScore}else{Live.events=ev;Live.homeScore=scores.homeScore;Live.awayScore=scores.awayScore}v26RecalcStats();save();renderAll();toast('Evento eliminado');};
+
+  window.renderAdminLive=function(){
+    const m=activeMatch();const minute=document.getElementById('adminMinute');if(minute)minute.textContent=displayMinute()+"'";const active=document.getElementById('adminActiveMatch');if(active)active.textContent=m?`${team(m.home).name} vs ${team(m.away).name}`:'Sin partido activo';const st=document.getElementById('adminLiveState');if(st){const labels={PREMATCH:'⚪ PREPARTIDO',FIRST_HALF:'🔴 1ª PARTE · EN DIRECTO',HALFTIME:'🟡 DESCANSO',SECOND_HALF:'🔴 2ª PARTE · EN DIRECTO',FINISHED:'🏁 FINALIZADO'};st.textContent=labels[Live.state]||Live.state;st.className='badge'+(['FIRST_HALF','SECOND_HALF'].includes(Live.state)?' live':'')}v26AdminEvents();const qs=document.getElementById('quickScore');if(qs)qs.textContent=`${Live.homeScore} - ${Live.awayScore}`;
+  };
+
+  window.finish=function(){const m=activeMatch();if(!m){toast('Crea o activa un partido primero');return}Live.half=2;Live.state='FINISHED';Live.pausedSeconds=80*60;Live.manualMinute=80;Live.startTimestamp=null;m.status='FINISHED';m.homeScore=Number(Live.homeScore||0);m.awayScore=Number(Live.awayScore||0);m.events=JSON.parse(JSON.stringify(Live.events||[]));m.lineup=Array.isArray(Live.lineup)&&Live.lineup.length?Live.lineup.slice():((App.lineup?.players||[]).slice());m.formation=Live.formation||App.lineup?.formation||'4-3-3';m.finishedAt=Date.now();v26RecalcStats();save();renderAll();toast('Partido finalizado · datos guardados y estadísticas actualizadas');};
+
+  window.resetLive=function(ask=true){const m=activeMatch();if(ask&&!confirm(m?.status==='FINISHED'?'El partido finalizado se conservará. Se limpiará solo la consola para poder preparar otro partido. ¿Continuar?':'¿Reiniciar marcador, cronómetro y eventos?'))return;if(m?.status==='FINISHED'){App.activeMatch=null;Live.state='PREMATCH';Live.half=1;Live.homeScore=0;Live.awayScore=0;Live.events=[];Live.lineup=[];Live.formation='4-3-3';Live.startTimestamp=null;Live.pausedSeconds=0;Live.manualMinute=0;save();renderAll();toast('Partido finalizado conservado. Ya puedes crear otro partido.');return}Live.state='PREMATCH';Live.half=1;Live.homeScore=0;Live.awayScore=0;Live.events=[];Live.startTimestamp=null;Live.pausedSeconds=0;Live.manualMinute=0;save();renderAll();};
+
+  window.renderMatches=function(){
+    const box=document.getElementById('matchList'),admin=document.getElementById('adminMatches');if(!box||!admin)return;const rows=(App.matches||[]).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||String(b.hour||'').localeCompare(String(a.hour||'')));
+    box.innerHTML=rows.length?rows.map(m=>{const h=team(m.home),a=team(m.away),active=String(m.id)===String(App.activeMatch),fin=m.status==='FINISHED'||(active&&Live.state==='FINISHED'),live=active&&['FIRST_HALF','SECOND_HALF'].includes(Live.state);const sc=fin?`${Number(m.homeScore||0)} - ${Number(m.awayScore||0)}`:live?`${Live.homeScore} - ${Live.awayScore}`:'—';return `<div class="matchRow matchRowV23"><div class="matchDate">${formatDate(m.date)}<br>${esc(m.hour||'')}</div><div class="matchTeams"><b>${esc(h.name)}</b><span>vs</span><b>${esc(a.name)}</b><br><small>${esc(m.competition||'Liga')}</small></div><div class="matchResultV23"><strong>${sc}</strong>${fin?'<span class="finalBadgeV20">⚪ FINALIZADO</span>':live?'<span class="liveBadgeV23">🔴 DIRECTO</span>':'<span class="pendingBadgeV23">PRÓXIMO</span>'}${fin?`<button class="btn small dark" onclick="v25ShowDetails(${m.id})">👁 Ver detalles</button>`:''}</div></div>`}).join(''):'<div class="empty">No hay partidos creados.</div>';
+    admin.innerHTML=rows.map(m=>`<div class="adminItem"><div><b>${esc(team(m.home).name)} vs ${esc(team(m.away).name)}</b><br><small style="color:var(--muted)">${formatDate(m.date)} ${esc(m.hour||'')} ${m.status==='FINISHED'?' · FINALIZADO':''}</small></div><div class="actions"><button class="btn small ${String(m.id)===String(App.activeMatch)?'green':'dark'}" onclick="setActive(${m.id})">${String(m.id)===String(App.activeMatch)?'Activo':'Activar'}</button><button class="btn small red" onclick="deleteMatch(${m.id})">🗑</button></div></div>`).join('');
+  };
+
+  /* Los cambios de jugadores y goles se guardan dentro del evento; las estadísticas se calculan al finalizar. */
+  const origCommit=window.commitEvent;
+  window.commitEvent=function(num){if(origCommit)origCommit(num);setTimeout(()=>{try{v26RecalcStats();renderPlayers();renderHomeDashboardV26();}catch(e){}},0)};
+
+  /* Al recibir Firebase, conserva las estadísticas y las recalcula a partir de partidos finalizados. */
+  if(oldApplyData){window.applyData=function(data){oldApplyData(data);try{v26RecalcStats();renderAll();}catch(e){console.error('V26 stats',e)}};}
+
+  v26EnsurePlayerStatsFields();
+  setTimeout(()=>{try{v26RecalcStats();renderAll();}catch(e){console.error(e)}},250);
+})();
+</script>
+
+
+<script>
+(function(){
+  function calcRaw(){
+    const c={};(App.players||[]).forEach(p=>c[p.id]={goals:0,yellow:0,red:0,starts:0,appearances:0});
+    (App.matches||[]).filter(m=>m.status==='FINISHED').forEach(m=>{
+      const side=Number(m.home)===1?'home':Number(m.away)===1?'away':null;if(!side)return;
+      (Array.isArray(m.lineup)?m.lineup:[]).forEach(n=>{const p=App.players.find(x=>Number(x.number)===Number(n));if(p&&c[p.id]){c[p.id].starts++;c[p.id].appearances++}});
+      (m.events||[]).forEach(e=>{if(e.team!==side)return;const p=App.players.find(x=>Number(x.number)===Number(e.playerNumber));if(!p||!c[p.id])return;if(e.type==='goal')c[p.id].goals++;if(e.type==='yellow')c[p.id].yellow++;if(e.type==='red')c[p.id].red++;if(e.type==='change'&&e.playerInNumber!=null&&Number(e.playerInNumber)===Number(p.number))c[p.id].appearances++});
+    });return c;
+  }
+  window.savePlayer=async function(){
+    v26EnsurePlayerStatsFields();const num=Number(document.getElementById('pNumber').value),name=document.getElementById('pName').value.trim();if(!num||!name){toast('Dorsal y nombre son obligatorios');return}
+    let p=App.players.find(x=>x.id===editPlayerId);if(!p){p={id:Date.now(),number:num,name,surname:'',position:'Defensa',captain:false,photo:'',goals:0,yellow:0,red:0,starts:0,appearances:0};App.players.push(p)}
+    const raw=calcRaw()[p.id]||{goals:0,yellow:0,red:0,starts:0,appearances:0};
+    const entered={goals:Number(document.getElementById('pGoals').value||0),yellow:Number(document.getElementById('pYellow').value||0),red:Number(document.getElementById('pRed').value||0),starts:Number(document.getElementById('pStarts').value||0),appearances:Number(document.getElementById('pApps').value||0)};
+    p.number=num;p.name=name;p.surname=document.getElementById('pSurname').value.trim();p.position=document.getElementById('pPosition').value;p.captain=document.getElementById('pCaptain').checked;p.status=document.getElementById('pStatus').value;
+    p.statAdjust={goals:entered.goals-raw.goals,yellow:entered.yellow-raw.yellow,red:entered.red-raw.red,starts:entered.starts-raw.starts,appearances:entered.appearances-raw.appearances};
+    const file=document.getElementById('pPhoto').files[0];if(file){toast('Subiendo foto…');p.photo=await uploadFile(file,'players')}
+    App.players.sort((a,b)=>a.number-b.number);closeModal('playerModal');v26RecalcStats();await save();renderAll();toast('Jugador guardado');
+  };
+  const old=document.getElementById('savePlayerBtn');if(old){const fresh=old.cloneNode(true);old.replaceWith(fresh);fresh.addEventListener('click',window.savePlayer)}
 })();
 </script>
 
