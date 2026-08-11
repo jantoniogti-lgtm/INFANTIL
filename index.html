@@ -3831,3 +3831,317 @@ document.addEventListener("click",function(e){
 })();
 </script>
 
+
+<!-- V38 — PARTIDOS FINALIZADOS: TARJETA HORIZONTAL NEGRA + COLOR DEL RESULTADO -->
+<style id="v38-final-results">
+  .matchRowV37{
+    display:grid!important;
+    grid-template-columns:125px minmax(0,1fr) 210px minmax(0,1fr) 170px!important;
+    grid-template-areas:"date home score away action"!important;
+    align-items:center!important;
+    gap:18px!important;
+    width:100%!important;
+    min-height:175px!important;
+    padding:22px 26px!important;
+    box-sizing:border-box!important;
+    border:1px solid rgba(255,255,255,.12)!important;
+    border-radius:22px!important;
+    background:#05090f!important;
+    color:#fff!important;
+    box-shadow:0 12px 28px rgba(0,0,0,.30)!important;
+    overflow:hidden!important;
+  }
+
+  .matchRowV37.result-win{
+    border-color:rgba(34,197,94,.65)!important;
+  }
+  .matchRowV37.result-draw{
+    border-color:rgba(250,204,21,.65)!important;
+  }
+  .matchRowV37.result-loss{
+    border-color:rgba(239,68,68,.65)!important;
+  }
+
+  .matchDateV37{
+    grid-area:date!important;
+    color:#b9c4d3!important;
+    font-size:18px!important;
+    line-height:1.35!important;
+    font-weight:800!important;
+    text-align:center!important;
+    padding:0!important;
+  }
+
+  .matchTeamsV37{
+    display:contents!important;
+  }
+
+  .matchTeamV37{
+    width:auto!important;
+    min-width:0!important;
+    display:grid!important;
+    grid-template-columns:72px minmax(0,1fr)!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:13px!important;
+    text-align:left!important;
+  }
+
+  .matchTeamV37:first-child{
+    grid-area:home!important;
+  }
+  .matchTeamV37:last-of-type{
+    grid-area:away!important;
+  }
+
+  .matchTeamV37 .matchCrestV37{
+    width:68px!important;
+    height:68px!important;
+    object-fit:contain!important;
+    display:block!important;
+    filter:drop-shadow(0 4px 6px rgba(0,0,0,.35))!important;
+  }
+
+  .matchTeamV37 .matchNameV37{
+    display:block!important;
+    width:auto!important;
+    color:#fff!important;
+    font-size:25px!important;
+    line-height:1.12!important;
+    font-weight:950!important;
+    white-space:normal!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  .matchTeamV37:first-child{
+    justify-self:end!important;
+  }
+  .matchTeamV37:last-of-type{
+    justify-self:start!important;
+  }
+
+  .matchVsV37{
+    display:none!important;
+  }
+
+  .matchCompetitionV37{
+    display:none!important;
+  }
+
+  .matchResultV37{
+    grid-area:score!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    min-width:0!important;
+    gap:0!important;
+    position:relative!important;
+  }
+
+  .finalScoreV37{
+    appearance:none!important;
+    border:0!important;
+    cursor:pointer!important;
+    min-width:190px!important;
+    width:190px!important;
+    padding:12px 14px 7px!important;
+    background:transparent!important;
+    color:#fff!important;
+    font-size:43px!important;
+    line-height:.9!important;
+    font-weight:1000!important;
+    letter-spacing:2px!important;
+    text-align:center!important;
+    transform:none!important;
+    text-shadow:none!important;
+    border-radius:10px!important;
+  }
+
+  .finalScoreV37 .scorePaintV37{
+    display:block!important;
+    padding:15px 12px 11px!important;
+    border-radius:8px!important;
+    background:#30343a!important;
+    box-shadow:none!important;
+    clip-path:none!important;
+  }
+
+  .matchRowV37.result-win .finalScoreV37 .scorePaintV37{
+    background:#16a34a!important;
+  }
+  .matchRowV37.result-draw .finalScoreV37 .scorePaintV37{
+    background:#eab308!important;
+    color:#111!important;
+  }
+  .matchRowV37.result-loss .finalScoreV37 .scorePaintV37{
+    background:#dc2626!important;
+  }
+
+  .finalScoreV37 .finalWordV37{
+    display:block!important;
+    width:auto!important;
+    margin:4px auto 0!important;
+    padding:4px 10px!important;
+    background:transparent!important;
+    color:#fff!important;
+    font-size:13px!important;
+    line-height:1!important;
+    letter-spacing:1.5px!important;
+    font-weight:950!important;
+    transform:none!important;
+    border-radius:0!important;
+  }
+
+  .matchDetailsHintV37{
+    grid-area:action!important;
+    color:#fff!important;
+    background:#182334!important;
+    border:1px solid rgba(255,255,255,.12)!important;
+    border-radius:12px!important;
+    padding:14px 13px!important;
+    font-size:16px!important;
+    font-weight:900!important;
+    white-space:nowrap!important;
+    text-align:center!important;
+  }
+
+  .matchRowV37.result-win .matchDetailsHintV37{
+    border-color:rgba(34,197,94,.42)!important;
+  }
+  .matchRowV37.result-draw .matchDetailsHintV37{
+    border-color:rgba(250,204,21,.42)!important;
+  }
+  .matchRowV37.result-loss .matchDetailsHintV37{
+    border-color:rgba(239,68,68,.42)!important;
+  }
+
+  @media(max-width:950px){
+    .matchRowV37{
+      grid-template-columns:95px minmax(0,1fr) 155px minmax(0,1fr) 125px!important;
+      gap:10px!important;
+      padding:18px 15px!important;
+      min-height:145px!important;
+    }
+    .matchTeamV37{
+      grid-template-columns:52px minmax(0,1fr)!important;
+      gap:8px!important;
+    }
+    .matchTeamV37 .matchCrestV37{
+      width:52px!important;
+      height:52px!important;
+    }
+    .matchTeamV37 .matchNameV37{
+      font-size:20px!important;
+    }
+    .finalScoreV37{
+      min-width:140px!important;
+      width:140px!important;
+      font-size:34px!important;
+    }
+    .matchDetailsHintV37{
+      font-size:13px!important;
+      padding:11px 8px!important;
+    }
+  }
+
+  @media(max-width:680px){
+    .matchRowV37{
+      grid-template-columns:1fr!important;
+      grid-template-areas:
+        "date"
+        "home"
+        "score"
+        "away"
+        "action"!important;
+      gap:10px!important;
+      min-height:0!important;
+      padding:20px 16px!important;
+    }
+
+    .matchDateV37{
+      font-size:17px!important;
+    }
+
+    .matchTeamV37,
+    .matchTeamV37:first-child,
+    .matchTeamV37:last-of-type{
+      justify-self:stretch!important;
+      width:100%!important;
+      display:flex!important;
+      justify-content:center!important;
+      align-items:center!important;
+      text-align:center!important;
+    }
+
+    .matchTeamV37 .matchCrestV37{
+      width:58px!important;
+      height:58px!important;
+    }
+
+    .matchTeamV37 .matchNameV37{
+      font-size:21px!important;
+    }
+
+    .matchResultV37{
+      margin:3px 0!important;
+    }
+
+    .finalScoreV37{
+      min-width:180px!important;
+      width:180px!important;
+      font-size:38px!important;
+    }
+
+    .matchDetailsHintV37{
+      justify-self:center!important;
+      width:180px!important;
+      box-sizing:border-box!important;
+    }
+  }
+</style>
+
+<script id="v38-final-results-script">
+(function(){
+  const oldRenderMatches = window.renderMatches;
+
+  function applyV38ResultColors(){
+    document.querySelectorAll('.matchRowV37').forEach(row=>{
+      row.classList.remove('result-win','result-draw','result-loss');
+
+      const scoreEl=row.querySelector('.scorePaintV37');
+      if(!scoreEl) return;
+
+      const text=(scoreEl.textContent||'').trim();
+      const match=text.match(/(\d+)\s*-\s*(\d+)/);
+      if(!match) return;
+
+      const home=Number(match[1]);
+      const away=Number(match[2]);
+
+      const names=[...row.querySelectorAll('.matchNameV37')].map(x=>
+        (x.textContent||'').trim().toLowerCase()
+      );
+      const isRamonHome=names[0]?.includes('ramón sicart') || names[0]?.includes('ramon sicart');
+      const isRamonAway=names[1]?.includes('ramón sicart') || names[1]?.includes('ramon sicart');
+
+      if(home===away){
+        row.classList.add('result-draw');
+      }else if((isRamonHome && home>away) || (isRamonAway && away>home)){
+        row.classList.add('result-win');
+      }else{
+        row.classList.add('result-loss');
+      }
+    });
+  }
+
+  window.renderMatches=function(){
+    if(typeof oldRenderMatches==='function') oldRenderMatches();
+    setTimeout(applyV38ResultColors,0);
+  };
+
+  setTimeout(applyV38ResultColors,50);
+})();
+</script>
+
