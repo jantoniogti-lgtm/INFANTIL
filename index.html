@@ -1051,11 +1051,116 @@ button{cursor:pointer}
 }
 </style>
 
+
+<style id="v35-crest-chronicle">
+/* ===== V35 — ESCUDO GRANDE + CRÓNICA GRANDE ===== */
+
+/* Cabecera principal: SOLO el escudo, sin RS LIVE ni fondo amarillo */
+.topbar .brandCrestOnlyV35{
+  display:flex!important;
+  align-items:center!important;
+  width:auto!important;
+  min-width:0!important;
+}
+.topbar .brandCrestOnlyV35 .brandMark{
+  width:92px!important;
+  height:92px!important;
+  min-width:92px!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  padding:0!important;
+}
+.topbar .brandCrestOnlyV35 .brandMark img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  display:block!important;
+}
+
+/* Escudo dentro del campo: el doble de grande y SIN recuadro negro */
+.pitchRamonCrestV34{
+  right:4.5%!important;
+  top:4%!important;
+  width:156px!important;
+  height:156px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+}
+.pitchRamonCrestV34 img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  display:block!important;
+}
+
+/* Crónica: aproximadamente el doble de tamaño respecto a V34 */
+#chronicleV20{
+  font-size:42px!important;
+  line-height:1.58!important;
+  letter-spacing:.15px!important;
+}
+.matchChronicleV20{
+  padding:30px!important;
+}
+.matchChronicleV20 h3{
+  font-size:28px!important;
+  margin-bottom:18px!important;
+}
+#chronicleV20 b{
+  font-weight:950!important;
+}
+
+@media(max-width:900px){
+  .topbar .brandCrestOnlyV35 .brandMark{
+    width:82px!important;
+    height:82px!important;
+    min-width:82px!important;
+  }
+  .pitchRamonCrestV34{
+    width:130px!important;
+    height:130px!important;
+  }
+  #chronicleV20{
+    font-size:38px!important;
+    line-height:1.55!important;
+  }
+}
+
+@media(max-width:600px){
+  .topbar .brandCrestOnlyV35 .brandMark{
+    width:72px!important;
+    height:72px!important;
+    min-width:72px!important;
+  }
+  .pitchRamonCrestV34{
+    width:105px!important;
+    height:105px!important;
+    right:4%!important;
+    top:3.5%!important;
+  }
+  #chronicleV20{
+    font-size:34px!important;
+    line-height:1.52!important;
+  }
+  .matchChronicleV20{
+    padding:22px!important;
+  }
+  .matchChronicleV20 h3{
+    font-size:24px!important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div class="app">
 <header class="topbar">
-  <div class="brand"><div class="brandMark crestBrandMarkV34"><img id="headerRamonCrestV29" alt="Ramón Sicart"></div><div>RS LIVE<small>RAMÓN SICART • MATCH CENTER</small></div></div>
+  <div class="brand brandCrestOnlyV35"><div class="brandMark crestBrandMarkV34"><img id="headerRamonCrestV29" alt="Ramón Sicart"></div></div>
   <div class="topStatus"><span id="syncDot" class="dot"></span><span id="syncText">Conectando Firebase…</span></div>
 </header>
 <button class="mobileMenuBtnV14" id="mobileMenuBtnV14" aria-label="Abrir menú">☰</button>
