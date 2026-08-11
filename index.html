@@ -1411,6 +1411,74 @@ button{cursor:pointer}
 }
 </style>
 
+
+<style id="v41-detail-score-css">
+/* V41 — marcador del detalle con el mismo lenguaje visual que los resultados */
+.completedScoreV20.detailScoreV41{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 270px minmax(0,1fr)!important;
+  grid-template-areas:"home center away"!important;
+  align-items:center!important;
+  gap:14px 22px!important;
+  padding:20px 24px!important;
+  margin-bottom:18px!important;
+  background:#030507!important;
+  border:1px solid rgba(255,255,255,.14)!important;
+  border-radius:16px!important;
+  color:#fff!important;
+  box-sizing:border-box!important;
+}
+.detailScoreTeamV41{
+  display:flex!important;flex-direction:column!important;align-items:center!important;
+  justify-content:center!important;gap:8px!important;min-width:0!important;text-align:center!important;
+}
+.detailScoreTeamV41.home{grid-area:home!important}
+.detailScoreTeamV41.away{grid-area:away!important}
+.detailScoreCrestV41{
+  width:74px!important;height:74px!important;object-fit:contain!important;display:block!important;
+  filter:drop-shadow(0 5px 9px rgba(0,0,0,.4))!important;
+}
+.detailScoreNameV41{
+  font-size:25px!important;line-height:1.08!important;font-weight:1000!important;color:#fff!important;
+  white-space:normal!important;overflow-wrap:anywhere!important;text-align:center!important;
+}
+.detailScoreCenterV41{
+  grid-area:center!important;display:flex!important;flex-direction:column!important;
+  align-items:center!important;justify-content:center!important;min-width:0!important;
+}
+.detailScoreMetaV41{
+  display:flex!important;align-items:center!important;justify-content:center!important;gap:10px!important;
+  color:#aab5c4!important;font-size:12px!important;font-weight:800!important;margin-bottom:7px!important;
+  white-space:nowrap!important;
+}
+.detailScoreBoxV41{
+  min-width:205px!important;padding:10px 18px!important;border-radius:9px!important;
+  color:#fff!important;font-size:46px!important;line-height:1!important;font-weight:1000!important;
+  letter-spacing:2px!important;text-align:center!important;background:#18a94b!important;
+  box-sizing:border-box!important;
+}
+.detailScoreBoxV41.draw{background:#d4a800!important}
+.detailScoreBoxV41.loss{background:#c52b35!important}
+.detailFinalV41{
+  margin-top:6px!important;font-size:14px!important;letter-spacing:4px!important;
+  font-weight:1000!important;color:#fff!important;
+}
+@media(max-width:700px){
+  .completedScoreV20.detailScoreV41{grid-template-columns:minmax(0,1fr) 190px minmax(0,1fr)!important;gap:10px!important;padding:16px 10px!important}
+  .detailScoreCrestV41{width:55px!important;height:55px!important}
+  .detailScoreNameV41{font-size:18px!important}
+  .detailScoreBoxV41{min-width:145px!important;font-size:32px!important;padding:9px 10px!important}
+  .detailScoreMetaV41{font-size:10px!important;gap:6px!important}
+  .detailFinalV41{font-size:11px!important;letter-spacing:3px!important}
+}
+@media(max-width:480px){
+  .completedScoreV20.detailScoreV41{grid-template-columns:minmax(0,1fr) 145px minmax(0,1fr)!important;gap:5px!important}
+  .detailScoreCrestV41{width:46px!important;height:46px!important}
+  .detailScoreNameV41{font-size:15px!important}
+  .detailScoreBoxV41{min-width:125px!important;font-size:27px!important}
+  .detailScoreMetaV41{font-size:9px!important}
+}
+</style>
 </head>
 <body>
 <div class="app">
@@ -2830,10 +2898,27 @@ document.addEventListener("click",function(e){
     const title=document.getElementById("completedTitleV20");
     const score=document.getElementById("completedScoreV20");
     if(title)title.textContent=`${h.name} vs ${a.name}`;
-    if(score)score.innerHTML=
-      `${h.logo?`<img src="${esc(h.logo)}" alt="">`:""}<span>${esc(h.name)}</span>
-       <strong>${sc.hs} - ${sc.as}</strong>
-       <span>${esc(a.name)}</span>${a.logo?`<img src="${esc(a.logo)}" alt="">`:""}`;
+    if(score){
+      const ramonHome=String(h.name||"").toLowerCase().includes("ramón sicart") || String(h.name||"").toLowerCase().includes("ramon sicart");
+      const ramonAway=String(a.name||"").toLowerCase().includes("ramón sicart") || String(a.name||"").toLowerCase().includes("ramon sicart");
+      const hs=Number(sc.hs||0), as=Number(sc.as||0);
+      const resultClass=hs===as?"draw":((ramonHome&&hs<as)||(ramonAway&&as<hs)?"loss":"");
+      score.className="completedScoreV20 detailScoreV41";
+      score.innerHTML=`
+        <div class="detailScoreTeamV41 home">
+          ${h.logo?`<img class="detailScoreCrestV41" src="${esc(h.logo)}" alt="">`:``}
+          <span class="detailScoreNameV41">${esc(h.name)}</span>
+        </div>
+        <div class="detailScoreCenterV41">
+          <div class="detailScoreMetaV41">${formatDate(m.date)} <span>•</span> ${esc(m.competition||"Liga")}</div>
+          <div class="detailScoreBoxV41 ${resultClass}">${esc(`${hs} - ${as}`)}</div>
+          <div class="detailFinalV41">FINAL</div>
+        </div>
+        <div class="detailScoreTeamV41 away">
+          ${a.logo?`<img class="detailScoreCrestV41" src="${esc(a.logo)}" alt="">`:``}
+          <span class="detailScoreNameV41">${esc(a.name)}</span>
+        </div>`;
+    }
 
     document.getElementById("detailGoalsV20").innerHTML=goals.length
       ? `<div class="detailTimelineV20">${goals.map(e=>v25Row(e,m,"goal")).join("")}</div>`
