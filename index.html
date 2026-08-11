@@ -502,6 +502,16 @@ button{cursor:pointer}
  .matchDetailsV22 .detailRowV22{grid-template-columns:34px 26px 25px 1fr;gap:5px}
 }
 
+
+/* V23 — partidos finalizados y detalles */
+.matchRowV23{align-items:center!important}
+.matchResultV23{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap;min-width:130px}
+.matchResultV23 strong{font-size:17px;font-weight:1000;min-width:52px;text-align:center}
+.liveBadgeV23{font-size:9px;font-weight:1000;color:#fff}
+.pendingBadgeV23{font-size:9px;color:var(--muted);font-weight:900}
+@media(max-width:700px){.matchRowV23{grid-template-columns:70px 1fr!important}.matchResultV23{grid-column:1/-1;justify-content:center;padding-top:5px}.matchResultV23 strong{font-size:20px}}
+
+<style>.v23ChangeNames{display:flex;flex-direction:column;gap:3px}.v23ChangeNames .out{color:#ff7777}.v23ChangeNames .in{color:#55e58c}</style>
 </style>
 
 <style>.v21ChangeNames{display:flex;flex-direction:column;gap:3px;font-size:9px;font-weight:1000}.v21ChangeNames .out{color:#ff7b7b}.v21ChangeNames .in{color:#54e58a}</style>
@@ -943,9 +953,23 @@ function renderPlayers(){
 function renderMatches(){
  const box=document.getElementById("matchList"),admin=document.getElementById("adminMatches");
  const rows=App.matches.slice().sort((a,b)=>(a.date+a.hour).localeCompare(b.date+b.hour));
- box.innerHTML=rows.length?rows.map(m=>{const h=team(m.home),a=team(m.away);const live=String(m.id)===String(App.activeMatch);return `<div class="matchRow"><div class="matchDate">${formatDate(m.date)}<br>${m.hour||""}</div><div class="matchTeams">${h.name}<span>vs</span>${a.name}<br><small style="color:var(--muted)">${esc(m.competition||"Liga")}</small></div><div class="${live?"result":"result pending"}">${live?"🔴 DIRECTO":"—"}</div></div>`}).join(""):'<div class="empty">No hay partidos creados.</div>';
- admin.innerHTML=rows.map(m=>`<div class="adminItem"><div><b>${esc(team(m.home).name)} vs ${esc(team(m.away).name)}</b><br><small style="color:var(--muted)">${formatDate(m.date)} ${m.hour||""}</small></div><div class="actions"><button class="btn small ${String(m.id)===String(App.activeMatch)?"green":"dark"}" onclick="setActive(${m.id})">${String(m.id)===String(App.activeMatch)?"Activo":"Activar"}</button><button class="btn small red" onclick="deleteMatch(${m.id})">🗑</button></div></div>`).join("");
+ box.innerHTML=rows.length?rows.map(m=>{
+   const h=team(m.home),a=team(m.away);
+   const isActive=String(m.id)===String(App.activeMatch);
+   const isFinished=m.status==="FINISHED" || (isActive && Live.state==="FINISHED");
+   const isLive=isActive && (Live.state==="FIRST_HALF"||Live.state==="SECOND_HALF");
+   const score=isFinished?`${Number(m.homeScore||0)} - ${Number(m.awayScore||0)}`:(isLive?`${Number(Live.homeScore||0)} - ${Number(Live.awayScore||0)}`:"—");
+   const badge=isFinished?`<span class="finalBadgeV20">⚪ FINALIZADO</span>`:(isLive?`<span class="liveBadgeV23">🔴 DIRECTO</span>`:`<span class="pendingBadgeV23">PRÓXIMO</span>`);
+   const details=isFinished?`<button class="btn small dark" onclick="v23ShowDetails(${m.id})">👁 Ver detalles</button>`:"";
+   return `<div class="matchRow matchRowV23">
+     <div class="matchDate">${formatDate(m.date)}<br>${m.hour||""}</div>
+     <div class="matchTeams"><b>${esc(h.name)}</b><span>vs</span><b>${esc(a.name)}</b><br><small style="color:var(--muted)">${esc(m.competition||"Liga")}</small></div>
+     <div class="matchResultV23"><strong>${score}</strong>${badge}${details}</div>
+   </div>`;
+ }).join(""):'<div class="empty">No hay partidos creados.</div>';
+ admin.innerHTML=rows.map(m=>`<div class="adminItem"><div><b>${esc(team(m.home).name)} vs ${esc(team(m.away).name)}</b><br><small style="color:var(--muted)">${formatDate(m.date)} ${m.hour||""} ${m.status==="FINISHED"?" · FINALIZADO":""}</small></div><div class="actions"><button class="btn small ${String(m.id)===String(App.activeMatch)?"green":"dark"}" onclick="setActive(${m.id})">${String(m.id)===String(App.activeMatch)?"Activo":"Activar"}</button><button class="btn small red" onclick="deleteMatch(${m.id})">🗑</button></div></div>`).join("");
 }
+
 function renderAdminPlayers(){
  document.getElementById("adminPlayers").innerHTML=App.players.slice().sort((a,b)=>a.number-b.number).map(p=>`<div class="adminItem"><div><b>#${p.number} ${esc(p.name)} ${p.captain?"⭐":""}</b><br><small style="color:var(--muted)">${esc(p.surname||"")} • ${esc(p.position)}</small></div><div class="actions"><button class="btn small dark" onclick="editPlayer(${p.id})">✏️</button><button class="btn small red" onclick="deletePlayer(${p.id})">🗑</button></div></div>`).join("")||'<div class="empty" style="margin-top:10px">Sin jugadores.</div>';
 }
@@ -979,7 +1003,15 @@ function renderAll(){
   try{renderLineupChecks()}catch(e){console.error("renderLineupChecks",e)}
   try{renderAdminLive()}catch(e){console.error("renderAdminLive",e)}
 }
-function setActive(id){App.activeMatch=id;resetLive(false);save();toast("Partido activo seleccionado")}
+function setActive(id){
+  const m=App.matches.find(x=>String(x.id)===String(id));
+  App.activeMatch=id;
+  if(m && m.status==="FINISHED"){
+    Live.state="FINISHED";Live.half=2;Live.homeScore=Number(m.homeScore||0);Live.awayScore=Number(m.awayScore||0);Live.events=JSON.parse(JSON.stringify(m.events||[]));Live.pausedSeconds=80*60;Live.manualMinute=80;Live.startTimestamp=null;
+    save();renderAll();toast("Partido finalizado seleccionado");return;
+  }
+  resetLive(false);save();toast("Partido activo seleccionado")
+}
 function resetLive(ask=true){
  if(ask&&!confirm("¿Reiniciar marcador, cronómetro y eventos?"))return;
  Live.state="PREMATCH";Live.half=1;Live.homeScore=0;Live.awayScore=0;Live.events=[];Live.startTimestamp=null;Live.pausedSeconds=0;Live.manualMinute=0;save();renderAll()
@@ -1011,12 +1043,19 @@ function secondHalf(){
   save();renderAll();
 }
 function finish(){
+  const m=activeMatch();
+  if(!m){toast("Crea o activa un partido primero");return}
   Live.half=2;
   Live.state="FINISHED";
   Live.pausedSeconds=80*60;
   Live.manualMinute=80;
   Live.startTimestamp=null;
-  save();renderAll();
+  m.status="FINISHED";
+  m.homeScore=Number(Live.homeScore||0);
+  m.awayScore=Number(Live.awayScore||0);
+  m.events=JSON.parse(JSON.stringify(Live.events||[]));
+  m.finishedAt=Date.now();
+  save();renderAll();toast("Partido finalizado · resultado guardado");
 }
 function adjustMinute(n){
   const next=Math.min(80,Math.max(0,displayMinute()+n));
@@ -1062,7 +1101,7 @@ function selectSubIn(n){subIn=n;document.querySelectorAll("#subIn button").forEa
 function maybeCommitSub(){
   if(subOut==null||subIn==null)return;
   const out=App.players.find(p=>Number(p.number)===subOut),inn=App.players.find(p=>Number(p.number)===subIn);
-  Live.events.push({id:Date.now(),type:"change",team:"home",minute:displayMinute(),playerName:`${inn?.name||subIn} por ${out?.name||subOut}`,playerNumber:subIn});
+  Live.events.push({id:Date.now(),type:"change",team:"home",minute:displayMinute(),playerName:`${inn?.name||subIn} por ${out?.name||subOut}`,playerNumber:subIn,playerInNumber:subIn,playerOutNumber:subOut,playerInName:inn?.name||String(subIn),playerOutName:out?.name||String(subOut)});
   subOut=null;subIn=null;document.getElementById("substitutionQuick").style.display="none";save();renderAll();toast("Cambio publicado");
 }
 function openEvent(type){
@@ -1542,146 +1581,37 @@ document.getElementById("closeDetailsV20")?.addEventListener("click",()=>{
 </script>
 
 
-<script>
-/* Add "Finalizado / Ver detalles" to match cards without replacing the existing renderer. */
-setTimeout(()=>{
-  if(typeof renderMatches!=="function")return;
-  const base=renderMatches;
-  window.renderMatches=function(){
-    base();
-    document.querySelectorAll("#matches .matchCard, #matches .matchRow, #matches .card").forEach(card=>{
-      if(card.dataset.v20Done)return;
-      const text=(card.innerText||"").toLowerCase();
-      if(text.includes("finalizado")||text.includes("final")){
-        card.classList.add("completedMatchCardV20");
-        const btn=document.createElement("button");
-        btn.className="btn";
-        btn.textContent="👁 Ver detalles"; btn.classList.add("v20-details-btn");
-        btn.style.marginTop="8px";
-        const id=card.dataset.matchId||card.getAttribute("data-id");
-        if(id){
-          btn.dataset.matchId=id; btn.onclick=(ev)=>{ev.preventDefault();showCompletedMatchDetailsV22(id);};
-          card.appendChild(btn);
-          card.dataset.v20Done="1";
-        }
-      }
-    });
-  };
-},250);
-</script>
 
 
 <script>
-function v21IsChange(e){const t=String(e?.type||e?.eventType||e?.kind||"").toLowerCase();return ["change","substitution","substitute","cambio"].includes(t)}
-function v21EventsForMatch(m){let a=[];if(Array.isArray(m?.events))a.push(...m.events);if(Array.isArray(App.events))a.push(...App.events.filter(e=>String(e.matchId||"")==String(m.id)));if(Array.isArray(Live?.events))a.push(...Live.events.filter(e=>!e.matchId||String(e.matchId)==String(m.id)));const s=new Set();return a.filter(e=>{const k=e.id!=null?String(e.id):JSON.stringify(e);if(s.has(k))return false;s.add(k);return true}).sort((a,b)=>Number(a.minute||0)-Number(b.minute||0))}
-function v21ShowDetails(matchId){const m=(App.matches||[]).find(x=>String(x.id)==String(matchId));if(!m)return;const ev=v21EventsForMatch(m);const box=document.getElementById("detailChangesV20");if(!box)return;const list=ev.filter(v21IsChange);box.innerHTML=list.length?`<div class="detailTimelineV20">${list.map(e=>{const crest=v20CrestForEvent(e,m);const inn=esc(e.playerInName||e.inPlayerName||e.playerIn||e.enteredPlayer||"");const out=esc(e.playerOutName||e.outPlayerName||e.playerOut||e.leftPlayer||"");const name=esc(e.playerName||e.player||e.name||"Cambio");return `<div class="detailEventV20"><div class="detailMinuteV20">${Number(e.minute||0)}'</div><div class="detailEventIconV20">🔄</div>${crest}<div class="v21ChangeNames">${out?`<span class="out">↓ ${out}</span>`:""}${inn?`<span class="in">↑ ${inn}</span>`:`<span>${name}</span>`}</div></div>`}).join("")}</div>`:'<div class="detailEmptyV20">Sin cambios registrados.</div>';document.getElementById("completedDetailsV20\`).style.display="block"}
-</script>
-
-<script>
-/* ===== V22 — SOURCE OF TRUTH FOR COMPLETED MATCH DETAILS ===== */
-(function(){
-  function norm(v){return String(v||"").toLowerCase().trim();}
-  function eventType(e){
-    return norm(e.type || e.eventType || e.kind || e.action);
-  }
-  function isGoal(e){return ["goal","gol"].includes(eventType(e));}
-  function isYellow(e){return ["yellow","yellow_card","amarilla"].includes(eventType(e));}
-  function isRed(e){return ["red","red_card","roja"].includes(eventType(e));}
-  function isChange(e){
-    return ["change","substitution","substitute","cambio","substitution_in","substitution_out"].includes(eventType(e))
-      || !!(e.playerIn||e.playerOut||e.playerInName||e.playerOutName||e.inPlayer||e.outPlayer);
-  }
-  function allMatchEvents(m){
-    let arr=[];
-    if(Array.isArray(m.events)) arr.push(...m.events);
-    if(Array.isArray(App.events)) arr.push(...App.events.filter(e=>String(e.matchId||"")===String(m.id)));
-    if(window.Live && Array.isArray(Live.events)){
-      arr.push(...Live.events.filter(e=>!e.matchId || String(e.matchId)===String(m.id)));
-    }
-    const seen=new Set();
-    return arr.filter(e=>{
-      const key=e.id!=null ? "id:"+e.id : JSON.stringify(e);
-      if(seen.has(key)) return false;
-      seen.add(key); return true;
-    }).sort((a,b)=>Number(a.minute||0)-Number(b.minute||0));
-  }
-  function crest(m,e){
-    const t=e.team==="home"?team(m.home):team(m.away);
-    return t && t.crest ? `<img class="crestV22" src="${esc(t.crest)}" alt="">` : `<span></span>`;
-  }
-  function row(e,m,icon,content){
-    return `<div class="detailRowV22">
-      <div class="minuteV22">${Number(e.minute||0)}'</div>
-      <div class="iconV22">${icon}</div>
-      ${crest(m,e)}
-      ${content}
-    </div>`;
-  }
-  window.showCompletedMatchDetailsV22=function(matchId){
-    const m=(App.matches||[]).find(x=>String(x.id)===String(matchId));
-    if(!m) return;
-    const events=allMatchEvents(m);
-    const goals=events.filter(isGoal);
-    const cards=events.filter(e=>isYellow(e)||isRed(e));
-    const changes=events.filter(isChange);
-
-    const details=document.getElementById("completedDetailsV20");
-    if(!details) return;
-
-    const home=team(m.home), away=team(m.away);
-    const title=document.getElementById("completedTitleV20");
-    if(title) title.textContent=home.name+" vs "+away.name;
-
-    const score=document.getElementById("completedScoreV20");
-    if(score) score.innerHTML=
-      `${home.crest?`<img src="${esc(home.crest)}" alt="">`:''}
-       <span>${esc(home.name)}</span>
-       <strong>${Number(m.homeScore||0)} - ${Number(m.awayScore||0)}</strong>
-       <span>${esc(away.name)}</span>
-       ${away.crest?`<img src="${esc(away.crest)}" alt="">`:''}`;
-
-    const goalBox=document.getElementById("detailGoalsV20");
-    if(goalBox) goalBox.innerHTML=goals.length
-      ? `<div class="matchDetailsV22">${goals.map(e=>row(e,m,"⚽",`<div class="whoV22">${esc(e.playerName||e.player||"Gol")}</div>`)).join("")}</div>`
-      : '<div class="emptyV22">Sin goles.</div>';
-
-    const cardBox=document.getElementById("detailCardsV20");
-    if(cardBox) cardBox.innerHTML=cards.length
-      ? `<div class="matchDetailsV22">${cards.map(e=>row(e,m,isRed(e)?"🟥":"🟨",`<div class="whoV22">${esc(e.playerName||e.player||"Tarjeta")}</div>`)).join("")}</div>`
-      : '<div class="emptyV22">Sin tarjetas.</div>';
-
-    const changeBox=document.getElementById("detailChangesV20");
-    if(changeBox){
-      changeBox.innerHTML=changes.length
-        ? `<div class="matchDetailsV22">${changes.map(e=>{
-            const inName=e.playerInName||e.inPlayerName||e.playerIn||e.enteredPlayer||"";
-            const outName=e.playerOutName||e.outPlayerName||e.playerOut||e.leftPlayer||"";
-            const fallback=e.playerName||e.player||e.name||"Cambio";
-            const content=(inName||outName)
-              ? `<div class="subV22">${outName?`<span class="outV22">↓ ${esc(outName)}</span>`:""}${inName?`<span class="inV22">↑ ${esc(inName)}</span>`:""}</div>`
-              : `<div class="whoV22">${esc(fallback)}</div>`;
-            return row(e,m,"🔄",content);
-          }).join("")}</div>`
-        : '<div class="emptyV22">Sin cambios registrados.</div>';
-    }
-
-    const chron=document.getElementById("chronicleV20");
-    if(chron && typeof v20BuildChronicle==="function") chron.innerHTML=v20BuildChronicle(m,events);
-
-    details.style.display="block";
-    details.scrollIntoView({behavior:"smooth",block:"start"});
-  };
-
-  // Replace the existing details button handler wherever the card is rendered.
-  document.addEventListener("click",function(ev){
-    const btn=ev.target.closest("[data-v20-details], .v20-details-btn");
-    if(!btn)return;
-    ev.preventDefault();
-    ev.stopPropagation();
-    const id=btn.dataset.matchId || btn.getAttribute("data-id");
-    if(id) window.showCompletedMatchDetailsV22(id);
-  },true);
-})();
+function v23EventsForMatch(m){
+  return (Array.isArray(m.events)?m.events:[]).slice().sort((a,b)=>Number(a.minute||0)-Number(b.minute||0));
+}
+function v23Type(e){return String(e.type||e.eventType||e.kind||"").toLowerCase()}
+function v23IsChange(e){const t=v23Type(e);return ["change","substitution","substitute","cambio"].includes(t)||!!(e.playerInName||e.playerOutName||e.playerIn||e.playerOut||e.enteredPlayer||e.leftPlayer)}
+function v23Crest(e,m){const t=e.team==="home"?team(m.home):team(m.away);return t?.logo?`<img src="${esc(t.logo)}" alt="">`:"<span></span>"}
+function v23Rows(list,m,kind){
+ return list.length?`<div class="detailTimelineV20">${list.map(e=>{
+  const t=v23Type(e);let icon=kind==="goal"?"⚽":kind==="card"?(t==="red"||t==="roja"?"🟥":"🟨"):"🔄";
+  let content=esc(e.playerName||e.player||e.name||"Evento");
+  if(kind==="change"){const out=e.playerOutName||e.outPlayerName||e.playerOut||e.leftPlayer||"";const inn=e.playerInName||e.inPlayerName||e.playerIn||e.enteredPlayer||"";content=`<div class="v23ChangeNames">${out?`<span class="out">↓ ${esc(out)}</span>`:""}${inn?`<span class="in">↑ ${esc(inn)}</span>`:""}</div>`}
+  return `<div class="detailEventV20"><div class="detailMinuteV20">${Number(e.minute||0)}'</div><div class="detailEventIconV20">${icon}</div>${v23Crest(e,m)}<div class="detailPlayerV20">${content}</div></div>`;
+ }).join("")}</div>`:'<div class="detailEmptyV20">Sin registros.</div>'
+}
+function v23ShowDetails(id){
+ const m=App.matches.find(x=>String(x.id)===String(id));if(!m)return;
+ const ev=v23EventsForMatch(m),goals=ev.filter(e=>v23Type(e)==="goal"||v23Type(e)==="gol"),cards=ev.filter(e=>["yellow","red","yellow_card","red_card","amarilla","roja"].includes(v23Type(e))),changes=ev.filter(v23IsChange);
+ const h=team(m.home),a=team(m.away);
+ document.getElementById("completedTitleV20").textContent=`${h.name} vs ${a.name}`;
+ document.getElementById("completedScoreV20").innerHTML=`${h.logo?`<img src="${esc(h.logo)}">`:""}<span>${esc(h.name)}</span><strong>${Number(m.homeScore||0)} - ${Number(m.awayScore||0)}</strong><span>${esc(a.name)}</span>${a.logo?`<img src="${esc(a.logo)}">`:""}`;
+ document.getElementById("detailGoalsV20").innerHTML=v23Rows(goals,m,"goal");
+ document.getElementById("detailCardsV20").innerHTML=v23Rows(cards,m,"card");
+ document.getElementById("detailChangesV20").innerHTML=v23Rows(changes,m,"change");
+ const chron=document.getElementById("chronicleV20");
+ if(typeof v20BuildChronicle==="function")chron.innerHTML=v20BuildChronicle(m,ev);
+ document.getElementById("completedDetailsV20").style.display="block";
+ document.getElementById("completedDetailsV20").scrollIntoView({behavior:"smooth",block:"start"});
+}
 </script>
 
 </body>
