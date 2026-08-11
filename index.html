@@ -4664,3 +4664,262 @@ document.addEventListener("click",function(e){
   setTimeout(v40RenderMatches,0);
 })();
 </script>
+
+
+<style id="rsV51ImageStyles">
+.rsV51ImageCard{margin-top:16px}
+.rsV51ImagePreview{width:100%;max-width:760px;display:block;background:#05080d;border:1px solid #263c56;border-radius:14px;margin:12px auto 0}
+.rsV51ImageActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.rsV51ImageStatus{font-size:11px;color:var(--muted);margin-top:8px}
+</style>
+
+
+<script id="rsV51ImageGenerator">
+(function(){
+  "use strict";
+
+  function rsV51Team(id){
+    return (App.teams||[]).find(t=>String(t.id)===String(id)) || {name:"Equipo",logo:""};
+  }
+
+  function rsV51Goals(m){
+    return (Array.isArray(m?.events)?m.events:[])
+      .filter(e=>e && e.type==="goal")
+      .sort((a,b)=>Number(a.minute||0)-Number(b.minute||0));
+  }
+
+  function rsV51Logo(src){
+    return new Promise(resolve=>{
+      if(!src){ resolve(null); return; }
+      const im=new Image();
+      im.onload=()=>resolve(im);
+      im.onerror=()=>resolve(null);
+      im.src=src;
+    });
+  }
+
+  function rsV51FitText(ctx,text,maxWidth,font){
+    ctx.font=font;
+    if(ctx.measureText(text).width<=maxWidth)return text;
+    let s=String(text);
+    while(s.length>3 && ctx.measureText(s+"…").width>maxWidth)s=s.slice(0,-1);
+    return s+"…";
+  }
+
+  function rsV51RoundRect(ctx,x,y,w,h,r,fill,stroke){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+    if(fill){ctx.fillStyle=fill;ctx.fill();}
+    if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke();}
+  }
+
+  async function rsV51Generate(m){
+    if(!m || m.status!=="FINISHED"){
+      toast("Primero finaliza el partido");
+      return null;
+    }
+
+    const home=rsV51Team(m.home), away=rsV51Team(m.away);
+    const hs=Number(m.homeScore||0), as=Number(m.awayScore||0);
+    const goals=rsV51Goals(m);
+    const W=1600,H=900;
+    const c=document.createElement("canvas");
+    c.width=W;c.height=H;
+    const ctx=c.getContext("2d");
+
+    const bg=ctx.createLinearGradient(0,0,W,H);
+    bg.addColorStop(0,"#05070b");
+    bg.addColorStop(.5,"#10151d");
+    bg.addColorStop(1,"#05070b");
+    ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+
+    ctx.fillStyle="#ffd600";
+    ctx.fillRect(70,55,W-140,5);
+
+    ctx.textAlign="center";
+    ctx.fillStyle="#ffffff";
+    ctx.font="900 38px Arial";
+    ctx.fillText("RAMÓN SICART · MATCH CENTER",W/2,115);
+
+    ctx.fillStyle="#a7b4c8";
+    ctx.font="700 25px Arial";
+    const meta=[m.date?formatDate(m.date):"",m.hour||"",m.competition||"Liga"].filter(Boolean).join("   •   ");
+    ctx.fillText(meta,W/2,155);
+
+    const him=await rsV51Logo(home.logo), aim=await rsV51Logo(away.logo);
+    const logoSize=170;
+
+    function drawLogo(im,x,y){
+      if(!im)return;
+      const ratio=Math.min(logoSize/im.width,logoSize/im.height);
+      const w=im.width*ratio,h=im.height*ratio;
+      ctx.drawImage(im,x-w/2,y-h/2,w,h);
+    }
+
+    drawLogo(him,320,300);
+    drawLogo(1280,300);
+
+    ctx.fillStyle="#fff";
+    ctx.font="900 48px Arial";
+    ctx.fillText(rsV51FitText(ctx,home.name,480,"900 48px Arial"),320,420);
+    ctx.fillText(rsV51FitText(ctx,away.name,480,"900 48px Arial"),1280,420);
+
+    ctx.fillStyle="#ffd600";
+    ctx.font="900 34px Arial";
+    ctx.fillText("FINAL",W/2,235);
+
+    const resultGradient=ctx.createLinearGradient(520,250,1080,250);
+    if(hs>as){resultGradient.addColorStop(0,"#0a8f45");resultGradient.addColorStop(1,"#18c35e");}
+    else if(hs<as){resultGradient.addColorStop(0,"#a51624");resultGradient.addColorStop(1,"#e63748");}
+    else {resultGradient.addColorStop(0,"#b18a00");resultGradient.addColorStop(1,"#ffd600");}
+
+    rsV51RoundRect(ctx,520,260,560,135,24,resultGradient);
+    ctx.fillStyle="#fff";
+    ctx.font="900 82px Arial";
+    ctx.fillText(hs+"  -  "+as,W/2,355);
+
+    ctx.textAlign="left";
+    ctx.fillStyle="#ffd600";
+    ctx.font="900 29px Arial";
+    ctx.fillText("⚽ GOLES DEL PARTIDO",100,490);
+
+    if(!goals.length){
+      ctx.fillStyle="#a7b4c8";
+      ctx.font="600 28px Arial";
+      ctx.fillText("Sin goles registrados en los eventos.",100,545);
+    }else{
+      const max=goals.length;
+      const cols=2;
+      const rows=Math.ceil(max/cols);
+      const colW=700;
+      goals.slice(0,10).forEach((g,i)=>{
+        const col=i%cols,row=Math.floor(i/cols);
+        const x=100+col*colW,y=530+row*65;
+        ctx.fillStyle="#ffd600";
+        ctx.font="900 28px Arial";
+        ctx.fillText((Number(g.minute||0))+"' ",x,y);
+        const side=String(g.team)==="home"?home:away;
+        ctx.fillStyle="#fff";
+        ctx.font="800 28px Arial";
+        ctx.fillText(rsV51FitText(ctx,(g.playerName||"Gol")+" · "+side.name,580,"800 28px Arial"),x+75,y);
+        if(g.score){
+          ctx.textAlign="right";
+          ctx.fillStyle="#a7b4c8";
+          ctx.font="800 26px Arial";
+          ctx.fillText(g.score, x+colW-30, y);
+          ctx.textAlign="left";
+        }
+      });
+    }
+
+    ctx.textAlign="center";
+    ctx.fillStyle="#65758c";
+    ctx.font="600 20px Arial";
+    ctx.fillText("RS LIVE · RAMÓN SICART",W/2,H-28);
+
+    const data=c.toDataURL("image/jpeg",0.86);
+    m.matchImageData=data;
+    m.matchImageGeneratedAt=Date.now();
+
+    const preview=document.getElementById("rsV51ImagePreview");
+    if(preview)preview.src=data;
+    const status=document.getElementById("rsV51ImageStatus");
+    if(status)status.textContent="Imagen generada automáticamente · "+new Date().toLocaleString("es-ES");
+
+    try{ await save(); }catch(e){ console.warn("No se pudo guardar la imagen en Firebase",e); }
+    return data;
+  }
+
+  function rsV51Download(){
+    const m=activeMatch();
+    const data=m?.matchImageData;
+    if(!data){toast("Genera primero la imagen del partido");return;}
+    const h=rsV51Team(m.home),a=rsV51Team(m.away);
+    const safe=s=>String(s||"equipo").replace(/[^a-z0-9áéíóúüñ_-]+/gi,"_");
+    const aEl=document.createElement("a");
+    aEl.href=data;
+    aEl.download=`RS_LIVE_${safe(h.name)}_${Number(m.homeScore||0)}-${Number(m.awayScore||0)}_${safe(a.name)}.jpg`;
+    document.body.appendChild(aEl);aEl.click();aEl.remove();
+  }
+
+  function rsV51BuildAdmin(){
+    const panel=document.getElementById("adminPanel");
+    if(!panel || document.getElementById("rsV51ImageCard"))return;
+    const card=document.createElement("div");
+    card.className="card adminCard rsV51ImageCard";
+    card.id="rsV51ImageCard";
+    card.innerHTML=`
+      <h2>🖼️ Imagen del partido</h2>
+      <p style="color:var(--muted);font-size:11px;margin:-7px 0 12px">
+        Al finalizar un partido se genera automáticamente una imagen con el resultado y todos los goles registrados en los eventos.
+      </p>
+      <div class="rsV51ImageActions">
+        <button class="btn green" id="rsV51GenerateBtn">🖼️ Generar imagen</button>
+        <button class="btn dark" id="rsV51DownloadBtn">💾 Guardar imagen</button>
+      </div>
+      <div id="rsV51ImageStatus" class="rsV51ImageStatus">No hay imagen generada para el partido activo.</div>
+      <img id="rsV51ImagePreview" class="rsV51ImagePreview" alt="Imagen del partido" style="display:none">
+    `;
+    panel.appendChild(card);
+    document.getElementById("rsV51GenerateBtn").onclick=async()=>{
+      const m=activeMatch();
+      if(!m){toast("Activa un partido");return;}
+      const data=await rsV51Generate(m);
+      const img=document.getElementById("rsV51ImagePreview");
+      if(data && img)img.style.display="block";
+      toast("Imagen del partido generada");
+    };
+    document.getElementById("rsV51DownloadBtn").onclick=rsV51Download;
+  }
+
+  function rsV51Refresh(){
+    rsV51BuildAdmin();
+    const m=activeMatch();
+    const img=document.getElementById("rsV51ImagePreview");
+    const status=document.getElementById("rsV51ImageStatus");
+    if(!img || !status)return;
+    if(m?.matchImageData){
+      img.src=m.matchImageData;
+      img.style.display="block";
+      status.textContent="Imagen guardada · "+(m.matchImageGeneratedAt?new Date(m.matchImageGeneratedAt).toLocaleString("es-ES"):"");
+    }else{
+      img.style.display="none";
+      status.textContent=m?.status==="FINISHED"?"Partido finalizado. Genera la imagen para este encuentro.":"No hay imagen generada para el partido activo.";
+    }
+  }
+
+  const oldFinish=window.finish;
+  window.finish=async function(){
+    const before=activeMatch();
+    if(typeof oldFinish==="function") oldFinish.apply(this,arguments);
+    setTimeout(async()=>{
+      try{
+        const m=before || activeMatch();
+        if(m && m.status==="FINISHED"){
+          await rsV51Generate(m);
+          rsV51Refresh();
+          toast("🏁 Partido finalizado · imagen generada automáticamente");
+        }
+      }catch(e){console.error("RS V51 image generation",e);}
+    },450);
+  };
+
+  const oldRenderAll=window.renderAll;
+  window.renderAll=function(){
+    if(typeof oldRenderAll==="function")oldRenderAll.apply(this,arguments);
+    setTimeout(rsV51Refresh,80);
+  };
+
+  window.rsV51Generate=rsV51Generate;
+  window.rsV51Download=rsV51Download;
+
+  setTimeout(rsV51BuildAdmin,250);
+  setTimeout(rsV51Refresh,700);
+})();
+</script>
+
