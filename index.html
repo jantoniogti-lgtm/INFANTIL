@@ -4692,6 +4692,9 @@ document.addEventListener("click",function(e){
     return new Promise(resolve=>{
       if(!src){ resolve(null); return; }
       const im=new Image();
+      // Evita que los logos alojados en Firebase/CDN "contaminen" el canvas
+      // y bloqueen canvas.toDataURL() en Safari/iPhone.
+      if(/^https?:\/\//i.test(String(src))) im.crossOrigin="anonymous";
       im.onload=()=>resolve(im);
       im.onerror=()=>resolve(null);
       im.src=src;
@@ -4822,7 +4825,45 @@ document.addEventListener("click",function(e){
     ctx.font="600 20px Arial";
     ctx.fillText("RS LIVE · RAMÓN SICART",W/2,H-28);
 
-    const data=c.toDataURL("image/jpeg",0.86);
+    let data=null;
+    try{
+      data=c.toDataURL("image/jpeg",0.90);
+    }catch(err){
+      console.warn("RS LIVE: canvas bloqueado por un recurso externo. Se genera una versión sin logos.",err);
+      // Reintentamos sin imágenes externas para que la generación nunca falle.
+      const clean=document.createElement("canvas");
+      clean.width=W; clean.height=H;
+      const cc=clean.getContext("2d");
+      const b2=cc.createLinearGradient(0,0,W,H);
+      b2.addColorStop(0,"#05070b"); b2.addColorStop(.5,"#10151d"); b2.addColorStop(1,"#05070b");
+      cc.fillStyle=b2; cc.fillRect(0,0,W,H);
+      cc.fillStyle="#ffd600"; cc.fillRect(70,55,W-140,5);
+      cc.textAlign="center"; cc.fillStyle="#fff"; cc.font="900 38px Arial";
+      cc.fillText("RAMÓN SICART · MATCH CENTER",W/2,115);
+      cc.fillStyle="#a7b4c8"; cc.font="700 25px Arial"; cc.fillText(meta,W/2,155);
+      cc.fillStyle="#fff"; cc.font="900 48px Arial";
+      cc.fillText(rsV51FitText(cc,home.name,480,"900 48px Arial"),320,300);
+      cc.fillText(rsV51FitText(cc,away.name,480,"900 48px Arial"),1280,300);
+      cc.fillStyle="#ffd600"; cc.font="900 34px Arial"; cc.fillText("FINAL",W/2,235);
+      rsV51RoundRect(cc,520,260,560,135,24,resultGradient);
+      cc.fillStyle="#fff"; cc.font="900 82px Arial"; cc.fillText(hs+"  -  "+as,W/2,355);
+      cc.textAlign="left"; cc.fillStyle="#ffd600"; cc.font="900 29px Arial"; cc.fillText("⚽ GOLES DEL PARTIDO",100,490);
+      if(!goals.length){
+        cc.fillStyle="#a7b4c8"; cc.font="600 28px Arial"; cc.fillText("Sin goles registrados en los eventos.",100,545);
+      }else{
+        goals.slice(0,10).forEach((g,i)=>{
+          const col=i%2,row=Math.floor(i/2),x=100+col*700,y=530+row*65;
+          cc.fillStyle="#ffd600"; cc.font="900 28px Arial"; cc.fillText((Number(g.minute||0))+"' ",x,y);
+          const side=String(g.team)==="home"?home:away;
+          cc.fillStyle="#fff"; cc.font="800 28px Arial";
+          cc.fillText(rsV51FitText(cc,(g.playerName||"Gol")+" · "+side.name,580,"800 28px Arial"),x+75,y);
+          if(g.score){cc.textAlign="right";cc.fillStyle="#a7b4c8";cc.font="800 26px Arial";cc.fillText(g.score,x+670,y);cc.textAlign="left";}
+        });
+      }
+      cc.textAlign="center"; cc.fillStyle="#65758c"; cc.font="600 20px Arial"; cc.fillText("RS LIVE · RAMÓN SICART",W/2,H-28);
+      data=clean.toDataURL("image/jpeg",0.90);
+    }
+    if(!data) throw new Error("No se pudo generar la imagen");
     m.matchImageData=data;
     m.matchImageGeneratedAt=Date.now();
 
@@ -4869,10 +4910,15 @@ document.addEventListener("click",function(e){
     document.getElementById("rsV51GenerateBtn").onclick=async()=>{
       const m=activeMatch();
       if(!m){toast("Activa un partido");return;}
-      const data=await rsV51Generate(m);
-      const img=document.getElementById("rsV51ImagePreview");
-      if(data && img)img.style.display="block";
-      toast("Imagen del partido generada");
+      try{
+        const data=await rsV51Generate(m);
+        const img=document.getElementById("rsV51ImagePreview");
+        if(data && img)img.style.display="block";
+        if(data) toast("✅ Imagen del partido generada");
+      }catch(e){
+        console.error("RS LIVE: error generando imagen",e);
+        toast("❌ No se pudo generar la imagen");
+      }
     };
     document.getElementById("rsV51DownloadBtn").onclick=rsV51Download;
   }
