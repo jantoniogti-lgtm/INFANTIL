@@ -533,20 +533,54 @@ button{cursor:pointer}
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 <script>
 const firebaseConfig = {
+  apiKey: "TU_API_KEY",
+  authDomain: "club-manager-9a242.firebaseapp.com",
   databaseURL: "https://club-manager-9a242-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "club-manager-9a242"
+  projectId: "club-manager-9a242",
+  storageBucket: "club-manager-9a242.appspot.com",
+  messagingSenderId: "TU_MESSAGING_SENDER_ID",
+  appId: "TU_APP_ID"
 };
-/*
-  IMPORTANTE:
-  La base facilitada contiene TU_API_KEY/TU_APP_ID como marcadores, no credenciales reales.
-  Realtime Database puede trabajar con databaseURL si sus reglas lo permiten.
-  Storage se activa solo cuando se dispone de configuración real.
-*/
-firebase.initializeApp(firebaseConfig);
-const db=firebase.database();
-const dbRef=db.ref("clubManagerV6");
-let storage=null;
-try{ storage=firebase.storage(); }catch(e){ console.warn("Firebase Storage no disponible; RTDB sigue activo.",e); }
+
+/* Firebase estable: usa SDK si hay credenciales reales; si el HTML solo conserva
+   marcadores, utiliza Realtime Database REST para que la app siga funcionando. */
+let dbRef=null, storage=null, firebaseSdkReady=false;
+const firebaseRestUrl=firebaseConfig.databaseURL.replace(/\/$/,"")+"/clubManagerV6.json";
+try{
+  const realConfig=firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("TU_") && firebaseConfig.appId && !firebaseConfig.appId.startsWith("TU_");
+  if(realConfig && window.firebase && firebase.database){
+    firebase.initializeApp(firebaseConfig);
+    dbRef=firebase.database().ref("clubManagerV6");
+    firebaseSdkReady=true;
+    try{storage=firebase.storage();}catch(e){console.warn("Storage no disponible",e)}
+  }
+}catch(e){ console.warn("SDK Firebase no pudo iniciarse; usando REST",e); }
+if(!dbRef){
+  dbRef={
+    set:async(data)=>{
+      const r=await fetch(firebaseRestUrl,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
+      if(!r.ok) throw new Error("Firebase REST PUT "+r.status);
+      return r.json().catch(()=>data);
+    },
+    on:(event,success,error)=>{
+      if(event!=="value") return;
+      let stopped=false,last="__initial__";
+      const poll=async()=>{
+        if(stopped)return;
+        try{
+          const r=await fetch(firebaseRestUrl+"?t="+Date.now(),{cache:"no-store"});
+          if(!r.ok) throw new Error("Firebase REST GET "+r.status);
+          const val=await r.json();
+          const key=JSON.stringify(val);
+          if(key!==last){last=key;success({exists:()=>val!==null, val:()=>val});}
+        }catch(e){if(error)error(e);}
+        if(!stopped)setTimeout(poll,1200);
+      };
+      poll();
+      return ()=>{stopped=true};
+    }
+  };
+}
 
 const PIN="2990";
 const App={
@@ -719,7 +753,15 @@ function renderAdminLive(){
       const qs=document.getElementById("quickScore");
       if(qs) qs.textContent=`${Live.homeScore} - ${Live.awayScore}`;
     }
-function renderAll(){renderHome();renderPlayers();renderMatches();renderAdminPlayers();renderTeams();renderLineupChecks();renderAdminLive()}
+function renderAll(){
+  try{renderHome()}catch(e){console.error("renderHome",e)}
+  try{renderPlayers()}catch(e){console.error("renderPlayers",e)}
+  try{renderMatches()}catch(e){console.error("renderMatches",e)}
+  try{renderAdminPlayers()}catch(e){console.error("renderAdminPlayers",e)}
+  try{renderTeams()}catch(e){console.error("renderTeams",e)}
+  try{renderLineupChecks()}catch(e){console.error("renderLineupChecks",e)}
+  try{renderAdminLive()}catch(e){console.error("renderAdminLive",e)}
+}
 function setActive(id){App.activeMatch=id;resetLive(false);save();toast("Partido activo seleccionado")}
 function resetLive(ask=true){
  if(ask&&!confirm("¿Reiniciar marcador, cronómetro y eventos?"))return;
@@ -808,7 +850,7 @@ async function savePlayer(){
  const file=document.getElementById("pPhoto").files[0];if(file){toast("Subiendo foto…");p.photo=await uploadFile(file,"players")}
  App.players.sort((a,b)=>a.number-b.number);closeModal("playerModal");save();renderAll();toast("Jugador guardado")
 }
-function deletePlayer(id){if(!confirm("¿Eliminar jugador?"))return;App.players=App.players.filter(p=>p.id!==id);App.lineup.players=(App.lineup.players||[]).filter(n=>Number(n)!==Number(id));save();renderAll()}
+function deletePlayer(id){if(!confirm("¿Eliminar jugador?"))return;App.players=App.players.filter(p=>p.id!==id);App.lineup.players=(App.lineup.players||[]).filter(n=>Number(n)!==Number(App.players.find(p=>p.id===id)?.number));save();renderAll()}
 async function addTeam(){
  const name=document.getElementById("teamNameInput").value.trim();if(!name){toast("Escribe el nombre");return}
  const t={id:Date.now(),name,short:name.slice(0,3).toUpperCase(),logo:"",protected:false};const file=document.getElementById("teamLogoInput").files[0];if(file){toast("Subiendo escudo…");t.logo=await uploadFile(file,"teams")}
@@ -832,7 +874,10 @@ function nav(){
 }
 document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>closeModal(b.dataset.close));
 document.getElementById("pinBtn").onclick=unlock;document.getElementById("newPlayerBtn").onclick=()=>{editPlayerId=null;document.getElementById("playerModalTitle").textContent="Nuevo jugador";document.querySelectorAll("#playerModal input").forEach(x=>{if(x.type!=="checkbox"&&x.type!=="file")x.value=""});document.getElementById("pCaptain").checked=false;document.getElementById("playerModal").classList.add("open")};
-document.getElementById("savePlayerBtn").onclick=savePlayer;document.getElementById("addTeamBtn").onclick=addTeam;document.getElementById("createMatchBtn").onclick=createMatch;document.getElementById("saveLineupBtn").onclick=saveLineup;
+document.getElementById("savePlayerBtn")?.addEventListener("click",savePlayer);
+document.getElementById("addTeamBtn")?.addEventListener("click",addTeam);
+document.getElementById("createMatchBtn")?.addEventListener("click",createMatch);
+document.getElementById("saveLineupBtn")?.addEventListener("click",saveLineup);
 document.getElementById("startBtn").onclick=startMatch;document.getElementById("halfBtn").onclick=halftime;document.getElementById("secondBtn").onclick=secondHalf;document.getElementById("finishBtn").onclick=finish;document.getElementById("resetBtn").onclick=()=>resetLive(true);document.getElementById("plusMinute").onclick=()=>adjustMinute(1);document.getElementById("minusMinute").onclick=()=>adjustMinute(-1);
 document.getElementById("goalEvent").onclick=()=>openEvent("goal");document.getElementById("yellowEvent").onclick=()=>openEvent("yellow");document.getElementById("redEvent").onclick=()=>openEvent("red");document.getElementById("changeEvent").onclick=openSubstitution;
 document.getElementById("eventPlus").onclick=()=>{eventMinuteOffset++;document.getElementById("eventMinute").textContent=(displayMinute()+eventMinuteOffset)+"'"};document.getElementById("eventMinus").onclick=()=>{eventMinuteOffset--;document.getElementById("eventMinute").textContent=(Math.max(0,displayMinute()+eventMinuteOffset))+"'"};nav();
@@ -860,10 +905,8 @@ document.addEventListener("keydown",e=>{
 window.addEventListener("beforeunload",()=>{if(Live.state==="FIRST_HALF"||Live.state==="SECOND_HALF"){Live.pausedSeconds=currentSeconds();Live.startTimestamp=null;save()}});
 
 App.players=defaultPlayers;
-renderAll();
-startRealtime();
 </script>
-<script>setTimeout(()=>{try{renderMatchCenterV4()}catch(e){}},50)</script>
+
 
 <script>
 /* ===== RS LIVE V10 — CLEAN PUBLIC LIVE + ORDERED XI ===== */
@@ -1066,6 +1109,33 @@ window.rsFirebaseRetry=function(){
     startRealtime();
   }catch(e){console.error(e);toast("No se pudo reconectar con Firebase")}
 };
+</script>
+
+
+<script>
+(function bootV16(){
+  const safe=(id,fn)=>{const el=document.getElementById(id);if(el)el.addEventListener("click",fn)};
+  safe("mobileMenuBtnV14",()=>document.getElementById("sideMenuV14")?.classList.add("open"));
+  safe("closeSideV14",()=>document.getElementById("sideMenuV14")?.classList.remove("open"));
+  safe("sideOverlayV14",()=>document.getElementById("sideMenuV14")?.classList.remove("open"));
+  document.querySelectorAll("#sideNavV14 button").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const page=btn.dataset.page;
+      document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+      const target=document.getElementById(page);
+      if(target)target.classList.add("active");
+      document.querySelectorAll("#sideNavV14 button").forEach(x=>x.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById("sideMenuV14")?.classList.remove("open");
+      document.getElementById("sideOverlayV14")?.classList.remove("open");
+      if(page==="admin")renderAdminXI10?.();
+    });
+  });
+  try{renderAll();}catch(e){console.error("RS LIVE render bootstrap",e)}
+  try{renderAdminXI10();}catch(e){}
+  try{renderPublicTeamV11();}catch(e){}
+  try{startRealtime();}catch(e){console.error("RS LIVE Firebase start",e)}
+})();
 </script>
 
 </body>
