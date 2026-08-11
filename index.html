@@ -515,6 +515,37 @@ button{cursor:pointer}
 </style>
 
 <style>.v21ChangeNames{display:flex;flex-direction:column;gap:3px;font-size:9px;font-weight:1000}.v21ChangeNames .out{color:#ff7b7b}.v21ChangeNames .in{color:#54e58a}</style>
+
+<style id="v24-details-css">
+.eventCrestOnlyV24{
+  width:26px!important;height:26px!important;
+  object-fit:contain!important;border-radius:50%!important;
+  background:#fff!important;padding:2px!important;
+  display:block!important;
+}
+.eventCrestFallbackV24{
+  display:grid!important;place-items:center!important;
+  background:#16283a!important;color:#fff!important;
+  font-size:14px!important;padding:0!important;
+}
+.detailEventV24{
+  display:grid!important;
+  grid-template-columns:42px 32px 32px minmax(0,1fr) auto!important;
+  align-items:center!important;gap:8px!important;
+}
+.detailScoreV24{
+  font-weight:1000!important;font-size:12px!important;
+  min-width:38px;text-align:right;
+}
+.v24ChangeNames{display:flex;flex-direction:column;gap:3px;font-weight:900}
+.v24ChangeNames .out{color:#ff7777}
+.v24ChangeNames .in{color:#55e58c}
+@media(max-width:600px){
+  .detailEventV24{grid-template-columns:35px 27px 28px minmax(0,1fr) auto!important;gap:5px!important}
+  .eventCrestOnlyV24{width:24px!important;height:24px!important}
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -960,7 +991,7 @@ function renderMatches(){
    const isLive=isActive && (Live.state==="FIRST_HALF"||Live.state==="SECOND_HALF");
    const score=isFinished?`${Number(m.homeScore||0)} - ${Number(m.awayScore||0)}`:(isLive?`${Number(Live.homeScore||0)} - ${Number(Live.awayScore||0)}`:"—");
    const badge=isFinished?`<span class="finalBadgeV20">⚪ FINALIZADO</span>`:(isLive?`<span class="liveBadgeV23">🔴 DIRECTO</span>`:`<span class="pendingBadgeV23">PRÓXIMO</span>`);
-   const details=isFinished?`<button class="btn small dark" onclick="v23ShowDetails(${m.id})">👁 Ver detalles</button>`:"";
+   const details=isFinished?`<button class="btn small dark" onclick="v24ShowDetails(${m.id})">👁 Ver detalles</button>`:"";
    return `<div class="matchRow matchRowV23">
      <div class="matchDate">${formatDate(m.date)}<br>${m.hour||""}</div>
      <div class="matchTeams"><b>${esc(h.name)}</b><span>vs</span><b>${esc(a.name)}</b><br><small style="color:var(--muted)">${esc(m.competition||"Liga")}</small></div>
@@ -1584,34 +1615,137 @@ document.getElementById("closeDetailsV20")?.addEventListener("click",()=>{
 
 
 <script>
-function v23EventsForMatch(m){
-  return (Array.isArray(m.events)?m.events:[]).slice().sort((a,b)=>Number(a.minute||0)-Number(b.minute||0));
+/* ===== V24 — HISTORIAL REAL + ESCUDO SIN NOMBRE DE EQUIPO ===== */
+function v24Type(e){
+  return String(e?.type||e?.eventType||e?.kind||"").toLowerCase().trim();
 }
-function v23Type(e){return String(e.type||e.eventType||e.kind||"").toLowerCase()}
-function v23IsChange(e){const t=v23Type(e);return ["change","substitution","substitute","cambio"].includes(t)||!!(e.playerInName||e.playerOutName||e.playerIn||e.playerOut||e.enteredPlayer||e.leftPlayer)}
-function v23Crest(e,m){const t=e.team==="home"?team(m.home):team(m.away);return t?.logo?`<img src="${esc(t.logo)}" alt="">`:"<span></span>"}
-function v23Rows(list,m,kind){
- return list.length?`<div class="detailTimelineV20">${list.map(e=>{
-  const t=v23Type(e);let icon=kind==="goal"?"⚽":kind==="card"?(t==="red"||t==="roja"?"🟥":"🟨"):"🔄";
-  let content=esc(e.playerName||e.player||e.name||"Evento");
-  if(kind==="change"){const out=e.playerOutName||e.outPlayerName||e.playerOut||e.leftPlayer||"";const inn=e.playerInName||e.inPlayerName||e.playerIn||e.enteredPlayer||"";content=`<div class="v23ChangeNames">${out?`<span class="out">↓ ${esc(out)}</span>`:""}${inn?`<span class="in">↑ ${esc(inn)}</span>`:""}</div>`}
-  return `<div class="detailEventV20"><div class="detailMinuteV20">${Number(e.minute||0)}'</div><div class="detailEventIconV20">${icon}</div>${v23Crest(e,m)}<div class="detailPlayerV20">${content}</div></div>`;
- }).join("")}</div>`:'<div class="detailEmptyV20">Sin registros.</div>'
+function v24IsGoal(e){return ["goal","gol"].includes(v24Type(e))}
+function v24IsCard(e){return ["yellow","red","yellow_card","red_card","amarilla","roja"].includes(v24Type(e))}
+function v24IsChange(e){
+  const t=v24Type(e);
+  return ["change","substitution","substitute","cambio"].includes(t)
+    || !!(e?.playerInName||e?.playerOutName||e?.playerIn||e?.playerOut||e?.enteredPlayer||e?.leftPlayer);
 }
-function v23ShowDetails(id){
- const m=App.matches.find(x=>String(x.id)===String(id));if(!m)return;
- const ev=v23EventsForMatch(m),goals=ev.filter(e=>v23Type(e)==="goal"||v23Type(e)==="gol"),cards=ev.filter(e=>["yellow","red","yellow_card","red_card","amarilla","roja"].includes(v23Type(e))),changes=ev.filter(v23IsChange);
- const h=team(m.home),a=team(m.away);
- document.getElementById("completedTitleV20").textContent=`${h.name} vs ${a.name}`;
- document.getElementById("completedScoreV20").innerHTML=`${h.logo?`<img src="${esc(h.logo)}">`:""}<span>${esc(h.name)}</span><strong>${Number(m.homeScore||0)} - ${Number(m.awayScore||0)}</strong><span>${esc(a.name)}</span>${a.logo?`<img src="${esc(a.logo)}">`:""}`;
- document.getElementById("detailGoalsV20").innerHTML=v23Rows(goals,m,"goal");
- document.getElementById("detailCardsV20").innerHTML=v23Rows(cards,m,"card");
- document.getElementById("detailChangesV20").innerHTML=v23Rows(changes,m,"change");
- const chron=document.getElementById("chronicleV20");
- if(typeof v20BuildChronicle==="function")chron.innerHTML=v20BuildChronicle(m,ev);
- document.getElementById("completedDetailsV20").style.display="block";
- document.getElementById("completedDetailsV20").scrollIntoView({behavior:"smooth",block:"start"});
+function v24EventsForMatch(m){
+  let events=Array.isArray(m?.events)?m.events.slice():[];
+
+  /*
+   * Compatibilidad con partidos finalizados antes de esta versión:
+   * si el partido no tiene su copia histórica, recuperamos los eventos
+   * que siguen en Live y los guardamos dentro del partido.
+   */
+  if(!events.length && Array.isArray(Live?.events) && Live.events.length){
+    events=Live.events.slice();
+    m.events=JSON.parse(JSON.stringify(events));
+    m.homeScore=Number(m.homeScore ?? Live.homeScore ?? 0);
+    m.awayScore=Number(m.awayScore ?? Live.awayScore ?? 0);
+    if(m.status==="FINISHED"){
+      save().catch(()=>{});
+    }
+  }
+
+  return events.sort((a,b)=>Number(a.minute||0)-Number(b.minute||0));
 }
+
+/* Solo escudo: NO se imprime el nombre del equipo debajo/al lado. */
+function v24EventCrest(e,m){
+  const t=e?.team==="home" ? team(m.home) : team(m.away);
+  if(t?.logo){
+    return `<img class="eventCrestOnlyV24" src="${esc(t.logo)}" alt="" title="${esc(t.name||"")}">`;
+  }
+  return `<span class="eventCrestOnlyV24 eventCrestFallbackV24">⚽</span>`;
+}
+
+function v24PlayerName(e,m){
+  let name=String(e?.playerName||e?.player||e?.name||"").trim();
+  const h=team(m.home), a=team(m.away);
+  const bad=[h?.name,h?.short,a?.name,a?.short,"ramon sicart","ramón sicart","rival"]
+    .filter(Boolean).map(x=>String(x).trim().toLowerCase());
+
+  /* Si una versión antigua guardó el nombre del equipo como jugador,
+     intenta recuperar el jugador real por dorsal. */
+  if(!name || bad.includes(name.toLowerCase())){
+    const n=Number(e?.playerNumber);
+    const p=Array.isArray(App.players)?App.players.find(x=>Number(x.number)===n):null;
+    if(p?.name) name=p.name;
+  }
+  return name || "Evento";
+}
+
+function v24ChangeContent(e,m){
+  const out=e?.playerOutName||e?.outPlayerName||e?.playerOut||e?.leftPlayer||"";
+  const inn=e?.playerInName||e?.inPlayerName||e?.playerIn||e?.enteredPlayer||"";
+
+  if(out||inn){
+    return `<div class="v24ChangeNames">
+      ${out?`<span class="out">↓ ${esc(out)}</span>`:""}
+      ${inn?`<span class="in">↑ ${esc(inn)}</span>`:""}
+    </div>`;
+  }
+
+  /* El formato antiguo "ENTRA por SALE" sigue mostrándose como cambio real. */
+  return `<div class="v24ChangeNames">${esc(v24PlayerName(e,m))}</div>`;
+}
+
+function v24Rows(list,m,kind){
+  if(!list.length)return '<div class="detailEmptyV20">Sin registros.</div>';
+
+  return `<div class="detailTimelineV20">${list.map(e=>{
+    const t=v24Type(e);
+    const icon=kind==="goal"?"⚽":kind==="card"?(t==="red"||t==="roja"||t==="red_card"?"🟥":"🟨"):"🔄";
+    const content=kind==="change"
+      ? v24ChangeContent(e,m)
+      : `<div class="detailPlayerV20">${esc(v24PlayerName(e,m))}</div>`;
+
+    return `<div class="detailEventV20 detailEventV24">
+      <div class="detailMinuteV20">${Number(e.minute||0)}'</div>
+      <div class="detailEventIconV20">${icon}</div>
+      ${v24EventCrest(e,m)}
+      ${content}
+      ${kind==="goal"&&e.score?`<div class="detailScoreV24">${esc(e.score)}</div>`:""}
+    </div>`;
+  }).join("")}</div>`;
+}
+
+function v24ShowDetails(id){
+  const m=(App.matches||[]).find(x=>String(x.id)===String(id));
+  if(!m)return;
+
+  const ev=v24EventsForMatch(m);
+  const goals=ev.filter(v24IsGoal);
+  const cards=ev.filter(v24IsCard);
+  const changes=ev.filter(v24IsChange);
+  const h=team(m.home),a=team(m.away);
+
+  document.getElementById("completedTitleV20").textContent=`${h.name} vs ${a.name}`;
+  document.getElementById("completedScoreV20").innerHTML=
+    `${h.logo?`<img src="${esc(h.logo)}" alt="">`:""}<span>${esc(h.name)}</span>
+     <strong>${Number(m.homeScore||0)} - ${Number(m.awayScore||0)}</strong>
+     <span>${esc(a.name)}</span>${a.logo?`<img src="${esc(a.logo)}" alt="">`:""}`;
+
+  document.getElementById("detailGoalsV20").innerHTML=v24Rows(goals,m,"goal");
+  document.getElementById("detailCardsV20").innerHTML=v24Rows(cards,m,"card");
+  document.getElementById("detailChangesV20").innerHTML=v24Rows(changes,m,"change");
+
+  const chron=document.getElementById("chronicleV20");
+  if(typeof v20BuildChronicle==="function")chron.innerHTML=v20BuildChronicle(m,ev);
+
+  const details=document.getElementById("completedDetailsV20");
+  details.style.display="block";
+  details.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+/* El botón Ver detalles utiliza SIEMPRE esta versión. */
+document.addEventListener("click",function(e){
+  const b=e.target.closest('button[onclick^="v23ShowDetails"],button[onclick^="v24ShowDetails"]');
+  if(!b)return;
+  const match=String(b.getAttribute("onclick")||"").match(/\((\d+)\)/);
+  if(match){
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    v24ShowDetails(match[1]);
+  }
+},true);
 </script>
 
 </body>
