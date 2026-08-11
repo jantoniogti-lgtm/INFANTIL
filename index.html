@@ -561,6 +561,25 @@ button{cursor:pointer}
 @media(max-width:650px){.v26EventEditRow{grid-template-columns:35px 55px 75px 1fr auto}.v26EventEditRow .eventTeamSelect{display:none}.v26AdminStats{grid-template-columns:repeat(2,1fr)}.v26PublicEvent{grid-template-columns:38px 26px 1fr auto}}
 </style>
 
+
+<style id="v27-css">
+/* V27 — Los bloques resumen pertenecen exclusivamente a Inicio */
+#homeDashboardV26{display:block}
+.matchTeamsV27{display:grid;grid-template-columns:minmax(0,1fr) 32px 30px 32px minmax(0,1fr);align-items:center;gap:8px;text-align:center;font-weight:900}
+.matchTeamV27{display:flex;align-items:center;justify-content:center;gap:8px;min-width:0}
+.matchTeamV27:first-child{justify-content:flex-end}
+.matchTeamV27:last-child{justify-content:flex-start}
+.matchTeamV27 span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.matchCrestV27{width:30px;height:30px;object-fit:contain;flex:0 0 30px}
+.matchVsV27{color:var(--yellow);font-weight:1000}
+.matchCompetitionV27{grid-column:1/-1;color:var(--muted);font-size:10px;margin-top:2px}
+@media(max-width:650px){
+  .matchTeamsV27{grid-template-columns:minmax(0,1fr) 26px 24px 26px minmax(0,1fr);gap:4px}
+  .matchCrestV27{width:24px;height:24px;flex-basis:24px}
+  .matchTeamV27{gap:5px;font-size:11px}
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -623,7 +642,6 @@ button{cursor:pointer}
     <div class="benchGridV11" id="publicBenchV11"></div>
   </div>
 </section>
-</section>
 
 <section class="v26Dashboard" id="homeDashboardV26">
   <div class="v26DashGrid">
@@ -631,6 +649,7 @@ button{cursor:pointer}
     <div class="card v26DashCard"><div class="sectionTitle"><h2>🏆 Clasificación</h2><p>Top 5</p></div><div id="homeTableV26"></div></div>
     <div class="card v26DashCard"><div class="sectionTitle"><h2>⚽ Goleadores</h2><p>Top 3</p></div><div id="homeScorersV26"></div></div>
   </div>
+</section>
 </section>
 
 <section id="squad" class="page">
@@ -2134,10 +2153,60 @@ document.addEventListener("click",function(e){
   window.resetLive=function(ask=true){const m=activeMatch();if(ask&&!confirm(m?.status==='FINISHED'?'El partido finalizado se conservará. Se limpiará solo la consola para poder preparar otro partido. ¿Continuar?':'¿Reiniciar marcador, cronómetro y eventos?'))return;if(m?.status==='FINISHED'){App.activeMatch=null;Live.state='PREMATCH';Live.half=1;Live.homeScore=0;Live.awayScore=0;Live.events=[];Live.lineup=[];Live.formation='4-3-3';Live.startTimestamp=null;Live.pausedSeconds=0;Live.manualMinute=0;save();renderAll();toast('Partido finalizado conservado. Ya puedes crear otro partido.');return}Live.state='PREMATCH';Live.half=1;Live.homeScore=0;Live.awayScore=0;Live.events=[];Live.startTimestamp=null;Live.pausedSeconds=0;Live.manualMinute=0;save();renderAll();};
 
   window.renderMatches=function(){
-    const box=document.getElementById('matchList'),admin=document.getElementById('adminMatches');if(!box||!admin)return;const rows=(App.matches||[]).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||String(b.hour||'').localeCompare(String(a.hour||'')));
-    box.innerHTML=rows.length?rows.map(m=>{const h=team(m.home),a=team(m.away),active=String(m.id)===String(App.activeMatch),fin=m.status==='FINISHED'||(active&&Live.state==='FINISHED'),live=active&&['FIRST_HALF','SECOND_HALF'].includes(Live.state);const sc=fin?`${Number(m.homeScore||0)} - ${Number(m.awayScore||0)}`:live?`${Live.homeScore} - ${Live.awayScore}`:'—';return `<div class="matchRow matchRowV23"><div class="matchDate">${formatDate(m.date)}<br>${esc(m.hour||'')}</div><div class="matchTeams"><b>${esc(h.name)}</b><span>vs</span><b>${esc(a.name)}</b><br><small>${esc(m.competition||'Liga')}</small></div><div class="matchResultV23"><strong>${sc}</strong>${fin?'<span class="finalBadgeV20">⚪ FINALIZADO</span>':live?'<span class="liveBadgeV23">🔴 DIRECTO</span>':'<span class="pendingBadgeV23">PRÓXIMO</span>'}${fin?`<button class="btn small dark" onclick="v25ShowDetails(${m.id})">👁 Ver detalles</button>`:''}</div></div>`}).join(''):'<div class="empty">No hay partidos creados.</div>';
-    admin.innerHTML=rows.map(m=>`<div class="adminItem"><div><b>${esc(team(m.home).name)} vs ${esc(team(m.away).name)}</b><br><small style="color:var(--muted)">${formatDate(m.date)} ${esc(m.hour||'')} ${m.status==='FINISHED'?' · FINALIZADO':''}</small></div><div class="actions"><button class="btn small ${String(m.id)===String(App.activeMatch)?'green':'dark'}" onclick="setActive(${m.id})">${String(m.id)===String(App.activeMatch)?'Activo':'Activar'}</button><button class="btn small red" onclick="deleteMatch(${m.id})">🗑</button></div></div>`).join('');
-  };
+    const box=document.getElementById('matchList'),admin=document.getElementById('adminMatches');
+    if(!box||!admin)return;
+    const rows=(App.matches||[]).slice().sort((a,b)=>
+      String(b.date||'').localeCompare(String(a.date||''))||
+      String(b.hour||'').localeCompare(String(a.hour||''))
+    );
+
+    const crest=(t)=>{
+      const logo=t?.logo||t?.crest||'';
+      return logo
+        ? `<img class="matchCrestV27" src="${esc(logo)}" alt="">`
+        : `<span class="matchCrestV27" aria-hidden="true"></span>`;
+    };
+
+    box.innerHTML=rows.length?rows.map(m=>{
+      const h=team(m.home),a=team(m.away);
+      const active=String(m.id)===String(App.activeMatch);
+      const fin=m.status==='FINISHED'||(active&&Live.state==='FINISHED');
+      const live=active&&['FIRST_HALF','SECOND_HALF'].includes(Live.state);
+      const sc=fin
+        ? `${Number(m.homeScore||0)} - ${Number(m.awayScore||0)}`
+        : live
+          ? `${Live.homeScore} - ${Live.awayScore}`
+          : '—';
+
+      return `<div class="matchRow matchRowV23">
+        <div class="matchDate">${formatDate(m.date)}<br>${esc(m.hour||'')}</div>
+        <div class="matchTeams matchTeamsV27">
+          <div class="matchTeamV27"><span>${esc(h.name)}</span>${crest(h)}</div>
+          <span class="matchVsV27">vs</span>
+          <div class="matchTeamV27">${crest(a)}<span>${esc(a.name)}</span></div>
+          <small class="matchCompetitionV27">${esc(m.competition||'Liga')}</small>
+        </div>
+        <div class="matchResultV23">
+          <strong>${sc}</strong>
+          ${fin?'<span class="finalBadgeV20">⚪ FINALIZADO</span>':
+            live?'<span class="liveBadgeV23">🔴 DIRECTO</span>':
+            '<span class="pendingBadgeV23">PRÓXIMO</span>'}
+          ${fin?`<button class="btn small dark" onclick="v25ShowDetails(${m.id})">👁 Ver detalles</button>`:''}
+        </div>
+      </div>`;
+    }).join(''):'<div class="empty">No hay partidos creados.</div>';
+
+    admin.innerHTML=rows.map(m=>
+      `<div class="adminItem">
+        <div><b>${esc(team(m.home).name)} vs ${esc(team(m.away).name)}</b><br>
+        <small style="color:var(--muted)">${formatDate(m.date)} ${esc(m.hour||'')} ${m.status==='FINISHED'?' · FINALIZADO':''}</small></div>
+        <div class="actions">
+          <button class="btn small ${String(m.id)===String(App.activeMatch)?'green':'dark'}" onclick="setActive(${m.id})">${String(m.id)===String(App.activeMatch)?'Activo':'Activar'}</button>
+          <button class="btn small red" onclick="deleteMatch(${m.id})">🗑</button>
+        </div>
+      </div>`
+    ).join('');
+  };;
 
   /* Los cambios de jugadores y goles se guardan dentro del evento; las estadísticas se calculan al finalizar. */
   const origCommit=window.commitEvent;
