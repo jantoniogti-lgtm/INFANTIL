@@ -2032,9 +2032,15 @@ function finish(){
   m.homeScore=Number(Live.homeScore||0);
   m.awayScore=Number(Live.awayScore||0);
   m.events=JSON.parse(JSON.stringify(Live.events||[]));
-  if(!m.lineupSnapshot && Array.isArray(Live.lineup) && Live.lineup.length){
-    m.lineupSnapshot={formation:Live.formation||App.lineup?.formation||"4-3-3",players:Live.lineup.slice(0,11),savedAt:Date.now()};
-    m.lineup=Live.lineup.slice(0,11);
+  if(Array.isArray(Live.lineup) && Live.lineup.length){
+    const starterNums=Live.lineup.slice(0,11).map(Number);
+    const snapshotPlayers=starterNums.map(n=>{
+      const p=(App.players||[]).find(x=>Number(x.number)===n);
+      return p ? {number:p.number,name:p.name||"Jugador",position:p.position||""} : n;
+    });
+    const bench=(App.players||[]).filter(p=>!starterNums.includes(Number(p.number))).map(p=>({number:p.number,name:p.name||"Jugador",position:p.position||""}));
+    m.lineupSnapshot={formation:Live.formation||App.lineup?.formation||"4-3-3",players:snapshotPlayers,bench,savedAt:Date.now()};
+    m.lineup=starterNums.slice();
   }
   m.finishedAt=Date.now();
   save();renderAll();toast("Partido finalizado · resultado guardado");
@@ -4425,16 +4431,27 @@ document.addEventListener("click",function(e){
       box.innerHTML='';
       return;
     }
-    const nums=snap.players.map(Number).slice(0,11);
-    const ps=nums.map(n=>(App.players||[]).find(p=>Number(p.number)===n)).filter(Boolean);
-    const starters=new Set(nums);
-    const bench=(App.players||[]).filter(p=>!starters.has(Number(p.number)));
+
+    // La alineación histórica puede contener números o snapshots completos de jugador.
+    // Si contiene objetos, se usan directamente para que no dependa de la plantilla actual.
+    const savedPlayers=snap.players.map((x)=>{
+      if(x && typeof x==='object') return {
+        number:x.number ?? x.dorsal ?? '',
+        name:x.name || [x.firstName,x.lastName].filter(Boolean).join(' ') || 'Jugador',
+        position:x.position || ''
+      };
+      const n=Number(x);
+      const current=(App.players||[]).find(p=>Number(p.number)===n);
+      return current ? {number:current.number,name:current.name||'Jugador',position:current.position||''} : {number:n,name:`Jugador #${n}`,position:''};
+    }).slice(0,11);
+
+    const nums=savedPlayers.map(p=>Number(p.number));
     const pos=typeof positions==='function'?positions(snap.formation||'4-3-3'):[];
     box.classList.add('v45Visible');
     box.style.display='block';
     box.innerHTML=`
       <div class="savedHead"><b>👕 ALINEACIÓN DEL PARTIDO</b><span>Formación ${esc(snap.formation||'4-3-3')}</span></div>
-      <div class="savedPitchV31">${ps.map((p,i)=>{
+      <div class="savedPitchV31">${savedPlayers.map((p,i)=>{
         const xy=pos[i]||[50,50];
         return `<div class="savedPlayerV31" style="left:${xy[0]}%;top:${xy[1]}%">
           <div class="savedShirtV31">${esc(p.number)}</div>
@@ -4442,7 +4459,16 @@ document.addEventListener("click",function(e){
         </div>`;
       }).join('')}</div>
       <div class="savedBenchV31"><strong>🪑 SUPLENTES</strong>
-        <div class="savedBenchGridV31">${bench.length?bench.map(p=>`<div class="savedBenchItemV31">#${esc(p.number)} ${esc(p.name)}<small>${esc(p.position||'')}</small></div>`).join(''):'<div class="savedBenchItemV31">No hay suplentes configurados.</div>'}</div>
+        <div class="savedBenchGridV31">${(()=>{
+          // Si existe banco guardado, se utiliza; si no, se deriva de la plantilla actual.
+          const rawBench=Array.isArray(snap.bench)?snap.bench:[];
+          const bench=rawBench.length?rawBench.map(x=>{
+            if(x&&typeof x==='object') return {number:x.number??x.dorsal??'',name:x.name||'Jugador',position:x.position||''};
+            const n=Number(x), cur=(App.players||[]).find(p=>Number(p.number)===n);
+            return cur?{number:cur.number,name:cur.name||'Jugador',position:cur.position||''}:{number:n,name:`Jugador #${n}`,position:''};
+          }):(App.players||[]).filter(p=>!nums.includes(Number(p.number))).map(p=>({number:p.number,name:p.name||'Jugador',position:p.position||''}));
+          return bench.length?bench.map(p=>`<div class="savedBenchItemV31">#${esc(p.number)} ${esc(p.name)}<small>${esc(p.position||'')}</small></div>`).join(''):`<div class='savedBenchItemV31'>No hay suplentes guardados.</div>`;
+        })()}</div>
       </div>`;
   }
 
@@ -4508,5 +4534,42 @@ document.addEventListener("click",function(e){
   };
 
   setTimeout(v45PrepareMatchPageMarkers,200);
+})();
+</script>
+
+<!-- V46 — ALINEACIÓN HISTÓRICA ROBUSTA + CRÓNICA MUY GRANDE -->
+<style id="v46-final-readability">
+  /* SOLO el texto narrado de la crónica: no el título */
+  #completedDetailsV20 #chronicleV20{
+    font-size:38px!important;
+    line-height:1.72!important;
+    font-weight:700!important;
+    color:#f2f6fb!important;
+    letter-spacing:.15px!important;
+  }
+  #completedDetailsV20 #completedLineupV31.v45Visible{
+    display:block!important;
+    visibility:visible!important;
+    opacity:1!important;
+  }
+  #completedDetailsV20 #completedLineupV31.v45Visible .savedPitchV31{
+    display:block!important;
+    visibility:visible!important;
+  }
+  @media(max-width:600px){
+    #completedDetailsV20 #chronicleV20{
+      font-size:30px!important;
+      line-height:1.7!important;
+      font-weight:700!important;
+    }
+    #completedDetailsV20 #completedLineupV31.v45Visible .savedHead b{font-size:20px!important}
+    #completedDetailsV20 #completedLineupV31.v45Visible .savedHead span{font-size:14px!important}
+    #completedDetailsV20 #completedLineupV31.v45Visible .savedPlayerV31 b{font-size:16px!important}
+    #completedDetailsV20 #completedLineupV31.v45Visible .savedPlayerV31 small{font-size:12px!important}
+  }
+</style>
+<script id="v46-final-fix">
+(function(){
+
 })();
 </script>
