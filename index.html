@@ -793,75 +793,33 @@ button{cursor:pointer}
 </style>
 
 
-<style id="v29-lineup-history-visibility">
-.completedLineupV29{
-  margin:14px 0 22px;
-  padding:18px;
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:20px;
-  background:linear-gradient(145deg,#10243a,#091727);
+<style id="v31-lineup">
+.completedLineupV31{margin-top:16px;padding:15px;border:1px solid #203854;border-radius:16px;background:#071523}
+.completedLineupV31 .savedHead{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}
+.completedLineupV31 .savedHead b{font-size:13px;color:#fff}
+.completedLineupV31 .savedHead span{font-size:10px;color:#8ea0b6;font-weight:900}
+.savedPitchV31{
+  position:relative;width:min(100%,520px);aspect-ratio:9/14;margin:auto;
+  overflow:hidden;border:3px solid #dcebd3;border-radius:20px;
+  background:repeating-linear-gradient(90deg,#237d4e 0,#237d4e 12.5%,#207548 12.5%,#207548 25%);
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.12)
 }
-.completedLineupV29 .lineupHeadV29{
-  display:flex;align-items:center;justify-content:space-between;gap:10px;
-  margin-bottom:14px;
-}
-.completedLineupV29 .lineupHeadV29 h3{font-size:17px;font-weight:1000}
-.completedLineupV29 .lineupHeadV29 span{font-size:12px;color:var(--muted);font-weight:900}
-.savedPitchV29{
-  position:relative; width:100%; max-width:620px; margin:0 auto;
-  aspect-ratio:9/14; min-height:500px; overflow:hidden;
-  border:3px solid #d9ebca; border-radius:22px;
-  background:repeating-linear-gradient(90deg,#237d4e 0,#237d4e 12%,#207449 12%,#207449 24%);
-  box-shadow:inset 0 0 0 3px rgba(255,255,255,.12);
-}
-.savedPitchV29:before{
-  content:"";position:absolute;inset:4%;border:3px solid rgba(240,255,240,.82);
-  border-radius:10px;
-}
-.savedPitchV29:after{
-  content:"";position:absolute;left:50%;top:50%;width:18%;aspect-ratio:1;
-  transform:translate(-50%,-50%);border:3px solid rgba(240,255,240,.7);
-  border-radius:50%;
-}
-.savedPitchPlayerV29{
-  position:absolute;transform:translate(-50%,-50%);z-index:2;
-  width:82px;text-align:center;
-}
-.savedPitchPlayerV29 .shirt{
-  width:43px;height:52px;margin:0 auto 3px;
-  display:grid;place-items:center;font-size:15px;font-weight:1000;color:#111;
-  background:repeating-linear-gradient(90deg,#ffd400 0,#ffd400 33%,#e21d2f 33%,#e21d2f 66%,#ffd400 66%,#ffd400 100%);
+.savedPitchV31:before{content:"";position:absolute;inset:4%;border:2px solid rgba(240,255,240,.75);border-radius:8px}
+.savedPitchV31:after{content:"";position:absolute;left:50%;top:50%;width:18%;aspect-ratio:1;transform:translate(-50%,-50%);border:2px solid rgba(240,255,240,.7);border-radius:50%}
+.savedPlayerV31{position:absolute;transform:translate(-50%,-50%);z-index:2;width:72px;text-align:center}
+.savedShirtV31{
+  width:37px;height:45px;margin:auto;display:grid;place-items:center;color:#111;font-weight:1000;font-size:12px;
+  background:repeating-linear-gradient(90deg,#ffd400 0,#ffd400 33%,#df1f35 33%,#df1f35 66%,#ffd400 66%);
   clip-path:polygon(18% 0,37% 0,50% 10%,63% 0,82% 0,100% 23%,86% 32%,86% 100%,14% 100%,14% 32%,0 23%);
-  filter:drop-shadow(0 3px 5px rgba(0,0,0,.3));
 }
-.savedPitchPlayerV29 b{
-  display:block;background:#061c13;color:#fff;border-radius:8px;
-  padding:4px 3px;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-.savedPitchPlayerV29 small{display:block;color:#fff;font-size:7px;margin-top:2px;font-weight:800}
-.savedBenchV29{margin-top:14px}
-.savedBenchTitleV29{font-size:11px;color:var(--yellow);font-weight:1000;margin-bottom:8px}
-.savedBenchGridV29{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:7px}
-.savedBenchPlayerV29{
-  background:#0a1a2b;border:1px solid #20344f;border-radius:10px;
-  padding:8px;font-size:10px
-}
-.savedBenchPlayerV29 b{color:#fff}.savedBenchPlayerV29 small{display:block;color:var(--muted);margin-top:2px}
-@media(max-width:600px){
-  .completedLineupV29{padding:12px}
-  .savedPitchV29{min-height:430px}
-  .savedPitchPlayerV29{width:64px}
-  .savedPitchPlayerV29 .shirt{width:35px;height:43px;font-size:12px}
-  .savedPitchPlayerV29 b{font-size:7px}
-  .savedPitchPlayerV29 small{font-size:6px}
-}
-
-/* En Inicio: alineación y eventos solo aparecen desde 1 hora antes hasta el final
-   del directo. Al finalizar desaparecen del público. */
-#home.rsHomeHideLiveV29 #publicTeamV11,
-#home.rsHomeHideLiveV29 #publicLiveConsole{
-  display:none!important;
-}
+.savedPlayerV31 b{display:block;background:#061c13;color:#fff;border-radius:7px;padding:3px;font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.savedPlayerV31 small{display:block;color:#fff;font-size:6px;margin-top:2px}
+.savedBenchV31{margin-top:10px}.savedBenchV31 strong{display:block;color:#f1d600;font-size:9px;margin-bottom:6px}
+.savedBenchGridV31{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:6px}
+.savedBenchItemV31{padding:7px;border-radius:8px;background:#081827;border:1px solid #1b3046;font-size:8px;color:#fff}
+.savedBenchItemV31 small{display:block;color:#71869c;margin-top:2px}
+@media(max-width:600px){.savedPitchV31{width:100%;max-height:520px}.savedPlayerV31{width:58px}.savedShirtV31{width:31px;height:38px;font-size:10px}.savedPlayerV31 b{font-size:7px}.savedPlayerV31 small{font-size:5px}}
+</style>
 
 </head>
 <body>
@@ -957,8 +915,6 @@ button{cursor:pointer}
     <button class="btn" id="closeDetailsV20">✕ Cerrar</button>
   </div>
   <div class="completedScoreV20" id="completedScoreV20"></div>
-  <div id="completedLineupV29" class="completedLineupV29" style="display:none"></div>
-
 
   <div class="detailGroupV20">
     <h3>⚽ GOLES</h3>
@@ -973,6 +929,7 @@ button{cursor:pointer}
     <div id="detailChangesV20"></div>
   </div>
 
+  <div id="completedLineupV31" class="completedLineupV31" style="display:none"></div>
   <div class="matchChronicleV20">
     <h3>📰 CRÓNICA DEL PARTIDO</h3>
     <div id="chronicleV20"></div>
@@ -1417,14 +1374,12 @@ function finish(){
   m.homeScore=Number(Live.homeScore||0);
   m.awayScore=Number(Live.awayScore||0);
   m.events=JSON.parse(JSON.stringify(Live.events||[]));
-  m.lineupSnapshot=m.lineupSnapshot||{
-    formation:App.lineup?.formation||Live.formation||"4-3-3",
-    players:(Array.isArray(Live.lineup)&&Live.lineup.length?Live.lineup:App.lineup?.players||[]).map(Number).slice(0,11),
-    savedAt:Date.now()
-  };
-  m.lineup=Array.isArray(m.lineupSnapshot.players)?m.lineupSnapshot.players.slice():[];
+  if(!m.lineupSnapshot && Array.isArray(Live.lineup) && Live.lineup.length){
+    m.lineupSnapshot={formation:Live.formation||App.lineup?.formation||"4-3-3",players:Live.lineup.slice(0,11),savedAt:Date.now()};
+    m.lineup=Live.lineup.slice(0,11);
+  }
   m.finishedAt=Date.now();
-  save();renderAll();toast("Partido finalizado · resultado y alineación guardados");
+  save();renderAll();toast("Partido finalizado · resultado guardado");
 }
 function adjustMinute(n){
   const next=Math.min(80,Math.max(0,displayMinute()+n));
@@ -1551,7 +1506,14 @@ function createMatch(){
 function deleteMatch(id){if(!confirm("¿Eliminar partido?"))return;App.matches=App.matches.filter(m=>Number(m.id)!==Number(id));if(Number(App.activeMatch)===Number(id))App.activeMatch=App.matches[0]?.id??null;save();renderAll()}
 function saveLineup(){
  const ids=[...document.querySelectorAll("#lineupChecks input:checked")].map(x=>Number(x.value));if(ids.length!==11){toast("Selecciona exactamente 11 jugadores");return}
- App.lineup={formation:document.getElementById("formationSelect").value,players:ids};Live.lineup=ids.slice();Live.formation=App.lineup.formation;save();renderAll();toast("Alineación guardada")
+ App.lineup={formation:document.getElementById("formationSelect").value,players:ids};
+ Live.lineup=ids.slice();Live.formation=App.lineup.formation;
+ const lm=activeMatch();
+ if(lm){
+   lm.lineupSnapshot={formation:App.lineup.formation,players:ids.slice(),savedAt:Date.now()};
+   lm.lineup=ids.slice();
+ }
+ save();renderAll();toast("Alineación guardada en el partido")
 }
 function closeModal(id){document.getElementById(id).classList.remove("open")}
 function unlock(){
@@ -1704,18 +1666,8 @@ document.getElementById("saveXI10")?.addEventListener("click",()=>{
   if(a.length!==11){toast("Debes seleccionar 11 jugadores");return}
   if(new Set(a).size!==11){toast("No puede haber jugadores repetidos");return}
   Live.lineup=a.slice(); Live.formation=App.lineup.formation||"4-3-3";
-  const lineupMatch=activeMatch();
-  if(lineupMatch){
-    lineupMatch.lineupSnapshot={
-      formation:App.lineup.formation||"4-3-3",
-      players:a.slice(),
-      savedAt:Date.now()
-    };
-    /* Compatibilidad con estadísticas/histórico */
-    lineupMatch.lineup=a.slice();
-  }
   localStorage.setItem("rs_lineup",JSON.stringify({formation:App.lineup.formation,players:a}));
-  save();renderAll();renderAdminXI10();renderPublicTeamV11();toast("Once guardado en el partido 👕");
+  save();renderAll();renderAdminXI10();renderPublicTeamV11();toast("Once guardado y publicado 👕");
 });
 
 /* V15: render general estable. */
@@ -2585,125 +2537,102 @@ document.addEventListener("click",function(e){
 </script>
 
 
-<script id="v29-lineup-history-script">
+<script id="v31-runtime">
 (function(){
-  function v29ScheduledStart(m){
-    if(!m || !m.date || !m.hour)return null;
+  function startMs(m){
+    if(!m || !m.date || !m.hour) return null;
     const d=new Date(String(m.date)+"T"+String(m.hour));
     return Number.isNaN(d.getTime())?null:d.getTime();
   }
 
-  function v29LiveWindow(m){
-    if(!m)return false;
-    /* Finalizado: nunca se muestra en Inicio */
-    if(m.status==="FINISHED" || Live.state==="FINISHED")return false;
+  function showPublicLiveOnlyAtRightTime(){
+    const m=typeof activeMatch==="function"?activeMatch():null;
+    const events=document.getElementById("publicLiveConsole");
+    const lineup=document.getElementById("publicTeamV11");
+    if(!events || !lineup) return;
 
-    const live=["FIRST_HALF","HALFTIME","SECOND_HALF"].includes(String(Live.state));
-    if(live)return true;
-
-    /* PREPARTIDO: exactamente desde 60 min antes del inicio */
-    const start=v29ScheduledStart(m);
-    if(!start)return false;
-    const now=Date.now();
-    return now>=start-60*60*1000 && now<start;
-  }
-
-  function v29RenderPublicVisibility(){
-    const home=document.getElementById("home");
-    if(!home)return;
-    const m=activeMatch();
-    const visible=v29LiveWindow(m);
-    home.classList.toggle("rsHomeHideLiveV29",!visible);
+    let visible=false;
+    if(m){
+      const state=String(Live?.state||"");
+      if(m.status!=="FINISHED" && ["FIRST_HALF","HALFTIME","SECOND_HALF"].includes(state)){
+        visible=true;
+      }else if(m.status!=="FINISHED"){
+        const start=startMs(m);
+        if(start){
+          const now=Date.now();
+          visible=now>=start-3600000 && now<start;
+        }
+      }
+    }
+    events.style.display=visible?"":"none";
+    lineup.style.display=visible?"":"none";
 
     const hint=document.getElementById("publicLiveHint");
-    if(hint){
-      if(["FIRST_HALF","HALFTIME","SECOND_HALF"].includes(String(Live.state)))
-        hint.textContent="EN DIRECTO";
-      else
-        hint.textContent="DESDE 1 HORA ANTES";
-    }
+    if(hint) hint.textContent=visible && ["FIRST_HALF","HALFTIME","SECOND_HALF"].includes(String(Live?.state||""))
+      ?"EN DIRECTO":"DESDE 1 HORA ANTES";
   }
 
-  function v29LineupSnapshot(m){
-    const snap=m?.lineupSnapshot;
-    if(snap && Array.isArray(snap.players) && snap.players.length) return snap;
-    if(Array.isArray(m?.lineup) && m.lineup.length)
-      return {formation:m.formation||"4-3-3",players:m.lineup.slice(0,11)};
-    return null;
-  }
-
-  function v29RenderSavedLineup(m){
-    const box=document.getElementById("completedLineupV29");
-    if(!box)return;
-    const snap=v29LineupSnapshot(m);
-    if(!snap){
-      box.style.display="none";
-      box.innerHTML="";
-      return;
+  function renderSavedLineup(m){
+    const box=document.getElementById("completedLineupV31");
+    if(!box || !m) return;
+    const snap=m.lineupSnapshot || (Array.isArray(m.lineup)&&m.lineup.length
+      ? {formation:m.formation||"4-3-3",players:m.lineup.slice(0,11)} : null);
+    if(!snap || !Array.isArray(snap.players) || !snap.players.length){
+      box.style.display="none"; box.innerHTML=""; return;
     }
-
-    const nums=(snap.players||[]).map(Number).slice(0,11);
-    const formation=snap.formation||"4-3-3";
-    const pos=positions(formation);
-    const players=nums.map(n=>(App.players||[]).find(p=>Number(p.number)===n)).filter(Boolean);
+    const nums=snap.players.map(Number).slice(0,11);
+    const ps=nums.map(n=>(App.players||[]).find(p=>Number(p.number)===n)).filter(Boolean);
     const starters=new Set(nums);
     const bench=(App.players||[]).filter(p=>!starters.has(Number(p.number)));
-
+    const pos=typeof positions==="function"?positions(snap.formation||"4-3-3"):[];
     box.style.display="block";
     box.innerHTML=`
-      <div class="lineupHeadV29">
-        <h3>👕 Alineación inicial</h3>
-        <span>Formación ${esc(formation)}</span>
-      </div>
-      <div class="savedPitchV29">
-        ${players.map((p,i)=>{
-          const xy=pos[i]||[50,50];
-          return `<div class="savedPitchPlayerV29" style="left:${xy[0]}%;top:${xy[1]}%">
-            <div class="shirt">${esc(p.number)}</div>
-            <b>${esc(p.name)}</b>
-            <small>${esc(p.position||"")}</small>
-          </div>`;
-        }).join("")}
-      </div>
-      <div class="savedBenchV29">
-        <div class="savedBenchTitleV29">🪑 SUPLENTES</div>
-        <div class="savedBenchGridV29">
-          ${bench.length?bench.map(p=>`<div class="savedBenchPlayerV29"><b>#${esc(p.number)} ${esc(p.name)}</b><small>${esc(p.position||"")}</small></div>`).join(""):'<div class="savedBenchPlayerV29">No hay suplentes configurados.</div>'}
-        </div>
+      <div class="savedHead"><b>👕 ALINEACIÓN INICIAL</b><span>Formación ${esc(snap.formation||"4-3-3")}</span></div>
+      <div class="savedPitchV31">${ps.map((p,i)=>{
+        const xy=pos[i]||[50,50];
+        return `<div class="savedPlayerV31" style="left:${xy[0]}%;top:${xy[1]}%">
+          <div class="savedShirtV31">${esc(p.number)}</div>
+          <b>${esc(p.name)}</b><small>${esc(p.position||"")}</small>
+        </div>`;
+      }).join("")}</div>
+      <div class="savedBenchV31"><strong>🪑 SUPLENTES</strong>
+        <div class="savedBenchGridV31">${bench.length?bench.map(p=>`<div class="savedBenchItemV31">#${esc(p.number)} ${esc(p.name)}<small>${esc(p.position||"")}</small></div>`).join(""):"<div class='savedBenchItemV31'>No hay suplentes configurados.</div>"}</div>
       </div>`;
   }
 
-  /* Encadena el render de Inicio sin sustituir la lógica existente. */
-  const baseHome=window.renderHome;
-  window.renderHome=function(){
-    if(typeof baseHome==="function")baseHome.apply(this,arguments);
-    try{v29RenderPublicVisibility()}catch(e){console.error("V29 visibility",e)}
-  };
+  const originalRenderAll=window.renderAll;
+  if(typeof originalRenderAll==="function"){
+    window.renderAll=function(){
+      originalRenderAll.apply(this,arguments);
+      try{showPublicLiveOnlyAtRightTime()}catch(e){console.error("V31 visibility",e)}
+    };
+  }
 
-  /* El histórico de Ver detalles conserva la alineación del partido. */
-  const baseDetails=window.v25ShowDetails;
-  window.v25ShowDetails=function(id){
-    if(typeof baseDetails==="function")baseDetails(id);
-    const m=(App.matches||[]).find(x=>String(x.id)===String(id));
-    if(m) v29RenderSavedLineup(m);
-  };
+  const originalDetails=window.v25ShowDetails;
+  if(typeof originalDetails==="function"){
+    window.v25ShowDetails=function(id){
+      originalDetails(id);
+      setTimeout(()=>{
+        const m=(App.matches||[]).find(x=>String(x.id)===String(id));
+        if(m)renderSavedLineup(m);
+      },30);
+    };
+  }
 
-  /* Si otra versión reemplaza v25ShowDetails después, el click sigue llamando
-     al wrapper mediante un pequeño listener de captura. */
   document.addEventListener("click",function(e){
-    const b=e.target.closest('button[onclick^="v25ShowDetails"]');
+    const b=e.target.closest("button[onclick*='v25ShowDetails']");
     if(!b)return;
-    const mm=String(b.getAttribute("onclick")||"").match(/\(([^)]+)\)/);
-    if(!mm)return;
     setTimeout(()=>{
-      const m=(App.matches||[]).find(x=>String(x.id)===String(mm[1]));
-      if(m)v29RenderSavedLineup(m);
-    },40);
-  },true);
+      const raw=b.getAttribute("onclick")||"";
+      const match=raw.match(/v25ShowDetails\(([^)]+)\)/);
+      if(!match)return;
+      const m=(App.matches||[]).find(x=>String(x.id)===String(match[1]));
+      if(m)renderSavedLineup(m);
+    },80);
+  });
 
-  /* Recalcular visibilidad periódicamente para cruzar el umbral de 1 hora. */
-  setInterval(v29RenderPublicVisibility,15000);
-  setTimeout(v29RenderPublicVisibility,250);
+  setInterval(showPublicLiveOnlyAtRightTime,15000);
+  setTimeout(showPublicLiveOnlyAtRightTime,500);
 })();
 </script>
 
