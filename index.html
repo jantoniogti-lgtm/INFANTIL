@@ -1156,6 +1156,261 @@ button{cursor:pointer}
 }
 </style>
 
+
+<style id="v36-professional-fixes">
+/* =========================================================
+   V36 — CABECERA + CRÓNICA + PARTIDOS
+   ========================================================= */
+
+/* 1. CABECERA: escudo limpio, centrado y sin recorte */
+.topbar{
+  height:92px!important;
+  min-height:92px!important;
+  padding-top:6px!important;
+  padding-bottom:6px!important;
+}
+.topbar .brandCrestOnlyV35{
+  height:100%!important;
+  display:flex!important;
+  align-items:center!important;
+}
+.topbar .brandCrestOnlyV35 .brandMark{
+  width:82px!important;
+  height:82px!important;
+  min-width:82px!important;
+  min-height:82px!important;
+  border-radius:8px!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  padding:0!important;
+  overflow:hidden!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+.topbar .brandCrestOnlyV35 .brandMark img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  display:block!important;
+}
+
+/* 2. CRÓNICA: claramente grande y cómoda de leer */
+.matchChronicleV20{
+  padding:32px 34px!important;
+  border-radius:20px!important;
+}
+.matchChronicleV20 h3{
+  font-size:30px!important;
+  line-height:1.2!important;
+  margin-bottom:20px!important;
+}
+#chronicleV20{
+  font-size:56px!important;
+  line-height:1.55!important;
+  font-weight:600!important;
+  color:#edf3f9!important;
+  letter-spacing:.1px!important;
+}
+
+/* 3. PARTIDOS: rediseño completo de la tarjeta.
+      Fecha arriba, equipos centrados, resultado en una franja propia
+      y estado/botón debajo. */
+.matchRowV23{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  grid-template-areas:
+    "date"
+    "teams"
+    "result"!important;
+  gap:0!important;
+  padding:30px 34px 34px!important;
+  min-height:0!important;
+  border-radius:24px!important;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(255,210,0,.055),transparent 34%),
+    linear-gradient(145deg,#12263d,#091827)!important;
+  border:1px solid rgba(75,105,137,.5)!important;
+  box-shadow:0 18px 45px rgba(0,0,0,.18)!important;
+}
+.matchRowV23 .matchDate{
+  grid-area:date!important;
+  text-align:center!important;
+  font-size:20px!important;
+  line-height:1.45!important;
+  font-weight:800!important;
+  color:#b9c7d8!important;
+  padding:0 0 24px!important;
+}
+.matchRowV23 .matchTeamsV27{
+  grid-area:teams!important;
+  width:100%!important;
+  max-width:900px!important;
+  margin:0 auto!important;
+  grid-template-columns:minmax(0,1fr) 80px minmax(0,1fr)!important;
+  gap:20px!important;
+  padding:4px 0 22px!important;
+}
+.matchRowV23 .matchTeamV27{
+  gap:12px!important;
+}
+.matchRowV23 .matchTeamV27 span{
+  font-size:26px!important;
+  line-height:1.2!important;
+  font-weight:1000!important;
+}
+.matchRowV23 .matchCrestV27{
+  width:78px!important;
+  height:78px!important;
+  flex-basis:78px!important;
+  filter:drop-shadow(0 8px 12px rgba(0,0,0,.28))!important;
+}
+.matchRowV23 .matchVsV27{
+  font-size:27px!important;
+  letter-spacing:1px!important;
+}
+
+/* Resultado totalmente separado y centrado */
+.matchRowV23 .matchResultV23{
+  grid-area:result!important;
+  width:100%!important;
+  max-width:760px!important;
+  margin:0 auto!important;
+  padding:24px 18px 4px!important;
+  border-top:1px solid rgba(255,255,255,.10)!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:16px!important;
+  flex-wrap:wrap!important;
+}
+.matchRowV23 .matchResultV23 strong{
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  text-align:center!important;
+  font-size:58px!important;
+  line-height:1!important;
+  letter-spacing:3px!important;
+  font-weight:1000!important;
+}
+.matchRowV23 .matchResultV23 .finalBadgeV20,
+.matchRowV23 .matchResultV23 .liveBadgeV23,
+.matchRowV23 .matchResultV23 .pendingBadgeV23{
+  font-size:17px!important;
+  padding:10px 18px!important;
+  border-radius:999px!important;
+}
+.matchRowV23 .matchResultV23 .btn{
+  font-size:17px!important;
+  padding:13px 24px!important;
+  border-radius:14px!important;
+  min-height:50px!important;
+}
+.matchRowV23 .matchCompetitionV27{
+  font-size:16px!important;
+  margin-top:4px!important;
+}
+
+/* Responsive */
+@media(max-width:700px){
+  .topbar{
+    height:84px!important;
+    min-height:84px!important;
+  }
+  .topbar .brandCrestOnlyV35 .brandMark{
+    width:72px!important;
+    height:72px!important;
+    min-width:72px!important;
+    min-height:72px!important;
+  }
+
+  .matchChronicleV20{
+    padding:24px 20px!important;
+  }
+  .matchChronicleV20 h3{
+    font-size:24px!important;
+  }
+  #chronicleV20{
+    font-size:46px!important;
+    line-height:1.5!important;
+  }
+
+  .matchRowV23{
+    padding:24px 18px 28px!important;
+    border-radius:20px!important;
+  }
+  .matchRowV23 .matchDate{
+    font-size:17px!important;
+    padding-bottom:20px!important;
+  }
+  .matchRowV23 .matchTeamsV27{
+    grid-template-columns:minmax(0,1fr) 52px minmax(0,1fr)!important;
+    gap:8px!important;
+  }
+  .matchRowV23 .matchTeamV27 span{
+    font-size:21px!important;
+  }
+  .matchRowV23 .matchCrestV27{
+    width:62px!important;
+    height:62px!important;
+    flex-basis:62px!important;
+  }
+  .matchRowV23 .matchVsV27{
+    font-size:21px!important;
+  }
+  .matchRowV23 .matchResultV23{
+    padding-top:20px!important;
+  }
+  .matchRowV23 .matchResultV23 strong{
+    font-size:48px!important;
+  }
+}
+
+@media(max-width:430px){
+  .topbar{
+    height:78px!important;
+    min-height:78px!important;
+  }
+  .topbar .brandCrestOnlyV35 .brandMark{
+    width:66px!important;
+    height:66px!important;
+    min-width:66px!important;
+    min-height:66px!important;
+  }
+
+  .matchChronicleV20{
+    padding:20px 16px!important;
+  }
+  .matchChronicleV20 h3{
+    font-size:21px!important;
+  }
+  #chronicleV20{
+    font-size:38px!important;
+    line-height:1.48!important;
+  }
+
+  .matchRowV23 .matchTeamsV27{
+    grid-template-columns:minmax(0,1fr) 42px minmax(0,1fr)!important;
+  }
+  .matchRowV23 .matchTeamV27 span{
+    font-size:18px!important;
+  }
+  .matchRowV23 .matchCrestV27{
+    width:54px!important;
+    height:54px!important;
+    flex-basis:54px!important;
+  }
+  .matchRowV23 .matchVsV27{
+    font-size:18px!important;
+  }
+  .matchRowV23 .matchResultV23 strong{
+    font-size:42px!important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div class="app">
