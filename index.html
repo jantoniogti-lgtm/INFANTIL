@@ -478,7 +478,33 @@ button{cursor:pointer}
   .detailEventV20{grid-template-columns:34px 24px 24px 1fr;gap:5px}
 }
 
+
+/* ===== V22 — DETALLES REALES DEL PARTIDO ===== */
+.matchDetailsV22{margin-top:14px}
+.matchDetailsV22 .detailSectionV22{margin-top:14px}
+.matchDetailsV22 .detailSectionV22 h3{
+  margin:0 0 8px;font-size:11px;color:#f1d600;font-weight:1000
+}
+.matchDetailsV22 .detailRowV22{
+  display:grid;grid-template-columns:42px 30px 30px 1fr;
+  align-items:center;gap:7px;min-height:44px;padding:7px 9px;
+  background:#081827;border:1px solid #1b3046;border-radius:10px;margin-bottom:6px
+}
+.matchDetailsV22 .minuteV22{font-size:10px;color:#f1d600;font-weight:1000;text-align:center}
+.matchDetailsV22 .iconV22{text-align:center;font-size:17px}
+.matchDetailsV22 .crestV22{width:25px;height:25px;object-fit:contain;background:#fff;border-radius:50%;padding:2px}
+.matchDetailsV22 .whoV22{font-size:9px;font-weight:1000;text-transform:uppercase}
+.matchDetailsV22 .subV22{display:flex;flex-direction:column;gap:3px}
+.matchDetailsV22 .outV22{color:#ff7b7b}
+.matchDetailsV22 .inV22{color:#52e58a}
+.matchDetailsV22 .emptyV22{padding:11px;background:#081827;border-radius:10px;color:#71869c;font-size:9px}
+@media(max-width:520px){
+ .matchDetailsV22 .detailRowV22{grid-template-columns:34px 26px 25px 1fr;gap:5px}
+}
+
 </style>
+
+<style>.v21ChangeNames{display:flex;flex-direction:column;gap:3px;font-size:9px;font-weight:1000}.v21ChangeNames .out{color:#ff7b7b}.v21ChangeNames .in{color:#54e58a}</style>
 </head>
 <body>
 <div class="app">
@@ -1530,11 +1556,11 @@ setTimeout(()=>{
         card.classList.add("completedMatchCardV20");
         const btn=document.createElement("button");
         btn.className="btn";
-        btn.textContent="👁 Ver detalles";
+        btn.textContent="👁 Ver detalles"; btn.classList.add("v20-details-btn");
         btn.style.marginTop="8px";
         const id=card.dataset.matchId||card.getAttribute("data-id");
         if(id){
-          btn.onclick=()=>v20ShowDetails(id);
+          btn.dataset.matchId=id; btn.onclick=(ev)=>{ev.preventDefault();showCompletedMatchDetailsV22(id);};
           card.appendChild(btn);
           card.dataset.v20Done="1";
         }
@@ -1542,6 +1568,120 @@ setTimeout(()=>{
     });
   };
 },250);
+</script>
+
+
+<script>
+function v21IsChange(e){const t=String(e?.type||e?.eventType||e?.kind||"").toLowerCase();return ["change","substitution","substitute","cambio"].includes(t)}
+function v21EventsForMatch(m){let a=[];if(Array.isArray(m?.events))a.push(...m.events);if(Array.isArray(App.events))a.push(...App.events.filter(e=>String(e.matchId||"")==String(m.id)));if(Array.isArray(Live?.events))a.push(...Live.events.filter(e=>!e.matchId||String(e.matchId)==String(m.id)));const s=new Set();return a.filter(e=>{const k=e.id!=null?String(e.id):JSON.stringify(e);if(s.has(k))return false;s.add(k);return true}).sort((a,b)=>Number(a.minute||0)-Number(b.minute||0))}
+function v21ShowDetails(matchId){const m=(App.matches||[]).find(x=>String(x.id)==String(matchId));if(!m)return;const ev=v21EventsForMatch(m);const box=document.getElementById("detailChangesV20");if(!box)return;const list=ev.filter(v21IsChange);box.innerHTML=list.length?`<div class="detailTimelineV20">${list.map(e=>{const crest=v20CrestForEvent(e,m);const inn=esc(e.playerInName||e.inPlayerName||e.playerIn||e.enteredPlayer||"");const out=esc(e.playerOutName||e.outPlayerName||e.playerOut||e.leftPlayer||"");const name=esc(e.playerName||e.player||e.name||"Cambio");return `<div class="detailEventV20"><div class="detailMinuteV20">${Number(e.minute||0)}'</div><div class="detailEventIconV20">🔄</div>${crest}<div class="v21ChangeNames">${out?`<span class="out">↓ ${out}</span>`:""}${inn?`<span class="in">↑ ${inn}</span>`:`<span>${name}</span>`}</div></div>`}).join("")}</div>`:'<div class="detailEmptyV20">Sin cambios registrados.</div>';document.getElementById("completedDetailsV20\`).style.display="block"}
+</script>
+
+<script>
+/* ===== V22 — SOURCE OF TRUTH FOR COMPLETED MATCH DETAILS ===== */
+(function(){
+  function norm(v){return String(v||"").toLowerCase().trim();}
+  function eventType(e){
+    return norm(e.type || e.eventType || e.kind || e.action);
+  }
+  function isGoal(e){return ["goal","gol"].includes(eventType(e));}
+  function isYellow(e){return ["yellow","yellow_card","amarilla"].includes(eventType(e));}
+  function isRed(e){return ["red","red_card","roja"].includes(eventType(e));}
+  function isChange(e){
+    return ["change","substitution","substitute","cambio","substitution_in","substitution_out"].includes(eventType(e))
+      || !!(e.playerIn||e.playerOut||e.playerInName||e.playerOutName||e.inPlayer||e.outPlayer);
+  }
+  function allMatchEvents(m){
+    let arr=[];
+    if(Array.isArray(m.events)) arr.push(...m.events);
+    if(Array.isArray(App.events)) arr.push(...App.events.filter(e=>String(e.matchId||"")===String(m.id)));
+    if(window.Live && Array.isArray(Live.events)){
+      arr.push(...Live.events.filter(e=>!e.matchId || String(e.matchId)===String(m.id)));
+    }
+    const seen=new Set();
+    return arr.filter(e=>{
+      const key=e.id!=null ? "id:"+e.id : JSON.stringify(e);
+      if(seen.has(key)) return false;
+      seen.add(key); return true;
+    }).sort((a,b)=>Number(a.minute||0)-Number(b.minute||0));
+  }
+  function crest(m,e){
+    const t=e.team==="home"?team(m.home):team(m.away);
+    return t && t.crest ? `<img class="crestV22" src="${esc(t.crest)}" alt="">` : `<span></span>`;
+  }
+  function row(e,m,icon,content){
+    return `<div class="detailRowV22">
+      <div class="minuteV22">${Number(e.minute||0)}'</div>
+      <div class="iconV22">${icon}</div>
+      ${crest(m,e)}
+      ${content}
+    </div>`;
+  }
+  window.showCompletedMatchDetailsV22=function(matchId){
+    const m=(App.matches||[]).find(x=>String(x.id)===String(matchId));
+    if(!m) return;
+    const events=allMatchEvents(m);
+    const goals=events.filter(isGoal);
+    const cards=events.filter(e=>isYellow(e)||isRed(e));
+    const changes=events.filter(isChange);
+
+    const details=document.getElementById("completedDetailsV20");
+    if(!details) return;
+
+    const home=team(m.home), away=team(m.away);
+    const title=document.getElementById("completedTitleV20");
+    if(title) title.textContent=home.name+" vs "+away.name;
+
+    const score=document.getElementById("completedScoreV20");
+    if(score) score.innerHTML=
+      `${home.crest?`<img src="${esc(home.crest)}" alt="">`:''}
+       <span>${esc(home.name)}</span>
+       <strong>${Number(m.homeScore||0)} - ${Number(m.awayScore||0)}</strong>
+       <span>${esc(away.name)}</span>
+       ${away.crest?`<img src="${esc(away.crest)}" alt="">`:''}`;
+
+    const goalBox=document.getElementById("detailGoalsV20");
+    if(goalBox) goalBox.innerHTML=goals.length
+      ? `<div class="matchDetailsV22">${goals.map(e=>row(e,m,"⚽",`<div class="whoV22">${esc(e.playerName||e.player||"Gol")}</div>`)).join("")}</div>`
+      : '<div class="emptyV22">Sin goles.</div>';
+
+    const cardBox=document.getElementById("detailCardsV20");
+    if(cardBox) cardBox.innerHTML=cards.length
+      ? `<div class="matchDetailsV22">${cards.map(e=>row(e,m,isRed(e)?"🟥":"🟨",`<div class="whoV22">${esc(e.playerName||e.player||"Tarjeta")}</div>`)).join("")}</div>`
+      : '<div class="emptyV22">Sin tarjetas.</div>';
+
+    const changeBox=document.getElementById("detailChangesV20");
+    if(changeBox){
+      changeBox.innerHTML=changes.length
+        ? `<div class="matchDetailsV22">${changes.map(e=>{
+            const inName=e.playerInName||e.inPlayerName||e.playerIn||e.enteredPlayer||"";
+            const outName=e.playerOutName||e.outPlayerName||e.playerOut||e.leftPlayer||"";
+            const fallback=e.playerName||e.player||e.name||"Cambio";
+            const content=(inName||outName)
+              ? `<div class="subV22">${outName?`<span class="outV22">↓ ${esc(outName)}</span>`:""}${inName?`<span class="inV22">↑ ${esc(inName)}</span>`:""}</div>`
+              : `<div class="whoV22">${esc(fallback)}</div>`;
+            return row(e,m,"🔄",content);
+          }).join("")}</div>`
+        : '<div class="emptyV22">Sin cambios registrados.</div>';
+    }
+
+    const chron=document.getElementById("chronicleV20");
+    if(chron && typeof v20BuildChronicle==="function") chron.innerHTML=v20BuildChronicle(m,events);
+
+    details.style.display="block";
+    details.scrollIntoView({behavior:"smooth",block:"start"});
+  };
+
+  // Replace the existing details button handler wherever the card is rendered.
+  document.addEventListener("click",function(ev){
+    const btn=ev.target.closest("[data-v20-details], .v20-details-btn");
+    if(!btn)return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    const id=btn.dataset.matchId || btn.getAttribute("data-id");
+    if(id) window.showCompletedMatchDetailsV22(id);
+  },true);
+})();
 </script>
 
 </body>
