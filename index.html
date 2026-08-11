@@ -312,6 +312,29 @@ button{cursor:pointer}
   .benchGridV11{grid-template-columns:repeat(2,1fr)}
 }
 
+
+/* ===== V14 — MENU LATERAL + STABLE NAV ===== */
+.mobileMenuBtnV14{display:none;position:fixed;left:14px;top:14px;z-index:1001;width:44px;height:44px;border:1px solid #29435d;border-radius:12px;background:#0b1a2b;color:#fff;font-size:23px;box-shadow:0 8px 25px #0005}
+.sideMenuV14{position:fixed;left:0;top:0;bottom:0;width:280px;background:#081523;border-right:1px solid #20334d;z-index:1000;transform:translateX(-105%);transition:transform .22s ease;padding:18px;box-shadow:20px 0 60px #0006}
+.sideMenuV14.open{transform:translateX(0)}
+.sideOverlayV14{display:none;position:fixed;inset:0;background:#0008;z-index:999}
+.sideOverlayV14.open{display:block}
+.sideHeadV14{display:flex;align-items:center;justify-content:space-between;padding-bottom:20px;border-bottom:1px solid #20334d}
+.sideHeadV14>button{border:0;background:#16283d;color:#fff;border-radius:10px;width:38px;height:38px;font-size:25px}
+.sideNavV14{display:grid;gap:8px;margin-top:18px}
+.sideNavV14 button{border:1px solid #20334d;background:#0d1c2e;color:#c5d0dd;border-radius:13px;padding:14px;text-align:left;font-weight:900;font-size:14px}
+.sideNavV14 button.active{background:var(--yellow);color:#111;border-color:var(--yellow)}
+
+.mobileMenuBtnV14{display:block}
+.topbar{padding-left:72px}
+.topbar .brand{margin-left:0}
+.nav{display:none!important}
+.shell{padding-top:14px}
+
+/* The public home uses only the visual XI, never the editor. */
+#home .publicTeamV11{display:block!important}
+#home .adminCard,#home #adminPanel,#home #lineupChecks{display:none!important}
+
 </style>
 </head>
 <body>
@@ -320,12 +343,23 @@ button{cursor:pointer}
   <div class="brand"><div class="brandMark">⚽</div><div>RS LIVE<small>RAMÓN SICART • MATCH CENTER</small></div></div>
   <div class="topStatus"><span id="syncDot" class="dot"></span><span id="syncText">Conectando Firebase…</span></div>
 </header>
+<button class="mobileMenuBtnV14" id="mobileMenuBtnV14" aria-label="Abrir menú">☰</button>
+<div class="sideOverlayV14" id="sideOverlayV14"></div>
+<aside class="sideMenuV14" id="sideMenuV14">
+  <div class="sideHeadV14"><div class="brand"><div class="brandMark">⚽</div><div>RS LIVE<small>RAMÓN SICART</small></div></div><button id="closeSideV14">×</button></div>
+  <div class="sideNavV14" id="sideNavV14">
+    <button class="active" data-page="home">🏠 <span>Inicio</span></button>
+    <button data-page="squad">👥 <span>Plantilla</span></button>
+    <button data-page="matches">📅 <span>Partidos</span></button>
+    <button data-page="admin">⚙️ <span>Administrador</span></button>
+  </div>
+</aside>
+
 
 <main class="shell">
 <nav class="nav" id="mainNav">
   <button class="active" data-page="home">🏠 Inicio</button>
   <button data-page="squad">👥 Plantilla</button>
-  <button data-page="lineup">🟢 Alineación</button>
   <button data-page="matches">📅 Partidos</button>
   <button data-page="admin">⚙️ Administrador</button>
 </nav>
@@ -345,7 +379,6 @@ button{cursor:pointer}
       <span id="matchHalfInfo">⏱ 1ª PARTE</span>
     </div>
     <div id="goalsBox" class="goals" style="display:none"><h3>GOLES</h3><div class="goalGrid"><div id="homeGoals" class="goalCol"></div><div class="goalDivider"></div><div id="awayGoals" class="goalCol"></div></div></div>
-  </div></div>
     <div class="integratedEventsV13" id="publicLiveConsole">
       <div class="integratedEventsHeadV13">
         <strong><span class="liveDotV13"></span> EVENTOS DEL PARTIDO</strong>
@@ -353,11 +386,12 @@ button{cursor:pointer}
       </div>
       <div id="publicEvents" class="eventTimeline"></div>
     </div>
+  </div>
 
 <section class="card publicTeamV11" id="publicTeamV11">
   <div class="sectionTitle">
-    <h2>👕 Ramón Sicart · Alineación</h2>
-    <p id="publicFormationV11">Once titular y suplentes</p>
+    <h2>🟢 Once inicial</h2>
+    <p id="publicFormationV11">4-3-3</p>
   </div>
   <div class="publicPitchV11" id="publicPitchV11"></div>
   <div class="benchV11">
@@ -372,7 +406,7 @@ button{cursor:pointer}
   <div id="players" class="players"></div>
 </section>
 
-<section id="lineup" class="page">
+<section id="lineup" class="page" style="display:none!important">
   <div class="sectionTitle"><h2>🟢 Alineación</h2><p>Vista táctica</p></div>
   <div class="card pitchWrap"><div id="pitch2" class="pitch"><div class="halfLine"></div><div class="centerCircle"></div><div class="boxTop"></div><div class="boxBottom"></div></div></div>
 </section>
@@ -468,7 +502,7 @@ button{cursor:pointer}
 </section>
 </main>
 
-<footer style="width:min(1400px,100%);margin:-55px auto 0;padding:0 20px 35px;text-align:center;color:#5f728a;font-size:10px;letter-spacing:.5px">
+<footer style="width:min(1400px,100%);margin:20px auto 0;padding:0 20px 35px;text-align:center;color:#5f728a;font-size:10px;letter-spacing:.5px">
   RS LIVE · Ramón Sicart · Datos sincronizados en tiempo real
 </footer>
 </div>
@@ -493,307 +527,8 @@ button{cursor:pointer}
 <div id="toast" class="toast"></div>
 
 <!-- Firebase: misma base de conexión del HTML facilitado -->
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js">
-function mcTeamData(id){return App.teams.find(t=>t.id===id)||{name:"—",logo:""}}
-function mcPlayer(n){return App.players.find(p=>Number(p.number)===Number(n))}
-function mcEventIcon(e){return e.type==="goal"?"⚽":e.type==="yellow"?"🟨":e.type==="red"?"🟥":e.type==="change"?"🔄":"•"}
-function renderMatchCenterV4(){
-  const m=activeMatch();
-  const home=m?mcTeamData(m.home):{name:"RAMÓN SICART",logo:""};
-  const away=m?mcTeamData(m.away):{name:"VISITANTE",logo:""};
-  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};
-  const img=(id,v)=>{const el=document.getElementById(id);if(el){el.src=v||"";el.style.visibility=v?"visible":"hidden"}};
-  set("mcHomeName",home.name);set("mcAwayName",away.name);
-  img("mcHomeLogo",home.logo);img("mcAwayLogo",away.logo);
-  set("mcScore",`${Live.homeScore} - ${Live.awayScore}`);
-  set("mcClock",clockText());
-  set("mcCompetition",m?.competition||"RAMÓN SICART · PARTIDO");
-  set("mcDate",m?.date?`📅 ${m.date}`:"📅 —");
-  set("mcHour",m?.time?`🕒 ${m.time}`:"🕒 —");
-  set("mcField",m?.field?`📍 ${m.field}`:"📍 —");
-  const labels={PREMATCH:"PREPARTIDO",FIRST_HALF:"🔴 1ª PARTE · EN DIRECTO",HALFTIME:"DESCANSO",SECOND_HALF:"🔴 2ª PARTE · EN DIRECTO",FINISHED:"🏁 FINAL"};
-  const st=document.getElementById("mcStatus"); if(st){st.textContent=labels[Live.state]||Live.state;st.className="mcStatus"+((Live.state==="FIRST_HALF"||Live.state==="SECOND_HALF")?" live":"")}
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 
-  const events=[...(Live.events||[])].sort((a,b)=>Number(a.minute||0)-Number(b.minute||0));
-  const eventHtml=events.length?events.map(e=>{
-    const player=e.playerName||"Evento";
-    const side=e.team==="home"?home.name:away.name;
-    return `<div class="mcEvent"><div class="mcMinute">${e.minute||0}'</div><div class="mcEventText">${esc(player)}<br><span style="color:#71869c;font-size:8px">${esc(side)}</span></div><div class="mcEventSide">${mcEventIcon(e)}</div></div>`
-  }).join(""):`<div style="padding:18px;text-align:center;color:#6f8298;font-size:10px">Todavía no hay eventos</div>`;
-  ["mcEvents","mcAllEvents"].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=eventHtml});
-
-  const goals=events.filter(e=>e.type==="goal");
-  set("mcGoalCount",`${goals.length} ${goals.length===1?"GOL":"GOLES"}`);
-  const gh=goals.length?goals.map(e=>`<div class="mcGoalRow"><strong>⚽ ${esc(e.playerName||"Gol")}</strong><span>${e.minute||0}' · ${e.team==="home"?home.name:away.name}</span></div>`).join(""):`<div style="padding:18px;text-align:center;color:#6f8298;font-size:10px">Sin goles</div>`;
-  document.getElementById("mcGoalers").innerHTML=gh;
-
-  renderMcPitch();
-}
-function renderMcPitch(){
-  const pitch=document.getElementById("mcPitch");if(!pitch)return;
-  const starters=(Live.lineup||[]).map(n=>mcPlayer(n)).filter(Boolean).slice(0,11);
-  const positions=[
-    [50,92],[18,74],[39,77],[61,77],[82,74],
-    [25,52],[50,55],[75,52],
-    [22,27],[50,25],[78,27]
-  ];
-  pitch.querySelectorAll(".mcPlayer").forEach(x=>x.remove());
-  starters.forEach((p,i)=>{
-    const [x,y]=positions[i]||[50,50];
-    pitch.insertAdjacentHTML("beforeend",`<div class="mcPlayer" style="left:${x}%;top:${y}%"><div class="mcShirt"><span class="mcNumber">${p.number}</span></div><div class="mcPlayerName">${esc(p.name)}</div></div>`);
-  });
-  const bench=App.players.filter(p=>!starters.some(s=>Number(s.number)===Number(p.number))).slice(0,8);
-  document.getElementById("mcBench").innerHTML=bench.length?bench.map(p=>`<div class="mcBenchItem"><b>#${p.number}</b>${esc(p.name)}</div>`).join(""):`<div style="color:#71869c;font-size:10px">Configura la plantilla y el once inicial desde el administrador.</div>`;
-}
-document.querySelectorAll(".mcTab").forEach(btn=>{
-  btn.addEventListener("click",()=>{
-    document.querySelectorAll(".mcTab").forEach(b=>b.classList.remove("active"));btn.classList.add("active");
-    ["mcDirecto","mcAlineacion","mcEventos"].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=id===btn.dataset.tab?"":"none"});
-  });
-});
-const oldRenderAll=renderAll;
-renderAll=function(){oldRenderAll();renderMatchCenterV4();};
-setInterval(()=>{if(typeof renderMatchCenterV4==="function")renderMatchCenterV4()},1000);
-
-
-/* ===== V5 LINEUP EDITOR ===== */
-const lineupPositionsV5={
- "4-3-3":[[50,91],[18,73],[39,77],[61,77],[82,73],[25,54],[50,57],[75,54],[22,28],[50,24],[78,28]],
- "4-4-2":[[50,91],[18,73],[39,77],[61,77],[82,73],[18,51],[39,54],[61,54],[82,51],[35,27],[65,27]],
- "4-2-3-1":[[50,91],[18,73],[39,77],[61,77],[82,73],[35,57],[65,57],[22,33],[50,29],[78,33],[50,17]],
- "4-1-4-1":[[50,91],[18,73],[39,77],[61,77],[82,73],[50,64],[18,48],[39,52],[61,52],[82,48],[50,25]],
- "3-5-2":[[50,91],[25,76],[50,79],[75,76],[18,54],[36,57],[50,48],[64,57],[82,54],[36,25],[64,25]]
-};
-let lineupDraftV5=[];
-let selectedPlayerV5=null;
-
-function renderLineupEditorV5(){
- const form=document.getElementById("lineupFormationV5");if(!form)return;
- const formation=Live.formation||"4-3-3";form.value=formation;
- const pos=lineupPositionsV5[formation]||lineupPositionsV5["4-3-3"];
- const pitch=document.getElementById("lePitchV5");
- pitch.querySelectorAll(".leSlotV5").forEach(x=>x.remove());
- pos.forEach((xy,i)=>{
-   const n=lineupDraftV5[i];const p=n!=null?mcPlayer(n):null;
-   pitch.insertAdjacentHTML("beforeend",`<div class="leSlotV5 ${p?"":"empty"}" data-slot="${i}" style="left:${xy[0]}%;top:${xy[1]}%">
-     <div class="shirt"><b>${p?p.number:"+"}</b></div><div class="slotName">${p?esc(p.name):"Seleccionar jugador"}</div>
-   </div>`);
- });
- pitch.querySelectorAll(".leSlotV5").forEach(slot=>slot.onclick=()=>{
-   if(selectedPlayerV5==null){toast("Primero selecciona un jugador");return}
-   const idx=Number(slot.dataset.slot);
-   if(lineupDraftV5.includes(selectedPlayerV5)){toast("Ese jugador ya está en el XI");return}
-   lineupDraftV5[idx]=selectedPlayerV5;selectedPlayerV5=null;renderLineupEditorV5();renderRosterV5();
- });
- renderRosterV5();
-}
-function renderRosterV5(){
- const el=document.getElementById("leRosterV5");if(!el)return;
- el.innerHTML=App.players.map(p=>{
-   const active=lineupDraftV5.includes(Number(p.number));
-   return `<div class="lePlayerV5 ${selectedPlayerV5===Number(p.number)?"selected":""}" data-n="${p.number}">
-     <div class="leDorsalV5">#${p.number}</div><div><div class="lePNV5">${esc(p.name)}</div><div class="lePosV5">${esc(p.position||"Jugador")}</div></div><div>${active?"👕":"➕"}</div>
-   </div>`
- }).join("");
- el.querySelectorAll(".lePlayerV5").forEach(row=>row.onclick=()=>{
-   selectedPlayerV5=Number(row.dataset.n);renderRosterV5();
-   toast("Jugador seleccionado · ahora toca una posición del campo");
- });
-}
-document.getElementById("lineupFormationV5")?.addEventListener("change",e=>{
- Live.formation=e.target.value;
- lineupDraftV5=(Live.lineup||[]).slice(0,11);
- while(lineupDraftV5.length<11)lineupDraftV5.push(null);
- renderLineupEditorV5();
-});
-document.getElementById("clearLineupV5")?.addEventListener("click",()=>{
- lineupDraftV5=Array(11).fill(null);selectedPlayerV5=null;renderLineupEditorV5();
-});
-document.getElementById("saveLineupV5")?.addEventListener("click",()=>{
- const clean=lineupDraftV5.filter(n=>n!=null).map(Number);
- if(clean.length!==11){toast("Debes colocar 11 jugadores");return}
- if(new Set(clean).size!==11){toast("No puede haber jugadores repetidos");return}
- Live.lineup=clean;save();renderAll();toast("Alineación publicada en directo 👕");
-});
-const oldRenderAdminLiveV5=renderAdminLive;
-renderAdminLive=function(){oldRenderAdminLiveV5();renderLineupEditorV5()};
-setTimeout(()=>{lineupDraftV5=(Live.lineup||[]).slice(0,11);while(lineupDraftV5.length<11)lineupDraftV5.push(null);renderLineupEditorV5()},100);
-
-
-/* ===== V6 SQUAD MANAGER ===== */
-let editingPlayerV6=null;
-function renderSquadV6(){
- const el=document.getElementById("squadListV6");if(!el)return;
- const players=[...App.players].sort((a,b)=>Number(a.number)-Number(b.number));
- el.innerHTML=players.length?players.map(p=>{
-   const status=p.status==="injured"?"No disponible":p.status==="inactive"?"No convocable":"Activo";
-   return `<div class="sqCardV6">
-     <img class="sqAvatarV6" src="${esc(p.photo||"")}" onerror="this.style.visibility='hidden'">
-     <div><div class="sqNumV6">#${p.number} · ${esc(p.position||"Jugador")}</div><div class="sqNameV6">${esc(p.name)}</div><div class="sqMetaV6">${status}</div>
-       <div class="sqTagsV6">${p.captain?'<span class="sqTagV6 cap">⭐ CAPITÁN</span>':''}<span class="sqTagV6">${status}</span></div>
-     </div>
-     <div class="sqActionsV6"><button onclick="editPlayerV6(${Number(p.number)})">✏️</button><button onclick="duplicatePlayerV6(${Number(p.number)})">⧉</button></div>
-   </div>`
- }).join(""):`<div style="grid-column:1/-1;padding:30px;text-align:center;color:#75899d">No hay jugadores. Crea la plantilla.</div>`;
-}
-function openPlayerFormV6(p=null){
- editingPlayerV6=p?Number(p.number):null;
- document.getElementById("playerFormV6").style.display="";
- document.getElementById("playerFormTitleV6").textContent=p?"Editar jugador":"Nuevo jugador";
- document.getElementById("pfNumberV6").value=p?.number??"";
- document.getElementById("pfNameV6").value=p?.name??"";
- document.getElementById("pfPositionV6").value=p?.position??"Portero";
- document.getElementById("pfStatusV6").value=p?.status??"active";
- document.getElementById("pfCaptainV6").checked=!!p?.captain;
- document.getElementById("pfPhotoV6").value=p?.photo??"";
- document.getElementById("playerPhotoV6").src=p?.photo||"";
- document.getElementById("deletePlayerV6").style.display=p?"":"none";
-}
-function editPlayerV6(n){const p=App.players.find(x=>Number(x.number)===Number(n));if(p)openPlayerFormV6(p)}
-function duplicatePlayerV6(n){const p=App.players.find(x=>Number(x.number)===Number(n));if(!p)return;openPlayerFormV6({...p,number:"",name:p.name+" copia",captain:false})}
-document.getElementById("newPlayerV6")?.addEventListener("click",()=>openPlayerFormV6());
-document.getElementById("cancelPlayerV6")?.addEventListener("click",()=>document.getElementById("playerFormV6").style.display="none");
-document.getElementById("sortPlayersV6")?.addEventListener("click",()=>{App.players.sort((a,b)=>Number(a.number)-Number(b.number));renderSquadV6()});
-document.getElementById("pfPhotoV6")?.addEventListener("input",e=>document.getElementById("playerPhotoV6").src=e.target.value);
-document.getElementById("savePlayerV6")?.addEventListener("click",()=>{
- const n=Number(document.getElementById("pfNumberV6").value),name=document.getElementById("pfNameV6").value.trim();
- if(!n||!name){toast("Indica dorsal y nombre");return}
- const duplicate=App.players.find(p=>Number(p.number)===n&&Number(p.number)!==editingPlayerV6);
- if(duplicate){toast("Ese dorsal ya está ocupado");return}
- const obj={number:n,name,position:document.getElementById("pfPositionV6").value,status:document.getElementById("pfStatusV6").value,captain:document.getElementById("pfCaptainV6").checked,photo:document.getElementById("pfPhotoV6").value.trim()};
- if(obj.captain)App.players.forEach(p=>p.captain=false);
- if(editingPlayerV6==null)App.players.push(obj);else{const i=App.players.findIndex(p=>Number(p.number)===editingPlayerV6);if(i>=0)App.players[i]=obj}
- save();renderAll();renderSquadV6();document.getElementById("playerFormV6").style.display="none";toast("Jugador guardado 👤");
-});
-document.getElementById("deletePlayerV6")?.addEventListener("click",()=>{
- if(editingPlayerV6==null)return;
- if(!confirm("¿Eliminar este jugador?"))return;
- App.players=App.players.filter(p=>Number(p.number)!==editingPlayerV6);
- Live.lineup=(Live.lineup||[]).filter(n=>Number(n)!==editingPlayerV6);
- save();renderAll();renderSquadV6();document.getElementById("playerFormV6").style.display="none";toast("Jugador eliminado");
-});
-const oldRenderAdminLiveV6=renderAdminLive;
-renderAdminLive=function(){oldRenderAdminLiveV6();renderLineupEditorV5();renderSquadV6()};
-setTimeout(renderSquadV6,120);
-
-
-/* ===== V7 FREE PLAYER POSITIONING ===== */
-const defaultPositionsV7={
- "4-3-3":[[50,91],[18,73],[39,77],[61,77],[82,73],[25,54],[50,57],[75,54],[22,28],[50,24],[78,28]],
- "4-4-2":[[50,91],[18,73],[39,77],[61,77],[82,73],[18,51],[39,54],[61,54],[82,51],[35,27],[65,27]],
- "4-2-3-1":[[50,91],[18,73],[39,77],[61,77],[82,73],[35,57],[65,57],[22,33],[50,29],[78,33],[50,17]],
- "4-1-4-1":[[50,91],[18,73],[39,77],[61,77],[82,73],[50,64],[18,48],[39,52],[61,52],[82,48],[50,25]],
- "3-5-2":[[50,91],[25,76],[50,79],[75,76],[18,54],[36,57],[50,48],[64,57],[82,54],[36,25],[64,25]]
-};
-function ensurePositionsV7(){
- if(!Live.playerPositions) Live.playerPositions={};
- const formation=Live.formation||"4-3-3";
- const pos=defaultPositionsV7[formation]||defaultPositionsV7["4-3-3"];
- (Live.lineup||[]).forEach((n,i)=>{
-   const k=String(n);
-   if(!Live.playerPositions[k]) Live.playerPositions[k]={x:pos[i]?.[0]||50,y:pos[i]?.[1]||50};
- });
-}
-function renderLineupEditorV5(){
- const form=document.getElementById("lineupFormationV5");if(!form)return;
- const formation=Live.formation||"4-3-3";form.value=formation;
- ensurePositionsV7();
- const pitch=document.getElementById("lePitchV5");
- pitch.querySelectorAll(".leSlotV5").forEach(x=>x.remove());
- (Live.lineup||[]).forEach((n,i)=>{
-   const p=mcPlayer(n); if(!p)return;
-   const xy=Live.playerPositions[String(n)]||{x:50,y:50};
-   pitch.insertAdjacentHTML("beforeend",`<div class="leSlotV5" data-n="${p.number}" style="left:${xy.x}%;top:${xy.y}%">
-     <div class="shirt"><b>${p.number}</b></div><div class="slotName">${esc(p.name)}</div>
-   </div>`);
- });
- pitch.querySelectorAll(".leSlotV5").forEach(makeDraggableV7);
- renderRosterV5();
-}
-function makeDraggableV7(el){
- let dragging=false, moved=false;
- const start=(clientX,clientY)=>{
-   dragging=true;moved=false;el.classList.add("dragging");
-   el._start={x:clientX,y:clientY};
- };
- const move=(clientX,clientY)=>{
-   if(!dragging)return;
-   if(Math.abs(clientX-el._start.x)+Math.abs(clientY-el._start.y)>3)moved=true;
-   const r=document.getElementById("lePitchV5").getBoundingClientRect();
-   let x=((clientX-r.left)/r.width)*100, y=((clientY-r.top)/r.height)*100;
-   x=Math.max(5,Math.min(95,x)); y=Math.max(5,Math.min(95,y));
-   el.style.left=x+"%";el.style.top=y+"%";
-   Live.playerPositions[String(el.dataset.n)]={x,y};
- };
- const end=()=>{
-   if(!dragging)return;dragging=false;el.classList.remove("dragging");
- };
- el.addEventListener("pointerdown",e=>{e.preventDefault();el.setPointerCapture?.(e.pointerId);start(e.clientX,e.clientY)});
- el.addEventListener("pointermove",e=>move(e.clientX,e.clientY));
- el.addEventListener("pointerup",end);el.addEventListener("pointercancel",end);
-}
-document.getElementById("resetPositionsV7")?.addEventListener("click",()=>{
- const formation=document.getElementById("lineupFormationV5").value||"4-3-3";
- const pos=defaultPositionsV7[formation]||defaultPositionsV7["4-3-3"];
- Live.playerPositions={};
- (Live.lineup||[]).forEach((n,i)=>{Live.playerPositions[String(n)]={x:pos[i]?.[0]||50,y:pos[i]?.[1]||50}});
- renderLineupEditorV5();toast("Formación recolocada");
-});
-document.getElementById("lineupFormationV5")?.addEventListener("change",e=>{
- Live.formation=e.target.value;
- const pos=defaultPositionsV7[Live.formation]||defaultPositionsV7["4-3-3"];
- Live.playerPositions={};
- (Live.lineup||[]).forEach((n,i)=>{Live.playerPositions[String(n)]={x:pos[i]?.[0]||50,y:pos[i]?.[1]||50}});
- renderLineupEditorV5();
-});
-document.getElementById("saveLineupV5")?.addEventListener("click",()=>{
- const clean=(Live.lineup||[]).filter(n=>n!=null).map(Number);
- if(clean.length!==11){toast("Debes colocar 11 jugadores");return}
- if(new Set(clean).size!==11){toast("No puede haber jugadores repetidos");return}
- ensurePositionsV7();save();renderAll();toast("Alineación y posiciones publicadas 👕");
-});
-/* Public field uses the exact saved positions instead of generic formation coordinates. */
-function renderMcPitch(){
- const pitch=document.getElementById("mcPitch");if(!pitch)return;
- ensurePositionsV7();
- pitch.querySelectorAll(".mcPlayer").forEach(x=>x.remove());
- (Live.lineup||[]).map(n=>mcPlayer(n)).filter(Boolean).forEach(p=>{
-   const xy=Live.playerPositions[String(p.number)]||{x:50,y:50};
-   pitch.insertAdjacentHTML("beforeend",`<div class="mcPlayer" style="left:${xy.x}%;top:${xy.y}%"><div class="mcShirt"><span class="mcNumber">${p.number}</span></div><div class="mcPlayerName">${esc(p.name)}</div></div>`);
- });
- const starters=(Live.lineup||[]).map(n=>mcPlayer(n)).filter(Boolean);
- const bench=App.players.filter(p=>!starters.some(s=>Number(s.number)===Number(p.number))).slice(0,8);
- document.getElementById("mcBench").innerHTML=bench.length?bench.map(p=>`<div class="mcBenchItem"><b>#${p.number}</b>${esc(p.name)}</div>`).join(""):`<div style="color:#71869c;font-size:10px">Configura la plantilla y el XI inicial.</div>`;
-}
-
-
-/* V8: force all public event rendering into the Match Center */
-function renderIntegratedMatchEventsV8(){
-  const events=[...(Live.events||[])].sort((a,b)=>Number(a.minute||0)-Number(b.minute||0));
-  const m=activeMatch();
-  const home=m?mcTeamData(m.home):{name:"LOCAL"};
-  const away=m?mcTeamData(m.away):{name:"VISITANTE"};
-  const el=document.getElementById("mcEvents");
-  const all=document.getElementById("mcAllEvents");
-  const make=events.length?events.map(e=>{
-    const side=e.team==="home"?home.name:away.name;
-    const player=e.playerName||"Evento";
-    return `<div class="mcEvent">
-      <div class="mcMinute">${e.minute||0}'</div>
-      <div class="mcEventText"><b>${esc(player)}</b><br><span style="color:#71869c;font-size:8px">${esc(side)}</span></div>
-      <div class="mcEventSide">${mcEventIcon(e)}</div>
-    </div>`;
-  }).join(""):`<div style="padding:24px;text-align:center;color:#6f8298;font-size:10px">El partido todavía no tiene eventos</div>`;
-  if(el)el.innerHTML=make;
-  if(all)all.innerHTML=make;
-}
-const oldRenderMCV8=renderMatchCenterV4;
-renderMatchCenterV4=function(){
-  oldRenderMCV8();
-  renderIntegratedMatchEventsV8();
-};
-
-</script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 <script>
@@ -1064,7 +799,7 @@ function createMatch(){
 function deleteMatch(id){if(!confirm("¿Eliminar partido?"))return;App.matches=App.matches.filter(m=>Number(m.id)!==Number(id));if(Number(App.activeMatch)===Number(id))App.activeMatch=App.matches[0]?.id??null;save();renderAll()}
 function saveLineup(){
  const ids=[...document.querySelectorAll("#lineupChecks input:checked")].map(x=>Number(x.value));if(ids.length!==11){toast("Selecciona exactamente 11 jugadores");return}
- App.lineup={formation:document.getElementById("formationSelect").value,players:ids};save();renderAll();toast("Alineación guardada")
+ App.lineup={formation:document.getElementById("formationSelect").value,players:ids};Live.lineup=ids.slice();Live.formation=App.lineup.formation;save();renderAll();toast("Alineación guardada")
 }
 function closeModal(id){document.getElementById(id).classList.remove("open")}
 function unlock(){
@@ -1147,7 +882,8 @@ function renderAdminXI10(){
   if(!form||!list||!avail||!pitch)return;
   App.lineup=App.lineup||{formation:"4-3-3",players:[]};
   form.value=App.lineup.formation||"4-3-3";
-  const nums=(App.lineup.players||[]).map(Number).slice(0,11);
+  const currentXI=(App.lineup?.players?.length?App.lineup.players:(Live.lineup||[]));
+  const nums=currentXI.map(Number).slice(0,11);
   const pos=positions(App.lineup.formation||"4-3-3");
 
   pitch.querySelectorAll(".adminPitchPlayerV10").forEach(x=>x.remove());
@@ -1184,24 +920,24 @@ function toggleXI10(n){
   let a=(App.lineup.players||[]).map(Number);
   if(a.includes(Number(n)))a=a.filter(x=>x!==Number(n));
   else{if(a.length>=11){toast("Ya tienes 11 jugadores en el XI");return}a.push(Number(n))}
-  App.lineup.players=a;renderAdminXI10();
+  App.lineup.players=a; Live.lineup=a.slice(); Live.formation=App.lineup.formation||"4-3-3"; renderAdminXI10();
 }
 function removeXI10(n){App.lineup.players=(App.lineup.players||[]).filter(x=>Number(x)!==Number(n));renderAdminXI10()}
 function moveXI10(i,dir){
   const a=(App.lineup.players||[]).slice(0,11),j=i+dir;
   if(j<0||j>=a.length)return;
   [a[i],a[j]]=[a[j],a[i]];
-  App.lineup.players=a;
+  App.lineup.players=a; Live.lineup=a.slice();
   renderAdminXI10();
 }
 document.getElementById("formationV10")?.addEventListener("change",e=>{
   App.lineup=App.lineup||{formation:"4-3-3",players:[]};
-  App.lineup.formation=e.target.value;
-  renderAdminXI10();
+  App.lineup.formation=e.target.value; Live.formation=e.target.value;
+  renderAdminXI10(); renderPublicTeamV11();
 });
 document.getElementById("clearXI10")?.addEventListener("click",()=>{
   App.lineup=App.lineup||{formation:"4-3-3",players:[]};
-  App.lineup.players=[];
+  App.lineup.players=[]; Live.lineup=[];
   renderAdminXI10();
 });
 document.getElementById("saveXI10")?.addEventListener("click",()=>{
@@ -1209,7 +945,7 @@ document.getElementById("saveXI10")?.addEventListener("click",()=>{
   const a=(App.lineup.players||[]).map(Number);
   if(a.length!==11){toast("Debes seleccionar 11 jugadores");return}
   if(new Set(a).size!==11){toast("No puede haber jugadores repetidos");return}
-  save();renderAll();renderAdminXI10();toast("Once guardado y publicado 👕");
+  Live.lineup=a.slice(); Live.formation=App.lineup.formation||"4-3-3"; save();renderAll();renderAdminXI10();renderPublicTeamV11();toast("Once guardado y publicado 👕");
 });
 
 /* El render general mantiene el directo público y nuestro editor del administrador. */
@@ -1248,9 +984,13 @@ function renderPublicTeamV11(){
   const formationEl=document.getElementById("publicFormationV11");
   if(!pitch||!bench)return;
 
-  const lineup=App.lineup||{formation:"4-3-3",players:[]};
   const safePlayers=Array.isArray(App.players)?App.players:[];
-  const nums=(lineup.players||[]).map(Number).slice(0,11);
+  const stored=Array.isArray(App.lineup?.players)?App.lineup.players:[];
+  const liveXI=Array.isArray(Live.lineup)?Live.lineup:[];
+  const fallbackXI=[1,2,3,4,7,11,14,9,10,12,15];
+  const sourceXI=stored.length?stored:(liveXI.length?liveXI:fallbackXI);
+  const nums=sourceXI.map(Number).filter(n=>safePlayers.some(p=>Number(p.number)===n)).slice(0,11);
+  const lineup={formation:App.lineup?.formation||Live.formation||"4-3-3",players:nums};
   const formation=lineup.formation||"4-3-3";
   const pos=positions(formation);
 
@@ -1282,7 +1022,7 @@ function renderPublicTeamV11(){
     </div>`).join("")
     :'<div style="color:#71869c;font-size:9px">No hay suplentes configurados.</div>';
 
-  if(formationEl)formationEl.textContent=`Formación ${formation} · ${nums.length}/11 titulares`;
+  if(formationEl)formationEl.textContent=`${formation} · ${nums.length}/11 titulares`;
 }
 
 const renderAllV11Base=renderAll;
@@ -1291,6 +1031,23 @@ renderAll=function(){
   renderPublicTeamV11();
 };
 setTimeout(renderPublicTeamV11,180);
+</script>
+
+
+<script>
+(function initSidebarV14(){
+ const side=document.getElementById("sideMenuV14"),overlay=document.getElementById("sideOverlayV14"),open=document.getElementById("mobileMenuBtnV14"),close=document.getElementById("closeSideV14");
+ function closeSide(){side?.classList.remove("open");overlay?.classList.remove("open")}
+ open?.addEventListener("click",()=>{side?.classList.add("open");overlay?.classList.add("open")});
+ close?.addEventListener("click",closeSide); overlay?.addEventListener("click",closeSide);
+ document.querySelectorAll("#sideNavV14 button").forEach(btn=>btn.addEventListener("click",()=>{
+   const page=btn.dataset.page;
+   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+   const target=document.getElementById(page); if(target){target.classList.add("active");target.style.display=""}
+   document.querySelectorAll("#sideNavV14 button").forEach(x=>x.classList.remove("active"));btn.classList.add("active");
+   closeSide(); window.scrollTo({top:0,behavior:"smooth"});
+ }));
+})();
 </script>
 
 </body>
