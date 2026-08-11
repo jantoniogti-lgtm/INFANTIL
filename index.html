@@ -580,6 +580,289 @@ button{cursor:pointer}
 }
 </style>
 
+
+<style id="v28-match-professional">
+/* V28 — Partidos: presentación profesional, nombres completos y legibles */
+.matchRowV23{
+  display:grid!important;
+  grid-template-columns:150px minmax(0,1fr) 330px!important;
+  gap:24px!important;
+  padding:30px 34px!important;
+  min-height:220px;
+  align-items:center!important;
+}
+.matchTeamsV27{
+  display:grid!important;
+  grid-template-columns:minmax(150px,1fr) 58px minmax(150px,1fr)!important;
+  grid-template-rows:auto auto!important;
+  align-items:center!important;
+  justify-items:center!important;
+  gap:12px 18px!important;
+  width:100%;
+  text-align:center!important;
+}
+.matchTeamV27{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:12px!important;
+  min-width:0!important;
+  width:100%;
+}
+.matchTeamV27:first-child,
+.matchTeamV27:last-child{justify-content:center!important}
+.matchTeamV27 span{
+  display:block!important;
+  width:100%!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+  word-break:normal!important;
+  font-size:22px!important;
+  line-height:1.15!important;
+  font-weight:1000!important;
+  color:#fff!important;
+}
+.matchCrestV27{
+  width:58px!important;
+  height:58px!important;
+  object-fit:contain!important;
+  flex:0 0 58px!important;
+  filter:drop-shadow(0 5px 8px rgba(0,0,0,.25));
+}
+.matchVsV27{
+  font-size:22px!important;
+  font-weight:1000!important;
+  color:var(--yellow)!important;
+  align-self:center;
+}
+.matchCompetitionV27{
+  grid-column:1/-1!important;
+  color:var(--muted)!important;
+  font-size:14px!important;
+  margin-top:2px!important;
+}
+.matchDate{
+  font-size:16px!important;
+  line-height:1.55!important;
+  color:#aebbd0!important;
+}
+.matchResultV23{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:12px!important;
+  flex-wrap:wrap!important;
+  min-width:0!important;
+}
+.matchResultV23 strong{
+  font-size:34px!important;
+  font-weight:1000!important;
+  min-width:100px!important;
+  text-align:center!important;
+}
+.matchResultV23 .finalBadgeV20,
+.matchResultV23 .liveBadgeV23,
+.matchResultV23 .pendingBadgeV23{
+  font-size:15px!important;
+  padding:10px 15px!important;
+  border-radius:14px!important;
+}
+.matchResultV23 .btn{
+  font-size:15px!important;
+  padding:12px 18px!important;
+  border-radius:14px!important;
+  white-space:nowrap;
+}
+
+@media(max-width:900px){
+  .matchRowV23{
+    grid-template-columns:100px minmax(0,1fr)!important;
+    gap:18px!important;
+    padding:24px 20px!important;
+  }
+  .matchResultV23{
+    grid-column:1/-1!important;
+    padding-top:8px!important;
+  }
+}
+
+@media(max-width:600px){
+  .matchRowV23{
+    grid-template-columns:1fr!important;
+    gap:18px!important;
+    padding:22px 16px!important;
+  }
+  .matchDate{
+    text-align:center!important;
+    font-size:14px!important;
+  }
+  .matchTeamsV27{
+    grid-template-columns:minmax(0,1fr) 38px minmax(0,1fr)!important;
+    gap:8px!important;
+  }
+  .matchTeamV27 span{
+    font-size:17px!important;
+    line-height:1.2!important;
+  }
+  .matchCrestV27{
+    width:50px!important;
+    height:50px!important;
+    flex-basis:50px!important;
+  }
+  .matchVsV27{font-size:18px!important}
+  .matchCompetitionV27{font-size:12px!important}
+  .matchResultV23 strong{font-size:28px!important}
+}
+</style>
+
+
+<style id="v29-home-club">
+/* V29 — Inicio con identidad Ramón Sicart */
+.rsClubHeaderV29{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+  padding:22px 24px 18px;
+  margin:0 0 18px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.rsClubCrestV29{
+  width:76px;
+  height:76px;
+  object-fit:contain;
+  filter:drop-shadow(0 8px 16px rgba(0,0,0,.28));
+}
+.rsClubBrandV29{
+  text-align:left;
+}
+.rsClubBrandV29 .clubName{
+  font-size:30px;
+  line-height:1;
+  font-weight:1000;
+  letter-spacing:-.5px;
+  color:#fff;
+}
+.rsClubBrandV29 .clubSub{
+  margin-top:7px;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:2.5px;
+  color:#9eacc0;
+  text-transform:uppercase;
+}
+.homeHeroV29{
+  position:relative;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.08);
+  background:linear-gradient(145deg,rgba(20,42,68,.96),rgba(7,20,35,.98));
+  border-radius:26px;
+  padding:28px 24px;
+  margin-bottom:22px;
+}
+.homeHeroV29:after{
+  content:"";
+  position:absolute;
+  width:260px;height:260px;
+  right:-90px;top:-110px;
+  border-radius:50%;
+  background:rgba(255,207,0,.08);
+  pointer-events:none;
+}
+.homeHeroV29 h1{
+  margin:0;
+  font-size:clamp(28px,4vw,44px);
+  line-height:1.05;
+  font-weight:1000;
+}
+.homeHeroV29 p{
+  margin:9px 0 0;
+  color:#aebbd0;
+  font-size:14px;
+}
+@media(max-width:600px){
+  .rsClubHeaderV29{justify-content:flex-start;padding:17px 15px;gap:12px}
+  .rsClubCrestV29{width:58px;height:58px}
+  .rsClubBrandV29 .clubName{font-size:23px}
+  .rsClubBrandV29 .clubSub{font-size:9px;letter-spacing:1.7px}
+  .homeHeroV29{padding:22px 18px;border-radius:20px}
+}
+</style>
+
+
+<style id="v29-lineup-history-visibility">
+.completedLineupV29{
+  margin:14px 0 22px;
+  padding:18px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:20px;
+  background:linear-gradient(145deg,#10243a,#091727);
+}
+.completedLineupV29 .lineupHeadV29{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  margin-bottom:14px;
+}
+.completedLineupV29 .lineupHeadV29 h3{font-size:17px;font-weight:1000}
+.completedLineupV29 .lineupHeadV29 span{font-size:12px;color:var(--muted);font-weight:900}
+.savedPitchV29{
+  position:relative; width:100%; max-width:620px; margin:0 auto;
+  aspect-ratio:9/14; min-height:500px; overflow:hidden;
+  border:3px solid #d9ebca; border-radius:22px;
+  background:repeating-linear-gradient(90deg,#237d4e 0,#237d4e 12%,#207449 12%,#207449 24%);
+  box-shadow:inset 0 0 0 3px rgba(255,255,255,.12);
+}
+.savedPitchV29:before{
+  content:"";position:absolute;inset:4%;border:3px solid rgba(240,255,240,.82);
+  border-radius:10px;
+}
+.savedPitchV29:after{
+  content:"";position:absolute;left:50%;top:50%;width:18%;aspect-ratio:1;
+  transform:translate(-50%,-50%);border:3px solid rgba(240,255,240,.7);
+  border-radius:50%;
+}
+.savedPitchPlayerV29{
+  position:absolute;transform:translate(-50%,-50%);z-index:2;
+  width:82px;text-align:center;
+}
+.savedPitchPlayerV29 .shirt{
+  width:43px;height:52px;margin:0 auto 3px;
+  display:grid;place-items:center;font-size:15px;font-weight:1000;color:#111;
+  background:repeating-linear-gradient(90deg,#ffd400 0,#ffd400 33%,#e21d2f 33%,#e21d2f 66%,#ffd400 66%,#ffd400 100%);
+  clip-path:polygon(18% 0,37% 0,50% 10%,63% 0,82% 0,100% 23%,86% 32%,86% 100%,14% 100%,14% 32%,0 23%);
+  filter:drop-shadow(0 3px 5px rgba(0,0,0,.3));
+}
+.savedPitchPlayerV29 b{
+  display:block;background:#061c13;color:#fff;border-radius:8px;
+  padding:4px 3px;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.savedPitchPlayerV29 small{display:block;color:#fff;font-size:7px;margin-top:2px;font-weight:800}
+.savedBenchV29{margin-top:14px}
+.savedBenchTitleV29{font-size:11px;color:var(--yellow);font-weight:1000;margin-bottom:8px}
+.savedBenchGridV29{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:7px}
+.savedBenchPlayerV29{
+  background:#0a1a2b;border:1px solid #20344f;border-radius:10px;
+  padding:8px;font-size:10px
+}
+.savedBenchPlayerV29 b{color:#fff}.savedBenchPlayerV29 small{display:block;color:var(--muted);margin-top:2px}
+@media(max-width:600px){
+  .completedLineupV29{padding:12px}
+  .savedPitchV29{min-height:430px}
+  .savedPitchPlayerV29{width:64px}
+  .savedPitchPlayerV29 .shirt{width:35px;height:43px;font-size:12px}
+  .savedPitchPlayerV29 b{font-size:7px}
+  .savedPitchPlayerV29 small{font-size:6px}
+}
+
+/* En Inicio: alineación y eventos solo aparecen desde 1 hora antes hasta el final
+   del directo. Al finalizar desaparecen del público. */
+#home.rsHomeHideLiveV29 #publicTeamV11,
+#home.rsHomeHideLiveV29 #publicLiveConsole{
+  display:none!important;
+}
+
 </head>
 <body>
 <div class="app">
@@ -609,6 +892,11 @@ button{cursor:pointer}
 </nav>
 
 <section id="home" class="page active">
+  <div class="homeHeroV29">
+    <h1>Ramón Sicart</h1>
+    <p>Todo el equipo, partidos y actualidad del club en un solo lugar.</p>
+  </div>
+
   <div class="card liveHero">
     <div class="heroTop"><div id="liveBadge" class="badge"><span class="pulse"></span> PRÓXIMO PARTIDO</div><div id="competition" class="competition">Liga</div></div>
     <div class="scoreArea">
@@ -669,6 +957,8 @@ button{cursor:pointer}
     <button class="btn" id="closeDetailsV20">✕ Cerrar</button>
   </div>
   <div class="completedScoreV20" id="completedScoreV20"></div>
+  <div id="completedLineupV29" class="completedLineupV29" style="display:none"></div>
+
 
   <div class="detailGroupV20">
     <h3>⚽ GOLES</h3>
@@ -1127,8 +1417,14 @@ function finish(){
   m.homeScore=Number(Live.homeScore||0);
   m.awayScore=Number(Live.awayScore||0);
   m.events=JSON.parse(JSON.stringify(Live.events||[]));
+  m.lineupSnapshot=m.lineupSnapshot||{
+    formation:App.lineup?.formation||Live.formation||"4-3-3",
+    players:(Array.isArray(Live.lineup)&&Live.lineup.length?Live.lineup:App.lineup?.players||[]).map(Number).slice(0,11),
+    savedAt:Date.now()
+  };
+  m.lineup=Array.isArray(m.lineupSnapshot.players)?m.lineupSnapshot.players.slice():[];
   m.finishedAt=Date.now();
-  save();renderAll();toast("Partido finalizado · resultado guardado");
+  save();renderAll();toast("Partido finalizado · resultado y alineación guardados");
 }
 function adjustMinute(n){
   const next=Math.min(80,Math.max(0,displayMinute()+n));
@@ -1408,8 +1704,18 @@ document.getElementById("saveXI10")?.addEventListener("click",()=>{
   if(a.length!==11){toast("Debes seleccionar 11 jugadores");return}
   if(new Set(a).size!==11){toast("No puede haber jugadores repetidos");return}
   Live.lineup=a.slice(); Live.formation=App.lineup.formation||"4-3-3";
+  const lineupMatch=activeMatch();
+  if(lineupMatch){
+    lineupMatch.lineupSnapshot={
+      formation:App.lineup.formation||"4-3-3",
+      players:a.slice(),
+      savedAt:Date.now()
+    };
+    /* Compatibilidad con estadísticas/histórico */
+    lineupMatch.lineup=a.slice();
+  }
   localStorage.setItem("rs_lineup",JSON.stringify({formation:App.lineup.formation,players:a}));
-  save();renderAll();renderAdminXI10();renderPublicTeamV11();toast("Once guardado y publicado 👕");
+  save();renderAll();renderAdminXI10();renderPublicTeamV11();toast("Once guardado en el partido 👕");
 });
 
 /* V15: render general estable. */
@@ -2242,6 +2548,162 @@ document.addEventListener("click",function(e){
     App.players.sort((a,b)=>a.number-b.number);closeModal('playerModal');v26RecalcStats();await save();renderAll();toast('Jugador guardado');
   };
   const old=document.getElementById('savePlayerBtn');if(old){const fresh=old.cloneNode(true);old.replaceWith(fresh);fresh.addEventListener('click',window.savePlayer)}
+})();
+</script>
+
+
+<script id="v29-home-sync">
+(function(){
+  function syncRamonHeaderV29(){
+    const img=document.getElementById('headerRamonCrestV29');
+    if(!img || typeof team!=='function') return;
+    try{
+      const candidates=(App && App.teams)||[];
+      let ramon=candidates.find(t=>{
+        const n=String(t.name||'').toLowerCase();
+        return n.includes('ramón sicart') || n.includes('ramon sicart');
+      });
+      if(!ramon) ramon=team('home');
+      const logo=ramon && (ramon.logo||ramon.crest||'');
+      if(logo){
+        img.src=logo;
+        img.style.display='block';
+      }else{
+        img.style.display='none';
+      }
+    }catch(e){}
+  }
+  const oldRender=window.renderAll;
+  window.renderAll=function(){
+    if(typeof oldRender==='function') oldRender.apply(this,arguments);
+    syncRamonHeaderV29();
+  };
+  setTimeout(syncRamonHeaderV29,300);
+  setTimeout(syncRamonHeaderV29,1200);
+  setInterval(syncRamonHeaderV29,2500);
+})();
+</script>
+
+
+<script id="v29-lineup-history-script">
+(function(){
+  function v29ScheduledStart(m){
+    if(!m || !m.date || !m.hour)return null;
+    const d=new Date(String(m.date)+"T"+String(m.hour));
+    return Number.isNaN(d.getTime())?null:d.getTime();
+  }
+
+  function v29LiveWindow(m){
+    if(!m)return false;
+    /* Finalizado: nunca se muestra en Inicio */
+    if(m.status==="FINISHED" || Live.state==="FINISHED")return false;
+
+    const live=["FIRST_HALF","HALFTIME","SECOND_HALF"].includes(String(Live.state));
+    if(live)return true;
+
+    /* PREPARTIDO: exactamente desde 60 min antes del inicio */
+    const start=v29ScheduledStart(m);
+    if(!start)return false;
+    const now=Date.now();
+    return now>=start-60*60*1000 && now<start;
+  }
+
+  function v29RenderPublicVisibility(){
+    const home=document.getElementById("home");
+    if(!home)return;
+    const m=activeMatch();
+    const visible=v29LiveWindow(m);
+    home.classList.toggle("rsHomeHideLiveV29",!visible);
+
+    const hint=document.getElementById("publicLiveHint");
+    if(hint){
+      if(["FIRST_HALF","HALFTIME","SECOND_HALF"].includes(String(Live.state)))
+        hint.textContent="EN DIRECTO";
+      else
+        hint.textContent="DESDE 1 HORA ANTES";
+    }
+  }
+
+  function v29LineupSnapshot(m){
+    const snap=m?.lineupSnapshot;
+    if(snap && Array.isArray(snap.players) && snap.players.length) return snap;
+    if(Array.isArray(m?.lineup) && m.lineup.length)
+      return {formation:m.formation||"4-3-3",players:m.lineup.slice(0,11)};
+    return null;
+  }
+
+  function v29RenderSavedLineup(m){
+    const box=document.getElementById("completedLineupV29");
+    if(!box)return;
+    const snap=v29LineupSnapshot(m);
+    if(!snap){
+      box.style.display="none";
+      box.innerHTML="";
+      return;
+    }
+
+    const nums=(snap.players||[]).map(Number).slice(0,11);
+    const formation=snap.formation||"4-3-3";
+    const pos=positions(formation);
+    const players=nums.map(n=>(App.players||[]).find(p=>Number(p.number)===n)).filter(Boolean);
+    const starters=new Set(nums);
+    const bench=(App.players||[]).filter(p=>!starters.has(Number(p.number)));
+
+    box.style.display="block";
+    box.innerHTML=`
+      <div class="lineupHeadV29">
+        <h3>👕 Alineación inicial</h3>
+        <span>Formación ${esc(formation)}</span>
+      </div>
+      <div class="savedPitchV29">
+        ${players.map((p,i)=>{
+          const xy=pos[i]||[50,50];
+          return `<div class="savedPitchPlayerV29" style="left:${xy[0]}%;top:${xy[1]}%">
+            <div class="shirt">${esc(p.number)}</div>
+            <b>${esc(p.name)}</b>
+            <small>${esc(p.position||"")}</small>
+          </div>`;
+        }).join("")}
+      </div>
+      <div class="savedBenchV29">
+        <div class="savedBenchTitleV29">🪑 SUPLENTES</div>
+        <div class="savedBenchGridV29">
+          ${bench.length?bench.map(p=>`<div class="savedBenchPlayerV29"><b>#${esc(p.number)} ${esc(p.name)}</b><small>${esc(p.position||"")}</small></div>`).join(""):'<div class="savedBenchPlayerV29">No hay suplentes configurados.</div>'}
+        </div>
+      </div>`;
+  }
+
+  /* Encadena el render de Inicio sin sustituir la lógica existente. */
+  const baseHome=window.renderHome;
+  window.renderHome=function(){
+    if(typeof baseHome==="function")baseHome.apply(this,arguments);
+    try{v29RenderPublicVisibility()}catch(e){console.error("V29 visibility",e)}
+  };
+
+  /* El histórico de Ver detalles conserva la alineación del partido. */
+  const baseDetails=window.v25ShowDetails;
+  window.v25ShowDetails=function(id){
+    if(typeof baseDetails==="function")baseDetails(id);
+    const m=(App.matches||[]).find(x=>String(x.id)===String(id));
+    if(m) v29RenderSavedLineup(m);
+  };
+
+  /* Si otra versión reemplaza v25ShowDetails después, el click sigue llamando
+     al wrapper mediante un pequeño listener de captura. */
+  document.addEventListener("click",function(e){
+    const b=e.target.closest('button[onclick^="v25ShowDetails"]');
+    if(!b)return;
+    const mm=String(b.getAttribute("onclick")||"").match(/\(([^)]+)\)/);
+    if(!mm)return;
+    setTimeout(()=>{
+      const m=(App.matches||[]).find(x=>String(x.id)===String(mm[1]));
+      if(m)v29RenderSavedLineup(m);
+    },40);
+  },true);
+
+  /* Recalcular visibilidad periódicamente para cruzar el umbral de 1 hora. */
+  setInterval(v29RenderPublicVisibility,15000);
+  setTimeout(v29RenderPublicVisibility,250);
 })();
 </script>
 
