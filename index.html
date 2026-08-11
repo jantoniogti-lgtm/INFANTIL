@@ -4380,3 +4380,133 @@ document.addEventListener("click",function(e){
   setTimeout(()=>{v44EnsureModal();v44RenderAdminMatches()},100);
 })();
 </script>
+
+<!-- V45 — DETALLE DE PARTIDO AISLADO + ALINEACIÓN HISTÓRICA DEL PARTIDO -->
+<style id="v45-detail-isolated-style">
+  /* Al abrir un detalle, la página se convierte visualmente en la ficha de ESE partido */
+  body.v45-detail-open #matchListCardV45,
+  body.v45-detail-open #matchSectionTitleV45{display:none!important}
+  body.v45-detail-open #completedDetailsV20{display:block!important}
+  #completedLineupV31.v45Visible{display:block!important;margin:0 0 24px!important;padding:20px!important;background:linear-gradient(145deg,#0a1a2a,#061321)!important;border:1px solid #29476a!important;border-radius:18px!important}
+  #completedLineupV31.v45Visible .savedHead{font-size:20px!important;margin-bottom:14px!important}
+  #completedLineupV31.v45Visible .savedHead b{font-size:20px!important;color:#ffd400!important}
+  #completedLineupV31.v45Visible .savedHead span{font-size:14px!important}
+  #completedLineupV31.v45Visible .savedPlayerV31 b{font-size:15px!important}
+  #completedLineupV31.v45Visible .savedPlayerV31 small{font-size:12px!important}
+  @media(max-width:600px){
+    #completedLineupV31.v45Visible{padding:14px!important;margin-bottom:18px!important}
+    #completedLineupV31.v45Visible .savedHead b{font-size:17px!important}
+    #completedLineupV31.v45Visible .savedHead span{font-size:12px!important}
+    #completedLineupV31.v45Visible .savedPlayerV31 b{font-size:14px!important}
+  }
+</style>
+<script id="v45-detail-isolated-script">
+(function(){
+  let detailsOpen=false;
+
+  function v45PrepareMatchPageMarkers(){
+    const list=document.getElementById('matchList');
+    if(!list)return;
+    const card=list.closest('.card');
+    if(card)card.id='matchListCardV45';
+    let sectionTitle=card?.previousElementSibling;
+    if(sectionTitle && sectionTitle.classList.contains('sectionTitle')) sectionTitle.id='matchSectionTitleV45';
+  }
+
+  function v45RenderLineup(m){
+    const box=document.getElementById('completedLineupV31');
+    if(!box)return;
+    const snap=m && (m.lineupSnapshot || (Array.isArray(m.lineup)&&m.lineup.length ? {
+      formation:m.formation||'4-3-3', players:m.lineup.slice(0,11)
+    }:null));
+    if(!snap || !Array.isArray(snap.players) || !snap.players.length){
+      box.classList.remove('v45Visible');
+      box.style.display='none';
+      box.innerHTML='';
+      return;
+    }
+    const nums=snap.players.map(Number).slice(0,11);
+    const ps=nums.map(n=>(App.players||[]).find(p=>Number(p.number)===n)).filter(Boolean);
+    const starters=new Set(nums);
+    const bench=(App.players||[]).filter(p=>!starters.has(Number(p.number)));
+    const pos=typeof positions==='function'?positions(snap.formation||'4-3-3'):[];
+    box.classList.add('v45Visible');
+    box.style.display='block';
+    box.innerHTML=`
+      <div class="savedHead"><b>👕 ALINEACIÓN DEL PARTIDO</b><span>Formación ${esc(snap.formation||'4-3-3')}</span></div>
+      <div class="savedPitchV31">${ps.map((p,i)=>{
+        const xy=pos[i]||[50,50];
+        return `<div class="savedPlayerV31" style="left:${xy[0]}%;top:${xy[1]}%">
+          <div class="savedShirtV31">${esc(p.number)}</div>
+          <b>${esc(p.name)}</b><small>${esc(p.position||'')}</small>
+        </div>`;
+      }).join('')}</div>
+      <div class="savedBenchV31"><strong>🪑 SUPLENTES</strong>
+        <div class="savedBenchGridV31">${bench.length?bench.map(p=>`<div class="savedBenchItemV31">#${esc(p.number)} ${esc(p.name)}<small>${esc(p.position||'')}</small></div>`).join(''):'<div class="savedBenchItemV31">No hay suplentes configurados.</div>'}</div>
+      </div>`;
+  }
+
+  function v45SetMode(open){
+    detailsOpen=!!open;
+    v45PrepareMatchPageMarkers();
+    document.body.classList.toggle('v45-detail-open',detailsOpen);
+    if(!detailsOpen){
+      const box=document.getElementById('completedLineupV31');
+      if(box){box.classList.remove('v45Visible');box.style.display='none';}
+    }
+  }
+
+  const previousDetails=window.v25ShowDetails;
+  window.v25ShowDetails=function(id){
+    if(typeof previousDetails==='function') previousDetails(id);
+    setTimeout(()=>{
+      const m=(App.matches||[]).find(x=>String(x.id)===String(id));
+      if(!m)return;
+      v45SetMode(true);
+      v45RenderLineup(m);
+      const details=document.getElementById('completedDetailsV20');
+      if(details)details.style.display='block';
+    },60);
+  };
+
+  const close=document.getElementById('closeDetailsV20');
+  if(close){
+    close.addEventListener('click',()=>v45SetMode(false));
+  }
+
+  /* Por si otra versión del botón de cerrar reemplaza el nodo */
+  document.addEventListener('click',e=>{
+    if(e.target.closest('#closeDetailsV20'))setTimeout(()=>v45SetMode(false),0);
+  });
+
+  const oldRenderAll=window.renderAll;
+  window.renderAll=function(){
+    if(typeof oldRenderAll==='function')oldRenderAll.apply(this,arguments);
+    setTimeout(()=>{
+      v45PrepareMatchPageMarkers();
+      if(detailsOpen){
+        const details=document.getElementById('completedDetailsV20');
+        if(details && details.style.display!=='none'){
+          const title=document.getElementById('completedTitleV20');
+          const id=title?.dataset?.v45MatchId;
+          if(id){const m=(App.matches||[]).find(x=>String(x.id)===String(id));if(m)v45RenderLineup(m)}
+        }
+      }
+    },30);
+  };
+
+  /* Guarda el ID del partido seleccionado para que un render no pierda su alineación */
+  const base=window.v25ShowDetails;
+  window.v25ShowDetails=function(id){
+    if(typeof base==='function')base(id);
+    const title=document.getElementById('completedTitleV20');
+    if(title)title.dataset.v45MatchId=String(id);
+    setTimeout(()=>{
+      const m=(App.matches||[]).find(x=>String(x.id)===String(id));
+      if(m){v45SetMode(true);v45RenderLineup(m)}
+    },70);
+  };
+
+  setTimeout(v45PrepareMatchPageMarkers,200);
+})();
+</script>
