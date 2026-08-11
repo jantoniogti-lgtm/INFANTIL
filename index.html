@@ -4042,3 +4042,153 @@ document.addEventListener("click",function(e){
 .matchChronicleV20 h3{font-size:28px!important}
 @media(max-width:700px){#chronicleV20{font-size:25px!important;line-height:1.62!important}.matchChronicleV20 h3{font-size:23px!important}}
 </style>
+
+
+<!-- V40 — RESULTADOS FINALIZADOS: DISEÑO TIPO MARCADOR OFICIAL -->
+<style id="v40-final-results">
+.matchRowV40{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 270px minmax(0,1fr)!important;
+  grid-template-areas:"home center away" "scorers scorers scorers"!important;
+  align-items:center!important;
+  gap:14px 22px!important;
+  width:100%!important;
+  box-sizing:border-box!important;
+  padding:20px 24px 0!important;
+  margin:0 0 18px!important;
+  background:#030507!important;
+  border:1px solid rgba(255,255,255,.14)!important;
+  border-radius:16px!important;
+  overflow:hidden!important;
+  color:#fff!important;
+}
+.matchRowV40 .matchTeamV40{
+  display:flex!important;flex-direction:column!important;align-items:center!important;
+  justify-content:center!important;gap:8px!important;min-width:0!important;text-align:center!important;
+}
+.matchRowV40 .matchTeamV40.home{grid-area:home!important}
+.matchRowV40 .matchTeamV40.away{grid-area:away!important}
+.matchRowV40 .matchCrestV40{
+  width:74px!important;height:74px!important;object-fit:contain!important;display:block!important;
+  filter:drop-shadow(0 5px 9px rgba(0,0,0,.4))!important;
+}
+.matchRowV40 .matchNameV40{
+  font-size:25px!important;line-height:1.08!important;font-weight:1000!important;color:#fff!important;
+  white-space:normal!important;overflow:visible!important;text-overflow:clip!important;
+  overflow-wrap:anywhere!important;
+}
+.matchCenterV40{
+  grid-area:center!important;display:flex!important;flex-direction:column!important;
+  align-items:center!important;justify-content:center!important;min-width:0!important;
+}
+.matchMetaV40{
+  display:flex!important;align-items:center!important;justify-content:center!important;gap:10px!important;
+  color:#aab5c4!important;font-size:12px!important;font-weight:800!important;margin-bottom:7px!important;
+  white-space:nowrap!important;
+}
+.matchMetaV40 .dot{opacity:.55!important}
+.matchScoreV40{
+  min-width:205px!important;padding:10px 18px!important;border-radius:9px!important;
+  color:#fff!important;font-size:46px!important;line-height:1!important;font-weight:1000!important;
+  letter-spacing:2px!important;text-align:center!important;background:#18a94b!important;
+  box-sizing:border-box!important;
+}
+.matchRowV40.result-draw .matchScoreV40{background:#d4a800!important}
+.matchRowV40.result-loss .matchScoreV40{background:#c52b35!important}
+.matchFinalV40{
+  margin-top:6px!important;font-size:14px!important;letter-spacing:4px!important;font-weight:1000!important;color:#fff!important;
+}
+.matchDetailsBtnV40{
+  margin-top:9px!important;background:#172235!important;border:1px solid rgba(255,255,255,.15)!important;
+  color:#fff!important;border-radius:9px!important;padding:8px 16px!important;font-size:14px!important;
+  font-weight:900!important;cursor:pointer!important;white-space:nowrap!important;
+}
+.matchDetailsBtnV40:hover{background:#22324d!important}
+.matchScorersV40{
+  grid-area:scorers!important;display:flex!important;align-items:center!important;gap:10px!important;
+  min-height:38px!important;padding:8px 14px!important;background:#050505!important;
+  border-top:1px solid rgba(255,255,255,.12)!important;color:#fff!important;
+  font-size:13px!important;font-weight:800!important;box-sizing:border-box!important;
+}
+.matchScorersV40 .scorerLabel{color:#f1cf00!important;font-weight:1000!important;white-space:nowrap!important}
+.matchScorersV40 .scorerText{color:#e8edf3!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+.matchScorersV40.empty{display:none!important}
+
+/* Próximos/directos mantienen su estructura original */
+@media(max-width:700px){
+  .matchRowV40{grid-template-columns:minmax(0,1fr) 190px minmax(0,1fr)!important;gap:10px!important;padding:16px 10px 0!important}
+  .matchRowV40 .matchCrestV40{width:55px!important;height:55px!important}
+  .matchRowV40 .matchNameV40{font-size:18px!important}
+  .matchScoreV40{min-width:145px!important;font-size:32px!important;padding:9px 10px!important}
+  .matchMetaV40{font-size:10px!important;gap:6px!important}
+  .matchFinalV40{font-size:11px!important;letter-spacing:3px!important}
+  .matchDetailsBtnV40{font-size:11px!important;padding:7px 10px!important}
+  .matchScorersV40{font-size:10px!important;padding:7px 9px!important}
+}
+@media(max-width:480px){
+  .matchRowV40{grid-template-columns:minmax(0,1fr) 145px minmax(0,1fr)!important;gap:5px!important}
+  .matchRowV40 .matchCrestV40{width:46px!important;height:46px!important}
+  .matchRowV40 .matchNameV40{font-size:15px!important}
+  .matchScoreV40{min-width:125px!important;font-size:27px!important}
+  .matchMetaV40{font-size:9px!important}
+  .matchDetailsBtnV40{font-size:10px!important;padding:6px 7px!important}
+}
+</style>
+<script id="v40-final-results-script">
+(function(){
+  function v40Crest(t){
+    return t?.logo ? `<img class="matchCrestV40" src="${esc(t.logo)}" alt="${esc(t.name||'')}" loading="lazy">` : `<div class="matchCrestV40" style="display:grid;place-items:center;font-size:30px">⚽</div>`;
+  }
+  function v40Scorers(m){
+    const events=Array.isArray(m.events)?m.events:[];
+    const goals=events.filter(e=>e.type==='goal' && e.playerName);
+    if(!goals.length) return '';
+    const counts={};
+    goals.forEach(e=>{const n=String(e.playerName).trim(); if(n) counts[n]=(counts[n]||0)+1});
+    const text=Object.entries(counts).map(([n,c])=>`${esc(n)}${c>1?` (${c})`:''}`).join(' · ');
+    return `<div class="matchScorersV40"><span class="scorerLabel">⚽ GOLEADORES:</span><span class="scorerText">${text}</span></div>`;
+  }
+  function v40RenderMatches(){
+    const box=document.getElementById('matchList'), admin=document.getElementById('adminMatches');
+    if(!box) return;
+    const rows=App.matches.slice().sort((a,b)=>(a.date+a.hour).localeCompare(b.date+b.hour));
+    box.innerHTML=rows.length?rows.map(m=>{
+      const h=team(m.home), a=team(m.away);
+      const active=String(m.id)===String(App.activeMatch);
+      const fin=m.status==='FINISHED' || (active && Live.state==='FINISHED');
+      const live=active && (Live.state==='FIRST_HALF'||Live.state==='SECOND_HALF');
+      let hs=Number(m.homeScore||0), as=Number(m.awayScore||0);
+      if(fin && active && Live.state==='FINISHED'){hs=Number(Live.homeScore||hs);as=Number(Live.awayScore||as)}
+      const score=fin?`${hs} - ${as}`:(live?`${Number(Live.homeScore||0)} - ${Number(Live.awayScore||0)}`:'—');
+      if(!fin){
+        return `<div class="matchRow matchRowV32">
+          <div class="matchDateV32">${formatDate(m.date)}<br>${esc(m.hour||'')}</div>
+          <div class="matchTeamsV32">${v32Crest(h)}<b>${esc(h.name)}</b><span>VS</span>${v32Crest(a)}<b>${esc(a.name)}</b><small class="matchCompetitionV32">${esc(m.competition||'Liga')}</small></div>
+          <div class="matchResultV32"><strong>${esc(score)}</strong>${live?'<span class="liveBadgeV23">🔴 DIRECTO</span>':'<span class="pendingBadgeV23">PRÓXIMO</span>'}</div>
+        </div>`;
+      }
+      const hWin=hs>as, aWin=as>hs;
+      const ramonHome=String(h.name||'').toLowerCase().includes('ramón sicart')||String(h.name||'').toLowerCase().includes('ramon sicart');
+      const ramonAway=String(a.name||'').toLowerCase().includes('ramón sicart')||String(a.name||'').toLowerCase().includes('ramon sicart');
+      const cls=hs===as?'result-draw':((ramonHome&&hWin)||(ramonAway&&aWin)?'result-win':'result-loss');
+      const details=`<button class="matchDetailsBtnV40" type="button" onclick="v25ShowDetails(${m.id});event.stopPropagation()">👁 Ver detalles</button>`;
+      return `<div class="matchRowV40 ${cls}">
+        <div class="matchTeamV40 home">${v40Crest(h)}<span class="matchNameV40">${esc(h.name)}</span></div>
+        <div class="matchCenterV40">
+          <div class="matchMetaV40"><span>${formatDate(m.date)}</span><span class="dot">•</span><span>${esc(m.competition||'Liga')}</span></div>
+          <div class="matchScoreV40">${esc(score)}</div>
+          <div class="matchFinalV40">FINAL</div>
+          ${details}
+        </div>
+        <div class="matchTeamV40 away">${v40Crest(a)}<span class="matchNameV40">${esc(a.name)}</span></div>
+        ${v40Scorers(m)}
+      </div>`;
+    }).join(''):'<div class="empty">No hay partidos creados.</div>';
+    if(admin){
+      admin.innerHTML=rows.map(m=>`<div class="adminItem"><div><b>${esc(team(m.home).name)} vs ${esc(team(m.away).name)}</b><br><small style="color:var(--muted)">${formatDate(m.date)} ${esc(m.hour||'')} ${m.status==='FINISHED'?' · FINALIZADO':''}</small></div><div class="actions"><button class="btn small ${String(m.id)===String(App.activeMatch)?'green':'dark'}" onclick="setActive(${m.id})">${String(m.id)===String(App.activeMatch)?'Activo':'Activar'}</button><button class="btn small red" onclick="deleteMatch(${m.id})">🗑</button></div></div>`).join('');
+    }
+  }
+  window.renderMatches=v40RenderMatches;
+  setTimeout(v40RenderMatches,0);
+})();
+</script>
