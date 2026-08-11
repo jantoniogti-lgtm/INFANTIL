@@ -533,18 +533,20 @@ button{cursor:pointer}
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 <script>
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "club-manager-9a242.firebaseapp.com",
   databaseURL: "https://club-manager-9a242-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "club-manager-9a242",
-  storageBucket: "club-manager-9a242.appspot.com",
-  messagingSenderId: "TU_MESSAGING_SENDER_ID",
-  appId: "TU_APP_ID"
+  projectId: "club-manager-9a242"
 };
+/*
+  IMPORTANTE:
+  La base facilitada contiene TU_API_KEY/TU_APP_ID como marcadores, no credenciales reales.
+  Realtime Database puede trabajar con databaseURL si sus reglas lo permiten.
+  Storage se activa solo cuando se dispone de configuración real.
+*/
 firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
 const dbRef=db.ref("clubManagerV6");
-const storage=firebase.storage();
+let storage=null;
+try{ storage=firebase.storage(); }catch(e){ console.warn("Firebase Storage no disponible; RTDB sigue activo.",e); }
 
 const PIN="2990";
 const App={
@@ -593,17 +595,23 @@ function currentSeconds(){
 }
 function displayMinute(){return Math.max(0,Math.floor(currentSeconds()/60))}
 function save(){
-  if(ignoreRemote)return;
-  return dbRef.set({app:App,liveMatch:Live});
+  if(ignoreRemote)return Promise.resolve();
+  return dbRef.set({app:App,liveMatch:Live}).catch(err=>{
+    console.error("Firebase save:",err);
+    const st=document.getElementById("syncText");
+    if(st)st.textContent="Error guardando Firebase";
+    toast("No se pudo guardar en Firebase");
+    throw err;
+  });
 }
 function applyData(data){
   if(!data)return;
   if(data.app){
-    App.teams=Array.isArray(data.app.teams)?data.app.teams:[];
-    App.players=Array.isArray(data.app.players)?data.app.players:[];
-    App.matches=Array.isArray(data.app.matches)?data.app.matches:[];
-    App.activeMatch=data.app.activeMatch??null;
-    App.lineup=data.app.lineup||{formation:"4-3-3",players:[]};
+    App.teams=Array.isArray(data.app.teams)&&data.app.teams.length?data.app.teams:App.teams;
+    App.players=Array.isArray(data.app.players)&&data.app.players.length?data.app.players:App.players;
+    App.matches=Array.isArray(data.app.matches)?data.app.matches:App.matches;
+    App.activeMatch=data.app.activeMatch??App.activeMatch;
+    App.lineup=data.app.lineup||App.lineup||{formation:"4-3-3",players:[]};
   }
   if(data.liveMatch)Object.assign(Live,data.liveMatch);
   renderAll();
@@ -611,10 +619,13 @@ function applyData(data){
 function startRealtime(){
   dbRef.on("value",snap=>{
     if(!snap.exists()){
-      App.players=defaultPlayers;
+      App.players=defaultPlayers.slice();
       const m={id:Date.now(),home:1,away:2,date:"2026-09-12",hour:"18:00",competition:"Liga",field:"Municipal"};
-      App.matches=[m];App.activeMatch=m.id;App.lineup={formation:"4-3-3",players:[1,2,3,4,7,11,14,9,10,12,15]};
-      save();return;
+      App.matches=[m];App.activeMatch=m.id;
+      App.lineup={formation:"4-3-3",players:[1,2,3,4,7,11,14,9,10,12,15]};
+      dbRef.set({app:App,liveMatch:Live}).catch(err=>console.error("Firebase seed:",err));
+      renderAll();
+      return;
     }
     if(ignoreRemote)return;
     applyData(snap.val());
@@ -778,7 +789,17 @@ function openPlayer(id){
 function editPlayer(id){openPlayer(id)}
 async function uploadFile(file,path){
  if(!file)return"";
- const ref=storage.ref().child(path+"/"+Date.now()+"_"+file.name.replace(/[^\w.-]/g,"_"));const snap=await ref.put(file);return await snap.ref.getDownloadURL()
+ if(!storage){
+   return await new Promise((resolve,reject)=>{
+     const r=new FileReader();
+     r.onload=()=>resolve(r.result);
+     r.onerror=reject;
+     r.readAsDataURL(file);
+   });
+ }
+ const ref=storage.ref().child(path+"/"+Date.now()+"_"+file.name.replace(/[^\w.-]/g,"_"));
+ const snap=await ref.put(file);
+ return await snap.ref.getDownloadURL();
 }
 async function savePlayer(){
  const num=Number(document.getElementById("pNumber").value),name=document.getElementById("pName").value.trim();if(!num||!name){toast("Dorsal y nombre son obligatorios");return}
@@ -880,6 +901,7 @@ function renderAdminXI10(){
   const avail=document.getElementById("availV10");
   const pitch=document.getElementById("adminPitchV10");
   if(!form||!list||!avail||!pitch)return;
+  const safePlayers=Array.isArray(App.players)?App.players:[];
   App.lineup=App.lineup||{formation:"4-3-3",players:[]};
   form.value=App.lineup.formation||"4-3-3";
   const currentXI=(App.lineup?.players?.length?App.lineup.players:(Live.lineup||[]));
@@ -898,7 +920,7 @@ function renderAdminXI10(){
   });
 
   list.innerHTML=nums.length?nums.map((n,i)=>{
-    const p=App.players.find(x=>Number(x.number)===n);
+    const p=safePlayers.find(x=>Number(x.number)===n);
     return `<div class="xiRowV10">
       <div class="slot">${i+1}</div>
       <div><div class="pname">#${p?.number??n} ${esc(p?.name||"Jugador")}</div><div class="pmeta">${esc(p?.position||"Jugador")}</div></div>
@@ -910,7 +932,7 @@ function renderAdminXI10(){
     </div>`;
   }).join(""):'<div style="padding:18px;text-align:center;color:#71869c;font-size:10px">Selecciona jugadores para formar el XI.</div>';
 
-  avail.innerHTML=App.players.slice().sort((a,b)=>Number(a.number)-Number(b.number)).map(p=>{
+  avail.innerHTML=safePlayers.slice().sort((a,b)=>Number(a.number)-Number(b.number)).map(p=>{
     const on=nums.includes(Number(p.number));
     return `<button class="${on?"on":""}" onclick="toggleXI10(${Number(p.number)})"><b>#${p.number}</b>${esc(p.name)} ${on?"✓":""}</button>`;
   }).join("");
@@ -948,31 +970,15 @@ document.getElementById("saveXI10")?.addEventListener("click",()=>{
   Live.lineup=a.slice(); Live.formation=App.lineup.formation||"4-3-3"; save();renderAll();renderAdminXI10();renderPublicTeamV11();toast("Once guardado y publicado 👕");
 });
 
-/* El render general mantiene el directo público y nuestro editor del administrador. */
-const renderAllBaseV10=renderAll;
+/* V15: render general estable. */
+const renderAllBaseV15=renderAll;
 renderAll=function(){
-  renderAllBaseV10();
-  renderPublicEventsV10();
-  renderAdminXI10();
+  renderAllBaseV15();
+  try{renderPublicEventsV10();}catch(e){console.error("Public events:",e)}
+  try{renderAdminXI10();}catch(e){console.error("Admin XI:",e)}
+  try{renderPublicTeamV11();}catch(e){console.error("Public XI:",e)}
 };
-
-/* Oculta cualquier resto de la antigua alineación pública/administrador. */
-function cleanLegacyV10(){
-  const old=document.getElementById("lineupChecks");
-  if(old){
-    const card=old.closest(".card");
-    if(card)card.style.display="none";
-  }
-  document.querySelectorAll('#mainNav button[data-page="lineup"]').forEach(b=>b.style.display="none");
-  const home=document.getElementById("home");
-  if(home){
-    home.querySelectorAll(".pitchWrap").forEach(x=>x.style.display="none");
-  }
-  const publicConsole=document.getElementById("publicLiveConsole");
-  if(publicConsole)publicConsole.style.display="block";
-}
-setTimeout(cleanLegacyV10,100);
-setTimeout(renderAdminXI10,150);
+setTimeout(()=>{try{renderAdminXI10();}catch(e){console.error(e)}},150);
 </script>
 
 
@@ -1048,6 +1054,18 @@ setTimeout(renderPublicTeamV11,180);
    closeSide(); window.scrollTo({top:0,behavior:"smooth"});
  }));
 })();
+</script>
+
+
+<script>
+/* V15 Firebase diagnostics */
+window.rsFirebaseRetry=function(){
+  try{
+    const st=document.getElementById("syncText");
+    if(st)st.textContent="Reconectando Firebase…";
+    startRealtime();
+  }catch(e){console.error(e);toast("No se pudo reconectar con Firebase")}
+};
 </script>
 
 </body>
