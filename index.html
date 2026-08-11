@@ -821,6 +821,236 @@ button{cursor:pointer}
 @media(max-width:600px){.savedPitchV31{width:100%;max-height:520px}.savedPlayerV31{width:58px}.savedShirtV31{width:31px;height:38px;font-size:10px}.savedPlayerV31 b{font-size:7px}.savedPlayerV31 small{font-size:5px}}
 </style>
 
+
+<style id="v33-professional-lineup">
+/* ===== V33 — CAMPO VERTICAL PROFESIONAL ===== */
+.publicTeamV11{
+  margin-top:22px;
+}
+.publicTeamV11 .sectionTitle{
+  align-items:center;
+  margin-bottom:14px;
+}
+.publicTeamV11 .sectionTitle h2{
+  font-size:clamp(20px,3vw,28px);
+  letter-spacing:.2px;
+}
+.publicTeamV11 .sectionTitle p{
+  font-size:clamp(12px,2vw,15px);
+  font-weight:900;
+  color:#cbd6e4;
+}
+
+.publicPitchV11{
+  position:relative;
+  width:min(100%,680px);
+  height:auto;
+  aspect-ratio:9 / 14;
+  min-height:0 !important;
+  margin:0 auto;
+  border-radius:26px;
+  overflow:hidden;
+  background:
+    linear-gradient(90deg,rgba(255,255,255,.025),transparent 18%,rgba(255,255,255,.025) 36%,transparent 54%,rgba(255,255,255,.025) 72%,transparent 90%),
+    repeating-linear-gradient(
+      0deg,
+      #217d4d 0,
+      #217d4d 8%,
+      #1d7447 8%,
+      #1d7447 16%
+    );
+  border:5px solid #dcebd3;
+  box-shadow:
+    0 18px 45px rgba(0,0,0,.32),
+    inset 0 0 0 2px rgba(159,193,143,.75),
+    inset 0 0 55px rgba(0,0,0,.12);
+}
+
+/* Campo interior */
+.publicPitchV11:before{
+  content:"";
+  position:absolute;
+  inset:3%;
+  border:3px solid rgba(255,255,255,.88);
+  border-radius:7px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);
+  pointer-events:none;
+}
+
+/* Línea de medio campo */
+.publicPitchV11:after{
+  content:"";
+  position:absolute;
+  left:3%;
+  right:3%;
+  top:50%;
+  height:3px;
+  background:rgba(255,255,255,.88);
+  transform:translateY(-50%);
+  pointer-events:none;
+}
+
+/* Líneas añadidas al campo desde el DOM */
+.publicPitchV11 .fieldMarkV33{
+  position:absolute;
+  left:25%;
+  width:50%;
+  border:3px solid rgba(255,255,255,.84);
+  pointer-events:none;
+}
+.publicPitchV11 .penaltyTopV33{
+  top:3%;
+  height:17%;
+  border-top:0;
+}
+.publicPitchV11 .penaltyBottomV33{
+  bottom:3%;
+  height:17%;
+  border-bottom:0;
+}
+.publicPitchV11 .goalAreaTopV33,
+.publicPitchV11 .goalAreaBottomV33{
+  position:absolute;
+  left:38%;
+  width:24%;
+  height:7%;
+  border:3px solid rgba(255,255,255,.82);
+  pointer-events:none;
+}
+.publicPitchV11 .goalAreaTopV33{
+  top:3%;
+  border-top:0;
+}
+.publicPitchV11 .goalAreaBottomV33{
+  bottom:3%;
+  border-bottom:0;
+}
+.publicPitchV11 .centerSpotV33{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  background:#fff;
+  transform:translate(-50%,-50%);
+  box-shadow:0 0 0 2px rgba(0,0,0,.08);
+}
+.publicPitchV11 .centerCircleV11{
+  width:clamp(105px,20%,145px);
+  height:clamp(105px,20%,145px);
+  border:3px solid rgba(255,255,255,.82);
+}
+
+/* Jugadores: más grandes, claros y profesionales */
+.publicPlayerV11{
+  width:clamp(108px,17%,132px);
+  z-index:5;
+}
+.publicShirtV11{
+  width:clamp(55px,8vw,68px);
+  height:clamp(61px,9vw,75px);
+  border-width:2px;
+  box-shadow:0 8px 15px rgba(0,0,0,.42);
+}
+.publicShirtV11 b{
+  top:24px;
+  font-size:clamp(17px,2.4vw,22px);
+  text-shadow:0 1px 2px rgba(255,255,255,.55);
+}
+.publicNameV11{
+  margin-top:7px;
+  padding:7px 9px;
+  border-radius:10px;
+  font-size:clamp(12px,1.7vw,15px);
+  line-height:1.05;
+  letter-spacing:.2px;
+  background:rgba(4,16,10,.92);
+  border:1px solid rgba(255,255,255,.16);
+  box-shadow:0 5px 12px rgba(0,0,0,.28);
+  text-overflow:ellipsis;
+}
+.publicPlayerV11 small{
+  display:block;
+  margin-top:4px;
+  font-size:clamp(9px,1.2vw,11px);
+  color:#fff;
+  font-weight:900;
+}
+
+/* Suplentes */
+.benchV11{
+  width:min(100%,900px);
+  margin:16px auto 0;
+  padding:16px;
+  border-radius:18px;
+}
+.benchTitleV11{
+  font-size:clamp(12px,1.7vw,15px);
+}
+.benchGridV11{
+  gap:10px;
+}
+.benchPlayerV11{
+  padding:11px;
+}
+.benchNameV11{
+  font-size:clamp(10px,1.5vw,13px);
+}
+.benchPosV11{
+  font-size:clamp(8px,1.2vw,10px);
+}
+
+@media(max-width:700px){
+  .publicPitchV11{
+    width:100%;
+    aspect-ratio:9 / 14;
+    border-width:4px;
+    border-radius:20px;
+  }
+  .publicPlayerV11{
+    width:82px;
+  }
+  .publicShirtV11{
+    width:47px;
+    height:53px;
+  }
+  .publicShirtV11 b{
+    top:17px;
+    font-size:15px;
+  }
+  .publicNameV11{
+    font-size:10px;
+    padding:6px 7px;
+    border-radius:8px;
+  }
+  .publicPlayerV11 small{
+    font-size:8px;
+  }
+}
+
+@media(max-width:430px){
+  .publicPitchV11{
+    aspect-ratio:9 / 14;
+  }
+  .publicPlayerV11{
+    width:70px;
+  }
+  .publicShirtV11{
+    width:40px;
+    height:46px;
+  }
+  .publicShirtV11 b{
+    top:14px;
+    font-size:13px;
+  }
+  .publicNameV11{
+    font-size:8.5px;
+    padding:5px 6px;
+  }
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -1701,7 +1931,14 @@ function renderPublicTeamV11(){
   const formation=lineup.formation||"4-3-3";
   const pos=positions(formation);
 
-  pitch.innerHTML='<div class="publicCircleV11"></div>';
+  pitch.innerHTML=`
+    <div class="fieldMarkV33 penaltyTopV33"></div>
+    <div class="fieldMarkV33 penaltyBottomV33"></div>
+    <div class="goalAreaTopV33"></div>
+    <div class="goalAreaBottomV33"></div>
+    <div class="publicCircleV11"></div>
+    <div class="centerSpotV33"></div>
+  `;
   nums.forEach((n,i)=>{
     const p=App.players.find(x=>Number(x.number)===n);
     if(!p)return;
@@ -2638,3 +2875,162 @@ document.addEventListener("click",function(e){
 
 </body>
 </html>
+
+
+<!-- V32 — PARTIDOS PROFESIONALES: ESCUDO ARRIBA + NOMBRE ABAJO / TIPOGRAFÍA GRANDE -->
+<style id="v32-professional-matches">
+  /* Tarjetas de partidos */
+  .matchRowV32{
+    display:grid!important;
+    grid-template-columns:155px minmax(0,1fr) 360px!important;
+    gap:26px!important;
+    align-items:center!important;
+    padding:30px 34px!important;
+    min-height:250px!important;
+  }
+  .matchTeamsV32{
+    display:grid!important;
+    grid-template-columns:minmax(180px,1fr) 70px minmax(180px,1fr)!important;
+    grid-template-rows:auto auto!important;
+    align-items:center!important;
+    justify-items:center!important;
+    gap:14px 22px!important;
+    width:100%!important;
+  }
+  .matchTeamV32{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:12px!important;
+    width:100%!important;
+    min-width:0!important;
+    text-align:center!important;
+  }
+  .matchTeamV32 .matchCrestV32{
+    width:76px!important;height:76px!important;
+    object-fit:contain!important;
+    flex:0 0 76px!important;
+    filter:drop-shadow(0 5px 10px rgba(0,0,0,.3));
+  }
+  .matchTeamV32 .matchNameV32{
+    display:block!important;
+    width:100%!important;
+    color:#fff!important;
+    font-size:25px!important;
+    line-height:1.15!important;
+    font-weight:1000!important;
+    white-space:normal!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+    overflow-wrap:anywhere!important;
+  }
+  .matchVsV32{font-size:25px!important;font-weight:1000!important;color:var(--yellow)!important}
+  .matchCompetitionV32{grid-column:1/-1!important;color:var(--muted)!important;font-size:16px!important;font-weight:800!important;margin-top:1px!important}
+  .matchDateV32{font-size:19px!important;line-height:1.55!important;color:#c1cede!important;font-weight:800!important;text-align:center!important}
+  .matchResultV32{display:flex!important;align-items:center!important;justify-content:center!important;gap:14px!important;flex-wrap:wrap!important;min-width:0!important}
+  .matchResultV32 strong{font-size:40px!important;line-height:1!important;font-weight:1000!important;min-width:125px!important;text-align:center!important;color:#fff!important}
+  .matchResultV32 .finalBadgeV20,.matchResultV32 .liveBadgeV23,.matchResultV32 .pendingBadgeV23{font-size:16px!important;padding:11px 16px!important;border-radius:14px!important}
+  .matchResultV32 .btn{font-size:16px!important;padding:13px 20px!important;border-radius:14px!important;white-space:nowrap!important}
+
+  /* Detalle del partido */
+  #completedDetailsV20{font-size:16px!important}
+  #completedTitleV20{font-size:30px!important;line-height:1.2!important}
+  .completedScoreV20{
+    min-height:100px!important;
+    padding:22px 18px!important;
+    gap:20px!important;
+    font-size:28px!important;
+  }
+  .completedScoreV20 img{width:58px!important;height:58px!important}
+  .detailGroupV20 h3,.matchChronicleV20 h3{font-size:17px!important;margin-bottom:12px!important}
+  .detailEventV24{
+    grid-template-columns:55px 38px 38px minmax(0,1fr) auto!important;
+    min-height:62px!important;
+    padding:12px 15px!important;
+    gap:11px!important;
+  }
+  .detailMinuteV20{font-size:17px!important}
+  .detailEventIconV20{font-size:24px!important}
+  .eventCrestOnlyV24{width:34px!important;height:34px!important}
+  .detailPlayerV20{font-size:16px!important;line-height:1.2!important}
+  .detailScoreV24{font-size:19px!important;min-width:52px!important}
+  .v24ChangeNames{font-size:16px!important;line-height:1.3!important}
+  #chronicleV20{font-size:16px!important;line-height:1.75!important}
+  .matchChronicleV20{padding:20px!important}
+
+  @media(max-width:900px){
+    .matchRowV32{grid-template-columns:110px minmax(0,1fr)!important;gap:18px!important;padding:26px 22px!important}
+    .matchResultV32{grid-column:1/-1!important;padding-top:8px!important}
+  }
+  @media(max-width:600px){
+    .matchRowV32{grid-template-columns:1fr!important;gap:20px!important;padding:24px 16px!important;min-height:0!important}
+    .matchDateV32{font-size:17px!important}
+    .matchTeamsV32{grid-template-columns:minmax(0,1fr) 42px minmax(0,1fr)!important;gap:10px!important}
+    .matchTeamV32 .matchCrestV32{width:62px!important;height:62px!important;flex-basis:62px!important}
+    .matchTeamV32 .matchNameV32{font-size:20px!important}
+    .matchVsV32{font-size:20px!important}
+    .matchCompetitionV32{font-size:14px!important}
+    .matchResultV32 strong{font-size:34px!important}
+    .matchResultV32 .finalBadgeV20,.matchResultV32 .liveBadgeV23,.matchResultV32 .pendingBadgeV23{font-size:14px!important}
+    #completedTitleV20{font-size:24px!important}
+    .completedScoreV20{font-size:22px!important;gap:10px!important;flex-wrap:wrap!important}
+    .completedScoreV20 img{width:48px!important;height:48px!important}
+    .detailGroupV20 h3,.matchChronicleV20 h3{font-size:15px!important}
+    .detailEventV24{grid-template-columns:42px 29px 30px minmax(0,1fr) auto!important;min-height:55px!important;padding:10px 10px!important;gap:7px!important}
+    .detailMinuteV20{font-size:15px!important}
+    .detailEventIconV20{font-size:20px!important}
+    .eventCrestOnlyV24{width:28px!important;height:28px!important}
+    .detailPlayerV20{font-size:14px!important}
+    .detailScoreV24{font-size:16px!important}
+    .v24ChangeNames{font-size:14px!important}
+    #chronicleV20{font-size:14px!important;line-height:1.65!important}
+  }
+</style>
+<script id="v32-professional-matches-script">
+(function(){
+  function v32Crest(t){
+    const logo=t?.logo||t?.crest||'';
+    return logo ? `<img class="matchCrestV32" src="${esc(logo)}" alt="Escudo ${esc(t?.name||'')}">` : `<span class="matchCrestV32" aria-hidden="true"></span>`;
+  }
+  window.renderMatches=function(){
+    const box=document.getElementById('matchList');
+    const admin=document.getElementById('adminMatches');
+    if(!box||!admin)return;
+    const rows=(App.matches||[]).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||String(b.hour||'').localeCompare(String(a.hour||'')));
+    box.innerHTML=rows.length?rows.map(m=>{
+      const h=team(m.home), a=team(m.away);
+      const active=String(m.id)===String(App.activeMatch);
+      const fin=m.status==='FINISHED'||(active&&Live.state==='FINISHED');
+      const live=active&&['FIRST_HALF','SECOND_HALF'].includes(Live.state);
+      let ev=[];
+      try{ev=typeof v25Events==='function'?v25Events(m):(Array.isArray(m.events)?m.events:[])}catch(_){ev=Array.isArray(m.events)?m.events:[]}
+      let hs=Number(m.homeScore||0),as=Number(m.awayScore||0);
+      if(fin && hs===0 && as===0 && ev.length){
+        const goals=ev.filter(e=>['goal','gol'].includes(String(e.type||e.eventType||'').toLowerCase()));
+        const scored=goals.map(e=>String(e.score||'').match(/^(\d+)\s*-\s*(\d+)$/)).filter(Boolean);
+        if(scored.length){hs=Number(scored.at(-1)[1]);as=Number(scored.at(-1)[2]);}
+        else {hs=goals.filter(e=>e.team==='home').length;as=goals.filter(e=>e.team==='away').length;}
+      }
+      if(active&&Live.state==='FINISHED'){hs=Number(Live.homeScore||0);as=Number(Live.awayScore||0)}
+      const score=fin?`${hs} - ${as}`:(live?`${Number(Live.homeScore||0)} - ${Number(Live.awayScore||0)}`:'—');
+      const badge=fin?'<span class="finalBadgeV20">⚪ FINALIZADO</span>':(live?'<span class="liveBadgeV23">🔴 DIRECTO</span>':'<span class="pendingBadgeV23">PRÓXIMO</span>');
+      return `<div class="matchRow matchRowV32">
+        <div class="matchDateV32">${formatDate(m.date)}<br>${esc(m.hour||'')}</div>
+        <div class="matchTeamsV32">
+          <div class="matchTeamV32">${v32Crest(h)}<span class="matchNameV32">${esc(h.name)}</span></div>
+          <span class="matchVsV32">VS</span>
+          <div class="matchTeamV32">${v32Crest(a)}<span class="matchNameV32">${esc(a.name)}</span></div>
+          <small class="matchCompetitionV32">${esc(m.competition||'Liga')}</small>
+        </div>
+        <div class="matchResultV32">
+          <strong>${score}</strong>${badge}
+          ${fin?`<button class="btn small dark" onclick="v25ShowDetails(${m.id})">👁 Ver detalles</button>`:''}
+        </div>
+      </div>`;
+    }).join(''):'<div class="empty">No hay partidos creados.</div>';
+    admin.innerHTML=rows.map(m=>`<div class="adminItem"><div><b>${esc(team(m.home).name)} vs ${esc(team(m.away).name)}</b><br><small style="color:var(--muted)">${formatDate(m.date)} ${esc(m.hour||'')} ${m.status==='FINISHED'?' · FINALIZADO':''}</small></div><div class="actions"><button class="btn small ${String(m.id)===String(App.activeMatch)?'green':'dark'}" onclick="setActive(${m.id})">${String(m.id)===String(App.activeMatch)?'Activo':'Activar'}</button><button class="btn small red" onclick="deleteMatch(${m.id})">🗑</button></div></div>`).join('');
+  };
+  if(typeof renderAll==='function')setTimeout(()=>{try{renderMatches()}catch(e){console.error('V32 renderMatches',e)}},0);
+})();
+</script>
