@@ -793,103 +793,760 @@ button{cursor:pointer}
 </style>
 
 
-<style id="v29-lineup-history-visibility">
-.completedLineupV29{
-  margin:14px 0 22px;
-  padding:18px;
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:20px;
-  background:linear-gradient(145deg,#10243a,#091727);
+<style id="v31-lineup">
+.completedLineupV31{margin-top:16px;padding:15px;border:1px solid #203854;border-radius:16px;background:#071523}
+.completedLineupV31 .savedHead{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}
+.completedLineupV31 .savedHead b{font-size:13px;color:#fff}
+.completedLineupV31 .savedHead span{font-size:10px;color:#8ea0b6;font-weight:900}
+.savedPitchV31{
+  position:relative;width:min(100%,520px);aspect-ratio:9/14;margin:auto;
+  overflow:hidden;border:3px solid #dcebd3;border-radius:20px;
+  background:repeating-linear-gradient(90deg,#237d4e 0,#237d4e 12.5%,#207548 12.5%,#207548 25%);
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.12)
 }
-.completedLineupV29 .lineupHeadV29{
-  display:flex;align-items:center;justify-content:space-between;gap:10px;
+.savedPitchV31:before{content:"";position:absolute;inset:4%;border:2px solid rgba(240,255,240,.75);border-radius:8px}
+.savedPitchV31:after{content:"";position:absolute;left:50%;top:50%;width:18%;aspect-ratio:1;transform:translate(-50%,-50%);border:2px solid rgba(240,255,240,.7);border-radius:50%}
+.savedPlayerV31{position:absolute;transform:translate(-50%,-50%);z-index:2;width:72px;text-align:center}
+.savedShirtV31{
+  width:37px;height:45px;margin:auto;display:grid;place-items:center;color:#111;font-weight:1000;font-size:12px;
+  background:repeating-linear-gradient(90deg,#ffd400 0,#ffd400 33%,#df1f35 33%,#df1f35 66%,#ffd400 66%);
+  clip-path:polygon(18% 0,37% 0,50% 10%,63% 0,82% 0,100% 23%,86% 32%,86% 100%,14% 100%,14% 32%,0 23%);
+}
+.savedPlayerV31 b{display:block;background:#061c13;color:#fff;border-radius:7px;padding:3px;font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.savedPlayerV31 small{display:block;color:#fff;font-size:6px;margin-top:2px}
+.savedBenchV31{margin-top:10px}.savedBenchV31 strong{display:block;color:#f1d600;font-size:9px;margin-bottom:6px}
+.savedBenchGridV31{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:6px}
+.savedBenchItemV31{padding:7px;border-radius:8px;background:#081827;border:1px solid #1b3046;font-size:8px;color:#fff}
+.savedBenchItemV31 small{display:block;color:#71869c;margin-top:2px}
+@media(max-width:600px){.savedPitchV31{width:100%;max-height:520px}.savedPlayerV31{width:58px}.savedShirtV31{width:31px;height:38px;font-size:10px}.savedPlayerV31 b{font-size:7px}.savedPlayerV31 small{font-size:5px}}
+</style>
+
+
+<style id="v33-professional-lineup">
+/* ===== V33 — CAMPO VERTICAL PROFESIONAL ===== */
+.publicTeamV11{
+  margin-top:22px;
+}
+.publicTeamV11 .sectionTitle{
+  align-items:center;
   margin-bottom:14px;
 }
-.completedLineupV29 .lineupHeadV29 h3{font-size:17px;font-weight:1000}
-.completedLineupV29 .lineupHeadV29 span{font-size:12px;color:var(--muted);font-weight:900}
-.savedPitchV29{
-  position:relative; width:100%; max-width:620px; margin:0 auto;
-  aspect-ratio:9/14; min-height:500px; overflow:hidden;
-  border:3px solid #d9ebca; border-radius:22px;
-  background:repeating-linear-gradient(90deg,#237d4e 0,#237d4e 12%,#207449 12%,#207449 24%);
-  box-shadow:inset 0 0 0 3px rgba(255,255,255,.12);
+.publicTeamV11 .sectionTitle h2{
+  font-size:clamp(20px,3vw,28px);
+  letter-spacing:.2px;
 }
-.savedPitchV29:before{
-  content:"";position:absolute;inset:4%;border:3px solid rgba(240,255,240,.82);
-  border-radius:10px;
+.publicTeamV11 .sectionTitle p{
+  font-size:clamp(12px,2vw,15px);
+  font-weight:900;
+  color:#cbd6e4;
 }
-.savedPitchV29:after{
-  content:"";position:absolute;left:50%;top:50%;width:18%;aspect-ratio:1;
-  transform:translate(-50%,-50%);border:3px solid rgba(240,255,240,.7);
+
+.publicPitchV11{
+  position:relative;
+  width:min(100%,680px);
+  height:auto;
+  aspect-ratio:9 / 14;
+  min-height:0 !important;
+  margin:0 auto;
+  border-radius:26px;
+  overflow:hidden;
+  background:
+    linear-gradient(90deg,rgba(255,255,255,.025),transparent 18%,rgba(255,255,255,.025) 36%,transparent 54%,rgba(255,255,255,.025) 72%,transparent 90%),
+    repeating-linear-gradient(
+      0deg,
+      #217d4d 0,
+      #217d4d 8%,
+      #1d7447 8%,
+      #1d7447 16%
+    );
+  border:5px solid #dcebd3;
+  box-shadow:
+    0 18px 45px rgba(0,0,0,.32),
+    inset 0 0 0 2px rgba(159,193,143,.75),
+    inset 0 0 55px rgba(0,0,0,.12);
+}
+
+/* Campo interior */
+.publicPitchV11:before{
+  content:"";
+  position:absolute;
+  inset:3%;
+  border:3px solid rgba(255,255,255,.88);
+  border-radius:7px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);
+  pointer-events:none;
+}
+
+/* Línea de medio campo */
+.publicPitchV11:after{
+  content:"";
+  position:absolute;
+  left:3%;
+  right:3%;
+  top:50%;
+  height:3px;
+  background:rgba(255,255,255,.88);
+  transform:translateY(-50%);
+  pointer-events:none;
+}
+
+/* Líneas añadidas al campo desde el DOM */
+.publicPitchV11 .fieldMarkV33{
+  position:absolute;
+  left:25%;
+  width:50%;
+  border:3px solid rgba(255,255,255,.84);
+  pointer-events:none;
+}
+.publicPitchV11 .penaltyTopV33{
+  top:3%;
+  height:17%;
+  border-top:0;
+}
+.publicPitchV11 .penaltyBottomV33{
+  bottom:3%;
+  height:17%;
+  border-bottom:0;
+}
+.publicPitchV11 .goalAreaTopV33,
+.publicPitchV11 .goalAreaBottomV33{
+  position:absolute;
+  left:38%;
+  width:24%;
+  height:7%;
+  border:3px solid rgba(255,255,255,.82);
+  pointer-events:none;
+}
+.publicPitchV11 .goalAreaTopV33{
+  top:3%;
+  border-top:0;
+}
+.publicPitchV11 .goalAreaBottomV33{
+  bottom:3%;
+  border-bottom:0;
+}
+.publicPitchV11 .centerSpotV33{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:12px;
+  height:12px;
   border-radius:50%;
+  background:#fff;
+  transform:translate(-50%,-50%);
+  box-shadow:0 0 0 2px rgba(0,0,0,.08);
 }
-.savedPitchPlayerV29{
-  position:absolute;transform:translate(-50%,-50%);z-index:2;
-  width:82px;text-align:center;
+.publicPitchV11 .centerCircleV11{
+  width:clamp(105px,20%,145px);
+  height:clamp(105px,20%,145px);
+  border:3px solid rgba(255,255,255,.82);
 }
-.savedPitchPlayerV29 .shirt{
-  width:43px;height:52px;margin:0 auto 3px;
-  display:grid;place-items:center;font-size:15px;font-weight:1000;color:#111;
-  background:repeating-linear-gradient(90deg,#ffd400 0,#ffd400 33%,#e21d2f 33%,#e21d2f 66%,#ffd400 66%,#ffd400 100%);
-  clip-path:polygon(18% 0,37% 0,50% 10%,63% 0,82% 0,100% 23%,86% 32%,86% 100%,14% 100%,14% 32%,0 23%);
-  filter:drop-shadow(0 3px 5px rgba(0,0,0,.3));
+
+/* Jugadores: más grandes, claros y profesionales */
+.publicPlayerV11{
+  width:clamp(108px,17%,132px);
+  z-index:5;
 }
-.savedPitchPlayerV29 b{
-  display:block;background:#061c13;color:#fff;border-radius:8px;
-  padding:4px 3px;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+.publicShirtV11{
+  width:clamp(55px,8vw,68px);
+  height:clamp(61px,9vw,75px);
+  border-width:2px;
+  box-shadow:0 8px 15px rgba(0,0,0,.42);
 }
-.savedPitchPlayerV29 small{display:block;color:#fff;font-size:7px;margin-top:2px;font-weight:800}
-.savedBenchV29{margin-top:14px}
-.savedBenchTitleV29{font-size:11px;color:var(--yellow);font-weight:1000;margin-bottom:8px}
-.savedBenchGridV29{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:7px}
-.savedBenchPlayerV29{
-  background:#0a1a2b;border:1px solid #20344f;border-radius:10px;
-  padding:8px;font-size:10px
+.publicShirtV11 b{
+  top:24px;
+  font-size:clamp(17px,2.4vw,22px);
+  text-shadow:0 1px 2px rgba(255,255,255,.55);
 }
-.savedBenchPlayerV29 b{color:#fff}.savedBenchPlayerV29 small{display:block;color:var(--muted);margin-top:2px}
+.publicNameV11{
+  margin-top:7px;
+  padding:7px 9px;
+  border-radius:10px;
+  font-size:clamp(12px,1.7vw,15px);
+  line-height:1.05;
+  letter-spacing:.2px;
+  background:rgba(4,16,10,.92);
+  border:1px solid rgba(255,255,255,.16);
+  box-shadow:0 5px 12px rgba(0,0,0,.28);
+  text-overflow:ellipsis;
+}
+.publicPlayerV11 small{
+  display:block;
+  margin-top:4px;
+  font-size:clamp(9px,1.2vw,11px);
+  color:#fff;
+  font-weight:900;
+}
+
+/* Suplentes */
+.benchV11{
+  width:min(100%,900px);
+  margin:16px auto 0;
+  padding:16px;
+  border-radius:18px;
+}
+.benchTitleV11{
+  font-size:clamp(12px,1.7vw,15px);
+}
+.benchGridV11{
+  gap:10px;
+}
+.benchPlayerV11{
+  padding:11px;
+}
+.benchNameV11{
+  font-size:clamp(10px,1.5vw,13px);
+}
+.benchPosV11{
+  font-size:clamp(8px,1.2vw,10px);
+}
+
+@media(max-width:700px){
+  .publicPitchV11{
+    width:100%;
+    aspect-ratio:9 / 14;
+    border-width:4px;
+    border-radius:20px;
+  }
+  .publicPlayerV11{
+    width:82px;
+  }
+  .publicShirtV11{
+    width:47px;
+    height:53px;
+  }
+  .publicShirtV11 b{
+    top:17px;
+    font-size:15px;
+  }
+  .publicNameV11{
+    font-size:10px;
+    padding:6px 7px;
+    border-radius:8px;
+  }
+  .publicPlayerV11 small{
+    font-size:8px;
+  }
+}
+
+@media(max-width:430px){
+  .publicPitchV11{
+    aspect-ratio:9 / 14;
+  }
+  .publicPlayerV11{
+    width:70px;
+  }
+  .publicShirtV11{
+    width:40px;
+    height:46px;
+  }
+  .publicShirtV11 b{
+    top:14px;
+    font-size:13px;
+  }
+  .publicNameV11{
+    font-size:8.5px;
+    padding:5px 6px;
+  }
+}
+</style>
+
+
+<style id="v35-crest-chronicle">
+/* ===== V35 — ESCUDO GRANDE + CRÓNICA GRANDE ===== */
+
+/* Cabecera principal: SOLO el escudo, sin RS LIVE ni fondo amarillo */
+.topbar .brandCrestOnlyV35{
+  display:flex!important;
+  align-items:center!important;
+  width:auto!important;
+  min-width:0!important;
+}
+.topbar .brandCrestOnlyV35 .brandMark{
+  width:92px!important;
+  height:92px!important;
+  min-width:92px!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  padding:0!important;
+}
+.topbar .brandCrestOnlyV35 .brandMark img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  display:block!important;
+}
+
+/* Escudo dentro del campo: el doble de grande y SIN recuadro negro */
+.pitchRamonCrestV34{
+  right:4.5%!important;
+  top:4%!important;
+  width:156px!important;
+  height:156px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+}
+.pitchRamonCrestV34 img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  display:block!important;
+}
+
+/* Crónica: aproximadamente el doble de tamaño respecto a V34 */
+#chronicleV20{
+  font-size:42px!important;
+  line-height:1.58!important;
+  letter-spacing:.15px!important;
+}
+.matchChronicleV20{
+  padding:30px!important;
+}
+.matchChronicleV20 h3{
+  font-size:28px!important;
+  margin-bottom:18px!important;
+}
+#chronicleV20 b{
+  font-weight:950!important;
+}
+
+@media(max-width:900px){
+  .topbar .brandCrestOnlyV35 .brandMark{
+    width:82px!important;
+    height:82px!important;
+    min-width:82px!important;
+  }
+  .pitchRamonCrestV34{
+    width:130px!important;
+    height:130px!important;
+  }
+  #chronicleV20{
+    font-size:38px!important;
+    line-height:1.55!important;
+  }
+}
+
 @media(max-width:600px){
-  .completedLineupV29{padding:12px}
-  .savedPitchV29{min-height:430px}
-  .savedPitchPlayerV29{width:64px}
-  .savedPitchPlayerV29 .shirt{width:35px;height:43px;font-size:12px}
-  .savedPitchPlayerV29 b{font-size:7px}
-  .savedPitchPlayerV29 small{font-size:6px}
+  .topbar .brandCrestOnlyV35 .brandMark{
+    width:72px!important;
+    height:72px!important;
+    min-width:72px!important;
+  }
+  .pitchRamonCrestV34{
+    width:105px!important;
+    height:105px!important;
+    right:4%!important;
+    top:3.5%!important;
+  }
+  #chronicleV20{
+    font-size:34px!important;
+    line-height:1.52!important;
+  }
+  .matchChronicleV20{
+    padding:22px!important;
+  }
+  .matchChronicleV20 h3{
+    font-size:24px!important;
+  }
 }
-
-/* En Inicio: alineación y eventos solo aparecen desde 1 hora antes hasta el final
-   del directo. Al finalizar desaparecen del público. */
-#home.rsHomeHideLiveV29 #publicTeamV11,
-#home.rsHomeHideLiveV29 #publicLiveConsole{
-  display:none!important;
-}
-
-
-<style id="v47-chronicle-final">
-#chronicleV20{font-size:38px!important;line-height:1.65!important;font-weight:650!important;}
-.matchChronicleV20 #chronicleV20{font-size:38px!important;line-height:1.65!important;}
-@media(max-width:700px){#chronicleV20,.matchChronicleV20 #chronicleV20{font-size:32px!important;line-height:1.62!important;}}
 </style>
 
 
-<style id="v48-detail-admin-fix">
-/* V48 — detalle aislado y administrador completo */
-#matches.rsV48DetailOpen > .sectionTitle,
-#matches.rsV48DetailOpen > .infoCard { display:none !important; }
-#matches.rsV48DetailOpen #completedDetailsV20 { margin-top:0 !important; }
-.v48AdminEditRow{display:flex;flex-wrap:wrap;gap:7px;justify-content:flex-end;margin-top:8px}
-.v48AdminEditRow .btn{min-width:82px}
+<style id="v36-professional-fixes">
+/* =========================================================
+   V36 — CABECERA + CRÓNICA + PARTIDOS
+   ========================================================= */
+
+/* 1. CABECERA: escudo limpio, centrado y sin recorte */
+.topbar{
+  height:92px!important;
+  min-height:92px!important;
+  padding-top:6px!important;
+  padding-bottom:6px!important;
+}
+.topbar .brandCrestOnlyV35{
+  height:100%!important;
+  display:flex!important;
+  align-items:center!important;
+}
+.topbar .brandCrestOnlyV35 .brandMark{
+  width:82px!important;
+  height:82px!important;
+  min-width:82px!important;
+  min-height:82px!important;
+  border-radius:8px!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  padding:0!important;
+  overflow:hidden!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+.topbar .brandCrestOnlyV35 .brandMark img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  display:block!important;
+}
+
+/* 2. CRÓNICA: claramente grande y cómoda de leer */
+.matchChronicleV20{
+  padding:32px 34px!important;
+  border-radius:20px!important;
+}
+.matchChronicleV20 h3{
+  font-size:30px!important;
+  line-height:1.2!important;
+  margin-bottom:20px!important;
+}
+#chronicleV20{
+  font-size:56px!important;
+  line-height:1.55!important;
+  font-weight:600!important;
+  color:#edf3f9!important;
+  letter-spacing:.1px!important;
+}
+
+/* 3. PARTIDOS: rediseño completo de la tarjeta.
+      Fecha arriba, equipos centrados, resultado en una franja propia
+      y estado/botón debajo. */
+.matchRowV23{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  grid-template-areas:
+    "date"
+    "teams"
+    "result"!important;
+  gap:0!important;
+  padding:30px 34px 34px!important;
+  min-height:0!important;
+  border-radius:24px!important;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(255,210,0,.055),transparent 34%),
+    linear-gradient(145deg,#12263d,#091827)!important;
+  border:1px solid rgba(75,105,137,.5)!important;
+  box-shadow:0 18px 45px rgba(0,0,0,.18)!important;
+}
+.matchRowV23 .matchDate{
+  grid-area:date!important;
+  text-align:center!important;
+  font-size:20px!important;
+  line-height:1.45!important;
+  font-weight:800!important;
+  color:#b9c7d8!important;
+  padding:0 0 24px!important;
+}
+.matchRowV23 .matchTeamsV27{
+  grid-area:teams!important;
+  width:100%!important;
+  max-width:900px!important;
+  margin:0 auto!important;
+  grid-template-columns:minmax(0,1fr) 80px minmax(0,1fr)!important;
+  gap:20px!important;
+  padding:4px 0 22px!important;
+}
+.matchRowV23 .matchTeamV27{
+  gap:12px!important;
+}
+.matchRowV23 .matchTeamV27 span{
+  font-size:26px!important;
+  line-height:1.2!important;
+  font-weight:1000!important;
+}
+.matchRowV23 .matchCrestV27{
+  width:78px!important;
+  height:78px!important;
+  flex-basis:78px!important;
+  filter:drop-shadow(0 8px 12px rgba(0,0,0,.28))!important;
+}
+.matchRowV23 .matchVsV27{
+  font-size:27px!important;
+  letter-spacing:1px!important;
+}
+
+/* Resultado totalmente separado y centrado */
+.matchRowV23 .matchResultV23{
+  grid-area:result!important;
+  width:100%!important;
+  max-width:760px!important;
+  margin:0 auto!important;
+  padding:24px 18px 4px!important;
+  border-top:1px solid rgba(255,255,255,.10)!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:16px!important;
+  flex-wrap:wrap!important;
+}
+.matchRowV23 .matchResultV23 strong{
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  text-align:center!important;
+  font-size:58px!important;
+  line-height:1!important;
+  letter-spacing:3px!important;
+  font-weight:1000!important;
+}
+.matchRowV23 .matchResultV23 .finalBadgeV20,
+.matchRowV23 .matchResultV23 .liveBadgeV23,
+.matchRowV23 .matchResultV23 .pendingBadgeV23{
+  font-size:17px!important;
+  padding:10px 18px!important;
+  border-radius:999px!important;
+}
+.matchRowV23 .matchResultV23 .btn{
+  font-size:17px!important;
+  padding:13px 24px!important;
+  border-radius:14px!important;
+  min-height:50px!important;
+}
+.matchRowV23 .matchCompetitionV27{
+  font-size:16px!important;
+  margin-top:4px!important;
+}
+
+/* Responsive */
+@media(max-width:700px){
+  .topbar{
+    height:84px!important;
+    min-height:84px!important;
+  }
+  .topbar .brandCrestOnlyV35 .brandMark{
+    width:72px!important;
+    height:72px!important;
+    min-width:72px!important;
+    min-height:72px!important;
+  }
+
+  .matchChronicleV20{
+    padding:24px 20px!important;
+  }
+  .matchChronicleV20 h3{
+    font-size:24px!important;
+  }
+  #chronicleV20{
+    font-size:46px!important;
+    line-height:1.5!important;
+  }
+
+  .matchRowV23{
+    padding:24px 18px 28px!important;
+    border-radius:20px!important;
+  }
+  .matchRowV23 .matchDate{
+    font-size:17px!important;
+    padding-bottom:20px!important;
+  }
+  .matchRowV23 .matchTeamsV27{
+    grid-template-columns:minmax(0,1fr) 52px minmax(0,1fr)!important;
+    gap:8px!important;
+  }
+  .matchRowV23 .matchTeamV27 span{
+    font-size:21px!important;
+  }
+  .matchRowV23 .matchCrestV27{
+    width:62px!important;
+    height:62px!important;
+    flex-basis:62px!important;
+  }
+  .matchRowV23 .matchVsV27{
+    font-size:21px!important;
+  }
+  .matchRowV23 .matchResultV23{
+    padding-top:20px!important;
+  }
+  .matchRowV23 .matchResultV23 strong{
+    font-size:48px!important;
+  }
+}
+
+@media(max-width:430px){
+  .topbar{
+    height:78px!important;
+    min-height:78px!important;
+  }
+  .topbar .brandCrestOnlyV35 .brandMark{
+    width:66px!important;
+    height:66px!important;
+    min-width:66px!important;
+    min-height:66px!important;
+  }
+
+  .matchChronicleV20{
+    padding:20px 16px!important;
+  }
+  .matchChronicleV20 h3{
+    font-size:21px!important;
+  }
+  #chronicleV20{
+    font-size:38px!important;
+    line-height:1.48!important;
+  }
+
+  .matchRowV23 .matchTeamsV27{
+    grid-template-columns:minmax(0,1fr) 42px minmax(0,1fr)!important;
+  }
+  .matchRowV23 .matchTeamV27 span{
+    font-size:18px!important;
+  }
+  .matchRowV23 .matchCrestV27{
+    width:54px!important;
+    height:54px!important;
+    flex-basis:54px!important;
+  }
+  .matchRowV23 .matchVsV27{
+    font-size:18px!important;
+  }
+  .matchRowV23 .matchResultV23 strong{
+    font-size:42px!important;
+  }
+}
 </style>
+
+
+<style id="v49-lineup-readability">
+/* V49 — campo histórico con rayado más visible + jugadores legibles */
+.savedPitchV31{
+  background:
+    linear-gradient(90deg,rgba(255,255,255,.035),transparent 50%,rgba(0,0,0,.035)),
+    repeating-linear-gradient(90deg,#23834f 0,#23834f 8%,#1b7044 8%,#1b7044 16%) !important;
+  background-size:100% 100%,100% 100% !important;
+}
+.savedPlayerV31{width:100px!important;z-index:5!important}
+.savedShirtV31{
+  width:52px!important;height:62px!important;font-size:18px!important;
+  text-shadow:0 1px 2px rgba(255,255,255,.45);
+  filter:drop-shadow(0 5px 7px rgba(0,0,0,.35));
+}
+.savedPlayerV31 b{
+  font-size:14px!important;line-height:1.05!important;padding:6px 8px!important;
+  border-radius:9px!important;background:rgba(3,18,12,.94)!important;
+  border:1px solid rgba(255,255,255,.16);
+}
+.savedPlayerV31 small{font-size:10px!important;margin-top:4px!important}
+@media(max-width:600px){
+  .savedPitchV31{max-height:none!important}
+  .savedPlayerV31{width:92px!important}
+  .savedShirtV31{width:48px!important;height:58px!important;font-size:17px!important}
+  .savedPlayerV31 b{font-size:13px!important;padding:5px 7px!important}
+  .savedPlayerV31 small{font-size:9px!important}
+  /* Crónica: más cómoda de leer sin ocupar media pantalla */
+  #chronicleV20{font-size:23px!important;line-height:1.58!important;letter-spacing:0!important}
+  .matchChronicleV20{padding:24px!important}
+}
+@media(min-width:601px){
+  #chronicleV20{font-size:27px!important;line-height:1.55!important}
+}
+</style>
+
+<style id="rs-v50-final-visual">
+/* =========================================================
+   RS LIVE V50 — CAMPO + SUPLENTES + CRÓNICA
+   ========================================================= */
+
+/* Campo: césped a franjas + líneas profesionales */
+.publicPitchV11{
+  background:
+    repeating-linear-gradient(90deg,
+      rgba(255,255,255,.045) 0, rgba(255,255,255,.045) 8.333%,
+      rgba(0,0,0,.035) 8.333%, rgba(0,0,0,.035) 16.666%),
+    linear-gradient(180deg,#218451 0%,#1d7849 100%)!important;
+  border:5px solid #e7f1e1!important;
+  box-shadow:0 18px 45px rgba(0,0,0,.34), inset 0 0 0 2px rgba(255,255,255,.20), inset 0 0 70px rgba(0,0,0,.13)!important;
+}
+.publicPitchV11:before{
+  inset:3%!important;
+  border:3px solid rgba(255,255,255,.92)!important;
+  border-radius:5px!important;
+}
+.publicPitchV11:after{
+  left:3%!important;right:3%!important;top:50%!important;
+  height:3px!important;background:rgba(255,255,255,.92)!important;
+  box-shadow:0 1px 0 rgba(0,0,0,.08)!important;
+}
+.publicPitchV11 .fieldMarkV33{
+  border:3px solid rgba(255,255,255,.90)!important;
+  box-shadow:0 1px 0 rgba(0,0,0,.08);
+}
+.publicPitchV11 .penaltyTopV33,.publicPitchV11 .penaltyBottomV33{
+  left:22%!important;width:56%!important;height:18%!important;
+}
+.publicPitchV11 .goalAreaTopV33,.publicPitchV11 .goalAreaBottomV33{
+  left:36%!important;width:28%!important;height:7%!important;
+  border-width:3px!important;border-color:rgba(255,255,255,.9)!important;
+}
+.publicPitchV11 .centerCircleV11{
+  width:clamp(120px,22%,155px)!important;
+  height:clamp(120px,22%,155px)!important;
+  border:3px solid rgba(255,255,255,.9)!important;
+}
+
+/* Arcos de las áreas */
+.penaltyArcTopV50,.penaltyArcBottomV50{
+  position:absolute;left:50%;width:24%;height:7.5%;
+  border:3px solid rgba(255,255,255,.88);
+  transform:translateX(-50%);z-index:1;pointer-events:none;
+}
+.penaltyArcTopV50{top:20.8%;border-top:0;border-radius:0 0 100% 100%;}
+.penaltyArcBottomV50{bottom:20.8%;border-bottom:0;border-radius:100% 100% 0 0;}
+
+/* Arcos de esquina */
+.cornerTLV50,.cornerTRV50,.cornerBLV50,.cornerBRV50{
+  position:absolute;width:28px;height:28px;border:3px solid rgba(255,255,255,.78);z-index:1;pointer-events:none;
+}
+.cornerTLV50{left:3%;top:3%;border-right:0;border-bottom:0;border-radius:100% 0 0 0;}
+.cornerTRV50{right:3%;top:3%;border-left:0;border-bottom:0;border-radius:0 100% 0 0;}
+.cornerBLV50{left:3%;bottom:3%;border-right:0;border-top:0;border-radius:0 0 0 100%;}
+.cornerBRV50{right:3%;bottom:3%;border-left:0;border-top:0;border-radius:0 0 100% 0;}
+
+/* Suplentes: más visibles */
+.benchPlayerV11{padding:15px 16px!important;gap:12px!important;min-height:66px!important;}
+.benchNameV11{font-size:18px!important;line-height:1.2!important;font-weight:1000!important;color:#f5f8fc!important;}
+.benchPosV11{font-size:13px!important;line-height:1.25!important;color:#9fb0c5!important;margin-top:4px!important;}
+.benchShirtV11{font-size:16px!important;min-width:38px!important;}
+
+/* Crónica: menor que V49, pero cómoda de leer */
+#chronicleV20,#chronicleV20 .v25-chronicle{
+  font-size:20px!important;
+  line-height:1.65!important;
+  font-weight:600!important;
+}
+.matchChronicleV20 h3{font-size:24px!important;}
+
+@media(max-width:700px){
+  .benchPlayerV11{padding:13px 14px!important;min-height:60px!important;}
+  .benchNameV11{font-size:16px!important;}
+  .benchPosV11{font-size:12px!important;}
+  #chronicleV20,#chronicleV20 .v25-chronicle{font-size:19px!important;line-height:1.62!important;}
+  .matchChronicleV20 h3{font-size:22px!important;}
+}
+@media(max-width:430px){
+  .benchNameV11{font-size:15px!important;}
+  .benchPosV11{font-size:11px!important;}
+  #chronicleV20,#chronicleV20 .v25-chronicle{font-size:18px!important;line-height:1.6!important;}
+  .penaltyArcTopV50,.penaltyArcBottomV50{width:25%;}
+}
+</style>
+
 </head>
 <body>
 <div class="app">
 <header class="topbar">
-  <div class="brand"><div class="brandMark">⚽</div><div>RS LIVE<small>RAMÓN SICART • MATCH CENTER</small></div></div>
+  <div class="brand brandCrestOnlyV35"><div class="brandMark crestBrandMarkV34"><img id="headerRamonCrestV29" alt="Ramón Sicart"></div></div>
   <div class="topStatus"><span id="syncDot" class="dot"></span><span id="syncText">Conectando Firebase…</span></div>
 </header>
 <button class="mobileMenuBtnV14" id="mobileMenuBtnV14" aria-label="Abrir menú">☰</button>
 <div class="sideOverlayV14" id="sideOverlayV14"></div>
 <aside class="sideMenuV14" id="sideMenuV14">
-  <div class="sideHeadV14"><div class="brand"><div class="brandMark">⚽</div><div>RS LIVE<small>RAMÓN SICART</small></div></div><button id="closeSideV14">×</button></div>
+  <div class="sideHeadV14"><div class="brand"><div class="brandMark crestBrandMarkV34"><img id="sideRamonCrestV34" alt="Ramón Sicart"></div><div>RS LIVE<small>RAMÓN SICART</small></div></div><button id="closeSideV14">×</button></div>
   <div class="sideNavV14" id="sideNavV14">
     <button class="active" data-page="home">🏠 <span>Inicio</span></button>
     <button data-page="squad">👥 <span>Plantilla</span></button>
@@ -973,8 +1630,6 @@ button{cursor:pointer}
     <button class="btn" id="closeDetailsV20">✕ Cerrar</button>
   </div>
   <div class="completedScoreV20" id="completedScoreV20"></div>
-  <div id="completedLineupV29" class="completedLineupV29" style="display:none"></div>
-
 
   <div class="detailGroupV20">
     <h3>⚽ GOLES</h3>
@@ -989,6 +1644,7 @@ button{cursor:pointer}
     <div id="detailChangesV20"></div>
   </div>
 
+  <div id="completedLineupV31" class="completedLineupV31" style="display:none"></div>
   <div class="matchChronicleV20">
     <h3>📰 CRÓNICA DEL PARTIDO</h3>
     <div id="chronicleV20"></div>
@@ -1433,14 +2089,12 @@ function finish(){
   m.homeScore=Number(Live.homeScore||0);
   m.awayScore=Number(Live.awayScore||0);
   m.events=JSON.parse(JSON.stringify(Live.events||[]));
-  m.lineupSnapshot=m.lineupSnapshot||{
-    formation:App.lineup?.formation||Live.formation||"4-3-3",
-    players:(Array.isArray(Live.lineup)&&Live.lineup.length?Live.lineup:App.lineup?.players||[]).map(Number).slice(0,11),
-    savedAt:Date.now()
-  };
-  m.lineup=Array.isArray(m.lineupSnapshot.players)?m.lineupSnapshot.players.slice():[];
+  if(!m.lineupSnapshot && Array.isArray(Live.lineup) && Live.lineup.length){
+    m.lineupSnapshot={formation:Live.formation||App.lineup?.formation||"4-3-3",players:Live.lineup.slice(0,11),savedAt:Date.now()};
+    m.lineup=Live.lineup.slice(0,11);
+  }
   m.finishedAt=Date.now();
-  save();renderAll();toast("Partido finalizado · resultado y alineación guardados");
+  save();renderAll();toast("Partido finalizado · resultado guardado");
 }
 function adjustMinute(n){
   const next=Math.min(80,Math.max(0,displayMinute()+n));
@@ -1567,7 +2221,14 @@ function createMatch(){
 function deleteMatch(id){if(!confirm("¿Eliminar partido?"))return;App.matches=App.matches.filter(m=>Number(m.id)!==Number(id));if(Number(App.activeMatch)===Number(id))App.activeMatch=App.matches[0]?.id??null;save();renderAll()}
 function saveLineup(){
  const ids=[...document.querySelectorAll("#lineupChecks input:checked")].map(x=>Number(x.value));if(ids.length!==11){toast("Selecciona exactamente 11 jugadores");return}
- App.lineup={formation:document.getElementById("formationSelect").value,players:ids};Live.lineup=ids.slice();Live.formation=App.lineup.formation;save();renderAll();toast("Alineación guardada")
+ App.lineup={formation:document.getElementById("formationSelect").value,players:ids};
+ Live.lineup=ids.slice();Live.formation=App.lineup.formation;
+ const lm=activeMatch();
+ if(lm){
+   lm.lineupSnapshot={formation:App.lineup.formation,players:ids.slice(),savedAt:Date.now()};
+   lm.lineup=ids.slice();
+ }
+ save();renderAll();toast("Alineación guardada en el partido")
 }
 function closeModal(id){document.getElementById(id).classList.remove("open")}
 function unlock(){
@@ -1720,18 +2381,8 @@ document.getElementById("saveXI10")?.addEventListener("click",()=>{
   if(a.length!==11){toast("Debes seleccionar 11 jugadores");return}
   if(new Set(a).size!==11){toast("No puede haber jugadores repetidos");return}
   Live.lineup=a.slice(); Live.formation=App.lineup.formation||"4-3-3";
-  const lineupMatch=activeMatch();
-  if(lineupMatch){
-    lineupMatch.lineupSnapshot={
-      formation:App.lineup.formation||"4-3-3",
-      players:a.slice(),
-      savedAt:Date.now()
-    };
-    /* Compatibilidad con estadísticas/histórico */
-    lineupMatch.lineup=a.slice();
-  }
   localStorage.setItem("rs_lineup",JSON.stringify({formation:App.lineup.formation,players:a}));
-  save();renderAll();renderAdminXI10();renderPublicTeamV11();toast("Once guardado en el partido 👕");
+  save();renderAll();renderAdminXI10();renderPublicTeamV11();toast("Once guardado y publicado 👕");
 });
 
 /* V15: render general estable. */
@@ -1765,7 +2416,19 @@ function renderPublicTeamV11(){
   const formation=lineup.formation||"4-3-3";
   const pos=positions(formation);
 
-  pitch.innerHTML='<div class="publicCircleV11"></div>';
+  pitch.innerHTML=`
+    <div class="fieldMarkV33 penaltyTopV33"></div>
+    <div class="fieldMarkV33 penaltyBottomV33"></div>
+    <div class="goalAreaTopV33"></div>
+    <div class="goalAreaBottomV33"></div>
+    <div class="penaltyArcTopV50"></div>
+    <div class="penaltyArcBottomV50"></div>
+    <div class="cornerTLV50"></div><div class="cornerTRV50"></div>
+    <div class="cornerBLV50"></div><div class="cornerBRV50"></div>
+    <div class="publicCircleV11"></div>
+    <div class="centerSpotV33"></div>
+    <div class="pitchRamonCrestV34"><img id="pitchRamonCrestV34" alt="Ramón Sicart"></div>
+  `;
   nums.forEach((n,i)=>{
     const p=App.players.find(x=>Number(x.number)===n);
     if(!p)return;
@@ -2601,216 +3264,248 @@ document.addEventListener("click",function(e){
 </script>
 
 
-<script id="v29-lineup-history-script">
+<script id="v31-runtime">
 (function(){
-  function v29ScheduledStart(m){
-    if(!m || !m.date || !m.hour)return null;
+  function startMs(m){
+    if(!m || !m.date || !m.hour) return null;
     const d=new Date(String(m.date)+"T"+String(m.hour));
     return Number.isNaN(d.getTime())?null:d.getTime();
   }
 
-  function v29LiveWindow(m){
-    if(!m)return false;
-    /* Finalizado: nunca se muestra en Inicio */
-    if(m.status==="FINISHED" || Live.state==="FINISHED")return false;
+  function showPublicLiveOnlyAtRightTime(){
+    const m=typeof activeMatch==="function"?activeMatch():null;
+    const events=document.getElementById("publicLiveConsole");
+    const lineup=document.getElementById("publicTeamV11");
+    if(!events || !lineup) return;
 
-    const live=["FIRST_HALF","HALFTIME","SECOND_HALF"].includes(String(Live.state));
-    if(live)return true;
-
-    /* PREPARTIDO: exactamente desde 60 min antes del inicio */
-    const start=v29ScheduledStart(m);
-    if(!start)return false;
-    const now=Date.now();
-    return now>=start-60*60*1000 && now<start;
-  }
-
-  function v29RenderPublicVisibility(){
-    const home=document.getElementById("home");
-    if(!home)return;
-    const m=activeMatch();
-    const visible=v29LiveWindow(m);
-    home.classList.toggle("rsHomeHideLiveV29",!visible);
+    let visible=false;
+    if(m){
+      const state=String(Live?.state||"");
+      if(m.status!=="FINISHED" && ["FIRST_HALF","HALFTIME","SECOND_HALF"].includes(state)){
+        visible=true;
+      }else if(m.status!=="FINISHED"){
+        const start=startMs(m);
+        if(start){
+          const now=Date.now();
+          visible=now>=start-3600000 && now<start;
+        }
+      }
+    }
+    events.style.display=visible?"":"none";
+    lineup.style.display=visible?"":"none";
 
     const hint=document.getElementById("publicLiveHint");
-    if(hint){
-      if(["FIRST_HALF","HALFTIME","SECOND_HALF"].includes(String(Live.state)))
-        hint.textContent="EN DIRECTO";
-      else
-        hint.textContent="DESDE 1 HORA ANTES";
-    }
+    if(hint) hint.textContent=visible && ["FIRST_HALF","HALFTIME","SECOND_HALF"].includes(String(Live?.state||""))
+      ?"EN DIRECTO":"DESDE 1 HORA ANTES";
   }
 
-  function v29LineupSnapshot(m){
-    const snap=m?.lineupSnapshot;
-    if(snap && Array.isArray(snap.players) && snap.players.length) return snap;
-    if(Array.isArray(m?.lineup) && m.lineup.length)
-      return {formation:m.formation||"4-3-3",players:m.lineup.slice(0,11)};
-    return null;
-  }
-
-  function v29RenderSavedLineup(m){
-    const box=document.getElementById("completedLineupV29");
-    if(!box)return;
-    const snap=v29LineupSnapshot(m);
-    if(!snap){
-      box.style.display="none";
-      box.innerHTML="";
-      return;
+  function renderSavedLineup(m){
+    const box=document.getElementById("completedLineupV31");
+    if(!box || !m) return;
+    const snap=m.lineupSnapshot || (Array.isArray(m.lineup)&&m.lineup.length
+      ? {formation:m.formation||"4-3-3",players:m.lineup.slice(0,11)} : null);
+    if(!snap || !Array.isArray(snap.players) || !snap.players.length){
+      box.style.display="none"; box.innerHTML=""; return;
     }
-
-    const nums=(snap.players||[]).map(Number).slice(0,11);
-    const formation=snap.formation||"4-3-3";
-    const pos=positions(formation);
-    const players=nums.map(n=>(App.players||[]).find(p=>Number(p.number)===n)).filter(Boolean);
+    const nums=snap.players.map(Number).slice(0,11);
+    const ps=nums.map(n=>(App.players||[]).find(p=>Number(p.number)===n)).filter(Boolean);
     const starters=new Set(nums);
     const bench=(App.players||[]).filter(p=>!starters.has(Number(p.number)));
-
+    const pos=typeof positions==="function"?positions(snap.formation||"4-3-3"):[];
     box.style.display="block";
     box.innerHTML=`
-      <div class="lineupHeadV29">
-        <h3>👕 Alineación inicial</h3>
-        <span>Formación ${esc(formation)}</span>
-      </div>
-      <div class="savedPitchV29">
-        ${players.map((p,i)=>{
-          const xy=pos[i]||[50,50];
-          return `<div class="savedPitchPlayerV29" style="left:${xy[0]}%;top:${xy[1]}%">
-            <div class="shirt">${esc(p.number)}</div>
-            <b>${esc(p.name)}</b>
-            <small>${esc(p.position||"")}</small>
-          </div>`;
-        }).join("")}
-      </div>
-      <div class="savedBenchV29">
-        <div class="savedBenchTitleV29">🪑 SUPLENTES</div>
-        <div class="savedBenchGridV29">
-          ${bench.length?bench.map(p=>`<div class="savedBenchPlayerV29"><b>#${esc(p.number)} ${esc(p.name)}</b><small>${esc(p.position||"")}</small></div>`).join(""):'<div class="savedBenchPlayerV29">No hay suplentes configurados.</div>'}
-        </div>
+      <div class="savedHead"><b>👕 ALINEACIÓN INICIAL</b><span>Formación ${esc(snap.formation||"4-3-3")}</span></div>
+      <div class="savedPitchV31">${ps.map((p,i)=>{
+        const xy=pos[i]||[50,50];
+        return `<div class="savedPlayerV31" style="left:${xy[0]}%;top:${xy[1]}%">
+          <div class="savedShirtV31">${esc(p.number)}</div>
+          <b>${esc(p.name)}</b><small>${esc(p.position||"")}</small>
+        </div>`;
+      }).join("")}</div>
+      <div class="savedBenchV31"><strong>🪑 SUPLENTES</strong>
+        <div class="savedBenchGridV31">${bench.length?bench.map(p=>`<div class="savedBenchItemV31">#${esc(p.number)} ${esc(p.name)}<small>${esc(p.position||"")}</small></div>`).join(""):"<div class='savedBenchItemV31'>No hay suplentes configurados.</div>"}</div>
       </div>`;
   }
 
-  /* Encadena el render de Inicio sin sustituir la lógica existente. */
-  const baseHome=window.renderHome;
-  window.renderHome=function(){
-    if(typeof baseHome==="function")baseHome.apply(this,arguments);
-    try{v29RenderPublicVisibility()}catch(e){console.error("V29 visibility",e)}
-  };
+  const originalRenderAll=window.renderAll;
+  if(typeof originalRenderAll==="function"){
+    window.renderAll=function(){
+      originalRenderAll.apply(this,arguments);
+      try{showPublicLiveOnlyAtRightTime()}catch(e){console.error("V31 visibility",e)}
+    };
+  }
 
-  /* El histórico de Ver detalles conserva la alineación del partido. */
-  const baseDetails=window.v25ShowDetails;
-  window.v25ShowDetails=function(id){
-    if(typeof baseDetails==="function")baseDetails(id);
-    const m=(App.matches||[]).find(x=>String(x.id)===String(id));
-    if(m) v29RenderSavedLineup(m);
-  };
+  const originalDetails=window.v25ShowDetails;
+  if(typeof originalDetails==="function"){
+    window.v25ShowDetails=function(id){
+      originalDetails(id);
+      setTimeout(()=>{
+        const m=(App.matches||[]).find(x=>String(x.id)===String(id));
+        if(m)renderSavedLineup(m);
+      },30);
+    };
+  }
 
-  /* Si otra versión reemplaza v25ShowDetails después, el click sigue llamando
-     al wrapper mediante un pequeño listener de captura. */
   document.addEventListener("click",function(e){
-    const b=e.target.closest('button[onclick^="v25ShowDetails"]');
+    const b=e.target.closest("button[onclick*='v25ShowDetails']");
     if(!b)return;
-    const mm=String(b.getAttribute("onclick")||"").match(/\(([^)]+)\)/);
-    if(!mm)return;
     setTimeout(()=>{
-      const m=(App.matches||[]).find(x=>String(x.id)===String(mm[1]));
-      if(m)v29RenderSavedLineup(m);
-    },40);
-  },true);
+      const raw=b.getAttribute("onclick")||"";
+      const match=raw.match(/v25ShowDetails\(([^)]+)\)/);
+      if(!match)return;
+      const m=(App.matches||[]).find(x=>String(x.id)===String(match[1]));
+      if(m)renderSavedLineup(m);
+    },80);
+  });
 
-  /* Recalcular visibilidad periódicamente para cruzar el umbral de 1 hora. */
-  setInterval(v29RenderPublicVisibility,15000);
-  setTimeout(v29RenderPublicVisibility,250);
+  setInterval(showPublicLiveOnlyAtRightTime,15000);
+  setTimeout(showPublicLiveOnlyAtRightTime,500);
+})();
+</script>
+
+<style id="v34-professional-ui">
+/* V34 — club identity, larger home typography, redesigned matches, pitch crest */
+.crestBrandMarkV34{display:grid!important;place-items:center!important;overflow:hidden!important;padding:6px!important}
+.crestBrandMarkV34 img{width:100%;height:100%;object-fit:contain;display:block}
+
+/* Inicio: escala tipográfica general */
+#home{font-size:18px}
+#home .homeHeroV29 h1{font-size:clamp(34px,5vw,52px)}
+#home .homeHeroV29 p{font-size:clamp(16px,2.1vw,20px);line-height:1.45}
+#home .liveHero .heroTop{font-size:clamp(15px,2vw,19px)}
+#home .teamHeroName{font-size:clamp(22px,3vw,30px)!important}
+#home .scoreArea .score{font-size:clamp(42px,6vw,68px)!important}
+#home .scoreArea .clock{font-size:clamp(30px,4vw,44px)!important}
+#home .scoreArea .state{font-size:clamp(16px,2vw,21px)!important}
+#home .meta{font-size:clamp(15px,1.9vw,19px)!important;gap:18px!important}
+#home .integratedEventsHeadV13{font-size:clamp(15px,2vw,19px)!important}
+#home .eventTimeline{font-size:clamp(15px,1.9vw,19px)!important}
+#home .v26DashCard .sectionTitle h2{font-size:clamp(20px,2.6vw,27px)!important}
+#home .v26DashCard .sectionTitle p{font-size:15px!important}
+#home .v26MiniList{font-size:16px!important}
+
+/* Partidos: tarjeta más limpia y resultado perfectamente centrado */
+.matchRowV32{
+  grid-template-columns:170px minmax(0,1fr)!important;
+  grid-template-areas:"date teams" "date result"!important;
+  gap:18px 34px!important;
+  padding:30px 38px!important;
+  min-height:285px!important;
+  background:linear-gradient(145deg,rgba(18,39,63,.98),rgba(7,20,35,.98))!important;
+}
+.matchDateV32{grid-area:date!important;align-self:center!important;font-size:22px!important;line-height:1.5!important}
+.matchTeamsV32{grid-area:teams!important;grid-template-columns:minmax(190px,1fr) 80px minmax(190px,1fr)!important;gap:18px 30px!important}
+.matchTeamV32 .matchCrestV32{width:88px!important;height:88px!important;flex-basis:88px!important}
+.matchTeamV32 .matchNameV32{font-size:29px!important;line-height:1.18!important}
+.matchVsV32{font-size:27px!important}
+.matchCompetitionV32{font-size:17px!important}
+.matchResultV32{grid-area:result!important;justify-content:center!important;gap:18px!important;padding-top:4px!important}
+.matchResultV32 strong{font-size:48px!important;min-width:150px!important}
+.matchResultV32 .finalBadgeV20,.matchResultV32 .liveBadgeV23,.matchResultV32 .pendingBadgeV23{font-size:17px!important;padding:12px 19px!important}
+.matchResultV32 .btn{font-size:17px!important;padding:14px 22px!important}
+
+/* Detalle: crónica claramente legible */
+.matchChronicleV20{padding:26px!important}
+.matchChronicleV20 h3{font-size:22px!important}
+#chronicleV20{font-size:21px!important;line-height:1.85!important;letter-spacing:.1px}
+
+/* Escudo fijo dentro del campo */
+.publicPitchV11{position:relative!important}
+.pitchRamonCrestV34{position:absolute;right:5.8%;top:5.5%;width:clamp(54px,9%,78px);height:clamp(54px,9%,78px);z-index:8;padding:6px;border-radius:14px;background:rgba(4,18,30,.72);border:1px solid rgba(255,255,255,.35);box-shadow:0 7px 18px rgba(0,0,0,.32);backdrop-filter:blur(4px)}
+.pitchRamonCrestV34 img{width:100%;height:100%;object-fit:contain;display:block}
+
+@media(max-width:900px){
+  .matchRowV32{grid-template-columns:130px minmax(0,1fr)!important;gap:16px 22px!important;padding:27px 24px!important}
+  .matchTeamsV32{grid-template-columns:minmax(150px,1fr) 55px minmax(150px,1fr)!important}
+  .matchTeamV32 .matchCrestV32{width:78px!important;height:78px!important;flex-basis:78px!important}
+  .matchTeamV32 .matchNameV32{font-size:25px!important}
+  .matchResultV32 strong{font-size:43px!important}
+  #chronicleV20{font-size:19px!important}
+}
+@media(max-width:600px){
+  #home{font-size:16px}
+  .matchRowV32{grid-template-columns:1fr!important;grid-template-areas:"date" "teams" "result"!important;gap:16px!important;padding:25px 17px!important;min-height:0!important}
+  .matchDateV32{font-size:19px!important}
+  .matchTeamsV32{grid-template-columns:minmax(0,1fr) 42px minmax(0,1fr)!important;gap:8px!important}
+  .matchTeamV32 .matchCrestV32{width:70px!important;height:70px!important;flex-basis:70px!important}
+  .matchTeamV32 .matchNameV32{font-size:22px!important}
+  .matchVsV32{font-size:21px!important}
+  .matchCompetitionV32{font-size:15px!important}
+  .matchResultV32 strong{font-size:40px!important;min-width:125px!important}
+  .matchResultV32 .finalBadgeV20,.matchResultV32 .liveBadgeV23,.matchResultV32 .pendingBadgeV23{font-size:15px!important}
+  .matchResultV32 .btn{font-size:15px!important}
+  #chronicleV20{font-size:18px!important;line-height:1.75!important}
+  .matchChronicleV20 h3{font-size:20px!important}
+  .pitchRamonCrestV34{right:5%;top:5%;width:54px;height:54px}
+}
+</style>
+<script id="v34-club-crest-sync">
+(function(){
+  function getRamon(){
+    try{
+      const list=(App&&App.teams)||[];
+      return list.find(t=>/ram[oó]n\s+sicart/i.test(String(t.name||''))) || list.find(t=>Number(t.id)===1) || null;
+    }catch(e){return null}
+  }
+  function sync(){
+    const t=getRamon(); const logo=t&&(t.logo||t.crest||'');
+    ['headerRamonCrestV29','sideRamonCrestV34','pitchRamonCrestV34'].forEach(id=>{
+      const el=document.getElementById(id); if(!el)return;
+      if(logo){el.src=logo;el.style.display='block'} else {el.removeAttribute('src');el.style.display='none'}
+    });
+  }
+  const old=window.renderAll;
+  window.renderAll=function(){if(typeof old==='function')old.apply(this,arguments);setTimeout(sync,0)};
+  setTimeout(sync,300);setTimeout(sync,1200);setInterval(sync,2500);
 })();
 </script>
 
 
-
 <!-- =========================================================
-     V31 — CORRECCIONES DEFINITIVAS:
-     1) Historial de alineación REAL por partido (titulares + suplentes)
-     2) Crónica narrada mucho más grande y legible
+     RS LIVE V48 — RESTAURACIÓN FINAL Y BLOQUEO DEL HISTÓRICO
+     - Mantiene el diseño profesional horizontal de resultados V40.
+     - Reiniciar nunca borra partidos finalizados.
+     - Ver detalles muestra SOLO ese partido.
+     - Guarda y recupera la alineación histórica real (titulares + suplentes).
+     - Permite editar/eliminar partidos desde Administrador.
      ========================================================= -->
-</style>
+<style id="rs-v48-final">
+  /* Cuando se entra en detalle, ocultar completamente el listado de partidos */
+  #matches.rsV48DetailsOpen > .sectionTitle,
+  #matches.rsV48DetailsOpen > .card.infoCard{
+    display:none!important;
+  }
 
-<style id="v31-final-fixes-css">
-  /* La crónica narrada: NO el título, solo el texto del relato. */
+  /* Crónica: se mantiene grande; afecta al relato, no al título */
   #chronicleV20 .v25-chronicle,
-  #chronicleV20,
-  .matchChronicleV20 #chronicleV20{
-    font-size:22px !important;
-    line-height:1.8 !important;
-    color:#f1f5fa !important;
-    font-weight:650 !important;
-    letter-spacing:.1px !important;
+  #chronicleV20{
+    font-size:34px!important;
+    line-height:1.65!important;
+    font-weight:650!important;
+    color:#edf3f9!important;
+    letter-spacing:.1px!important;
   }
-  #chronicleV20 .v25-chronicle b,
-  #chronicleV20 .v25-chronicle .highlight{
-    font-size:inherit !important;
-  }
-  @media(max-width:600px){
+  @media(max-width:700px){
     #chronicleV20 .v25-chronicle,
-    #chronicleV20,
-    .matchChronicleV20 #chronicleV20{
-      font-size:21px !important;
-      line-height:1.75 !important;
+    #chronicleV20{
+      font-size:25px!important;
+      line-height:1.62!important;
     }
   }
 
-  /* Histórico de alineación: nombres claramente visibles. */
-  .v31-history-pitch{
-    position:relative;
-    width:100%;
-    max-width:620px;
-    margin:0 auto;
-    aspect-ratio:9/14;
-    min-height:500px;
-    overflow:hidden;
-    border:3px solid #d9ebca;
-    border-radius:22px;
-    background:repeating-linear-gradient(90deg,#237d4e 0,#237d4e 12%,#207449 12%,#207449 24%);
-    box-shadow:inset 0 0 0 3px rgba(255,255,255,.12);
-  }
-  .v31-history-pitch:before{
-    content:"";position:absolute;inset:4%;border:3px solid rgba(240,255,240,.82);border-radius:10px;
-  }
-  .v31-history-pitch:after{
-    content:"";position:absolute;left:50%;top:50%;width:18%;aspect-ratio:1;transform:translate(-50%,-50%);
-    border:3px solid rgba(240,255,240,.7);border-radius:50%;
-  }
-  .v31-history-player{
-    position:absolute;transform:translate(-50%,-50%);z-index:2;width:105px;text-align:center;
-  }
-  .v31-history-player .shirt{
-    width:50px;height:59px;margin:0 auto 5px;display:grid;place-items:center;
-    font-size:16px;font-weight:1000;color:#111;
-    background:repeating-linear-gradient(90deg,#ffd400 0,#ffd400 33%,#e21d2f 33%,#e21d2f 66%,#ffd400 66%,#ffd400 100%);
-    clip-path:polygon(18% 0,37% 0,50% 10%,63% 0,82% 0,100% 23%,86% 32%,86% 100%,14% 100%,14% 32%,0 23%);
-    filter:drop-shadow(0 3px 5px rgba(0,0,0,.3));
-  }
-  .v31-history-player b{
-    display:block;background:#061c13;color:#fff;border-radius:9px;padding:5px 4px;
-    font-size:12px;line-height:1.15;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  }
-  .v31-history-player small{display:block;color:#fff;font-size:9px;margin-top:3px;font-weight:800}
-  .v31-history-bench{margin-top:14px}
-  .v31-history-bench-title{font-size:12px;color:var(--yellow);font-weight:1000;margin-bottom:9px}
-  .v31-history-bench-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:8px}
-  .v31-history-bench-player{
-    background:#0a1a2b;border:1px solid #20344f;border-radius:10px;padding:9px;font-size:11px;
-  }
-  .v31-history-bench-player b{color:#fff}.v31-history-bench-player small{display:block;color:var(--muted);margin-top:3px}
-  @media(max-width:600px){
-    .v31-history-pitch{min-height:430px}
-    .v31-history-player{width:76px}
-    .v31-history-player .shirt{width:38px;height:45px;font-size:13px}
-    .v31-history-player b{font-size:9px;padding:4px 3px}
-    .v31-history-player small{font-size:7px}
+  /* Editor de partido */
+  .rsV48EditBox{
+    display:grid;
+    gap:10px;
   }
 </style>
-<script id="v31-final-fixes-script">
+
+<script id="rs-v48-final-script">
 (function(){
-  function v31PlayersByNumbers(numbers){
-    return (numbers||[]).map(Number).map(n=>{
+  "use strict";
+
+  function rsV48Players(numbers){
+    return (numbers||[]).map(Number).slice(0,11).map(n=>{
       const p=(App.players||[]).find(x=>Number(x.number)===n);
       return p ? {
         number:Number(p.number),
@@ -2821,39 +3516,47 @@ document.addEventListener("click",function(e){
     });
   }
 
-  function v31BuildSnapshot(){
-    const formation=App.lineup?.formation||Live.formation||"4-3-3";
+  function rsV48MakeSnapshot(){
     const nums=(Array.isArray(Live.lineup)&&Live.lineup.length
       ? Live.lineup
       : (App.lineup?.players||[])).map(Number).slice(0,11);
-    const starters=v31PlayersByNumbers(nums);
-    const starterSet=new Set(nums);
+
+    const formation=Live.formation||App.lineup?.formation||"4-3-3";
+    const starters=rsV48Players(nums);
+    const set=new Set(nums);
+
+    /* Guardamos también los suplentes como datos independientes */
     const bench=(App.players||[])
-      .filter(p=>!starterSet.has(Number(p.number)))
+      .filter(p=>!set.has(Number(p.number)))
       .sort((a,b)=>Number(a.number)-Number(b.number))
       .map(p=>({
-        number:Number(p.number),name:String(p.name||"Jugador"),surname:String(p.surname||""),position:String(p.position||"Jugador")
+        number:Number(p.number),
+        name:String(p.name||"Jugador"),
+        surname:String(p.surname||""),
+        position:String(p.position||"Jugador")
       }));
+
     return {formation,players:nums.slice(),starters,bench,savedAt:Date.now()};
   }
 
-  function v31SnapshotForMatch(m){
-    const s=m?.lineupSnapshot;
-    if(s && Array.isArray(s.starters) && s.starters.length) return s;
-    if(s && Array.isArray(s.players) && s.players.length){
+  function rsV48Snapshot(m){
+    if(!m) return null;
+    if(m.lineupSnapshot && Array.isArray(m.lineupSnapshot.players) && m.lineupSnapshot.players.length){
+      const s=m.lineupSnapshot;
       return {
-        formation:s.formation||m?.formation||"4-3-3",
+        formation:s.formation||m.formation||"4-3-3",
         players:s.players.slice(0,11),
-        starters:v31PlayersByNumbers(s.players.slice(0,11)),
-        bench:(Array.isArray(s.bench)?s.bench:[]),
-        savedAt:s.savedAt||m?.finishedAt||Date.now()
+        starters:Array.isArray(s.starters)&&s.starters.length?s.starters:rsV48Players(s.players),
+        bench:Array.isArray(s.bench)?s.bench:[],
+        savedAt:s.savedAt||m.finishedAt||Date.now()
       };
     }
-    if(Array.isArray(m?.lineup) && m.lineup.length){
+    if(Array.isArray(m.lineup)&&m.lineup.length){
+      const nums=m.lineup.slice(0,11).map(Number);
       return {
         formation:m.formation||"4-3-3",
-        players:m.lineup.slice(0,11),
-        starters:v31PlayersByNumbers(m.lineup.slice(0,11)),
+        players:nums,
+        starters:rsV48Players(nums),
         bench:[],
         savedAt:m.finishedAt||Date.now()
       };
@@ -2861,106 +3564,220 @@ document.addEventListener("click",function(e){
     return null;
   }
 
-  function v31RenderSavedLineup(m){
-    const box=document.getElementById("completedLineupV29");
+  function rsV48RenderHistory(m){
+    const box=document.getElementById("completedLineupV31");
     if(!box)return;
-    const snap=v31SnapshotForMatch(m);
-    if(!snap){box.style.display="none";box.innerHTML="";return;}
+    const snap=rsV48Snapshot(m);
+    if(!snap){
+      box.style.display="none";
+      box.innerHTML="";
+      return;
+    }
 
     const starters=Array.isArray(snap.starters)&&snap.starters.length
-      ? snap.starters
-      : v31PlayersByNumbers(snap.players||[]);
+      ? snap.starters : rsV48Players(snap.players||[]);
     const formation=snap.formation||"4-3-3";
-    const pos=positions(formation);
+    const pos=typeof positions==="function"?positions(formation):[];
     let bench=Array.isArray(snap.bench)?snap.bench:[];
+
     if(!bench.length && Array.isArray(snap.players)){
-      const starterSet=new Set(snap.players.map(Number));
-      bench=(App.players||[]).filter(p=>!starterSet.has(Number(p.number))).sort((a,b)=>Number(a.number)-Number(b.number));
+      const set=new Set(snap.players.map(Number));
+      bench=(App.players||[])
+        .filter(p=>!set.has(Number(p.number)))
+        .sort((a,b)=>Number(a.number)-Number(b.number))
+        .map(p=>({number:p.number,name:p.name,position:p.position}));
     }
 
     box.style.display="block";
     box.innerHTML=`
-      <div class="lineupHeadV29">
-        <h3>👕 Alineación inicial del partido</h3>
+      <div class="savedHead">
+        <b>👕 ALINEACIÓN INICIAL DEL PARTIDO</b>
         <span>Formación ${esc(formation)}</span>
       </div>
-      <div class="v31-history-pitch">
+      <div class="savedPitchV31">
         ${starters.map((p,i)=>{
           const xy=pos[i]||[50,50];
-          return `<div class="v31-history-player" style="left:${xy[0]}%;top:${xy[1]}%">
-            <div class="shirt">${esc(p.number)}</div>
+          return `<div class="savedPlayerV31" style="left:${xy[0]}%;top:${xy[1]}%">
+            <div class="savedShirtV31">${esc(p.number)}</div>
             <b>${esc(p.name)}</b>
             <small>${esc(p.position||"Jugador")}</small>
           </div>`;
         }).join("")}
       </div>
-      <div class="v31-history-bench">
-        <div class="v31-history-bench-title">🪑 SUPLENTES DEL PARTIDO</div>
-        <div class="v31-history-bench-grid">
-          ${bench.length?bench.map(p=>`<div class="v31-history-bench-player"><b>#${esc(p.number)} ${esc(p.name)}</b><small>${esc(p.position||"Jugador")}</small></div>`).join(""):'<div class="v31-history-bench-player">No hay suplentes guardados para este encuentro.</div>'}
+      <div class="savedBenchV31">
+        <strong>🪑 SUPLENTES DEL PARTIDO</strong>
+        <div class="savedBenchGridV31">
+          ${bench.length
+            ? bench.map(p=>`<div class="savedBenchItemV31"><b>#${esc(p.number)} ${esc(p.name)}</b><small>${esc(p.position||"Jugador")}</small></div>`).join("")
+            : `<div class="savedBenchItemV31">No hay suplentes guardados para este encuentro.</div>`}
         </div>
       </div>`;
   }
 
-  /* Al finalizar: guardar una copia independiente de la alineación de ESE partido.
-     Así no cambia aunque después se modifique la plantilla actual. */
+  /* 1) FINALIZAR: snapshot histórico independiente antes de que pueda cambiar la plantilla */
+  const oldFinish=window.finish;
   window.finish=function(){
     const m=activeMatch();
-    if(!m){toast("Crea o activa un partido primero");return;}
-    const snapshot=v31BuildSnapshot();
-    Live.half=2;Live.state="FINISHED";Live.pausedSeconds=80*60;Live.manualMinute=80;Live.startTimestamp=null;
-    m.status="FINISHED";
-    m.homeScore=Number(Live.homeScore||0);
-    m.awayScore=Number(Live.awayScore||0);
-    m.events=JSON.parse(JSON.stringify(Live.events||[]));
-    m.lineupSnapshot=JSON.parse(JSON.stringify(snapshot));
-    m.lineup=snapshot.players.slice();
-    m.formation=snapshot.formation;
-    m.finishedAt=Date.now();
-    if(typeof v26RecalcStats==='function')v26RecalcStats();
-    save();renderAll();toast("Partido finalizado · resultado, eventos y alineación histórica guardados");
+    const snapshot=m?rsV48MakeSnapshot():null;
+
+    if(typeof oldFinish==="function") oldFinish();
+
+    if(m && snapshot){
+      m.lineupSnapshot=JSON.parse(JSON.stringify(snapshot));
+      m.lineup=snapshot.players.slice();
+      m.formation=snapshot.formation;
+      save().catch(()=>{});
+    }
   };
 
-  /* Guardar también una instantánea completa cuando se pulsa Guardar once. */
-  const oldSaveXI=document.getElementById("saveXI10");
-  if(oldSaveXI){
-    oldSaveXI.addEventListener("click",function(){
-      setTimeout(()=>{
-        const m=activeMatch();
-        if(m && m.status!=="FINISHED"){
-          const snap=v31BuildSnapshot();
-          m.lineupSnapshot=JSON.parse(JSON.stringify(snap));
-          m.lineup=snap.players.slice();
-          m.formation=snap.formation;
-          save();
-        }
-      },30);
-    });
-  }
+  /* 2) REINICIAR: SOLO limpia la consola; jamás elimina App.matches */
+  window.resetLive=function(ask=true){
+    const m=activeMatch();
+    if(ask){
+      const msg=m && m.status==="FINISHED"
+        ? "El partido finalizado se conservará. Solo se reiniciará la consola para preparar otro partido. ¿Continuar?"
+        : "¿Reiniciar únicamente la consola del partido activo?";
+      if(!confirm(msg))return;
+    }
 
-  /* Al abrir Ver detalles, solo se muestra la alineación histórica de ESE partido. */
+    Live.state="PREMATCH";
+    Live.half=1;
+    Live.homeScore=0;
+    Live.awayScore=0;
+    Live.events=[];
+    Live.lineup=[];
+    Live.formation="4-3-3";
+    Live.startTimestamp=null;
+    Live.pausedSeconds=0;
+    Live.manualMinute=0;
+
+    /* Si era un partido finalizado, lo deseleccionamos pero NO lo tocamos */
+    if(m && m.status==="FINISHED") App.activeMatch=null;
+
+    save();
+    renderAll();
+    toast("Consola reiniciada. El histórico de partidos se ha conservado.");
+  };
+
+  /* 3) DETALLE: solo el partido elegido y su alineación histórica */
   const oldDetails=window.v25ShowDetails;
   window.v25ShowDetails=function(id){
-    if(typeof oldDetails==='function')oldDetails(id);
+    if(typeof oldDetails==="function") oldDetails(id);
+
     const m=(App.matches||[]).find(x=>String(x.id)===String(id));
-    if(m)setTimeout(()=>v31RenderSavedLineup(m),20);
+    const matches=document.getElementById("matches");
+    if(matches) matches.classList.add("rsV48DetailsOpen");
+
+    if(m) setTimeout(()=>rsV48RenderHistory(m),40);
   };
 
-  /* Captura por si otra versión vuelve a enganchar el botón. */
+  document.getElementById("closeDetailsV20")?.addEventListener("click",()=>{
+    document.getElementById("matches")?.classList.remove("rsV48DetailsOpen");
+  });
+
+  /* Si otra versión engancha el botón, aseguramos que el detalle siga funcionando */
   document.addEventListener("click",function(e){
-    const b=e.target.closest('button[onclick^="v25ShowDetails"]');
+    const b=e.target.closest("button[onclick*='v25ShowDetails']");
     if(!b)return;
-    const match=String(b.getAttribute("onclick")||"").match(/\(([^)]+)\)/);
-    if(!match)return;
     setTimeout(()=>{
-      const m=(App.matches||[]).find(x=>String(x.id)===String(match[1]));
-      if(m)v31RenderSavedLineup(m);
-    },50);
+      const raw=b.getAttribute("onclick")||"";
+      const mm=raw.match(/v25ShowDetails\(([^)]+)\)/);
+      if(!mm)return;
+      const m=(App.matches||[]).find(x=>String(x.id)===String(mm[1]));
+      if(m){
+        document.getElementById("matches")?.classList.add("rsV48DetailsOpen");
+        rsV48RenderHistory(m);
+      }
+    },70);
   },true);
 
-  /* Si ya existen partidos históricos, normaliza snapshots antiguos sin tocar
-     su resultado ni sus eventos. */
-  function v31MigrateHistory(){
+  /* 4) ADMIN: editar partidos finalizados y próximos */
+  function rsV48OpenEdit(id){
+    const m=(App.matches||[]).find(x=>String(x.id)===String(id));
+    if(!m)return;
+
+    let modal=document.getElementById("rsV48EditMatchModal");
+    if(!modal){
+      modal=document.createElement("div");
+      modal.id="rsV48EditMatchModal";
+      modal.className="modal";
+      modal.innerHTML=`
+        <div class="modalBox">
+          <div class="modalHead">
+            <h2>✏️ Editar partido</h2>
+            <button class="close" id="rsV48EditClose">×</button>
+          </div>
+          <div class="form rsV48EditBox">
+            <label>Equipo local</label><select id="rsV48EH"></select>
+            <label>Equipo visitante</label><select id="rsV48EA"></select>
+            <div class="row">
+              <div><label>Fecha</label><input id="rsV48ED" type="date"></div>
+              <div><label>Hora</label><input id="rsV48ET" type="time"></div>
+            </div>
+            <label>Competición</label><input id="rsV48EC">
+            <label>Campo</label><input id="rsV48EF">
+            <button class="btn green" id="rsV48EditSave">💾 Guardar cambios</button>
+          </div>
+        </div>`;
+      document.body.appendChild(modal);
+      document.getElementById("rsV48EditClose").onclick=()=>modal.classList.remove("open");
+    }
+
+    const h=document.getElementById("rsV48EH"), a=document.getElementById("rsV48EA");
+    h.innerHTML=(App.teams||[]).map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join("");
+    a.innerHTML=(App.teams||[]).map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join("");
+    h.value=String(m.home); a.value=String(m.away);
+    document.getElementById("rsV48ED").value=m.date||"";
+    document.getElementById("rsV48ET").value=m.hour||"";
+    document.getElementById("rsV48EC").value=m.competition||"Liga";
+    document.getElementById("rsV48EF").value=m.field||"";
+
+    document.getElementById("rsV48EditSave").onclick=()=>{
+      const nh=Number(h.value),na=Number(a.value);
+      if(nh===na){toast("Local y visitante deben ser diferentes");return;}
+      m.home=nh;m.away=na;
+      m.date=document.getElementById("rsV48ED").value;
+      m.hour=document.getElementById("rsV48ET").value;
+      m.competition=document.getElementById("rsV48EC").value.trim()||"Liga";
+      m.field=document.getElementById("rsV48EF").value.trim();
+      save();modal.classList.remove("open");renderAll();toast("Partido actualizado");
+    };
+    modal.classList.add("open");
+  }
+  window.rsV48OpenEdit=rsV48OpenEdit;
+
+  /* Añade Editar al listado del administrador sin alterar el resto del histórico */
+  const oldRenderMatches=window.renderMatches;
+  window.renderMatches=function(){
+    if(typeof oldRenderMatches==="function") oldRenderMatches();
+
+    const admin=document.getElementById("adminMatches");
+    if(!admin)return;
+
+    admin.querySelectorAll(".adminItem").forEach(item=>{
+      const buttons=item.querySelector(".actions");
+      if(!buttons || buttons.querySelector(".rsV48EditBtn"))return;
+
+      const first=item.querySelector("b");
+      const name=first?.textContent||"";
+      const m=(App.matches||[]).find(x=>{
+        const h=team(x.home)?.name||"";
+        const a=team(x.away)?.name||"";
+        return name.trim()===`${h} vs ${a}`;
+      });
+
+      if(m){
+        const b=document.createElement("button");
+        b.className="btn small dark rsV48EditBtn";
+        b.textContent="✏️ Editar";
+        b.onclick=()=>rsV48OpenEdit(m.id);
+        buttons.insertBefore(b,buttons.lastElementChild);
+      }
+    });
+  };
+
+  /* Migración suave: partidos finalizados que aún no tienen snapshot */
+  function rsV48Migrate(){
     let changed=false;
     (App.matches||[]).forEach(m=>{
       if(m.status!=="FINISHED" || m.lineupSnapshot)return;
@@ -2968,8 +3785,8 @@ document.addEventListener("click",function(e){
         const nums=m.lineup.slice(0,11).map(Number);
         m.lineupSnapshot={
           formation:m.formation||"4-3-3",
-          players:nums.slice(),
-          starters:v31PlayersByNumbers(nums),
+          players:nums,
+          starters:rsV48Players(nums),
           bench:[],
           savedAt:m.finishedAt||Date.now()
         };
@@ -2979,100 +3796,1314 @@ document.addEventListener("click",function(e){
     if(changed)save().catch(()=>{});
   }
 
-  setTimeout(()=>{try{v31MigrateHistory()}catch(e){console.error("V31 history",e)}},500);
+  setTimeout(()=>{
+    try{rsV48Migrate()}catch(e){console.error("RS V48 migration",e)}
+    try{renderAll()}catch(e){}
+  },500);
 })();
 </script>
-\n<script id="v48-detail-admin-fix-js">
+
+</body>
+</html>
+
+
+<!-- V32 — PARTIDOS PROFESIONALES: ESCUDO ARRIBA + NOMBRE ABAJO / TIPOGRAFÍA GRANDE -->
+<style id="v32-professional-matches">
+  /* Tarjetas de partidos */
+  .matchRowV32{
+    display:grid!important;
+    grid-template-columns:155px minmax(0,1fr) 360px!important;
+    gap:26px!important;
+    align-items:center!important;
+    padding:30px 34px!important;
+    min-height:250px!important;
+  }
+  .matchTeamsV32{
+    display:grid!important;
+    grid-template-columns:minmax(180px,1fr) 70px minmax(180px,1fr)!important;
+    grid-template-rows:auto auto!important;
+    align-items:center!important;
+    justify-items:center!important;
+    gap:14px 22px!important;
+    width:100%!important;
+  }
+  .matchTeamV32{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:12px!important;
+    width:100%!important;
+    min-width:0!important;
+    text-align:center!important;
+  }
+  .matchTeamV32 .matchCrestV32{
+    width:76px!important;height:76px!important;
+    object-fit:contain!important;
+    flex:0 0 76px!important;
+    filter:drop-shadow(0 5px 10px rgba(0,0,0,.3));
+  }
+  .matchTeamV32 .matchNameV32{
+    display:block!important;
+    width:100%!important;
+    color:#fff!important;
+    font-size:25px!important;
+    line-height:1.15!important;
+    font-weight:1000!important;
+    white-space:normal!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+    overflow-wrap:anywhere!important;
+  }
+  .matchVsV32{font-size:25px!important;font-weight:1000!important;color:var(--yellow)!important}
+  .matchCompetitionV32{grid-column:1/-1!important;color:var(--muted)!important;font-size:16px!important;font-weight:800!important;margin-top:1px!important}
+  .matchDateV32{font-size:19px!important;line-height:1.55!important;color:#c1cede!important;font-weight:800!important;text-align:center!important}
+  .matchResultV32{display:flex!important;align-items:center!important;justify-content:center!important;gap:14px!important;flex-wrap:wrap!important;min-width:0!important}
+  .matchResultV32 strong{font-size:40px!important;line-height:1!important;font-weight:1000!important;min-width:125px!important;text-align:center!important;color:#fff!important}
+  .matchResultV32 .finalBadgeV20,.matchResultV32 .liveBadgeV23,.matchResultV32 .pendingBadgeV23{font-size:16px!important;padding:11px 16px!important;border-radius:14px!important}
+  .matchResultV32 .btn{font-size:16px!important;padding:13px 20px!important;border-radius:14px!important;white-space:nowrap!important}
+
+  /* Detalle del partido */
+  #completedDetailsV20{font-size:16px!important}
+  #completedTitleV20{font-size:30px!important;line-height:1.2!important}
+  .completedScoreV20{
+    min-height:100px!important;
+    padding:22px 18px!important;
+    gap:20px!important;
+    font-size:28px!important;
+  }
+  .completedScoreV20 img{width:58px!important;height:58px!important}
+  .detailGroupV20 h3,.matchChronicleV20 h3{font-size:17px!important;margin-bottom:12px!important}
+  .detailEventV24{
+    grid-template-columns:55px 38px 38px minmax(0,1fr) auto!important;
+    min-height:62px!important;
+    padding:12px 15px!important;
+    gap:11px!important;
+  }
+  .detailMinuteV20{font-size:17px!important}
+  .detailEventIconV20{font-size:24px!important}
+  .eventCrestOnlyV24{width:34px!important;height:34px!important}
+  .detailPlayerV20{font-size:16px!important;line-height:1.2!important}
+  .detailScoreV24{font-size:19px!important;min-width:52px!important}
+  .v24ChangeNames{font-size:16px!important;line-height:1.3!important}
+  #chronicleV20{font-size:16px!important;line-height:1.75!important}
+  .matchChronicleV20{padding:20px!important}
+
+  @media(max-width:900px){
+    .matchRowV32{grid-template-columns:110px minmax(0,1fr)!important;gap:18px!important;padding:26px 22px!important}
+    .matchResultV32{grid-column:1/-1!important;padding-top:8px!important}
+  }
+  @media(max-width:600px){
+    .matchRowV32{grid-template-columns:1fr!important;gap:20px!important;padding:24px 16px!important;min-height:0!important}
+    .matchDateV32{font-size:17px!important}
+    .matchTeamsV32{grid-template-columns:minmax(0,1fr) 42px minmax(0,1fr)!important;gap:10px!important}
+    .matchTeamV32 .matchCrestV32{width:62px!important;height:62px!important;flex-basis:62px!important}
+    .matchTeamV32 .matchNameV32{font-size:20px!important}
+    .matchVsV32{font-size:20px!important}
+    .matchCompetitionV32{font-size:14px!important}
+    .matchResultV32 strong{font-size:34px!important}
+    .matchResultV32 .finalBadgeV20,.matchResultV32 .liveBadgeV23,.matchResultV32 .pendingBadgeV23{font-size:14px!important}
+    #completedTitleV20{font-size:24px!important}
+    .completedScoreV20{font-size:22px!important;gap:10px!important;flex-wrap:wrap!important}
+    .completedScoreV20 img{width:48px!important;height:48px!important}
+    .detailGroupV20 h3,.matchChronicleV20 h3{font-size:15px!important}
+    .detailEventV24{grid-template-columns:42px 29px 30px minmax(0,1fr) auto!important;min-height:55px!important;padding:10px 10px!important;gap:7px!important}
+    .detailMinuteV20{font-size:15px!important}
+    .detailEventIconV20{font-size:20px!important}
+    .eventCrestOnlyV24{width:28px!important;height:28px!important}
+    .detailPlayerV20{font-size:14px!important}
+    .detailScoreV24{font-size:16px!important}
+    .v24ChangeNames{font-size:14px!important}
+    #chronicleV20{font-size:14px!important;line-height:1.65!important}
+  }
+</style>
+<script id="v32-professional-matches-script">
 (function(){
-  const matchesSection=document.getElementById('matches');
-  const closeBtn=document.getElementById('closeDetailsV20');
-  function openDetailMode(){ matchesSection?.classList.add('rsV48DetailOpen'); }
-  function closeDetailMode(){ matchesSection?.classList.remove('rsV48DetailOpen'); }
-  closeBtn?.addEventListener('click',closeDetailMode);
-
-  // El detalle SIEMPRE corresponde únicamente al partido seleccionado.
-  const previousDetails=window.v25ShowDetails;
-  window.v25ShowDetails=function(id){
-    openDetailMode();
-    if(typeof previousDetails==='function') previousDetails(id);
-    const m=(App.matches||[]).find(x=>String(x.id)===String(id));
-    if(m){
-      setTimeout(()=>{
-        try{ if(typeof v31RenderSavedLineup==='function') v31RenderSavedLineup(m); }catch(e){ console.error('V48 lineup',e); }
-        openDetailMode();
-      },60);
-    }
-  };
-
-  // Si se pulsa cualquier botón de detalle creado por otra capa, aplicar el mismo aislamiento.
-  document.addEventListener('click',function(e){
-    const b=e.target.closest('button[onclick*="ShowDetails"]');
-    if(!b)return;
-    openDetailMode();
-    setTimeout(openDetailMode,80);
-  },true);
-
-  // Editar cualquier partido desde Administración, incluso si ya está finalizado.
-  window.editMatchV48=function(id){
-    const m=(App.matches||[]).find(x=>String(x.id)===String(id));
-    if(!m){toast('Partido no encontrado');return;}
-    const h=team(m.home), a=team(m.away);
-    const date=prompt('Fecha (AAAA-MM-DD):',m.date||'');
-    if(date===null)return;
-    const hour=prompt('Hora:',m.hour||'');
-    if(hour===null)return;
-    let hs=m.status==='FINISHED'?Number(m.homeScore||0):0;
-    let as=m.status==='FINISHED'?Number(m.awayScore||0):0;
-    if(m.status==='FINISHED'){
-      const hsIn=prompt(`Resultado ${h.name} - ${a.name}\
-Goles de ${h.name}:`,String(hs));
-      if(hsIn===null)return; hs=Math.max(0,parseInt(hsIn,10)||0);
-      const asIn=prompt(`Resultado ${h.name} - ${a.name}\
-Goles de ${a.name}:`,String(as));
-      if(asIn===null)return; as=Math.max(0,parseInt(asIn,10)||0);
-    }
-    const competition=prompt('Competición:',m.competition||'Liga');
-    if(competition===null)return;
-    const field=prompt('Campo:',m.field||'');
-    if(field===null)return;
-    m.date=date.trim()||m.date;
-    m.hour=hour.trim();
-    m.competition=competition.trim()||'Liga';
-    m.field=field.trim();
-    if(m.status==='FINISHED'){m.homeScore=hs;m.awayScore=as;}
-    save(); renderAll(); toast('Partido actualizado correctamente');
-  };
-
-  // Render final de Administración: TODOS los partidos, ordenados por fecha, con editar/eliminar.
-  const baseRenderMatches=window.renderMatches;
+  function v32Crest(t){
+    const logo=t?.logo||t?.crest||'';
+    return logo ? `<img class="matchCrestV32" src="${esc(logo)}" alt="Escudo ${esc(t?.name||'')}">` : `<span class="matchCrestV32" aria-hidden="true"></span>`;
+  }
   window.renderMatches=function(){
-    if(typeof baseRenderMatches==='function')baseRenderMatches();
+    const box=document.getElementById('matchList');
     const admin=document.getElementById('adminMatches');
-    if(!admin)return;
-    const rows=(App.matches||[]).slice().sort((a,b)=>{
-      const da=String(a.date||'')+' '+String(a.hour||'');
-      const db=String(b.date||'')+' '+String(b.hour||'');
-      return da.localeCompare(db);
-    });
-    admin.innerHTML=rows.length?rows.map(m=>{
-      const h=team(m.home),a=team(m.away);
-      const fin=m.status==='FINISHED';
-      const score=fin?`${Number(m.homeScore||0)} - ${Number(m.awayScore||0)}`:'Pendiente';
+    if(!box||!admin)return;
+    const rows=(App.matches||[]).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||String(b.hour||'').localeCompare(String(a.hour||'')));
+    box.innerHTML=rows.length?rows.map(m=>{
+      const h=team(m.home), a=team(m.away);
       const active=String(m.id)===String(App.activeMatch);
-      return `<div class="adminItem">
-        <div style="min-width:0;flex:1"><b>${esc(h.name)} vs ${esc(a.name)}</b><br>
-        <small style="color:var(--muted)">${formatDate(m.date)} ${esc(m.hour||'')} · ${esc(m.competition||'Liga')} · ${score}${fin?' · FINALIZADO':''}</small></div>
-        <div class="actions v48AdminEditRow">
-          <button class="btn small ${active?'green':'dark'}" onclick="setActive(${m.id})">${active?'Activo':'Activar'}</button>
-          <button class="btn small dark" onclick="editMatchV48(${m.id})">✏️ Editar</button>
-          <button class="btn small red" onclick="deleteMatch(${m.id})">🗑 Eliminar</button>
+      const fin=m.status==='FINISHED'||(active&&Live.state==='FINISHED');
+      const live=active&&['FIRST_HALF','SECOND_HALF'].includes(Live.state);
+      let ev=[];
+      try{ev=typeof v25Events==='function'?v25Events(m):(Array.isArray(m.events)?m.events:[])}catch(_){ev=Array.isArray(m.events)?m.events:[]}
+      let hs=Number(m.homeScore||0),as=Number(m.awayScore||0);
+      if(fin && hs===0 && as===0 && ev.length){
+        const goals=ev.filter(e=>['goal','gol'].includes(String(e.type||e.eventType||'').toLowerCase()));
+        const scored=goals.map(e=>String(e.score||'').match(/^(\d+)\s*-\s*(\d+)$/)).filter(Boolean);
+        if(scored.length){hs=Number(scored.at(-1)[1]);as=Number(scored.at(-1)[2]);}
+        else {hs=goals.filter(e=>e.team==='home').length;as=goals.filter(e=>e.team==='away').length;}
+      }
+      if(active&&Live.state==='FINISHED'){hs=Number(Live.homeScore||0);as=Number(Live.awayScore||0)}
+      const score=fin?`${hs} - ${as}`:(live?`${Number(Live.homeScore||0)} - ${Number(Live.awayScore||0)}`:'—');
+      const badge=fin?'<span class="finalBadgeV20">⚪ FINALIZADO</span>':(live?'<span class="liveBadgeV23">🔴 DIRECTO</span>':'<span class="pendingBadgeV23">PRÓXIMO</span>');
+      return `<div class="matchRow matchRowV32">
+        <div class="matchDateV32">${formatDate(m.date)}<br>${esc(m.hour||'')}</div>
+        <div class="matchTeamsV32">
+          <div class="matchTeamV32">${v32Crest(h)}<span class="matchNameV32">${esc(h.name)}</span></div>
+          <span class="matchVsV32">VS</span>
+          <div class="matchTeamV32">${v32Crest(a)}<span class="matchNameV32">${esc(a.name)}</span></div>
+          <small class="matchCompetitionV32">${esc(m.competition||'Liga')}</small>
+        </div>
+        <div class="matchResultV32">
+          <strong>${score}</strong>${badge}
+          ${fin?`<button class="btn small dark" onclick="v25ShowDetails(${m.id})">👁 Ver detalles</button>`:''}
         </div>
       </div>`;
     }).join(''):'<div class="empty">No hay partidos creados.</div>';
+    admin.innerHTML=rows.map(m=>`<div class="adminItem"><div><b>${esc(team(m.home).name)} vs ${esc(team(m.away).name)}</b><br><small style="color:var(--muted)">${formatDate(m.date)} ${esc(m.hour||'')} ${m.status==='FINISHED'?' · FINALIZADO':''}</small></div><div class="actions"><button class="btn small ${String(m.id)===String(App.activeMatch)?'green':'dark'}" onclick="setActive(${m.id})">${String(m.id)===String(App.activeMatch)?'Activo':'Activar'}</button><button class="btn small red" onclick="deleteMatch(${m.id})">🗑</button></div></div>`).join('');
+  };
+  if(typeof renderAll==='function')setTimeout(()=>{try{renderMatches()}catch(e){console.error('V32 renderMatches',e)}},0);
+})();
+</script>
+
+
+<!-- V37 — RESULTADOS FINALIZADOS ESTILO MARCADOR + CRÓNICA GRANDE -->
+<style id="v37-final-results">
+  .matchRowV37{
+    position:relative!important;
+    display:grid!important;
+    grid-template-columns:150px minmax(0,1fr)!important;
+    grid-template-areas:"date teams" "date result"!important;
+    gap:22px 30px!important;
+    padding:30px 34px 34px!important;
+    min-height:315px!important;
+    border:2px solid rgba(255,195,0,.58)!important;
+    border-radius:24px!important;
+    background:linear-gradient(145deg,#f5f5f2 0%,#eeeeea 72%,#e5e5e2 100%)!important;
+    box-shadow:0 14px 34px rgba(0,0,0,.28)!important;
+    color:#111!important;
+    overflow:hidden!important;
+  }
+  .matchRowV37::before{
+    content:"";
+    position:absolute!important;
+    inset:0!important;
+    pointer-events:none!important;
+    background:linear-gradient(115deg,rgba(255,255,255,.45),transparent 45%,rgba(0,0,0,.04))!important;
+  }
+  .matchDateV37{
+    grid-area:date!important;
+    align-self:start!important;
+    text-align:center!important;
+    color:#273242!important;
+    font-size:22px!important;
+    line-height:1.35!important;
+    font-weight:900!important;
+    padding-top:8px!important;
+    position:relative!important;
+    z-index:1!important;
+  }
+  .matchTeamsV37{
+    grid-area:teams!important;
+    display:grid!important;
+    grid-template-columns:minmax(180px,1fr) 85px minmax(180px,1fr)!important;
+    grid-template-rows:auto auto!important;
+    align-items:center!important;
+    justify-items:center!important;
+    gap:10px 24px!important;
+    position:relative!important;
+    z-index:1!important;
+  }
+  .matchTeamV37{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    gap:9px!important;
+    width:100%!important;
+    min-width:0!important;
+    text-align:center!important;
+  }
+  .matchTeamV37 .matchCrestV37{
+    width:94px!important;
+    height:94px!important;
+    object-fit:contain!important;
+    display:block!important;
+    filter:drop-shadow(0 5px 7px rgba(0,0,0,.22))!important;
+  }
+  .matchTeamV37 .matchNameV37{
+    display:block!important;
+    width:100%!important;
+    color:#111!important;
+    font-size:27px!important;
+    line-height:1.08!important;
+    font-weight:1000!important;
+    white-space:normal!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+    overflow-wrap:anywhere!important;
+  }
+  .matchVsV37{
+    font-size:30px!important;
+    font-weight:1000!important;
+    color:#e4b900!important;
+    align-self:center!important;
+  }
+  .matchCompetitionV37{
+    grid-column:1/-1!important;
+    color:#6d7784!important;
+    font-size:17px!important;
+    font-weight:850!important;
+    margin-top:2px!important;
+  }
+  .matchResultV37{
+    grid-area:result!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:20px!important;
+    position:relative!important;
+    z-index:2!important;
+  }
+  .finalScoreV37{
+    appearance:none!important;
+    border:0!important;
+    cursor:pointer!important;
+    min-width:270px!important;
+    padding:10px 28px 0!important;
+    background:transparent!important;
+    color:#fff!important;
+    font-size:58px!important;
+    line-height:.9!important;
+    font-weight:1000!important;
+    letter-spacing:3px!important;
+    text-align:center!important;
+    text-shadow:0 2px 1px rgba(0,0,0,.16)!important;
+    transform:rotate(-.5deg)!important;
+  }
+  .finalScoreV37 .scorePaintV37{
+    display:block!important;
+    padding:18px 24px 10px!important;
+    border-radius:8px 5px 12px 4px!important;
+    background:
+      linear-gradient(3deg,rgba(185,0,0,.98),rgba(228,22,22,.98) 48%,rgba(202,4,4,.98))!important;
+    box-shadow:inset 0 -5px 0 rgba(120,0,0,.16),0 8px 16px rgba(0,0,0,.16)!important;
+    clip-path:polygon(2% 8%,98% 0,100% 88%,93% 100%,4% 94%,0 17%)!important;
+  }
+  .finalScoreV37 .finalWordV37{
+    display:block!important;
+    width:100px!important;
+    margin:-2px auto 0!important;
+    padding:5px 12px 7px!important;
+    background:#101010!important;
+    color:#fff!important;
+    font-size:18px!important;
+    line-height:1!important;
+    letter-spacing:1px!important;
+    font-weight:1000!important;
+    transform:skew(-5deg)!important;
+    border-radius:2px!important;
+  }
+  .matchDetailsHintV37{
+    color:#17202b!important;
+    font-size:16px!important;
+    font-weight:900!important;
+    opacity:.8!important;
+    white-space:nowrap!important;
+  }
+
+  /* Crónica: el doble de tamaño y muy legible */
+  #chronicleV20{
+    font-size:32px!important;
+    line-height:1.72!important;
+    font-weight:650!important;
+    letter-spacing:.1px!important;
+  }
+  .matchChronicleV20{
+    padding:32px!important;
+  }
+  .matchChronicleV20 h3{
+    font-size:28px!important;
+    line-height:1.25!important;
+    margin-bottom:18px!important;
+  }
+
+  @media(max-width:900px){
+    .matchRowV37{
+      grid-template-columns:110px minmax(0,1fr)!important;
+      gap:18px 20px!important;
+      padding:26px 24px 30px!important;
+    }
+    .matchTeamV37 .matchCrestV37{width:82px!important;height:82px!important}
+    .matchTeamV37 .matchNameV37{font-size:24px!important}
+    .matchVsV37{font-size:25px!important}
+    .matchDateV37{font-size:19px!important}
+    .finalScoreV37{font-size:50px!important;min-width:230px!important}
+    #chronicleV20{font-size:28px!important;line-height:1.65!important}
+  }
+  @media(max-width:600px){
+    .matchRowV37{
+      grid-template-columns:1fr!important;
+      grid-template-areas:"date" "teams" "result"!important;
+      gap:18px!important;
+      padding:23px 14px 28px!important;
+      min-height:0!important;
+    }
+    .matchDateV37{font-size:18px!important;padding-top:0!important}
+    .matchTeamsV37{
+      grid-template-columns:minmax(0,1fr) 36px minmax(0,1fr)!important;
+      gap:8px!important;
+    }
+    .matchTeamV37 .matchCrestV37{width:68px!important;height:68px!important}
+    .matchTeamV37 .matchNameV37{font-size:20px!important}
+    .matchVsV37{font-size:20px!important}
+    .matchCompetitionV37{font-size:14px!important}
+    .matchResultV37{flex-direction:column!important;gap:8px!important}
+    .finalScoreV37{font-size:42px!important;min-width:205px!important;padding:8px 18px 0!important}
+    .finalScoreV37 .scorePaintV37{padding:15px 18px 8px!important}
+    .finalScoreV37 .finalWordV37{font-size:15px!important;width:82px!important}
+    .matchDetailsHintV37{font-size:14px!important}
+    #chronicleV20{font-size:24px!important;line-height:1.62!important}
+    .matchChronicleV20{padding:24px!important}
+    .matchChronicleV20 h3{font-size:24px!important}
+  }
+</style>
+
+<script id="v37-final-results-script">
+(function(){
+  function crest(t){
+    const logo=t?.logo||t?.crest||'';
+    return logo
+      ? `<img class="matchCrestV37" src="${esc(logo)}" alt="Escudo ${esc(t?.name||'')}">`
+      : `<span class="matchCrestV37" aria-hidden="true"></span>`;
+  }
+
+  window.renderMatches=function(){
+    const box=document.getElementById('matchList');
+    const admin=document.getElementById('adminMatches');
+    if(!box||!admin)return;
+
+    const rows=(App.matches||[]).slice().sort(
+      (a,b)=>String(b.date||'').localeCompare(String(a.date||'')) ||
+             String(b.hour||'').localeCompare(String(a.hour||''))
+    );
+
+    box.innerHTML=rows.length ? rows.map(m=>{
+      const h=team(m.home), a=team(m.away);
+      const active=String(m.id)===String(App.activeMatch);
+      const fin=m.status==='FINISHED'||(active&&Live.state==='FINISHED');
+      const live=active&&['FIRST_HALF','SECOND_HALF'].includes(Live.state);
+
+      let ev=[];
+      try{
+        ev=typeof v25Events==='function'
+          ? v25Events(m)
+          : (Array.isArray(m.events)?m.events:[]);
+      }catch(_){
+        ev=Array.isArray(m.events)?m.events:[];
+      }
+
+      let hs=Number(m.homeScore||0), as=Number(m.awayScore||0);
+      if(fin && hs===0 && as===0 && ev.length){
+        const goals=ev.filter(e=>['goal','gol'].includes(
+          String(e.type||e.eventType||'').toLowerCase()
+        ));
+        const scored=goals.map(e=>String(e.score||'')
+          .match(/^(\d+)\s*-\s*(\d+)$/)).filter(Boolean);
+
+        if(scored.length){
+          hs=Number(scored.at(-1)[1]);
+          as=Number(scored.at(-1)[2]);
+        }else{
+          hs=goals.filter(e=>e.team==='home').length;
+          as=goals.filter(e=>e.team==='away').length;
+        }
+      }
+
+      if(active&&Live.state==='FINISHED'){
+        hs=Number(Live.homeScore||0);
+        as=Number(Live.awayScore||0);
+      }
+
+      const score=fin
+        ? `${hs} - ${as}`
+        : (live ? `${Number(Live.homeScore||0)} - ${Number(Live.awayScore||0)}` : '—');
+
+      const badge=fin
+        ? '<span class="finalBadgeV20">⚪ FINALIZADO</span>'
+        : (live
+          ? '<span class="liveBadgeV23">🔴 DIRECTO</span>'
+          : '<span class="pendingBadgeV23">PRÓXIMO</span>');
+
+      const finalResult=fin ? `
+        <div class="finalScoreV37" aria-label="Resultado final ${esc(h.name)} ${score} ${esc(a.name)}">
+          <span class="scorePaintV37">${esc(score)}</span>
+          <span class="finalWordV37">FINAL</span>
+        </div>
+        <button class="btn matchDetailsBtnV39" type="button" onclick="v25ShowDetails(${m.id})">👁 Ver detalles</button>
+      ` : `
+        <strong class="currentScoreV37">${esc(score)}</strong>
+        ${badge}
+      `;
+
+      return `
+        <div class="matchRow ${fin?'matchRowV37':'matchRowV32'}">
+          <div class="${fin?'matchDateV37':'matchDateV32'}">
+            ${formatDate(m.date)}<br>${esc(m.hour||'')}
+          </div>
+
+          <div class="${fin?'matchTeamsV37':'matchTeamsV32'}">
+            <div class="${fin?'matchTeamV37':'matchTeamV32'}">
+              ${fin?crest(h):v32Crest(h)}
+              <span class="${fin?'matchNameV37':'matchNameV32'}">${esc(h.name)}</span>
+            </div>
+
+            <span class="${fin?'matchVsV37':'matchVsV32'}">VS</span>
+
+            <div class="${fin?'matchTeamV37':'matchTeamV32'}">
+              ${fin?crest(a):v32Crest(a)}
+              <span class="${fin?'matchNameV37':'matchNameV32'}">${esc(a.name)}</span>
+            </div>
+
+            <small class="${fin?'matchCompetitionV37':'matchCompetitionV32'}">
+              ${esc(m.competition||'Liga')}
+            </small>
+          </div>
+
+          <div class="${fin?'matchResultV37':'matchResultV32'}">
+            ${finalResult}
+          </div>
+        </div>
+      `;
+    }).join('') : '<div class="empty">No hay partidos creados.</div>';
+
+    admin.innerHTML=rows.map(m=>`
+      <div class="adminItem">
+        <div>
+          <b>${esc(team(m.home).name)} vs ${esc(team(m.away).name)}</b><br>
+          <small style="color:var(--muted)">
+            ${formatDate(m.date)} ${esc(m.hour||'')}
+            ${m.status==='FINISHED'?' · FINALIZADO':''}
+          </small>
+        </div>
+        <div class="actions">
+          <button class="btn small ${String(m.id)===String(App.activeMatch)?'green':'dark'}"
+            onclick="setActive(${m.id})">
+            ${String(m.id)===String(App.activeMatch)?'Activo':'Activar'}
+          </button>
+          <button class="btn small red" onclick="deleteMatch(${m.id})">🗑</button>
+        </div>
+      </div>
+    `).join('');
   };
 
-  // Al volver a Partidos, se cierra el modo detalle y reaparece el calendario completo.
-  document.querySelectorAll('[data-page="matches"]').forEach(btn=>btn.addEventListener('click',closeDetailMode));
+  setTimeout(()=>{try{window.renderMatches()}catch(e){console.error('V37 renderMatches',e)}},0);
 })();
-</script>\n</body>
-</html>
+</script>
+
+
+<!-- V39 — PARTIDOS FINALIZADOS: HORIZONTAL, LIMPIO Y PROFESIONAL -->
+<style id="v39-final-results">
+.matchRowV37{
+  display:grid!important;
+  grid-template-columns:130px minmax(0,1fr) 250px!important;
+  grid-template-areas:"date teams result"!important;
+  align-items:center!important;
+  gap:18px!important;
+  width:100%!important;
+  min-height:155px!important;
+  padding:22px 24px!important;
+  box-sizing:border-box!important;
+  border:1px solid rgba(255,255,255,.13)!important;
+  border-radius:18px!important;
+  background:#05080d!important;
+  color:#fff!important;
+  overflow:hidden!important;
+}
+.matchRowV37 .matchDateV37{
+  grid-area:date!important;
+  font-size:18px!important;
+  line-height:1.35!important;
+  color:#b9c4d1!important;
+  text-align:center!important;
+  padding:0!important;
+  font-weight:800!important;
+}
+.matchRowV37 .matchTeamsV37{
+  grid-area:teams!important;
+  width:100%!important;
+  display:grid!important;
+  grid-template-columns:minmax(150px,1fr) 55px minmax(150px,1fr)!important;
+  grid-template-rows:auto auto!important;
+  align-items:center!important;
+  justify-items:center!important;
+  gap:8px 14px!important;
+  padding:0!important;
+}
+.matchRowV37 .matchTeamV37{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:7px!important;
+  width:100%!important;
+  min-width:0!important;
+  text-align:center!important;
+}
+.matchRowV37 .matchTeamV37 .matchCrestV37{
+  width:64px!important;
+  height:64px!important;
+  flex:0 0 64px!important;
+  object-fit:contain!important;
+  display:block!important;
+  filter:drop-shadow(0 5px 8px rgba(0,0,0,.35))!important;
+}
+.matchRowV37 .matchTeamV37 .matchNameV37{
+  display:block!important;
+  width:100%!important;
+  color:#fff!important;
+  font-size:22px!important;
+  line-height:1.1!important;
+  font-weight:1000!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  overflow-wrap:anywhere!important;
+}
+.matchRowV37 .matchVsV37{
+  font-size:26px!important;
+  font-weight:1000!important;
+  color:#f1cf00!important;
+  align-self:center!important;
+}
+.matchRowV37 .matchCompetitionV37{
+  grid-column:1/-1!important;
+  color:#8190a2!important;
+  font-size:14px!important;
+  font-weight:800!important;
+  margin-top:2px!important;
+}
+.matchRowV37 .matchResultV37{
+  grid-area:result!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:9px!important;
+  width:100%!important;
+  margin:0!important;
+}
+.matchRowV37 .finalScoreV37{
+  appearance:none!important;
+  border:0!important;
+  cursor:default!important;
+  min-width:190px!important;
+  width:190px!important;
+  padding:0!important;
+  background:transparent!important;
+  color:#fff!important;
+  font-size:42px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  letter-spacing:2px!important;
+  text-align:center!important;
+  transform:none!important;
+}
+.matchRowV37 .scorePaintV37{
+  display:block!important;
+  padding:13px 18px!important;
+  border-radius:10px!important;
+  background:#1aa84b!important;
+  color:#fff!important;
+  box-shadow:none!important;
+  clip-path:none!important;
+}
+.matchRowV37.result-draw .scorePaintV37{background:#d6a900!important}
+.matchRowV37.result-loss .scorePaintV37{background:#c52b35!important}
+.matchRowV37.result-win .scorePaintV37{background:#18a94b!important}
+.matchRowV37 .finalWordV37{
+  display:block!important;
+  width:auto!important;
+  margin:0!important;
+  padding:0!important;
+  background:transparent!important;
+  color:#fff!important;
+  font-size:15px!important;
+  line-height:1!important;
+  letter-spacing:3px!important;
+  font-weight:1000!important;
+  transform:none!important;
+  border-radius:0!important;
+}
+.matchRowV37 .matchDetailsBtnV39{
+  min-height:42px!important;
+  padding:9px 18px!important;
+  border-radius:11px!important;
+  font-size:16px!important;
+  font-weight:900!important;
+  cursor:pointer!important;
+}
+@media(max-width:850px){
+  .matchRowV37{grid-template-columns:105px minmax(0,1fr) 185px!important;gap:12px!important;padding:18px 15px!important}
+  .matchRowV37 .matchTeamV37 .matchCrestV37{width:55px!important;height:55px!important;flex-basis:55px!important}
+  .matchRowV37 .matchTeamV37 .matchNameV37{font-size:18px!important}
+  .matchRowV37 .matchVsV37{font-size:21px!important}
+  .matchRowV37 .finalScoreV37{min-width:150px!important;width:150px!important;font-size:32px!important}
+  .matchRowV37 .matchDetailsBtnV39{font-size:14px!important;padding:8px 12px!important}
+}
+@media(max-width:620px){
+  .matchRowV37{grid-template-columns:76px minmax(0,1fr) 120px!important;gap:7px!important;padding:15px 9px!important;min-height:125px!important}
+  .matchRowV37 .matchDateV37{font-size:13px!important}
+  .matchRowV37 .matchTeamsV37{grid-template-columns:minmax(70px,1fr) 30px minmax(70px,1fr)!important;gap:5px!important}
+  .matchRowV37 .matchTeamV37 .matchCrestV37{width:42px!important;height:42px!important;flex-basis:42px!important}
+  .matchRowV37 .matchTeamV37 .matchNameV37{font-size:14px!important}
+  .matchRowV37 .matchVsV37{font-size:16px!important}
+  .matchRowV37 .matchCompetitionV37{font-size:11px!important}
+  .matchRowV37 .finalScoreV37{min-width:105px!important;width:105px!important;font-size:25px!important}
+  .matchRowV37 .scorePaintV37{padding:9px 8px!important}
+  .matchRowV37 .finalWordV37{font-size:11px!important;letter-spacing:2px!important}
+  .matchRowV37 .matchDetailsBtnV39{font-size:11px!important;min-height:34px!important;padding:6px 7px!important;white-space:nowrap!important}
+}
+</style>
+
+<script id="v38-final-results-script">
+(function(){
+  const oldRenderMatches = window.renderMatches;
+
+  function applyV38ResultColors(){
+    document.querySelectorAll('.matchRowV37').forEach(row=>{
+      row.classList.remove('result-win','result-draw','result-loss');
+
+      const scoreEl=row.querySelector('.scorePaintV37');
+      if(!scoreEl) return;
+
+      const text=(scoreEl.textContent||'').trim();
+      const match=text.match(/(\d+)\s*-\s*(\d+)/);
+      if(!match) return;
+
+      const home=Number(match[1]);
+      const away=Number(match[2]);
+
+      const names=[...row.querySelectorAll('.matchNameV37')].map(x=>
+        (x.textContent||'').trim().toLowerCase()
+      );
+      const isRamonHome=names[0]?.includes('ramón sicart') || names[0]?.includes('ramon sicart');
+      const isRamonAway=names[1]?.includes('ramón sicart') || names[1]?.includes('ramon sicart');
+
+      if(home===away){
+        row.classList.add('result-draw');
+      }else if((isRamonHome && home>away) || (isRamonAway && away>home)){
+        row.classList.add('result-win');
+      }else{
+        row.classList.add('result-loss');
+      }
+    });
+  }
+
+  window.renderMatches=function(){
+    if(typeof oldRenderMatches==='function') oldRenderMatches();
+    setTimeout(applyV38ResultColors,0);
+  };
+
+  setTimeout(applyV38ResultColors,50);
+})();
+</script>
+
+
+<style id="v39-chronicle-final">
+#chronicleV20{font-size:34px!important;line-height:1.65!important;font-weight:600!important;color:#edf3f9!important}
+.matchChronicleV20 h3{font-size:28px!important}
+@media(max-width:700px){#chronicleV20{font-size:25px!important;line-height:1.62!important}.matchChronicleV20 h3{font-size:23px!important}}
+</style>
+
+
+<!-- V40 — RESULTADOS FINALIZADOS: DISEÑO TIPO MARCADOR OFICIAL -->
+<style id="v40-final-results">
+.matchRowV40{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 270px minmax(0,1fr)!important;
+  grid-template-areas:"home center away" "scorers scorers scorers"!important;
+  align-items:center!important;
+  gap:14px 22px!important;
+  width:100%!important;
+  box-sizing:border-box!important;
+  padding:20px 24px 0!important;
+  margin:0 0 18px!important;
+  background:#030507!important;
+  border:1px solid rgba(255,255,255,.14)!important;
+  border-radius:16px!important;
+  overflow:hidden!important;
+  color:#fff!important;
+}
+.matchRowV40 .matchTeamV40{
+  display:flex!important;flex-direction:column!important;align-items:center!important;
+  justify-content:center!important;gap:8px!important;min-width:0!important;text-align:center!important;
+}
+.matchRowV40 .matchTeamV40.home{grid-area:home!important}
+.matchRowV40 .matchTeamV40.away{grid-area:away!important}
+.matchRowV40 .matchCrestV40{
+  width:74px!important;height:74px!important;object-fit:contain!important;display:block!important;
+  filter:drop-shadow(0 5px 9px rgba(0,0,0,.4))!important;
+}
+.matchRowV40 .matchNameV40{
+  font-size:25px!important;line-height:1.08!important;font-weight:1000!important;color:#fff!important;
+  white-space:normal!important;overflow:visible!important;text-overflow:clip!important;
+  overflow-wrap:anywhere!important;
+}
+.matchCenterV40{
+  grid-area:center!important;display:flex!important;flex-direction:column!important;
+  align-items:center!important;justify-content:center!important;min-width:0!important;
+}
+.matchMetaV40{
+  display:flex!important;align-items:center!important;justify-content:center!important;gap:10px!important;
+  color:#aab5c4!important;font-size:12px!important;font-weight:800!important;margin-bottom:7px!important;
+  white-space:nowrap!important;
+}
+.matchMetaV40 .dot{opacity:.55!important}
+.matchScoreV40{
+  min-width:205px!important;padding:10px 18px!important;border-radius:9px!important;
+  color:#fff!important;font-size:46px!important;line-height:1!important;font-weight:1000!important;
+  letter-spacing:2px!important;text-align:center!important;background:#18a94b!important;
+  box-sizing:border-box!important;
+}
+.matchRowV40.result-draw .matchScoreV40{background:#d4a800!important}
+.matchRowV40.result-loss .matchScoreV40{background:#c52b35!important}
+.matchFinalV40{
+  margin-top:6px!important;font-size:14px!important;letter-spacing:4px!important;font-weight:1000!important;color:#fff!important;
+}
+.matchDetailsBtnV40{
+  margin-top:9px!important;background:#172235!important;border:1px solid rgba(255,255,255,.15)!important;
+  color:#fff!important;border-radius:9px!important;padding:8px 16px!important;font-size:14px!important;
+  font-weight:900!important;cursor:pointer!important;white-space:nowrap!important;
+}
+.matchDetailsBtnV40:hover{background:#22324d!important}
+.matchScorersV40{
+  grid-area:scorers!important;display:flex!important;align-items:center!important;gap:10px!important;
+  min-height:38px!important;padding:8px 14px!important;background:#050505!important;
+  border-top:1px solid rgba(255,255,255,.12)!important;color:#fff!important;
+  font-size:13px!important;font-weight:800!important;box-sizing:border-box!important;
+}
+.matchScorersV40 .scorerLabel{color:#f1cf00!important;font-weight:1000!important;white-space:nowrap!important}
+.matchScorersV40 .scorerText{color:#e8edf3!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+.matchScorersV40.empty{display:none!important}
+
+/* Próximos/directos mantienen su estructura original */
+@media(max-width:700px){
+  .matchRowV40{grid-template-columns:minmax(0,1fr) 190px minmax(0,1fr)!important;gap:10px!important;padding:16px 10px 0!important}
+  .matchRowV40 .matchCrestV40{width:55px!important;height:55px!important}
+  .matchRowV40 .matchNameV40{font-size:18px!important}
+  .matchScoreV40{min-width:145px!important;font-size:32px!important;padding:9px 10px!important}
+  .matchMetaV40{font-size:10px!important;gap:6px!important}
+  .matchFinalV40{font-size:11px!important;letter-spacing:3px!important}
+  .matchDetailsBtnV40{font-size:11px!important;padding:7px 10px!important}
+  .matchScorersV40{font-size:10px!important;padding:7px 9px!important}
+}
+@media(max-width:480px){
+  .matchRowV40{grid-template-columns:minmax(0,1fr) 145px minmax(0,1fr)!important;gap:5px!important}
+  .matchRowV40 .matchCrestV40{width:46px!important;height:46px!important}
+  .matchRowV40 .matchNameV40{font-size:15px!important}
+  .matchScoreV40{min-width:125px!important;font-size:27px!important}
+  .matchMetaV40{font-size:9px!important}
+  .matchDetailsBtnV40{font-size:10px!important;padding:6px 7px!important}
+}
+</style>
+<script id="v40-final-results-script">
+(function(){
+  function v40Crest(t){
+    return t?.logo ? `<img class="matchCrestV40" src="${esc(t.logo)}" alt="${esc(t.name||'')}" loading="lazy">` : `<div class="matchCrestV40" style="display:grid;place-items:center;font-size:30px">⚽</div>`;
+  }
+  function v40Scorers(m){
+    const events=Array.isArray(m.events)?m.events:[];
+    const goals=events.filter(e=>e.type==='goal' && e.playerName);
+    if(!goals.length) return '';
+    const counts={};
+    goals.forEach(e=>{const n=String(e.playerName).trim(); if(n) counts[n]=(counts[n]||0)+1});
+    const text=Object.entries(counts).map(([n,c])=>`${esc(n)}${c>1?` (${c})`:''}`).join(' · ');
+    return `<div class="matchScorersV40"><span class="scorerLabel">⚽ GOLEADORES:</span><span class="scorerText">${text}</span></div>`;
+  }
+  function v40RenderMatches(){
+    const box=document.getElementById('matchList'), admin=document.getElementById('adminMatches');
+    if(!box) return;
+    const rows=App.matches.slice().sort((a,b)=>(a.date+a.hour).localeCompare(b.date+b.hour));
+    box.innerHTML=rows.length?rows.map(m=>{
+      const h=team(m.home), a=team(m.away);
+      const active=String(m.id)===String(App.activeMatch);
+      const fin=m.status==='FINISHED' || (active && Live.state==='FINISHED');
+      const live=active && (Live.state==='FIRST_HALF'||Live.state==='SECOND_HALF');
+      let hs=Number(m.homeScore||0), as=Number(m.awayScore||0);
+      if(fin && active && Live.state==='FINISHED'){hs=Number(Live.homeScore||hs);as=Number(Live.awayScore||as)}
+      const score=fin?`${hs} - ${as}`:(live?`${Number(Live.homeScore||0)} - ${Number(Live.awayScore||0)}`:'—');
+      if(!fin){
+        return `<div class="matchRow matchRowV32">
+          <div class="matchDateV32">${formatDate(m.date)}<br>${esc(m.hour||'')}</div>
+          <div class="matchTeamsV32">${v32Crest(h)}<b>${esc(h.name)}</b><span>VS</span>${v32Crest(a)}<b>${esc(a.name)}</b><small class="matchCompetitionV32">${esc(m.competition||'Liga')}</small></div>
+          <div class="matchResultV32"><strong>${esc(score)}</strong>${live?'<span class="liveBadgeV23">🔴 DIRECTO</span>':'<span class="pendingBadgeV23">PRÓXIMO</span>'}</div>
+        </div>`;
+      }
+      const hWin=hs>as, aWin=as>hs;
+      const ramonHome=String(h.name||'').toLowerCase().includes('ramón sicart')||String(h.name||'').toLowerCase().includes('ramon sicart');
+      const ramonAway=String(a.name||'').toLowerCase().includes('ramón sicart')||String(a.name||'').toLowerCase().includes('ramon sicart');
+      const cls=hs===as?'result-draw':((ramonHome&&hWin)||(ramonAway&&aWin)?'result-win':'result-loss');
+      const details=`<button class="matchDetailsBtnV40" type="button" onclick="v25ShowDetails(${m.id});event.stopPropagation()">👁 Ver detalles</button>`;
+      return `<div class="matchRowV40 ${cls}">
+        <div class="matchTeamV40 home">${v40Crest(h)}<span class="matchNameV40">${esc(h.name)}</span></div>
+        <div class="matchCenterV40">
+          <div class="matchMetaV40"><span>${formatDate(m.date)}</span><span class="dot">•</span><span>${esc(m.competition||'Liga')}</span></div>
+          <div class="matchScoreV40">${esc(score)}</div>
+          <div class="matchFinalV40">FINAL</div>
+          ${details}
+        </div>
+        <div class="matchTeamV40 away">${v40Crest(a)}<span class="matchNameV40">${esc(a.name)}</span></div>
+        ${v40Scorers(m)}
+      </div>`;
+    }).join(''):'<div class="empty">No hay partidos creados.</div>';
+    if(admin){
+      admin.innerHTML=rows.map(m=>`<div class="adminItem"><div><b>${esc(team(m.home).name)} vs ${esc(team(m.away).name)}</b><br><small style="color:var(--muted)">${formatDate(m.date)} ${esc(m.hour||'')} ${m.status==='FINISHED'?' · FINALIZADO':''}</small></div><div class="actions"><button class="btn small ${String(m.id)===String(App.activeMatch)?'green':'dark'}" onclick="setActive(${m.id})">${String(m.id)===String(App.activeMatch)?'Activo':'Activar'}</button><button class="btn small red" onclick="deleteMatch(${m.id})">🗑</button></div></div>`).join('');
+    }
+  }
+  window.renderMatches=v40RenderMatches;
+  setTimeout(v40RenderMatches,0);
+})();
+</script>
+
+
+<style id="rsV51ImageStyles">
+.rsV51ImageCard{margin-top:16px}
+.rsV51ImagePreview{width:100%;max-width:760px;display:block;background:#05080d;border:1px solid #263c56;border-radius:14px;margin:12px auto 0}
+.rsV51ImageActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.rsV51ImageStatus{font-size:11px;color:var(--muted);margin-top:8px}
+</style>
+
+
+<script id="rsV51ImageGenerator">
+(function(){
+  "use strict";
+
+  function rsV51Team(id){
+    return (App.teams||[]).find(t=>String(t.id)===String(id)) || {name:"Equipo",logo:""};
+  }
+
+  function rsV51Goals(m){
+    return (Array.isArray(m?.events)?m.events:[])
+      .filter(e=>e && e.type==="goal")
+      .sort((a,b)=>Number(a.minute||0)-Number(b.minute||0));
+  }
+
+  function rsV51Logo(src){
+    return new Promise(resolve=>{
+      if(!src){ resolve(null); return; }
+      const im=new Image();
+      // Evita que los logos alojados en Firebase/CDN "contaminen" el canvas
+      // y bloqueen canvas.toDataURL() en Safari/iPhone.
+      if(/^https?:\/\//i.test(String(src))) im.crossOrigin="anonymous";
+      im.onload=()=>resolve(im);
+      im.onerror=()=>resolve(null);
+      im.src=src;
+    });
+  }
+
+  function rsV51FitText(ctx,text,maxWidth,font){
+    ctx.font=font;
+    if(ctx.measureText(text).width<=maxWidth)return text;
+    let s=String(text);
+    while(s.length>3 && ctx.measureText(s+"…").width>maxWidth)s=s.slice(0,-1);
+    return s+"…";
+  }
+
+  function rsV51RoundRect(ctx,x,y,w,h,r,fill,stroke){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+    if(fill){ctx.fillStyle=fill;ctx.fill();}
+    if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke();}
+  }
+
+  async function rsV51Generate(m){
+    if(!m || m.status!=="FINISHED"){
+      toast("Primero finaliza el partido");
+      return null;
+    }
+
+    const home=rsV51Team(m.home), away=rsV51Team(m.away);
+    const hs=Number(m.homeScore||0), as=Number(m.awayScore||0);
+    const goals=rsV51Goals(m);
+    const W=1600,H=900;
+    const c=document.createElement("canvas");
+    c.width=W;c.height=H;
+    const ctx=c.getContext("2d");
+
+    const bg=ctx.createLinearGradient(0,0,W,H);
+    bg.addColorStop(0,"#05070b");
+    bg.addColorStop(.5,"#10151d");
+    bg.addColorStop(1,"#05070b");
+    ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+
+    ctx.fillStyle="#ffd600";
+    ctx.fillRect(70,55,W-140,5);
+
+    ctx.textAlign="center";
+    ctx.fillStyle="#ffffff";
+    ctx.font="900 38px Arial";
+    ctx.fillText("RAMÓN SICART · MATCH CENTER",W/2,115);
+
+    ctx.fillStyle="#a7b4c8";
+    ctx.font="700 25px Arial";
+    const meta=[m.date?formatDate(m.date):"",m.hour||"",m.competition||"Liga"].filter(Boolean).join("   •   ");
+    ctx.fillText(meta,W/2,155);
+
+    const him=await rsV51Logo(home.logo), aim=await rsV51Logo(away.logo);
+    const logoSize=170;
+
+    function drawLogo(im,x,y){
+      if(!im)return;
+      const ratio=Math.min(logoSize/im.width,logoSize/im.height);
+      const w=im.width*ratio,h=im.height*ratio;
+      ctx.drawImage(im,x-w/2,y-h/2,w,h);
+    }
+
+    drawLogo(him,320,300);
+    drawLogo(aim,1280,300);
+
+    ctx.fillStyle="#fff";
+    ctx.font="900 48px Arial";
+    ctx.fillText(rsV51FitText(ctx,home.name,480,"900 48px Arial"),320,420);
+    ctx.fillText(rsV51FitText(ctx,away.name,480,"900 48px Arial"),1280,420);
+
+    ctx.fillStyle="#ffd600";
+    ctx.font="900 34px Arial";
+    ctx.fillText("FINAL",W/2,235);
+
+    const resultGradient=ctx.createLinearGradient(520,250,1080,250);
+    if(hs>as){resultGradient.addColorStop(0,"#0a8f45");resultGradient.addColorStop(1,"#18c35e");}
+    else if(hs<as){resultGradient.addColorStop(0,"#a51624");resultGradient.addColorStop(1,"#e63748");}
+    else {resultGradient.addColorStop(0,"#b18a00");resultGradient.addColorStop(1,"#ffd600");}
+
+    rsV51RoundRect(ctx,520,260,560,135,24,resultGradient);
+    ctx.fillStyle="#fff";
+    ctx.font="900 82px Arial";
+    ctx.fillText(hs+"  -  "+as,W/2,355);
+
+    ctx.textAlign="left";
+    ctx.fillStyle="#ffd600";
+    ctx.font="900 29px Arial";
+    ctx.fillText("⚽ GOLES DEL PARTIDO",100,490);
+
+    if(!goals.length){
+      ctx.fillStyle="#a7b4c8";
+      ctx.font="600 28px Arial";
+      ctx.fillText("Sin goles registrados en los eventos.",100,545);
+    }else{
+      const max=goals.length;
+      const cols=2;
+      const rows=Math.ceil(max/cols);
+      const colW=700;
+      goals.slice(0,10).forEach((g,i)=>{
+        const col=i%cols,row=Math.floor(i/cols);
+        const x=100+col*colW,y=530+row*65;
+        ctx.fillStyle="#ffd600";
+        ctx.font="900 28px Arial";
+        ctx.fillText((Number(g.minute||0))+"' ",x,y);
+        const side=String(g.team)==="home"?home:away;
+        ctx.fillStyle="#fff";
+        ctx.font="800 28px Arial";
+        ctx.fillText(rsV51FitText(ctx,(g.playerName||"Gol")+" · "+side.name,580,"800 28px Arial"),x+75,y);
+        if(g.score){
+          ctx.textAlign="right";
+          ctx.fillStyle="#a7b4c8";
+          ctx.font="800 26px Arial";
+          ctx.fillText(g.score, x+colW-30, y);
+          ctx.textAlign="left";
+        }
+      });
+    }
+
+    ctx.textAlign="center";
+    ctx.fillStyle="#65758c";
+    ctx.font="600 20px Arial";
+    ctx.fillText("RS LIVE · RAMÓN SICART",W/2,H-28);
+
+    let data=null;
+    try{
+      data=c.toDataURL("image/jpeg",0.90);
+    }catch(err){
+      console.warn("RS LIVE: canvas bloqueado por un recurso externo. Se genera una versión sin logos.",err);
+      // Reintentamos sin imágenes externas para que la generación nunca falle.
+      const clean=document.createElement("canvas");
+      clean.width=W; clean.height=H;
+      const cc=clean.getContext("2d");
+      const b2=cc.createLinearGradient(0,0,W,H);
+      b2.addColorStop(0,"#05070b"); b2.addColorStop(.5,"#10151d"); b2.addColorStop(1,"#05070b");
+      cc.fillStyle=b2; cc.fillRect(0,0,W,H);
+      cc.fillStyle="#ffd600"; cc.fillRect(70,55,W-140,5);
+      cc.textAlign="center"; cc.fillStyle="#fff"; cc.font="900 38px Arial";
+      cc.fillText("RAMÓN SICART · MATCH CENTER",W/2,115);
+      cc.fillStyle="#a7b4c8"; cc.font="700 25px Arial"; cc.fillText(meta,W/2,155);
+      cc.fillStyle="#fff"; cc.font="900 48px Arial";
+      cc.fillText(rsV51FitText(cc,home.name,480,"900 48px Arial"),320,300);
+      cc.fillText(rsV51FitText(cc,away.name,480,"900 48px Arial"),1280,300);
+      cc.fillStyle="#ffd600"; cc.font="900 34px Arial"; cc.fillText("FINAL",W/2,235);
+      rsV51RoundRect(cc,520,260,560,135,24,resultGradient);
+      cc.fillStyle="#fff"; cc.font="900 82px Arial"; cc.fillText(hs+"  -  "+as,W/2,355);
+      cc.textAlign="left"; cc.fillStyle="#ffd600"; cc.font="900 29px Arial"; cc.fillText("⚽ GOLES DEL PARTIDO",100,490);
+      if(!goals.length){
+        cc.fillStyle="#a7b4c8"; cc.font="600 28px Arial"; cc.fillText("Sin goles registrados en los eventos.",100,545);
+      }else{
+        goals.slice(0,10).forEach((g,i)=>{
+          const col=i%2,row=Math.floor(i/2),x=100+col*700,y=530+row*65;
+          cc.fillStyle="#ffd600"; cc.font="900 28px Arial"; cc.fillText((Number(g.minute||0))+"' ",x,y);
+          const side=String(g.team)==="home"?home:away;
+          cc.fillStyle="#fff"; cc.font="800 28px Arial";
+          cc.fillText(rsV51FitText(cc,(g.playerName||"Gol")+" · "+side.name,580,"800 28px Arial"),x+75,y);
+          if(g.score){cc.textAlign="right";cc.fillStyle="#a7b4c8";cc.font="800 26px Arial";cc.fillText(g.score,x+670,y);cc.textAlign="left";}
+        });
+      }
+      cc.textAlign="center"; cc.fillStyle="#65758c"; cc.font="600 20px Arial"; cc.fillText("RS LIVE · RAMÓN SICART",W/2,H-28);
+      data=clean.toDataURL("image/jpeg",0.90);
+    }
+    if(!data) throw new Error("No se pudo generar la imagen");
+    m.matchImageData=data;
+    m.matchImageGeneratedAt=Date.now();
+
+    const preview=document.getElementById("rsV51ImagePreview");
+    if(preview)preview.src=data;
+    const status=document.getElementById("rsV51ImageStatus");
+    if(status)status.textContent="Imagen generada automáticamente · "+new Date().toLocaleString("es-ES");
+
+    try{ await save(); }catch(e){ console.warn("No se pudo guardar la imagen en Firebase",e); }
+    return data;
+  }
+
+  function rsV51Download(){
+    const m=activeMatch();
+    const data=m?.matchImageData;
+    if(!data){toast("Genera primero la imagen del partido");return;}
+    const h=rsV51Team(m.home),a=rsV51Team(m.away);
+    const safe=s=>String(s||"equipo").replace(/[^a-z0-9áéíóúüñ_-]+/gi,"_");
+    const aEl=document.createElement("a");
+    aEl.href=data;
+    aEl.download=`RS_LIVE_${safe(h.name)}_${Number(m.homeScore||0)}-${Number(m.awayScore||0)}_${safe(a.name)}.jpg`;
+    document.body.appendChild(aEl);aEl.click();aEl.remove();
+  }
+
+  function rsV51BuildAdmin(){
+    const panel=document.getElementById("adminPanel");
+    if(!panel || document.getElementById("rsV51ImageCard"))return;
+    const card=document.createElement("div");
+    card.className="card adminCard rsV51ImageCard";
+    card.id="rsV51ImageCard";
+    card.innerHTML=`
+      <h2>🖼️ Imagen del partido</h2>
+      <p style="color:var(--muted);font-size:11px;margin:-7px 0 12px">
+        Al finalizar un partido se genera automáticamente una imagen con el resultado y todos los goles registrados en los eventos.
+      </p>
+      <div class="rsV51ImageActions">
+        <button class="btn green" id="rsV51GenerateBtn">🖼️ Generar imagen</button>
+        <button class="btn dark" id="rsV51DownloadBtn">💾 Guardar imagen</button>
+      </div>
+      <div id="rsV51ImageStatus" class="rsV51ImageStatus">No hay imagen generada para el partido activo.</div>
+      <img id="rsV51ImagePreview" class="rsV51ImagePreview" alt="Imagen del partido" style="display:none">
+    `;
+    panel.appendChild(card);
+    document.getElementById("rsV51GenerateBtn").onclick=async()=>{
+      const m=activeMatch();
+      if(!m){toast("Activa un partido");return;}
+      try{
+        const data=await rsV51Generate(m);
+        const img=document.getElementById("rsV51ImagePreview");
+        if(data && img)img.style.display="block";
+        if(data) toast("✅ Imagen del partido generada");
+      }catch(e){
+        console.error("RS LIVE: error generando imagen",e);
+        toast("❌ No se pudo generar la imagen");
+      }
+    };
+    document.getElementById("rsV51DownloadBtn").onclick=rsV51Download;
+  }
+
+  function rsV51Refresh(){
+    rsV51BuildAdmin();
+    const m=activeMatch();
+    const img=document.getElementById("rsV51ImagePreview");
+    const status=document.getElementById("rsV51ImageStatus");
+    if(!img || !status)return;
+    if(m?.matchImageData){
+      img.src=m.matchImageData;
+      img.style.display="block";
+      status.textContent="Imagen guardada · "+(m.matchImageGeneratedAt?new Date(m.matchImageGeneratedAt).toLocaleString("es-ES"):"");
+    }else{
+      img.style.display="none";
+      status.textContent=m?.status==="FINISHED"?"Partido finalizado. Genera la imagen para este encuentro.":"No hay imagen generada para el partido activo.";
+    }
+  }
+
+  const oldFinish=window.finish;
+  window.finish=async function(){
+    const before=activeMatch();
+    if(typeof oldFinish==="function") oldFinish.apply(this,arguments);
+    setTimeout(async()=>{
+      try{
+        const m=before || activeMatch();
+        if(m && m.status==="FINISHED"){
+          await rsV51Generate(m);
+          rsV51Refresh();
+          toast("🏁 Partido finalizado · imagen generada automáticamente");
+        }
+      }catch(e){console.error("RS V51 image generation",e);}
+    },450);
+  };
+
+  const oldRenderAll=window.renderAll;
+  window.renderAll=function(){
+    if(typeof oldRenderAll==="function")oldRenderAll.apply(this,arguments);
+    setTimeout(rsV51Refresh,80);
+  };
+
+  window.rsV51Generate=rsV51Generate;
+  window.rsV51Download=rsV51Download;
+
+  setTimeout(rsV51BuildAdmin,250);
+  setTimeout(rsV51Refresh,700);
+})();
+</script>
+
+
+<!-- =========================================================
+ RS LIVE V52 — ÚLTIMA CAPA DE ESTABILIZACIÓN
+ - Partidos: diseño V40 restaurado y listado completo ordenado por fecha.
+ - Administrador: TODOS los partidos + Activar + Editar + Eliminar.
+ - Detalle: SOLO el partido seleccionado; se oculta el resto del calendario.
+ - Clasificación 2024/25: FIJA, independiente de App.matches/Firebase.
+========================================================= -->
+<style id="rs-v52-final">
+  /* Detalle: cuando se abre un partido, desaparece completamente el calendario */
+  #matches.rsV48DetailsOpen > .sectionTitle,
+  #matches.rsV48DetailsOpen > .infoCard,
+  #matches.rsV48DetailsOpen > #matchList,
+  #matches.rsV52DetailsOpen > .sectionTitle,
+  #matches.rsV52DetailsOpen > .infoCard { display:none!important; }
+  #matches.rsV48DetailsOpen #completedDetailsV20,
+  #matches.rsV52DetailsOpen #completedDetailsV20 { display:block!important; }
+
+  /* Clasificación fija */
+  .rsV52TableWrap{overflow-x:auto;border:1px solid rgba(255,255,255,.14);border-radius:16px;background:#071522}
+  .rsV52Table{width:100%;min-width:760px;border-collapse:collapse;font-size:13px}
+  .rsV52Table th{background:#142b42;color:#f4d400;padding:11px 8px;border-bottom:1px solid #34506b;text-align:center;font-weight:1000}
+  .rsV52Table td{padding:10px 8px;border-bottom:1px solid rgba(255,255,255,.12);text-align:center;color:#eef3f8;font-weight:700}
+  .rsV52Table td:nth-child(2){text-align:left;font-weight:900}
+  .rsV52Table tr.ramon{background:rgba(255,212,0,.14);box-shadow:inset 4px 0 #ffd400}
+  .rsV52Table tr:last-child td{border-bottom:0}
+  .rsV52Table .pos{font-size:16px;font-weight:1000;color:#fff}
+  .rsV52Table .pts{font-size:16px;font-weight:1000;color:#ffd400}
+  .rsV52FixedNote{font-size:11px;color:var(--muted);margin-top:8px}
+
+  /* Administrador */
+  .rsV52AdminMatch{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;margin:8px 0;border:1px solid rgba(255,255,255,.1);border-radius:14px;background:#0b1b2c}
+  .rsV52AdminInfo{min-width:0}.rsV52AdminInfo b{display:block;color:#fff;font-size:14px}.rsV52AdminInfo small{display:block;color:var(--muted);margin-top:4px;line-height:1.4}
+  .rsV52AdminActions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0}
+  @media(max-width:700px){.rsV52AdminMatch{align-items:flex-start;flex-direction:column}.rsV52AdminActions{width:100%;justify-content:flex-start}.rsV52AdminActions .btn{flex:1;min-width:90px}}
+</style>
+<script id="rs-v52-final-script">
+(function(){
+  'use strict';
+
+  const FIXED_TABLE=[
+    {pos:1,name:'CALAFELL CF C',pts:60,j:24,g:19,e:3,p:2,gf:79,gc:21,d:58},
+    {pos:2,name:'ESCOLA F. BASE VENDRELL A',pts:58,j:24,g:19,e:1,p:4,gf:103,gc:38,d:65},
+    {pos:3,name:'RAMON SICART, A.E. A',pts:52,j:24,g:17,e:1,p:6,gf:94,gc:47,d:47,ramon:true},
+    {pos:4,name:'S.PAU APOSTOL ESP.APA B',pts:51,j:24,g:16,e:3,p:5,gf:87,gc:34,d:53},
+    {pos:5,name:'BASE VILANOVA D',pts:46,j:24,g:14,e:4,p:6,gf:72,gc:36,d:36},
+    {pos:6,name:'JOVENTUT BISBALENCA, C.F. A',pts:43,j:24,g:13,e:4,p:7,gf:68,gc:45,d:23}
+  ];
+
+  function renderFixedClassification(){
+    const table=document.getElementById('homeTableV26');
+    if(!table)return;
+    table.innerHTML=`<div class="rsV52TableWrap"><table class="rsV52Table">
+      <thead><tr><th>POS</th><th>EQUIPOS</th><th>PTS</th><th>J</th><th>G</th><th>E</th><th>P</th><th>GF</th><th>GC</th><th>DIF.G</th></tr></thead>
+      <tbody>${FIXED_TABLE.map(r=>`<tr class="${r.ramon?'ramon':''}"><td class="pos">${r.pos}</td><td>${esc(r.name)}</td><td class="pts">${r.pts}</td><td>${r.j}</td><td>${r.g}</td><td>${r.e}</td><td>${r.p}</td><td>${r.gf}</td><td>${r.gc}</td><td>${r.d}</td></tr>`).join('')}</tbody>
+    </table></div><div class="rsV52FixedNote">Clasificación histórica 2024/25 · datos fijos, no se recalcula con los partidos actuales.</div>`;
+    const card=table.closest('.v26DashCard');
+    const sub=card?.querySelector('.sectionTitle p'); if(sub)sub.textContent='Temporada 2024/25';
+  }
+
+  /* Diseño de partidos V40, sin depender de versiones anteriores */
+  function crest(t){
+    return t?.logo ? `<img class="matchCrestV40" src="${esc(t.logo)}" alt="" loading="lazy">` : `<div class="matchCrestV40" style="display:grid;place-items:center;font-size:30px">⚽</div>`;
+  }
+  function scorers(m){
+    const ev=Array.isArray(m?.events)?m.events:[];
+    const goals=ev.filter(e=>['goal','gol'].includes(String(e?.type||e?.eventType||'').toLowerCase()));
+    if(!goals.length)return '';
+    const counts={};
+    goals.forEach(e=>{const n=String(e?.playerName||e?.player||'').trim();if(n)counts[n]=(counts[n]||0)+1;});
+    const text=Object.entries(counts).map(([n,c])=>`${esc(n)}${c>1?` (${c})`:''}`).join(' · ');
+    return text?`<div class="matchScorersV40"><span class="scorerLabel">⚽ GOLEADORES:</span><span class="scorerText">${text}</span></div>`:'';
+  }
+  function sortMatches(a,b){return String(a.date||'').localeCompare(String(b.date||''))||String(a.hour||'').localeCompare(String(b.hour||''));}
+
+  function renderMatchesV52(){
+    const box=document.getElementById('matchList'),admin=document.getElementById('adminMatches');
+    if(!box)return;
+    const rows=[...(App.matches||[])].sort(sortMatches);
+    box.innerHTML=rows.length?rows.map(m=>{
+      const h=team(m.home),a=team(m.away);
+      const active=String(m.id)===String(App.activeMatch);
+      const fin=m.status==='FINISHED'||(active&&Live.state==='FINISHED');
+      const live=active&&['FIRST_HALF','SECOND_HALF'].includes(Live.state);
+      let hs=Number(m.homeScore||0),as=Number(m.awayScore||0);
+      if(fin&&active&&Live.state==='FINISHED'){hs=Number(Live.homeScore||hs);as=Number(Live.awayScore||as)}
+      const score=fin?`${hs} - ${as}`:(live?`${Number(Live.homeScore||0)} - ${Number(Live.awayScore||0)}`:'—');
+      if(!fin){
+        return `<div class="matchRow matchRowV32"><div class="matchDateV32">${formatDate(m.date)}<br>${esc(m.hour||'')}</div><div class="matchTeamsV32"><div class="matchTeamV32">${crest(h)}<span class="matchNameV32">${esc(h.name)}</span></div><span class="matchVsV32">VS</span><div class="matchTeamV32">${crest(a)}<span class="matchNameV32">${esc(a.name)}</span></div><small class="matchCompetitionV32">${esc(m.competition||'Liga')}</small></div><div class="matchResultV32"><strong>${esc(score)}</strong>${live?'<span class="liveBadgeV23">🔴 DIRECTO</span>':'<span class="pendingBadgeV23">PRÓXIMO</span>'}</div></div>`;
+      }
+      const ramonHome=/ram[oó]n\s+sicart/i.test(String(h.name||'')),ramonAway=/ram[oó]n\s+sicart/i.test(String(a.name||''));
+      const cls=hs===as?'result-draw':((ramonHome&&hs>as)||(ramonAway&&as>hs)?'result-win':'result-loss');
+      return `<div class="matchRowV40 ${cls}"><div class="matchTeamV40 home">${crest(h)}<span class="matchNameV40">${esc(h.name)}</span></div><div class="matchCenterV40"><div class="matchMetaV40"><span>${formatDate(m.date)}</span><span class="dot">•</span><span>${esc(m.competition||'Liga')}</span></div><div class="matchScoreV40">${esc(score)}</div><div class="matchFinalV40">FINAL</div><button class="matchDetailsBtnV40" type="button" onclick="v25ShowDetails(${m.id});event.stopPropagation()">👁 Ver detalles</button></div><div class="matchTeamV40 away">${crest(a)}<span class="matchNameV40">${esc(a.name)}</span></div>${scorers(m)}</div>`;
+    }).join(''):'<div class="empty">No hay partidos creados.</div>';
+
+    if(admin){
+      admin.innerHTML=rows.length?rows.map(m=>{
+        const h=team(m.home),a=team(m.away),fin=m.status==='FINISHED';
+        const score=fin?` · ${Number(m.homeScore||0)}-${Number(m.awayScore||0)}`:'';
+        return `<div class="rsV52AdminMatch"><div class="rsV52AdminInfo"><b>${esc(h.name)} vs ${esc(a.name)}</b><small>${formatDate(m.date)} ${esc(m.hour||'')} · ${esc(m.competition||'Liga')}${fin?' · 🏁 FINALIZADO':''}${score}</small></div><div class="rsV52AdminActions"><button class="btn small ${String(m.id)===String(App.activeMatch)?'green':'dark'}" onclick="setActive(${m.id})">${String(m.id)===String(App.activeMatch)?'Activo':'Activar'}</button><button class="btn small dark" onclick="rsV48OpenEdit(${m.id})">✏️ Editar</button><button class="btn small red" onclick="deleteMatch(${m.id})">🗑 Eliminar</button></div></div>`;
+      }).join(''):'<div class="empty">No hay partidos creados.</div>';
+    }
+  }
+
+  /* Detalle exclusivo: elimina visualmente todo lo demás y deja el encuentro seleccionado */
+  function openOnlyDetails(id){
+    const section=document.getElementById('matches');
+    if(!section)return;
+    section.classList.add('rsV52DetailsOpen');
+    const details=document.getElementById('completedDetailsV20');
+    if(details)details.style.display='block';
+    const m=(App.matches||[]).find(x=>String(x.id)===String(id));
+    if(m&&typeof rsV48RenderHistory==='function')setTimeout(()=>rsV48RenderHistory(m),20);
+  }
+
+  const originalDetails=window.v25ShowDetails;
+  window.v25ShowDetails=function(id){
+    if(typeof originalDetails==='function')originalDetails(id);
+    openOnlyDetails(id);
+  };
+
+  document.getElementById('closeDetailsV20')?.addEventListener('click',()=>{
+    document.getElementById('matches')?.classList.remove('rsV48DetailsOpen','rsV52DetailsOpen');
+  });
+
+  window.renderMatches=renderMatchesV52;
+
+  /* renderAll ya llama a renderHome/renderMatches. Solo sustituimos la clasificación por los datos fijos. */
+  const originalHome=window.renderHome;
+  window.renderHome=function(){
+    if(typeof originalHome==='function')originalHome();
+    renderFixedClassification();
+  };
+
+  /* Ejecutar después de que todas las versiones anteriores hayan terminado de montar sus elementos. */
+  setTimeout(()=>{try{renderFixedClassification();renderMatchesV52();}catch(e){console.error('RS V52',e)}},100);
+})();
+</script>
