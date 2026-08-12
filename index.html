@@ -1536,6 +1536,15 @@ button{cursor:pointer}
 }
 </style>
 
+
+<style id="rsWhatsAppEventStyle">
+.rsWaModal .modalBox{max-width:620px}
+.rsWaMessage{background:#091727;border:1px solid var(--line);border-radius:14px;padding:14px;white-space:pre-wrap;font-size:15px;line-height:1.55;color:#fff;margin:12px 0}
+.rsWaActions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rsWaActions .btn{min-height:48px;font-size:14px;font-weight:900}
+.rsWaHint{font-size:11px;color:var(--muted);margin-top:9px}
+@media(max-width:560px){.rsWaActions{grid-template-columns:1fr}.rsWaMessage{font-size:14px}}
+</style>
 </head>
 <body>
 <div class="app">
@@ -2143,6 +2152,44 @@ function maybeCommitSub(){
   Live.events.push({id:Date.now(),type:"change",team:"home",minute:displayMinute(),playerName:`${inn?.name||subIn} por ${out?.name||subOut}`,playerNumber:subIn,playerInNumber:subIn,playerOutNumber:subOut,playerInName:inn?.name||String(subIn),playerOutName:out?.name||String(subOut)});
   subOut=null;subIn=null;document.getElementById("substitutionQuick").style.display="none";save();renderAll();toast("Cambio publicado");
 }
+function rsWhatsAppEventText(ev,m){
+  const h=team(m.home), a=team(m.away);
+  const minute=`${Number(ev.minute||0)}'`;
+  const player=String(ev.playerName||'Jugador').trim();
+  const side=ev.team==='home'?h:a;
+  const score=ev.score||`${Number(Live.homeScore||0)}-${Number(Live.awayScore||0)}`;
+  if(ev.type==='goal'){
+    return `⚽ ¡GOOOOL DEL ${String(side.name||'EQUIPO').toUpperCase()}!\n\n⏱️ ${minute}\n⚽ ${player}\n📊 ${h.name} ${score} ${a.name}\n\n🔴 RS LIVE · Ramón Sicart`;
+  }
+  if(ev.type==='yellow'){
+    return `🟨 TARJETA AMARILLA\n\n⏱️ ${minute}\n👤 ${player}\n🏟️ ${h.name} ${score} ${a.name}\n\n🔴 RS LIVE · Ramón Sicart`;
+  }
+  if(ev.type==='red'){
+    return `🟥 TARJETA ROJA\n\n⏱️ ${minute}\n👤 ${player}\n🏟️ ${h.name} ${score} ${a.name}\n\n🔴 RS LIVE · Ramón Sicart`;
+  }
+  return `🔄 CAMBIO\n\n⏱️ ${minute}\n👤 ${player}\n🏟️ ${h.name} ${score} ${a.name}\n\n🔴 RS LIVE · Ramón Sicart`;
+}
+function openRSWhatsAppEvent(ev){
+  const m=activeMatch(); if(!m||!ev)return;
+  const msg=rsWhatsAppEventText(ev,m);
+  const box=document.getElementById('rsWhatsAppEventMessage');
+  if(box)box.textContent=msg;
+  const modal=document.getElementById('rsWhatsAppEventModal');
+  if(modal)modal.classList.add('open');
+}
+function closeRSWhatsAppEvent(){document.getElementById('rsWhatsAppEventModal')?.classList.remove('open')}
+function sendRSWhatsAppEvent(){
+  const text=document.getElementById('rsWhatsAppEventMessage')?.textContent||'';
+  if(!text)return;
+  const url='https://wa.me/?text='+encodeURIComponent(text);
+  window.open(url,'_blank');
+}
+async function copyRSWhatsAppEvent(){
+  const text=document.getElementById('rsWhatsAppEventMessage')?.textContent||'';
+  if(!text)return;
+  try{await navigator.clipboard.writeText(text);toast('✅ Mensaje copiado');}
+  catch(e){toast('No se pudo copiar el mensaje');}
+}
 function openEvent(type){
  if(!activeMatch()){toast("Activa un partido");return}
  eventType=type;eventTeam=null;eventMinuteOffset=0;
@@ -2161,8 +2208,11 @@ function commitEvent(num){
  const ev={id:Date.now(),type:eventType,team:eventTeam,minute:eventMinute,playerNumber:num,playerName:pl?.name||("Jugador "+num)};
  if(eventType==="goal"){if(eventTeam==="home")Live.homeScore++;else Live.awayScore++;ev.score=`${Live.homeScore}-${Live.awayScore}`;if(rsHome=== (eventTeam==="home")){const p=App.players.find(x=>Number(x.number)===num);if(p)p.goals=(p.goals||0)+1}}
  if(eventType==="yellow"||eventType==="red"){if(rsHome=== (eventTeam==="home")){const p=App.players.find(x=>Number(x.number)===num);if(p)p[eventType==="yellow"?"yellow":"red"]=(p[eventType==="yellow"?"yellow":"red"]||0)+1}}
- Live.events.push(ev);closeModal("eventModal");save();renderAll();toast("Evento publicado en directo")
+ Live.events.push(ev);closeModal("eventModal");save();renderAll();toast("Evento publicado en directo");
+ // Después de publicar el evento, ofrecemos preparar el aviso de WhatsApp.
+ setTimeout(()=>openRSWhatsAppEvent(ev),80);
 }
+
 function openPlayer(id){
  editPlayerId=id;const p=App.players.find(x=>x.id===id);if(!p)return;
  document.getElementById("playerModalTitle").textContent="Editar jugador";document.getElementById("pNumber").value=p.number;document.getElementById("pName").value=p.name;document.getElementById("pSurname").value=p.surname||"";document.getElementById("pPosition").value=p.position;document.getElementById("pCaptain").checked=!!p.captain;document.getElementById("pStatus").value=p.status||"Disponible";document.getElementById("playerModal").classList.add("open")
@@ -3217,15 +3267,88 @@ document.addEventListener("click",function(e){
     });return c;
   }
   window.savePlayer=async function(){
-    v26EnsurePlayerStatsFields();const num=Number(document.getElementById('pNumber').value),name=document.getElementById('pName').value.trim();if(!num||!name){toast('Dorsal y nombre son obligatorios');return}
-    let p=App.players.find(x=>x.id===editPlayerId);if(!p){p={id:Date.now(),number:num,name,surname:'',position:'Defensa',captain:false,photo:'',goals:0,yellow:0,red:0,starts:0,appearances:0};App.players.push(p)}
+    v26EnsurePlayerStatsFields();
+    const num=Number(document.getElementById('pNumber').value);
+    const name=document.getElementById('pName').value.trim();
+    if(!num||!name){toast('Dorsal y nombre son obligatorios');return}
+
+    let p=App.players.find(x=>String(x.id)===String(editPlayerId));
+    if(!p){
+      p={id:Date.now(),number:num,name,surname:'',position:'Defensa',captain:false,photo:'',goals:0,yellow:0,red:0,starts:0,appearances:0};
+      App.players.push(p);
+    }
+
+    const oldNumber=Number(p.number);
     const raw=calcRaw()[p.id]||{goals:0,yellow:0,red:0,starts:0,appearances:0};
-    const entered={goals:Number(document.getElementById('pGoals').value||0),yellow:Number(document.getElementById('pYellow').value||0),red:Number(document.getElementById('pRed').value||0),starts:Number(document.getElementById('pStarts').value||0),appearances:Number(document.getElementById('pApps').value||0)};
-    p.number=num;p.name=name;p.surname=document.getElementById('pSurname').value.trim();p.position=document.getElementById('pPosition').value;p.captain=document.getElementById('pCaptain').checked;p.status=document.getElementById('pStatus').value;
-    p.statAdjust={goals:entered.goals-raw.goals,yellow:entered.yellow-raw.yellow,red:entered.red-raw.red,starts:entered.starts-raw.starts,appearances:entered.appearances-raw.appearances};
-    const file=document.getElementById('pPhoto').files[0];if(file){toast('Subiendo foto…');p.photo=await uploadFile(file,'players')}
-    App.players.sort((a,b)=>a.number-b.number);closeModal('playerModal');v26RecalcStats();await save();renderAll();toast('Jugador guardado');
+    const entered={
+      goals:Number(document.getElementById('pGoals').value||0),
+      yellow:Number(document.getElementById('pYellow').value||0),
+      red:Number(document.getElementById('pRed').value||0),
+      starts:Number(document.getElementById('pStarts').value||0),
+      appearances:Number(document.getElementById('pApps').value||0)
+    };
+
+    /* No permitimos dos jugadores con el mismo dorsal. */
+    const duplicate=App.players.find(x=>x!==p && Number(x.number)===num);
+    if(duplicate){toast(`El dorsal #${num} ya está asignado a ${duplicate.name}`);return}
+
+    /*
+     * El histórico usa el dorsal como referencia. Si cambiamos el dorsal,
+     * actualizamos también alineaciones y eventos de partidos ya guardados
+     * para que el jugador siga siendo el mismo y no se pierdan sus datos.
+     */
+    if(oldNumber!==num){
+      (App.matches||[]).forEach(m=>{
+        if(Array.isArray(m.lineup)){
+          m.lineup=m.lineup.map(n=>Number(n)===oldNumber?num:n);
+        }
+        if(Array.isArray(m.events)){
+          m.events.forEach(e=>{
+            if(Number(e.playerNumber)===oldNumber)e.playerNumber=num;
+            if(Number(e.playerInNumber)===oldNumber)e.playerInNumber=num;
+            if(Number(e.playerOutNumber)===oldNumber)e.playerOutNumber=num;
+          });
+        }
+      });
+      if(Array.isArray(Live.lineup)) Live.lineup=Live.lineup.map(n=>Number(n)===oldNumber?num:n);
+      if(Array.isArray(Live.events)) Live.events.forEach(e=>{
+        if(Number(e.playerNumber)===oldNumber)e.playerNumber=num;
+        if(Number(e.playerInNumber)===oldNumber)e.playerInNumber=num;
+        if(Number(e.playerOutNumber)===oldNumber)e.playerOutNumber=num;
+      });
+    }
+
+    p.number=num;
+    p.name=name;
+    p.surname=document.getElementById('pSurname').value.trim();
+    p.position=document.getElementById('pPosition').value;
+    p.captain=document.getElementById('pCaptain').checked;
+    p.status=document.getElementById('pStatus').value;
+    p.statAdjust={
+      goals:entered.goals-raw.goals,
+      yellow:entered.yellow-raw.yellow,
+      red:entered.red-raw.red,
+      starts:entered.starts-raw.starts,
+      appearances:entered.appearances-raw.appearances
+    };
+
+    const file=document.getElementById('pPhoto').files[0];
+    if(file){toast('Subiendo foto…');p.photo=await uploadFile(file,'players')}
+
+    App.players.sort((a,b)=>Number(a.number)-Number(b.number));
+    v26RecalcStats();
+
+    try{
+      await save();
+      closeModal('playerModal');
+      renderAll();
+      toast(oldNumber!==num?`✅ Jugador guardado · dorsal #${num} actualizado en el histórico`:'✅ Jugador guardado correctamente');
+    }catch(err){
+      console.error('RS LIVE: error guardando jugador',err);
+      toast('❌ No se pudieron guardar los cambios');
+    }
   };
+
   const old=document.getElementById('savePlayerBtn');if(old){const fresh=old.cloneNode(true);old.replaceWith(fresh);fresh.addEventListener('click',window.savePlayer)}
 })();
 </script>
@@ -3803,6 +3926,19 @@ document.addEventListener("click",function(e){
 })();
 </script>
 
+
+<div id="rsWhatsAppEventModal" class="modal rsWaModal">
+  <div class="modalBox">
+    <div class="modalHead"><h2>📲 Informar por WhatsApp</h2><button class="close" onclick="closeRSWhatsAppEvent()">×</button></div>
+    <p style="color:var(--muted);font-size:12px;margin:0 0 8px">Evento publicado. Puedes enviar ahora la información del evento por WhatsApp.</p>
+    <div id="rsWhatsAppEventMessage" class="rsWaMessage"></div>
+    <div class="rsWaActions">
+      <button class="btn green" type="button" onclick="sendRSWhatsAppEvent()">📲 Abrir WhatsApp</button>
+      <button class="btn dark" type="button" onclick="copyRSWhatsAppEvent()">📋 Copiar mensaje</button>
+    </div>
+    <div class="rsWaHint">WhatsApp se abrirá con el mensaje preparado para que elijas el grupo o contacto y pulses Enviar.</div>
+  </div>
+</div>
 </body>
 </html>
 
@@ -4969,141 +5105,3 @@ document.addEventListener("click",function(e){
 })();
 </script>
 
-
-<!-- =========================================================
- RS LIVE V52 — ÚLTIMA CAPA DE ESTABILIZACIÓN
- - Partidos: diseño V40 restaurado y listado completo ordenado por fecha.
- - Administrador: TODOS los partidos + Activar + Editar + Eliminar.
- - Detalle: SOLO el partido seleccionado; se oculta el resto del calendario.
- - Clasificación 2024/25: FIJA, independiente de App.matches/Firebase.
-========================================================= -->
-<style id="rs-v52-final">
-  /* Detalle: cuando se abre un partido, desaparece completamente el calendario */
-  #matches.rsV48DetailsOpen > .sectionTitle,
-  #matches.rsV48DetailsOpen > .infoCard,
-  #matches.rsV48DetailsOpen > #matchList,
-  #matches.rsV52DetailsOpen > .sectionTitle,
-  #matches.rsV52DetailsOpen > .infoCard { display:none!important; }
-  #matches.rsV48DetailsOpen #completedDetailsV20,
-  #matches.rsV52DetailsOpen #completedDetailsV20 { display:block!important; }
-
-  /* Clasificación fija */
-  .rsV52TableWrap{overflow-x:auto;border:1px solid rgba(255,255,255,.14);border-radius:16px;background:#071522}
-  .rsV52Table{width:100%;min-width:760px;border-collapse:collapse;font-size:13px}
-  .rsV52Table th{background:#142b42;color:#f4d400;padding:11px 8px;border-bottom:1px solid #34506b;text-align:center;font-weight:1000}
-  .rsV52Table td{padding:10px 8px;border-bottom:1px solid rgba(255,255,255,.12);text-align:center;color:#eef3f8;font-weight:700}
-  .rsV52Table td:nth-child(2){text-align:left;font-weight:900}
-  .rsV52Table tr.ramon{background:rgba(255,212,0,.14);box-shadow:inset 4px 0 #ffd400}
-  .rsV52Table tr:last-child td{border-bottom:0}
-  .rsV52Table .pos{font-size:16px;font-weight:1000;color:#fff}
-  .rsV52Table .pts{font-size:16px;font-weight:1000;color:#ffd400}
-  .rsV52FixedNote{font-size:11px;color:var(--muted);margin-top:8px}
-
-  /* Administrador */
-  .rsV52AdminMatch{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;margin:8px 0;border:1px solid rgba(255,255,255,.1);border-radius:14px;background:#0b1b2c}
-  .rsV52AdminInfo{min-width:0}.rsV52AdminInfo b{display:block;color:#fff;font-size:14px}.rsV52AdminInfo small{display:block;color:var(--muted);margin-top:4px;line-height:1.4}
-  .rsV52AdminActions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0}
-  @media(max-width:700px){.rsV52AdminMatch{align-items:flex-start;flex-direction:column}.rsV52AdminActions{width:100%;justify-content:flex-start}.rsV52AdminActions .btn{flex:1;min-width:90px}}
-</style>
-<script id="rs-v52-final-script">
-(function(){
-  'use strict';
-
-  const FIXED_TABLE=[
-    {pos:1,name:'CALAFELL CF C',pts:60,j:24,g:19,e:3,p:2,gf:79,gc:21,d:58},
-    {pos:2,name:'ESCOLA F. BASE VENDRELL A',pts:58,j:24,g:19,e:1,p:4,gf:103,gc:38,d:65},
-    {pos:3,name:'RAMON SICART, A.E. A',pts:52,j:24,g:17,e:1,p:6,gf:94,gc:47,d:47,ramon:true},
-    {pos:4,name:'S.PAU APOSTOL ESP.APA B',pts:51,j:24,g:16,e:3,p:5,gf:87,gc:34,d:53},
-    {pos:5,name:'BASE VILANOVA D',pts:46,j:24,g:14,e:4,p:6,gf:72,gc:36,d:36},
-    {pos:6,name:'JOVENTUT BISBALENCA, C.F. A',pts:43,j:24,g:13,e:4,p:7,gf:68,gc:45,d:23}
-  ];
-
-  function renderFixedClassification(){
-    const table=document.getElementById('homeTableV26');
-    if(!table)return;
-    table.innerHTML=`<div class="rsV52TableWrap"><table class="rsV52Table">
-      <thead><tr><th>POS</th><th>EQUIPOS</th><th>PTS</th><th>J</th><th>G</th><th>E</th><th>P</th><th>GF</th><th>GC</th><th>DIF.G</th></tr></thead>
-      <tbody>${FIXED_TABLE.map(r=>`<tr class="${r.ramon?'ramon':''}"><td class="pos">${r.pos}</td><td>${esc(r.name)}</td><td class="pts">${r.pts}</td><td>${r.j}</td><td>${r.g}</td><td>${r.e}</td><td>${r.p}</td><td>${r.gf}</td><td>${r.gc}</td><td>${r.d}</td></tr>`).join('')}</tbody>
-    </table></div><div class="rsV52FixedNote">Clasificación histórica 2024/25 · datos fijos, no se recalcula con los partidos actuales.</div>`;
-    const card=table.closest('.v26DashCard');
-    const sub=card?.querySelector('.sectionTitle p'); if(sub)sub.textContent='Temporada 2024/25';
-  }
-
-  /* Diseño de partidos V40, sin depender de versiones anteriores */
-  function crest(t){
-    return t?.logo ? `<img class="matchCrestV40" src="${esc(t.logo)}" alt="" loading="lazy">` : `<div class="matchCrestV40" style="display:grid;place-items:center;font-size:30px">⚽</div>`;
-  }
-  function scorers(m){
-    const ev=Array.isArray(m?.events)?m.events:[];
-    const goals=ev.filter(e=>['goal','gol'].includes(String(e?.type||e?.eventType||'').toLowerCase()));
-    if(!goals.length)return '';
-    const counts={};
-    goals.forEach(e=>{const n=String(e?.playerName||e?.player||'').trim();if(n)counts[n]=(counts[n]||0)+1;});
-    const text=Object.entries(counts).map(([n,c])=>`${esc(n)}${c>1?` (${c})`:''}`).join(' · ');
-    return text?`<div class="matchScorersV40"><span class="scorerLabel">⚽ GOLEADORES:</span><span class="scorerText">${text}</span></div>`:'';
-  }
-  function sortMatches(a,b){return String(a.date||'').localeCompare(String(b.date||''))||String(a.hour||'').localeCompare(String(b.hour||''));}
-
-  function renderMatchesV52(){
-    const box=document.getElementById('matchList'),admin=document.getElementById('adminMatches');
-    if(!box)return;
-    const rows=[...(App.matches||[])].sort(sortMatches);
-    box.innerHTML=rows.length?rows.map(m=>{
-      const h=team(m.home),a=team(m.away);
-      const active=String(m.id)===String(App.activeMatch);
-      const fin=m.status==='FINISHED'||(active&&Live.state==='FINISHED');
-      const live=active&&['FIRST_HALF','SECOND_HALF'].includes(Live.state);
-      let hs=Number(m.homeScore||0),as=Number(m.awayScore||0);
-      if(fin&&active&&Live.state==='FINISHED'){hs=Number(Live.homeScore||hs);as=Number(Live.awayScore||as)}
-      const score=fin?`${hs} - ${as}`:(live?`${Number(Live.homeScore||0)} - ${Number(Live.awayScore||0)}`:'—');
-      if(!fin){
-        return `<div class="matchRow matchRowV32"><div class="matchDateV32">${formatDate(m.date)}<br>${esc(m.hour||'')}</div><div class="matchTeamsV32"><div class="matchTeamV32">${crest(h)}<span class="matchNameV32">${esc(h.name)}</span></div><span class="matchVsV32">VS</span><div class="matchTeamV32">${crest(a)}<span class="matchNameV32">${esc(a.name)}</span></div><small class="matchCompetitionV32">${esc(m.competition||'Liga')}</small></div><div class="matchResultV32"><strong>${esc(score)}</strong>${live?'<span class="liveBadgeV23">🔴 DIRECTO</span>':'<span class="pendingBadgeV23">PRÓXIMO</span>'}</div></div>`;
-      }
-      const ramonHome=/ram[oó]n\s+sicart/i.test(String(h.name||'')),ramonAway=/ram[oó]n\s+sicart/i.test(String(a.name||''));
-      const cls=hs===as?'result-draw':((ramonHome&&hs>as)||(ramonAway&&as>hs)?'result-win':'result-loss');
-      return `<div class="matchRowV40 ${cls}"><div class="matchTeamV40 home">${crest(h)}<span class="matchNameV40">${esc(h.name)}</span></div><div class="matchCenterV40"><div class="matchMetaV40"><span>${formatDate(m.date)}</span><span class="dot">•</span><span>${esc(m.competition||'Liga')}</span></div><div class="matchScoreV40">${esc(score)}</div><div class="matchFinalV40">FINAL</div><button class="matchDetailsBtnV40" type="button" onclick="v25ShowDetails(${m.id});event.stopPropagation()">👁 Ver detalles</button></div><div class="matchTeamV40 away">${crest(a)}<span class="matchNameV40">${esc(a.name)}</span></div>${scorers(m)}</div>`;
-    }).join(''):'<div class="empty">No hay partidos creados.</div>';
-
-    if(admin){
-      admin.innerHTML=rows.length?rows.map(m=>{
-        const h=team(m.home),a=team(m.away),fin=m.status==='FINISHED';
-        const score=fin?` · ${Number(m.homeScore||0)}-${Number(m.awayScore||0)}`:'';
-        return `<div class="rsV52AdminMatch"><div class="rsV52AdminInfo"><b>${esc(h.name)} vs ${esc(a.name)}</b><small>${formatDate(m.date)} ${esc(m.hour||'')} · ${esc(m.competition||'Liga')}${fin?' · 🏁 FINALIZADO':''}${score}</small></div><div class="rsV52AdminActions"><button class="btn small ${String(m.id)===String(App.activeMatch)?'green':'dark'}" onclick="setActive(${m.id})">${String(m.id)===String(App.activeMatch)?'Activo':'Activar'}</button><button class="btn small dark" onclick="rsV48OpenEdit(${m.id})">✏️ Editar</button><button class="btn small red" onclick="deleteMatch(${m.id})">🗑 Eliminar</button></div></div>`;
-      }).join(''):'<div class="empty">No hay partidos creados.</div>';
-    }
-  }
-
-  /* Detalle exclusivo: elimina visualmente todo lo demás y deja el encuentro seleccionado */
-  function openOnlyDetails(id){
-    const section=document.getElementById('matches');
-    if(!section)return;
-    section.classList.add('rsV52DetailsOpen');
-    const details=document.getElementById('completedDetailsV20');
-    if(details)details.style.display='block';
-    const m=(App.matches||[]).find(x=>String(x.id)===String(id));
-    if(m&&typeof rsV48RenderHistory==='function')setTimeout(()=>rsV48RenderHistory(m),20);
-  }
-
-  const originalDetails=window.v25ShowDetails;
-  window.v25ShowDetails=function(id){
-    if(typeof originalDetails==='function')originalDetails(id);
-    openOnlyDetails(id);
-  };
-
-  document.getElementById('closeDetailsV20')?.addEventListener('click',()=>{
-    document.getElementById('matches')?.classList.remove('rsV48DetailsOpen','rsV52DetailsOpen');
-  });
-
-  window.renderMatches=renderMatchesV52;
-
-  /* renderAll ya llama a renderHome/renderMatches. Solo sustituimos la clasificación por los datos fijos. */
-  const originalHome=window.renderHome;
-  window.renderHome=function(){
-    if(typeof originalHome==='function')originalHome();
-    renderFixedClassification();
-  };
-
-  /* Ejecutar después de que todas las versiones anteriores hayan terminado de montar sus elementos. */
-  setTimeout(()=>{try{renderFixedClassification();renderMatchesV52();}catch(e){console.error('RS V52',e)}},100);
-})();
-</script>
