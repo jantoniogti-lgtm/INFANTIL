@@ -5046,3 +5046,140 @@ document.addEventListener("click",function(e){
   setTimeout(enhanceHistoricalRows,2200);
 })();
 </script>
+
+<!-- V55 — Recupera diseño V40 de Partidos + gestión completa de partidos en Administrador -->
+<style id="v55-matches-admin-fix">
+/* PUBLICO: tarjetas horizontales tipo V40 */
+#matchList{display:grid!important;gap:14px!important}
+.matchRowV55{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 250px minmax(0,1fr)!important;
+  grid-template-areas:"home center away" "scorers scorers scorers"!important;
+  align-items:center!important;gap:12px 20px!important;
+  width:100%!important;box-sizing:border-box!important;padding:18px 22px 0!important;
+  margin:0!important;background:#030507!important;border:1px solid rgba(255,255,255,.14)!important;
+  border-radius:16px!important;overflow:hidden!important;color:#fff!important;
+}
+.matchTeamV55{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:7px!important;min-width:0!important;text-align:center!important}
+.matchTeamV55.home{grid-area:home!important}.matchTeamV55.away{grid-area:away!important}
+.matchCrestV55{width:68px!important;height:68px!important;object-fit:contain!important;display:block!important;filter:drop-shadow(0 5px 9px rgba(0,0,0,.4))!important}
+.matchNameV55{font-size:23px!important;line-height:1.08!important;font-weight:1000!important;color:#fff!important;overflow-wrap:anywhere!important}
+.matchCenterV55{grid-area:center!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;min-width:0!important}
+.matchMetaV55{display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;color:#aab5c4!important;font-size:11px!important;font-weight:800!important;margin-bottom:7px!important;white-space:nowrap!important}
+.matchScoreV55{min-width:190px!important;padding:9px 16px!important;border-radius:9px!important;color:#fff!important;font-size:43px!important;line-height:1!important;font-weight:1000!important;letter-spacing:2px!important;text-align:center!important;background:#18a94b!important;box-sizing:border-box!important}
+.matchRowV55.result-draw .matchScoreV55{background:#d4a800!important}.matchRowV55.result-loss .matchScoreV55{background:#c52b35!important}
+.matchFinalV55{margin-top:6px!important;font-size:13px!important;letter-spacing:4px!important;font-weight:1000!important;color:#fff!important}
+.matchDetailsBtnV55{margin-top:8px!important;background:#172235!important;border:1px solid rgba(255,255,255,.15)!important;color:#fff!important;border-radius:9px!important;padding:8px 15px!important;font-size:13px!important;font-weight:900!important;cursor:pointer!important}
+.matchScorersV55{grid-area:scorers!important;display:flex!important;align-items:center!important;gap:10px!important;min-height:36px!important;padding:7px 13px!important;background:#050505!important;border-top:1px solid rgba(255,255,255,.12)!important;color:#fff!important;font-size:12px!important;font-weight:800!important;box-sizing:border-box!important}
+.matchScorersV55 .scorerLabel{color:#f1cf00!important;font-weight:1000!important;white-space:nowrap!important}.matchScorersV55 .scorerText{color:#e8edf3!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+.matchScorersV55.empty{display:none!important}
+/* ADMIN: todos los partidos + edición */
+.v55AdminMatches{display:grid;gap:10px;margin-top:14px}
+.v55AdminMatch{background:#091728;border:1px solid #29405d;border-radius:14px;padding:13px}
+.v55AdminHead{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}
+.v55AdminTitle{font-weight:1000;color:#fff;font-size:14px}.v55AdminMeta{font-size:10px;color:#71869c;margin-top:3px}
+.v55AdminActions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.v55EditGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.v55EditGrid label{display:block;font-size:9px;color:#71869c;font-weight:900;margin-bottom:4px}
+.v55EditGrid input,.v55EditGrid select{width:100%;box-sizing:border-box;background:#06111f;color:#fff;border:1px solid #29405d;border-radius:9px;padding:9px;font-size:12px}
+.v55EditScore{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.v55EditFooter{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.v55Editing{border-color:#ffd400;box-shadow:0 0 0 1px #ffd40033}
+@media(max-width:700px){
+ .matchRowV55{grid-template-columns:minmax(0,1fr) 145px minmax(0,1fr)!important;gap:7px!important;padding:14px 9px 0!important}
+ .matchCrestV55{width:48px!important;height:48px!important}.matchNameV55{font-size:16px!important}.matchScoreV55{min-width:125px!important;font-size:28px!important;padding:8px 7px!important}.matchMetaV55{font-size:9px!important}.matchFinalV55{font-size:10px!important;letter-spacing:3px!important}.matchDetailsBtnV55{font-size:10px!important;padding:6px 8px!important}.matchScorersV55{font-size:10px!important;padding:7px 8px!important}
+ .v55AdminHead{align-items:flex-start;flex-direction:column}.v55AdminActions{justify-content:flex-start}.v55EditGrid{grid-template-columns:1fr}.v55EditScore{grid-template-columns:1fr 1fr}
+}
+</style>
+<script id="v55-matches-admin-fix-script">
+(function(){
+  "use strict";
+  function v55Crest(t){
+    return t && t.logo ? `<img class="matchCrestV55" src="${esc(t.logo)}" alt="${esc(t.name||'')}" loading="lazy">` : `<div class="matchCrestV55" style="display:grid;place-items:center;font-size:30px">⚽</div>`;
+  }
+  function v55Scorers(m){
+    const goals=(Array.isArray(m.events)?m.events:[]).filter(e=>e&&e.type==='goal'&&e.playerName);
+    if(!goals.length)return '';
+    const counts={}; goals.forEach(e=>{const n=String(e.playerName).trim();if(n)counts[n]=(counts[n]||0)+1});
+    const text=Object.entries(counts).map(([n,c])=>`${esc(n)}${c>1?` (${c})`:''}`).join(' · ');
+    return `<div class="matchScorersV55"><span class="scorerLabel">⚽ GOLEADORES:</span><span class="scorerText">${text}</span></div>`;
+  }
+  function v55Sorted(){
+    return (Array.isArray(App.matches)?App.matches:[]).slice().sort((a,b)=>{
+      const da=a.date||'9999-99-99',db=b.date||'9999-99-99';
+      if(da!==db)return da.localeCompare(db);
+      const ja=Number(a.jornada||999),jb=Number(b.jornada||999); if(ja!==jb)return ja-jb;
+      return String(a.id).localeCompare(String(b.id));
+    });
+  }
+  function v55RenderPublic(){
+    const box=document.getElementById('matchList'); if(!box)return;
+    const rows=v55Sorted();
+    box.innerHTML=rows.length?rows.map(m=>{
+      const h=team(m.home),a=m.away?team(m.away):{name:'Sin rival registrado',logo:''};
+      const fin=m.status==='FINISHED';
+      const active=String(m.id)===String(App.activeMatch);
+      const live=active&&(Live.state==='FIRST_HALF'||Live.state==='SECOND_HALF');
+      let hs=Number(m.homeScore||0),as=Number(m.awayScore||0);
+      if(active&&Live.state==='FINISHED'){hs=Number(Live.homeScore||hs);as=Number(Live.awayScore||as)}
+      const score=fin||live?`${hs} - ${as}`:'—';
+      if(!fin&&!live){
+        return `<div class="matchRowV55"><div class="matchTeamV55 home">${v55Crest(h)}<span class="matchNameV55">${esc(h.name)}</span></div><div class="matchCenterV55"><div class="matchMetaV55"><span>${m.jornada?`Jornada ${esc(m.jornada)} · `:''}${formatDate(m.date)}</span><span>•</span><span>${esc(m.competition||'Liga')}</span></div><div class="matchScoreV55">${esc(score)}</div><div class="matchFinalV55">PRÓXIMO</div></div><div class="matchTeamV55 away">${v55Crest(a)}<span class="matchNameV55">${esc(a.name)}</span></div></div>`;
+      }
+      const ramonHome=/ram[oó]n sicart/i.test(String(h.name||'')),ramonAway=/ram[oó]n sicart/i.test(String(a.name||''));
+      const cls=hs===as?'result-draw':((ramonHome&&hs>as)||(ramonAway&&as>hs)?'result-win':'result-loss');
+      return `<div class="matchRowV55 ${cls}"><div class="matchTeamV55 home">${v55Crest(h)}<span class="matchNameV55">${esc(h.name)}</span></div><div class="matchCenterV55"><div class="matchMetaV55"><span>${m.jornada?`Jornada ${esc(m.jornada)} · `:''}${formatDate(m.date)}</span><span>•</span><span>${esc(m.competition||'Liga')}</span></div><div class="matchScoreV55">${esc(score)}</div><div class="matchFinalV55">${live?'🔴 DIRECTO':'FINAL'}</div>${!live?`<button class="matchDetailsBtnV55" type="button" onclick="v25ShowDetails(${Number(m.id)});event.stopPropagation()">👁 Ver detalles</button>`:''}</div><div class="matchTeamV55 away">${v55Crest(a)}<span class="matchNameV55">${esc(a.name)}</span></div>${v55Scorers(m)}</div>`;
+    }).join(''):'<div class="empty">No hay partidos creados.</div>';
+  }
+  function optTeams(selected){
+    return (App.teams||[]).map(t=>`<option value="${esc(t.id)}" ${String(t.id)===String(selected)?'selected':''}>${esc(t.name)}</option>`).join('');
+  }
+  function v55EditRow(m){
+    const h=team(m.home),a=m.away?team(m.away):{name:'Sin rival registrado'};
+    return `<div class="v55AdminMatch v55Editing" id="v55Edit_${Number(m.id)}"><div class="v55AdminHead"><div><div class="v55AdminTitle">Editando J${esc(m.jornada||'—')} · ${esc(h.name)} vs ${esc(a.name)}</div><div class="v55AdminMeta">ID ${esc(m.id)} · partido ${m.status==='FINISHED'?'FINALIZADO':'PENDIENTE'}</div></div></div><div class="v55EditGrid"><div><label>Jornada</label><input id="v55j_${Number(m.id)}" type="number" min="1" value="${Number(m.jornada||'')||''}"></div><div><label>Estado</label><select id="v55s_${Number(m.id)}"><option value="PENDING" ${m.status!=='FINISHED'?'selected':''}>Pendiente</option><option value="FINISHED" ${m.status==='FINISHED'?'selected':''}>Finalizado</option></select></div><div><label>Local</label><select id="v55h_${Number(m.id)}">${optTeams(m.home)}</select></div><div><label>Visitante</label><select id="v55a_${Number(m.id)}"><option value="">Sin rival registrado</option>${optTeams(m.away)}</select></div><div><label>Fecha</label><input id="v55d_${Number(m.id)}" type="date" value="${esc(m.date||'')}"></div><div><label>Hora</label><input id="v55t_${Number(m.id)}" type="time" value="${esc(m.hour||'')}"></div><div><label>Competición</label><input id="v55c_${Number(m.id)}" value="${esc(m.competition||'Liga')}"></div><div><label>Campo</label><input id="v55f_${Number(m.id)}" value="${esc(m.field||'')}"></div><div><label>Marcador</label><div class="v55EditScore"><input id="v55hs_${Number(m.id)}" type="number" min="0" value="${Number(m.homeScore||0)}"><input id="v55as_${Number(m.id)}" type="number" min="0" value="${Number(m.awayScore||0)}"></div></div></div><div class="v55EditFooter"><button class="btn green small" onclick="v55SaveMatch(${Number(m.id)})">💾 Guardar cambios</button><button class="btn dark small" onclick="v55CancelEdit()">Cancelar</button></div></div>`;
+  }
+  function v55AdminCard(m){
+    const h=team(m.home),a=m.away?team(m.away):{name:'Sin rival registrado'};
+    const active=String(m.id)===String(App.activeMatch);
+    return `<div class="v55AdminMatch"><div class="v55AdminHead"><div><div class="v55AdminTitle">J${esc(m.jornada||'—')} · ${esc(h.name)} vs ${esc(a.name)}</div><div class="v55AdminMeta">${m.date?formatDate(m.date):'Sin fecha'}${m.hour?' · '+esc(m.hour):''} · ${esc(m.competition||'Liga')} · ${m.status==='FINISHED'?'FINALIZADO':'PENDIENTE'} · ${Number(m.homeScore||0)} - ${Number(m.awayScore||0)}</div></div><div class="v55AdminActions"><button class="btn small ${active?'green':'dark'}" onclick="setActive(${Number(m.id)})">${active?'Activo':'Activar'}</button><button class="btn small" onclick="v55EditMatch(${Number(m.id)})">✏️ Editar</button><button class="btn small red" onclick="deleteMatch(${Number(m.id)})">🗑 Eliminar</button></div></div></div>`;
+  }
+  function v55RenderAdmin(){
+    const admin=document.getElementById('adminMatches'); if(!admin)return;
+    const rows=v55Sorted();
+    admin.classList.add('v55AdminMatches');
+    admin.innerHTML=rows.length?rows.map(v55AdminCard).join(''):'<div class="empty">No hay partidos creados.</div>';
+  }
+  window.v55EditMatch=function(id){
+    const m=App.matches.find(x=>String(x.id)===String(id));if(!m)return;
+    const admin=document.getElementById('adminMatches');if(!admin)return;
+    admin.innerHTML=v55Sorted().map(x=>String(x.id)===String(id)?v55EditRow(x):v55AdminCard(x)).join('');
+    const el=document.getElementById('v55Edit_'+Number(id));if(el)el.scrollIntoView({behavior:'smooth',block:'center'});
+  };
+  window.v55CancelEdit=function(){v55RenderAdmin()};
+  window.v55SaveMatch=async function(id){
+    const m=App.matches.find(x=>String(x.id)===String(id));if(!m)return;
+    const num=id=>document.getElementById(id+Number(m.id));
+    const home=Number(document.getElementById('v55h_'+Number(m.id)).value);
+    const awayVal=document.getElementById('v55a_'+Number(m.id)).value;
+    const status=document.getElementById('v55s_'+Number(m.id)).value;
+    m.jornada=Number(document.getElementById('v55j_'+Number(m.id)).value)||null;
+    m.home=home;m.away=awayVal?Number(awayVal):null;
+    m.date=document.getElementById('v55d_'+Number(m.id)).value;
+    m.hour=document.getElementById('v55t_'+Number(m.id)).value;
+    m.competition=document.getElementById('v55c_'+Number(m.id)).value.trim()||'Liga';
+    m.field=document.getElementById('v55f_'+Number(m.id)).value.trim();
+    m.status=status;m.homeScore=Math.max(0,Number(document.getElementById('v55hs_'+Number(m.id)).value)||0);m.awayScore=Math.max(0,Number(document.getElementById('v55as_'+Number(m.id)).value)||0);
+    if(status==='PENDING'){m.homeScore=0;m.awayScore=0}
+    if(String(App.activeMatch)===String(id)){
+      Live.homeScore=m.homeScore;Live.awayScore=m.awayScore;Live.events=JSON.parse(JSON.stringify(m.events||[]));
+      if(status==='FINISHED'){Live.state='FINISHED';Live.half=2;Live.pausedSeconds=80*60;Live.manualMinute=80;Live.startTimestamp=null;}
+      else {Live.state='PREMATCH';Live.pausedSeconds=0;Live.manualMinute=0;Live.startTimestamp=null;}
+    }
+    try{await save();renderAll();toast('✅ Partido actualizado correctamente')}catch(e){toast('❌ No se pudo guardar el partido')}
+  };
+  const originalRenderMatches=window.renderMatches;
+  window.renderMatches=function(){v55RenderPublic();v55RenderAdmin()};
+  window.v55RenderMatches=function(){v55RenderPublic();v55RenderAdmin()};
+  setTimeout(()=>{v55RenderPublic();v55RenderAdmin()},50);
+})();
+</script>
