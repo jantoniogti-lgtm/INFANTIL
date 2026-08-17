@@ -1536,14 +1536,34 @@ button{cursor:pointer}
 }
 </style>
 
-
-<style id="rsWhatsAppEventStyle">
-.rsWaModal .modalBox{max-width:620px}
-.rsWaMessage{background:#091727;border:1px solid var(--line);border-radius:14px;padding:14px;white-space:pre-wrap;font-size:15px;line-height:1.55;color:#fff;margin:12px 0}
-.rsWaActions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.rsWaActions .btn{min-height:48px;font-size:14px;font-weight:900}
-.rsWaHint{font-size:11px;color:var(--muted);margin-top:9px}
-@media(max-width:560px){.rsWaActions{grid-template-columns:1fr}.rsWaMessage{font-size:14px}}
+<style id="rs-event-layout-v56">
+.event{grid-template-columns:42px 28px 32px 1fr auto!important;gap:8px!important;}
+.eventTeamOnly{display:grid;place-items:center;width:28px;height:28px;}
+.eventTeamOnly img,.eventTeamOnly .eventTeamLogoV18,.eventTeamOnly .eventTeamLogoFallbackV18{width:26px!important;height:26px!important;object-fit:contain!important;border-radius:50%;background:#fff;padding:1px;display:block;}
+.eventIcon{font-size:21px!important;text-align:center;}
+.eventText{font-size:12px!important;}
+.eventText b{display:block!important;}
+.eventTeamLineV18{display:none!important;}
+.eventCompactV19{grid-template-columns:38px 28px 30px 1fr 48px!important;}
+.eventTeamCrestSlotV19{display:grid;place-items:center;width:28px;height:28px;}
+.eventTeamCrestSlotV19 img,.eventTeamCrestSlotV19 .eventTeamCrestFallbackV19{width:25px!important;height:25px!important;object-fit:contain!important;border-radius:50%!important;background:#fff!important;padding:2px!important;}
+.eventPlayerV19{display:flex!important;align-items:center!important;gap:0!important;}
+.eventPlayerV19 b{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+.v26PublicEvent{display:grid!important;grid-template-columns:38px 28px 30px 1fr 48px!important;align-items:center!important;gap:8px!important;}
+.v26PublicEvent .crestSlot{display:grid;place-items:center;width:28px;height:28px;}
+.v26PublicEvent .crestSlot img,.v26PublicEvent .crestSlot .eventCrestOnlyV26{width:25px!important;height:25px!important;object-fit:contain!important;border-radius:50%!important;background:#fff!important;padding:2px!important;}
+.v26PublicEvent .eventBall{text-align:center;font-size:20px!important;line-height:1;}
+.detailEventV20{grid-template-columns:34px 24px 24px 1fr auto!important;gap:7px!important;}
+.detailEventV20 .detailEventIconV20{text-align:center;font-size:20px!important;}
+.detailEventV20 img,.detailEventV20 .eventCrestOnlyV24,.detailEventV20 .eventCrestOnlyV26{width:23px!important;height:23px!important;object-fit:contain!important;background:#fff;border-radius:50%;padding:1px;}
+@media(max-width:520px){
+ .event{grid-template-columns:34px 24px 26px 1fr 42px!important;gap:5px!important;}
+ .eventTeamOnly{width:24px;height:24px;}
+ .eventTeamOnly img,.eventTeamOnly .eventTeamLogoV18,.eventTeamOnly .eventTeamLogoFallbackV18{width:22px!important;height:22px!important;}
+ .eventCompactV19{grid-template-columns:32px 24px 26px 1fr 42px!important;}
+ .v26PublicEvent{grid-template-columns:32px 24px 26px 1fr 42px!important;}
+ .detailEventV20{grid-template-columns:30px 22px 24px 1fr auto!important;gap:5px!important;}
+}
 </style>
 </head>
 <body>
@@ -1835,6 +1855,7 @@ const App={
   version:"RS-LIVE-1.0",
   club:{name:"Ramón Sicart",season:"2026 / 2027",category:"Cadete",colors:{primary:"#FFD400",secondary:"#E21D2F"}},
   teams:[{id:1,name:"Ramón Sicart",short:"RS",logo:"",protected:true},{id:2,name:"Rival",short:"RIV",logo:"",protected:false}],
+  favoriteTeamId:1,
   players:[],
   matches:[],
   activeMatch:null,
@@ -1983,12 +2004,12 @@ function eventTeamObj(e){
 function eventTeamMarkup(e){
  const t=eventTeamObj(e);
  const logo=t?.logo?`<img class="eventTeamLogoV18" src="${esc(t.logo)}" alt="">`:`<span class="eventTeamLogoFallbackV18">${esc((t?.short||t?.name||"?").slice(0,2).toUpperCase())}</span>`;
- return `${logo}<span>${esc(t?.name||"Equipo")}</span>`;
+ return logo;
 }
 function renderEvents(id){
  const box=document.getElementById(id);if(!box)return;
  const ev=[...Live.events].sort((a,b)=>b.minute-a.minute);
- box.innerHTML=ev.length?ev.map(e=>`<div class="event"><div class="eventMinute">${e.minute}'</div><div class="eventIcon">${eventIcon(e)}</div><div class="eventText"><b>${esc(e.playerName||"Evento")}</b><small class="eventTeamLineV18">${eventTeamMarkup(e)}</small></div><div>${e.type==="goal"?esc(e.score||""):e.type==="change"?"↕":""}</div></div>`).join(""):'<div class="empty">Todavía no hay eventos.</div>';
+ box.innerHTML=ev.length?ev.map(e=>`<div class="event"><div class="eventMinute">${e.minute}'</div><div class="eventTeamOnly">${eventTeamMarkup(e)}</div><div class="eventIcon">${eventIcon(e)}</div><div class="eventText"><b>${esc(e.playerName||"Evento")}</b></div><div>${e.type==="goal"?esc(e.score||""):e.type==="change"?"↕":""}</div></div>`).join(""):'<div class="empty">Todavía no hay eventos.</div>';
 }
 function renderPlayers(){
  const box=document.getElementById("players");document.getElementById("squadCount").textContent=App.players.length+" jugadores";
@@ -2152,44 +2173,6 @@ function maybeCommitSub(){
   Live.events.push({id:Date.now(),type:"change",team:"home",minute:displayMinute(),playerName:`${inn?.name||subIn} por ${out?.name||subOut}`,playerNumber:subIn,playerInNumber:subIn,playerOutNumber:subOut,playerInName:inn?.name||String(subIn),playerOutName:out?.name||String(subOut)});
   subOut=null;subIn=null;document.getElementById("substitutionQuick").style.display="none";save();renderAll();toast("Cambio publicado");
 }
-function rsWhatsAppEventText(ev,m){
-  const h=team(m.home), a=team(m.away);
-  const minute=`${Number(ev.minute||0)}'`;
-  const player=String(ev.playerName||'Jugador').trim();
-  const side=ev.team==='home'?h:a;
-  const score=ev.score||`${Number(Live.homeScore||0)}-${Number(Live.awayScore||0)}`;
-  if(ev.type==='goal'){
-    return `⚽ ¡GOOOOL DEL ${String(side.name||'EQUIPO').toUpperCase()}!\n\n⏱️ ${minute}\n⚽ ${player}\n📊 ${h.name} ${score} ${a.name}\n\n🔴 RS LIVE · Ramón Sicart`;
-  }
-  if(ev.type==='yellow'){
-    return `🟨 TARJETA AMARILLA\n\n⏱️ ${minute}\n👤 ${player}\n🏟️ ${h.name} ${score} ${a.name}\n\n🔴 RS LIVE · Ramón Sicart`;
-  }
-  if(ev.type==='red'){
-    return `🟥 TARJETA ROJA\n\n⏱️ ${minute}\n👤 ${player}\n🏟️ ${h.name} ${score} ${a.name}\n\n🔴 RS LIVE · Ramón Sicart`;
-  }
-  return `🔄 CAMBIO\n\n⏱️ ${minute}\n👤 ${player}\n🏟️ ${h.name} ${score} ${a.name}\n\n🔴 RS LIVE · Ramón Sicart`;
-}
-function openRSWhatsAppEvent(ev){
-  const m=activeMatch(); if(!m||!ev)return;
-  const msg=rsWhatsAppEventText(ev,m);
-  const box=document.getElementById('rsWhatsAppEventMessage');
-  if(box)box.textContent=msg;
-  const modal=document.getElementById('rsWhatsAppEventModal');
-  if(modal)modal.classList.add('open');
-}
-function closeRSWhatsAppEvent(){document.getElementById('rsWhatsAppEventModal')?.classList.remove('open')}
-function sendRSWhatsAppEvent(){
-  const text=document.getElementById('rsWhatsAppEventMessage')?.textContent||'';
-  if(!text)return;
-  const url='https://wa.me/?text='+encodeURIComponent(text);
-  window.open(url,'_blank');
-}
-async function copyRSWhatsAppEvent(){
-  const text=document.getElementById('rsWhatsAppEventMessage')?.textContent||'';
-  if(!text)return;
-  try{await navigator.clipboard.writeText(text);toast('✅ Mensaje copiado');}
-  catch(e){toast('No se pudo copiar el mensaje');}
-}
 function openEvent(type){
  if(!activeMatch()){toast("Activa un partido");return}
  eventType=type;eventTeam=null;eventMinuteOffset=0;
@@ -2199,20 +2182,35 @@ function openEvent(type){
 }
 function chooseEventTeam(t){
  eventTeam=t;
- const isHome=t==="home",rsTeam=Number(activeMatch().home)===1===isHome;
+ const m=activeMatch();
+ const favoriteId=Number(App.favoriteTeamId ?? (App.teams||[]).find(x=>x.protected)?.id ?? 1);
+ const scoringTeamId=Number(t==="home"?m.home:m.away);
+ const rsTeam=scoringTeamId===favoriteId;
  let players=rsTeam?App.players:Array.from({length:18},(_,i)=>({number:i+1,name:"Jugador "+(i+1)}));
  document.getElementById("eventStep").innerHTML=`<h3 style="margin-bottom:10px">2. Jugador</h3><div class="formList">${players.map(p=>`<button class="btn dark" style="text-align:left" onclick="commitEvent(${p.number})">#${p.number} ${esc(p.name)}</button>`).join("")}</div>`;
 }
 function commitEvent(num){
- const rsHome=Number(activeMatch().home)===1,eventMinute=Math.max(0,displayMinute()+eventMinuteOffset),pl=eventTeam==="home"?(rsHome?App.players.find(p=>Number(p.number)===num):{number:num,name:"Jugador "+num}):(rsHome?{number:num,name:"Jugador "+num}:App.players.find(p=>Number(p.number)===num));
- const ev={id:Date.now(),type:eventType,team:eventTeam,minute:eventMinute,playerNumber:num,playerName:pl?.name||("Jugador "+num)};
- if(eventType==="goal"){if(eventTeam==="home")Live.homeScore++;else Live.awayScore++;ev.score=`${Live.homeScore}-${Live.awayScore}`;if(rsHome=== (eventTeam==="home")){const p=App.players.find(x=>Number(x.number)===num);if(p)p.goals=(p.goals||0)+1}}
- if(eventType==="yellow"||eventType==="red"){if(rsHome=== (eventTeam==="home")){const p=App.players.find(x=>Number(x.number)===num);if(p)p[eventType==="yellow"?"yellow":"red"]=(p[eventType==="yellow"?"yellow":"red"]||0)+1}}
- Live.events.push(ev);closeModal("eventModal");save();renderAll();toast("Evento publicado en directo");
- // Después de publicar el evento, ofrecemos preparar el aviso de WhatsApp.
- setTimeout(()=>openRSWhatsAppEvent(ev),80);
+ const m=activeMatch();
+ const rsHome=Number(m.home)===Number((App.favoriteTeamId ?? (App.teams||[]).find(t=>t.protected)?.id ?? 1));
+ const eventIsFavoriteTeam=(eventTeam==="home")===rsHome;
+ const eventMinute=Math.max(0,displayMinute()+eventMinuteOffset);
+ const pl=eventTeam==="home"?(eventIsFavoriteTeam?App.players.find(p=>Number(p.number)===num):{number:num,name:"Jugador "+num}):(eventIsFavoriteTeam?{number:num,name:"Jugador "+num}:App.players.find(p=>Number(p.number)===num));
+ const player=eventIsFavoriteTeam?App.players.find(p=>Number(p.number)===num):null;
+ const ev={id:Date.now(),type:eventType,team:eventTeam,minute:eventMinute,playerId:player?.id??null,playerNumber:num,playerName:pl?.name||("Jugador "+num)};
+ if(eventType==="goal"){
+   if(eventTeam==="home")Live.homeScore++;else Live.awayScore++;
+   ev.score=`${Live.homeScore}-${Live.awayScore}`;
+   if(eventIsFavoriteTeam && player)player.goals=(player.goals||0)+1;
+ }
+ if(eventType==="yellow"||eventType==="red"){
+   if(eventIsFavoriteTeam && player)player[eventType==="yellow"?"yellow":"red"]=(player[eventType==="yellow"?"yellow":"red"]||0)+1;
+ }
+ Live.events.push(ev);closeModal("eventModal");save();renderAll();
+ if(eventType==="goal" && typeof rsGoalPosterGenerate==="function") {
+   setTimeout(async()=>{try{await rsGoalPosterGenerate(m,ev,true)}catch(e){console.warn("RS LIVE: cartel de gol",e)}},80);
+ }
+ toast("Evento publicado en directo")
 }
-
 function openPlayer(id){
  editPlayerId=id;const p=App.players.find(x=>x.id===id);if(!p)return;
  document.getElementById("playerModalTitle").textContent="Editar jugador";document.getElementById("pNumber").value=p.number;document.getElementById("pName").value=p.name;document.getElementById("pSurname").value=p.surname||"";document.getElementById("pPosition").value=p.position;document.getElementById("pCaptain").checked=!!p.captain;document.getElementById("pStatus").value=p.status||"Disponible";document.getElementById("playerModal").classList.add("open")
@@ -2349,8 +2347,9 @@ function renderPublicEventsV10(){
     const logo=et?.logo?`<img class="eventTeamLogoV18" src="${esc(et.logo)}" alt="">`:`<span class="eventTeamLogoFallbackV18">${esc((et?.short||et?.name||"?").slice(0,2).toUpperCase())}</span>`;
     return `<div class="event ${cls}">
       <div class="eventMinute">${e.minute||0}'</div>
+      <div class="eventTeamOnly">${logo}</div>
       <div class="eventIcon">${icon}</div>
-      <div class="eventText"><b>${esc(e.playerName||"Evento")}</b><small class="eventTeamLineV18">${logo}<span>${esc(et?.name||side)}</span></small></div>
+      <div class="eventText"><b>${esc(e.playerName||"Evento")}</b></div>
       <div>${esc(score)}</div>
     </div>`;
   }).join(""):'<div class="empty">Todavía no hay eventos.</div>';
@@ -2595,7 +2594,7 @@ window.rsFirebaseRetry=function(){
   const home=team(m.home), away=team(m.away);
   box.innerHTML=ev.length?ev.map(e=>{
     const t=e.team==="home"?home:away;
-    const crest=t?.crest||"";
+    const crest=t?.logo||t?.crest||"";
     const icon=eventIcon(e);
     const score=e.type==="goal"?(e.score||""):"";
     const crestHtml=crest
@@ -2603,8 +2602,9 @@ window.rsFirebaseRetry=function(){
       : `<span class="eventTeamCrestFallbackV19">🛡️</span>`;
     return `<div class="event eventCompactV19 ${e.type==="goal"?"goalEventPublic":""}">
       <div class="eventMinuteV19">${e.minute||0}'</div>
+      <div class="eventTeamCrestSlotV19">${crestHtml}</div>
       <div class="eventIconV19">${icon}</div>
-      <div class="eventPlayerV19">${crestHtml}<b>${esc(e.playerName||"Evento")}</b></div>
+      <div class="eventPlayerV19"><b>${esc(e.playerName||"Evento")}</b></div>
       <div class="eventScoreV19">${esc(score)}</div>
     </div>`;
   }).join(""):'<div class="empty">Todavía no hay eventos.</div>';
@@ -2616,7 +2616,7 @@ function v20EventMinute(e){return Number(e.minute||0)}
 function v20TeamForEvent(e,m){return e.team==="home"?team(m.home):team(m.away)}
 function v20CrestForEvent(e,m){
   const t=v20TeamForEvent(e,m);
-  return t&&t.crest ? `<img src="${esc(t.crest)}" alt="">` : `<span></span>`;
+  return t&&(t.logo||t.crest) ? `<img src="${esc(t.logo||t.crest)}" alt="">` : `<span class="eventCrestFallbackV24">🛡️</span>`;
 }
 function v20SortEvents(events){
   return [...(events||[])].sort((a,b)=>{
@@ -2633,8 +2633,8 @@ function v20DetailRows(events,m,type){
     const crest=v20CrestForEvent(e,m);
     return `<div class="detailEventV20">
       <div class="detailMinuteV20">${v20EventMinute(e)}'</div>
-      <div class="detailEventIconV20">${icon}</div>
       ${crest}
+      <div class="detailEventIconV20">${icon}</div>
       <div class="detailPlayerV20">${player}</div>
     </div>`;
   }).join("")}</div>`;
@@ -2676,7 +2676,7 @@ function v20ShowDetails(matchId){
   document.getElementById("detailGoalsV20").innerHTML=v20DetailRows(ev,m,"goal");
   const cards=v20SortEvents(ev).filter(e=>e.type==="yellow"||e.type==="red");
   document.getElementById("detailCardsV20").innerHTML=cards.length?
-    `<div class="detailTimelineV20">${cards.map(e=>`<div class="detailEventV20"><div class="detailMinuteV20">${v20EventMinute(e)}'</div><div class="detailEventIconV20">${eventIcon(e)}</div>${v20CrestForEvent(e,m)}<div class="detailPlayerV20">${esc(e.playerName||"Evento")}</div></div>`).join("")}</div>`:
+    `<div class="detailTimelineV20">${cards.map(e=>`<div class="detailEventV20"><div class="detailMinuteV20">${v20EventMinute(e)}'</div>${v20CrestForEvent(e,m)}<div class="detailEventIconV20">${eventIcon(e)}</div><div class="detailPlayerV20">${esc(e.playerName||"Evento")}</div></div>`).join("")}</div>`:
     '<div class="detailEmptyV20">Sin registros.</div>';
   document.getElementById("detailChangesV20").innerHTML=v20DetailRows(ev,m,"change");
   document.getElementById("chronicleV20").innerHTML=v20BuildChronicle(m,ev);
@@ -2730,7 +2730,7 @@ function v24EventCrest(e,m){
   if(t?.logo){
     return `<img class="eventCrestOnlyV24" src="${esc(t.logo)}" alt="" title="${esc(t.name||"")}">`;
   }
-  return `<span class="eventCrestOnlyV24 eventCrestFallbackV24">⚽</span>`;
+  return `<span class="eventCrestOnlyV24 eventCrestFallbackV24">🛡️</span>`;
 }
 
 function v24PlayerName(e,m){
@@ -2776,8 +2776,8 @@ function v24Rows(list,m,kind){
 
     return `<div class="detailEventV20 detailEventV24">
       <div class="detailMinuteV20">${Number(e.minute||0)}'</div>
-      <div class="detailEventIconV20">${icon}</div>
       ${v24EventCrest(e,m)}
+      <div class="detailEventIconV20">${icon}</div>
       ${content}
       ${kind==="goal"&&e.score?`<div class="detailScoreV24">${esc(e.score)}</div>`:""}
     </div>`;
@@ -2895,7 +2895,7 @@ document.addEventListener("click",function(e){
     const logo=t?.logo||t?.crest||"";
     return logo
       ? `<img class="eventCrestOnlyV24" src="${esc(logo)}" alt="">`
-      : `<span class="eventCrestOnlyV24 eventCrestFallbackV24">⚽</span>`;
+      : `<span class="eventCrestOnlyV24 eventCrestFallbackV24">🛡️</span>`;
   }
 
   function v25Row(e,m,kind){
@@ -2915,8 +2915,8 @@ document.addEventListener("click",function(e){
     const score=kind==="goal" && e.score ? `<div class="detailScoreV24">${esc(e.score)}</div>`:"";
     return `<div class="detailEventV20 detailEventV24">
       <div class="detailMinuteV20">${Number(e.minute||0)}'</div>
-      <div class="detailEventIconV20">${icon}</div>
       ${v25Crest(e,m)}
+      <div class="detailEventIconV20">${icon}</div>
       ${body}${score}
     </div>`;
   }
@@ -3123,8 +3123,8 @@ document.addEventListener("click",function(e){
     const m=activeMatch();if(!m){box.innerHTML='<div class="empty">No hay partido activo.</div>';return;}
     const ev=v26Sort(Live.events||[]);const home=team(m.home),away=team(m.away);
     box.innerHTML=ev.length?ev.map(e=>{
-      const logo=v26TeamLogo(m,e.team);const crest=logo?`<img class="eventCrestOnlyV26" src="${esc(logo)}" alt="">`:`<span class="eventCrestOnlyV26">🛡️</span>`;
-      return `<div class="v26PublicEvent"><div class="minute">${Number(e.minute||0)}'</div><div>${v26Icon(e)}</div><div class="player">${crest}<b>${esc(v26EventPlayer(e))}</b></div><div class="score">${e.type==='goal'?esc(e.score||''):''}</div></div>`;
+      const logo=v26TeamLogo(m,e.team);const crest=logo?`<img class="eventCrestOnlyV26" src="${esc(logo)}" alt="">`:`<span class="eventCrestOnlyV26 eventCrestFallbackV26">🛡️</span>`;
+      return `<div class="v26PublicEvent"><div class="minute">${Number(e.minute||0)}'</div><div class="crestSlot">${crest}</div><div class="eventBall">${v26Icon(e)}</div><div class="player"><b>${esc(v26EventPlayer(e))}</b></div><div class="score">${e.type==='goal'?esc(e.score||''):''}</div></div>`;
     }).join(''):'<div class="empty">Todavía no hay eventos.</div>';
   }
 
@@ -3267,88 +3267,15 @@ document.addEventListener("click",function(e){
     });return c;
   }
   window.savePlayer=async function(){
-    v26EnsurePlayerStatsFields();
-    const num=Number(document.getElementById('pNumber').value);
-    const name=document.getElementById('pName').value.trim();
-    if(!num||!name){toast('Dorsal y nombre son obligatorios');return}
-
-    let p=App.players.find(x=>String(x.id)===String(editPlayerId));
-    if(!p){
-      p={id:Date.now(),number:num,name,surname:'',position:'Defensa',captain:false,photo:'',goals:0,yellow:0,red:0,starts:0,appearances:0};
-      App.players.push(p);
-    }
-
-    const oldNumber=Number(p.number);
+    v26EnsurePlayerStatsFields();const num=Number(document.getElementById('pNumber').value),name=document.getElementById('pName').value.trim();if(!num||!name){toast('Dorsal y nombre son obligatorios');return}
+    let p=App.players.find(x=>x.id===editPlayerId);if(!p){p={id:Date.now(),number:num,name,surname:'',position:'Defensa',captain:false,photo:'',goals:0,yellow:0,red:0,starts:0,appearances:0};App.players.push(p)}
     const raw=calcRaw()[p.id]||{goals:0,yellow:0,red:0,starts:0,appearances:0};
-    const entered={
-      goals:Number(document.getElementById('pGoals').value||0),
-      yellow:Number(document.getElementById('pYellow').value||0),
-      red:Number(document.getElementById('pRed').value||0),
-      starts:Number(document.getElementById('pStarts').value||0),
-      appearances:Number(document.getElementById('pApps').value||0)
-    };
-
-    /* No permitimos dos jugadores con el mismo dorsal. */
-    const duplicate=App.players.find(x=>x!==p && Number(x.number)===num);
-    if(duplicate){toast(`El dorsal #${num} ya está asignado a ${duplicate.name}`);return}
-
-    /*
-     * El histórico usa el dorsal como referencia. Si cambiamos el dorsal,
-     * actualizamos también alineaciones y eventos de partidos ya guardados
-     * para que el jugador siga siendo el mismo y no se pierdan sus datos.
-     */
-    if(oldNumber!==num){
-      (App.matches||[]).forEach(m=>{
-        if(Array.isArray(m.lineup)){
-          m.lineup=m.lineup.map(n=>Number(n)===oldNumber?num:n);
-        }
-        if(Array.isArray(m.events)){
-          m.events.forEach(e=>{
-            if(Number(e.playerNumber)===oldNumber)e.playerNumber=num;
-            if(Number(e.playerInNumber)===oldNumber)e.playerInNumber=num;
-            if(Number(e.playerOutNumber)===oldNumber)e.playerOutNumber=num;
-          });
-        }
-      });
-      if(Array.isArray(Live.lineup)) Live.lineup=Live.lineup.map(n=>Number(n)===oldNumber?num:n);
-      if(Array.isArray(Live.events)) Live.events.forEach(e=>{
-        if(Number(e.playerNumber)===oldNumber)e.playerNumber=num;
-        if(Number(e.playerInNumber)===oldNumber)e.playerInNumber=num;
-        if(Number(e.playerOutNumber)===oldNumber)e.playerOutNumber=num;
-      });
-    }
-
-    p.number=num;
-    p.name=name;
-    p.surname=document.getElementById('pSurname').value.trim();
-    p.position=document.getElementById('pPosition').value;
-    p.captain=document.getElementById('pCaptain').checked;
-    p.status=document.getElementById('pStatus').value;
-    p.statAdjust={
-      goals:entered.goals-raw.goals,
-      yellow:entered.yellow-raw.yellow,
-      red:entered.red-raw.red,
-      starts:entered.starts-raw.starts,
-      appearances:entered.appearances-raw.appearances
-    };
-
-    const file=document.getElementById('pPhoto').files[0];
-    if(file){toast('Subiendo foto…');p.photo=await uploadFile(file,'players')}
-
-    App.players.sort((a,b)=>Number(a.number)-Number(b.number));
-    v26RecalcStats();
-
-    try{
-      await save();
-      closeModal('playerModal');
-      renderAll();
-      toast(oldNumber!==num?`✅ Jugador guardado · dorsal #${num} actualizado en el histórico`:'✅ Jugador guardado correctamente');
-    }catch(err){
-      console.error('RS LIVE: error guardando jugador',err);
-      toast('❌ No se pudieron guardar los cambios');
-    }
+    const entered={goals:Number(document.getElementById('pGoals').value||0),yellow:Number(document.getElementById('pYellow').value||0),red:Number(document.getElementById('pRed').value||0),starts:Number(document.getElementById('pStarts').value||0),appearances:Number(document.getElementById('pApps').value||0)};
+    p.number=num;p.name=name;p.surname=document.getElementById('pSurname').value.trim();p.position=document.getElementById('pPosition').value;p.captain=document.getElementById('pCaptain').checked;p.status=document.getElementById('pStatus').value;
+    p.statAdjust={goals:entered.goals-raw.goals,yellow:entered.yellow-raw.yellow,red:entered.red-raw.red,starts:entered.starts-raw.starts,appearances:entered.appearances-raw.appearances};
+    const file=document.getElementById('pPhoto').files[0];if(file){toast('Subiendo foto…');p.photo=await uploadFile(file,'players')}
+    App.players.sort((a,b)=>a.number-b.number);closeModal('playerModal');v26RecalcStats();await save();renderAll();toast('Jugador guardado');
   };
-
   const old=document.getElementById('savePlayerBtn');if(old){const fresh=old.cloneNode(true);old.replaceWith(fresh);fresh.addEventListener('click',window.savePlayer)}
 })();
 </script>
@@ -3926,19 +3853,178 @@ document.addEventListener("click",function(e){
 })();
 </script>
 
+<script id="rsGoalPosterV58">
+(function(){
+  "use strict";
 
-<div id="rsWhatsAppEventModal" class="modal rsWaModal">
-  <div class="modalBox">
-    <div class="modalHead"><h2>📲 Informar por WhatsApp</h2><button class="close" onclick="closeRSWhatsAppEvent()">×</button></div>
-    <p style="color:var(--muted);font-size:12px;margin:0 0 8px">Evento publicado. Puedes enviar ahora la información del evento por WhatsApp.</p>
-    <div id="rsWhatsAppEventMessage" class="rsWaMessage"></div>
-    <div class="rsWaActions">
-      <button class="btn green" type="button" onclick="sendRSWhatsAppEvent()">📲 Abrir WhatsApp</button>
-      <button class="btn dark" type="button" onclick="copyRSWhatsAppEvent()">📋 Copiar mensaje</button>
-    </div>
-    <div class="rsWaHint">WhatsApp se abrirá con el mensaje preparado para que elijas el grupo o contacto y pulses Enviar.</div>
-  </div>
-</div>
+  function gpTeam(m, side){
+    const id=side==="home"?m?.home:m?.away;
+    const embedded=side==="home"?(m?.homeTeam||m?.homeTeamData):(m?.awayTeam||m?.awayTeamData);
+    if(embedded && typeof embedded==="object") return {...embedded,id:embedded.id??id};
+    return (App.teams||[]).find(t=>String(t.id)===String(id)) || {id,name:"Equipo",short:"",logo:""};
+  }
+
+  function gpFavoriteTeamId(){
+    const configured=App.favoriteTeamId ?? App.settings?.favoriteTeamId;
+    if(configured!=null && configured!=="") return Number(configured);
+    const protectedTeam=(App.teams||[]).find(t=>t.protected===true);
+    return Number(protectedTeam?.id ?? 1);
+  }
+
+  function gpNorm(v){
+    return String(v||"").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase().trim();
+  }
+
+  function gpPlayer(e){
+    const players=App.players||[];
+    if(e?.playerId!=null){
+      const byId=players.find(p=>String(p.id)===String(e.playerId));
+      if(byId) return byId;
+    }
+    if(e?.playerName){
+      const n=gpNorm(e.playerName);
+      const byName=players.find(p=>gpNorm(p.name)===n || gpNorm(`${p.name} ${p.surname||""}`)===n);
+      if(byName) return byName;
+    }
+    if(e?.playerNumber!=null){
+      const byNumber=players.find(p=>Number(p.number)===Number(e.playerNumber));
+      if(byNumber) return byNumber;
+    }
+    return null;
+  }
+
+  function gpScoreForEvent(m,e){
+    if(e?.score && /^\\d+\\s*-\\s*\\d+$/.test(String(e.score))) return String(e.score).replace(/\\s+/g,"");
+    let h=0,a=0;
+    const events=Array.isArray(m?.events)?m.events:[];
+    const idx=events.indexOf(e);
+    const upto=idx>=0?events.slice(0,idx+1):events;
+    upto.forEach(x=>{if(x?.type!=="goal")return;if(x.team==="home")h++;else if(x.team==="away")a++;});
+    return `${h}-${a}`;
+  }
+
+  function gpLoad(src){
+    return new Promise(resolve=>{
+      if(!src){resolve(null);return;}
+      const im=new Image();
+      if(/^https?:\/\//i.test(String(src))) im.crossOrigin="anonymous";
+      im.onload=()=>resolve(im); im.onerror=()=>resolve(null); im.src=src;
+    });
+  }
+
+  function gpFit(ctx,text,max,font){
+    ctx.font=font; let s=String(text||"");
+    if(ctx.measureText(s).width<=max)return s;
+    while(s.length>2 && ctx.measureText(s+"…").width>max)s=s.slice(0,-1);
+    return s+"…";
+  }
+
+  function gpRound(ctx,x,y,w,h,r,fill,stroke){
+    ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();
+    if(fill){ctx.fillStyle=fill;ctx.fill();} if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=3;ctx.stroke();}
+  }
+
+  function gpDrawContain(ctx,im,x,y,w,h){
+    if(!im)return false;
+    const r=Math.min(w/im.width,h/im.height),dw=im.width*r,dh=im.height*r;
+    ctx.drawImage(im,x+(w-dw)/2,y+(h-dh)/2,dw,dh); return true;
+  }
+
+  async function rsGoalPosterGenerate(m,e,automatic){
+    if(!m||!e||e.type!=="goal") return null;
+    const home=gpTeam(m,"home"),away=gpTeam(m,"away");
+    const favoriteId=gpFavoriteTeamId();
+    const scoringId=Number(e.team==="home"?m.home:m.away);
+    const favoriteScorer=scoringId===favoriteId;
+    const player=favoriteScorer?gpPlayer(e):null;
+    const him=await gpLoad(home.logo),aim=await gpLoad(away.logo);
+    const pim=player?.photo?await gpLoad(player.photo):null;
+    const W=1080,H=1350,c=document.createElement("canvas");c.width=W;c.height=H;
+    const ctx=c.getContext("2d");
+
+    const bg=ctx.createLinearGradient(0,0,W,H);bg.addColorStop(0,"#05080d");bg.addColorStop(.5,"#10223a");bg.addColorStop(1,"#05080d");ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+    ctx.fillStyle="#ffd400";ctx.fillRect(55,55,W-110,6);
+    ctx.textAlign="center";ctx.fillStyle="#fff";ctx.font="900 74px Arial";ctx.fillText("GOOOOL",W/2,170);
+    ctx.fillStyle="#ffd400";ctx.font="900 34px Arial";ctx.fillText(`DEL ${gpFit(ctx,(scoringId===Number(m.home)?home.name:away.name).toUpperCase(),850,"900 34px Arial")}`,W/2,220);
+
+    // Marcador: escudos reales + nombres + resultado.
+    gpRound(ctx,55,285,970,250,28,"rgba(5,12,22,.82)","#294764");
+    gpDrawContain(ctx,him,105,325,155,145);gpDrawContain(ctx,aim,820,325,155,145);
+    ctx.fillStyle="#fff";ctx.font="900 31px Arial";
+    ctx.fillText(gpFit(ctx,home.name,300,"900 31px Arial"),182,505);
+    ctx.fillText(gpFit(ctx,away.name,300,"900 31px Arial"),898,505);
+    ctx.fillStyle="#ffd400";ctx.font="900 30px Arial";ctx.fillText("VS",W/2,405);
+    const score=gpScoreForEvent(m,e);ctx.fillStyle="#fff";ctx.font="900 82px Arial";ctx.fillText(score.replace("-","  –  "),W/2,490);
+
+    ctx.fillStyle="#aabbd0";ctx.font="700 27px Arial";ctx.fillText(m.date?formatDate(m.date):"",W/2,585);
+    ctx.fillStyle="#ffd400";ctx.font="900 54px Arial";ctx.fillText(`${Number(e.minute||0)}’`,W/2,660);
+    ctx.fillStyle="#fff";ctx.font="900 45px Arial";ctx.fillText(gpFit(ctx,(e.playerName||"Gol").toUpperCase(),780,"900 45px Arial"),W/2,720);
+
+    if(favoriteScorer){
+      // Foto únicamente si el goleador pertenece al equipo favorito.
+      gpRound(ctx,340,770,400,400,32,"#0b1728","#ffd400");
+      if(pim){
+        ctx.save();ctx.beginPath();ctx.arc(540,970,170,0,Math.PI*2);ctx.clip();ctx.drawImage(pim,370,800,340,340);ctx.restore();
+      }else{
+        ctx.fillStyle="#23364d";ctx.beginPath();ctx.arc(540,970,170,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle="#a9b9cc";ctx.font="900 150px Arial";ctx.fillText("👤",540,1020);
+      }
+      ctx.fillStyle="#fff";ctx.font="800 24px Arial";ctx.fillText("GOLEADOR",540,1215);
+    }else{
+      ctx.fillStyle="#aabbd0";ctx.font="700 30px Arial";ctx.fillText("Gol del equipo visitante/local",W/2,850);
+    }
+
+    ctx.fillStyle="#65758c";ctx.font="600 22px Arial";ctx.fillText("RS LIVE · RAMÓN SICART · MATCH CENTER",W/2,1310);
+
+    let data=null;
+    try{data=c.toDataURL("image/jpeg",0.92);}catch(err){
+      console.warn("RS LIVE: no se pudo exportar el cartel de gol",err);
+      toast("⚠️ No se pudo generar el cartel. Revisa los permisos/CORS de las imágenes.");
+      return null;
+    }
+
+    // Se conserva el cartel en el mismo evento para que el directo y el administrador trabajen con el mismo dato.
+    e.goalPosterData=data;e.goalPosterGeneratedAt=Date.now();e.goalPosterFavoriteScorer=!!favoriteScorer;
+    const card=document.getElementById("rsGoalPosterCard");
+    const preview=document.getElementById("rsGoalPosterPreview");
+    const status=document.getElementById("rsGoalPosterStatus");
+    if(preview){preview.src=data;preview.style.display="block";}
+    if(status)status.textContent=`Cartel generado · ${e.minute||0}’ · ${e.playerName||"Gol"}${favoriteScorer?" · foto del jugador":" · sin foto rival"}`;
+    try{await save();}catch(err){console.warn("RS LIVE: no se pudo guardar el cartel",err);}
+    if(automatic) toast(favoriteScorer?"⚽ Cartel de gol generado con la foto del jugador":"⚽ Cartel de gol generado");
+    return data;
+  }
+
+  function rsGoalPosterDownload(){
+    const m=activeMatch();const events=Array.isArray(m?.events)?m.events:[];const e=[...events].reverse().find(x=>x?.type==="goal"&&x.goalPosterData);
+    if(!e){toast("Genera primero el cartel de un gol");return;}
+    const home=gpTeam(m,"home"),away=gpTeam(m,"away");
+    const safe=s=>String(s||"equipo").replace(/[^a-z0-9áéíóúüñ_-]+/gi,"_");
+    const a=document.createElement("a");a.href=e.goalPosterData;a.download=`RS_LIVE_GOL_${safe(home.name)}_${e.minute||0}min_${safe(e.playerName||"gol")}_${safe(away.name)}.jpg`;document.body.appendChild(a);a.click();a.remove();
+  }
+
+  function rsGoalPosterBuildAdmin(){
+    const panel=document.getElementById("adminPanel");if(!panel||document.getElementById("rsGoalPosterCard"))return;
+    const card=document.createElement("div");card.className="card adminCard rsV51ImageCard";card.id="rsGoalPosterCard";
+    card.innerHTML=`<h2>⚽ Cartel de gol</h2><p style="color:var(--muted);font-size:11px;margin:-7px 0 12px">Se genera desde el mismo evento del directo: escudos reales, minuto, marcador y foto del goleador solo cuando pertenece al equipo favorito.</p><div class="rsV51ImageActions"><button class="btn green" id="rsGoalPosterGenerateBtn">⚽ Generar último gol</button><button class="btn dark" id="rsGoalPosterDownloadBtn">💾 Guardar cartel</button></div><div id="rsGoalPosterStatus" class="rsV51ImageStatus">No hay cartel generado.</div><img id="rsGoalPosterPreview" class="rsV51ImagePreview" alt="Cartel de gol" style="display:none">`;
+    panel.appendChild(card);
+    document.getElementById("rsGoalPosterGenerateBtn").onclick=async()=>{const m=activeMatch();const e=[...(m?.events||[])].reverse().find(x=>x?.type==="goal");if(!m||!e){toast("No hay goles en el partido activo");return;}await rsGoalPosterGenerate(m,e,false);};
+    document.getElementById("rsGoalPosterDownloadBtn").onclick=rsGoalPosterDownload;
+  }
+
+  function rsGoalPosterRefresh(){
+    rsGoalPosterBuildAdmin();
+    const m=activeMatch();const e=[...(m?.events||[])].reverse().find(x=>x?.type==="goal"&&x.goalPosterData);
+    const img=document.getElementById("rsGoalPosterPreview"),status=document.getElementById("rsGoalPosterStatus");if(!img||!status)return;
+    if(e){img.src=e.goalPosterData;img.style.display="block";status.textContent=`Cartel guardado · ${e.minute||0}’ · ${e.playerName||"Gol"}`;}else{img.style.display="none";status.textContent="No hay cartel generado.";}
+  }
+
+  window.rsGoalPosterGenerate=rsGoalPosterGenerate;
+  window.rsGoalPosterDownload=rsGoalPosterDownload;
+  setTimeout(rsGoalPosterBuildAdmin,350);setTimeout(rsGoalPosterRefresh,800);
+})();
+</script>
+
 </body>
 </html>
 
@@ -4943,9 +5029,15 @@ document.addEventListener("click",function(e){
         ctx.font="900 28px Arial";
         ctx.fillText((Number(g.minute||0))+"' ",x,y);
         const side=String(g.team)==="home"?home:away;
-        ctx.fillStyle="#fff";
+        const sideImg=String(g.team)==="home"?him:aim;
+        if(sideImg){
+          const rr=Math.min(34/sideImg.width,34/sideImg.height);
+          ctx.drawImage(sideImg,x+18-sideImg.width*rr/2,y-17-sideImg.height*rr/2,sideImg.width*rr,sideImg.height*rr);
+        }
         ctx.font="800 28px Arial";
-        ctx.fillText(rsV51FitText(ctx,(g.playerName||"Gol")+" · "+side.name,580,"800 28px Arial"),x+75,y);
+        ctx.fillStyle="#fff";
+        ctx.fillText("⚽",x+42,y);
+        ctx.fillText(rsV51FitText(ctx,(g.playerName||"Gol"),500,"800 28px Arial"),x+80,y);
         if(g.score){
           ctx.textAlign="right";
           ctx.fillStyle="#a7b4c8";
@@ -4992,7 +5084,9 @@ document.addEventListener("click",function(e){
           cc.fillStyle="#ffd600"; cc.font="900 28px Arial"; cc.fillText((Number(g.minute||0))+"' ",x,y);
           const side=String(g.team)==="home"?home:away;
           cc.fillStyle="#fff"; cc.font="800 28px Arial";
-          cc.fillText(rsV51FitText(cc,(g.playerName||"Gol")+" · "+side.name,580,"800 28px Arial"),x+75,y);
+          cc.fillText("🛡️",x+18,y);
+          cc.fillText("⚽",x+45,y);
+          cc.fillText(rsV51FitText(cc,(g.playerName||"Gol"),500,"800 28px Arial"),x+80,y);
           if(g.score){cc.textAlign="right";cc.fillStyle="#a7b4c8";cc.font="800 26px Arial";cc.fillText(g.score,x+670,y);cc.textAlign="left";}
         });
       }
@@ -5105,3 +5199,233 @@ document.addEventListener("click",function(e){
 })();
 </script>
 
+
+
+<script id="v54-season-202425-import">
+(function(){
+  const HIST={"club":{"name":"Ramón Sicart","season":"2024 / 2025","category":"Infantil A","colors":{"primary":"#FFD400","secondary":"#E21D2F"}},"teams":[{"id":1,"name":"Ramón Sicart","short":"RS","logo":"","protected":true},{"id":2,"name":"Joventut Bisbalenca","short":"JOV","logo":"","protected":false},{"id":3,"name":"Base L’Arboç","short":"BAS","logo":"","protected":false},{"id":4,"name":"Escola F. Base Vendrell","short":"ESC","logo":"","protected":false},{"id":5,"name":"Vallmoll","short":"VAL","logo":"","protected":false},{"id":6,"name":"Roda de Barà","short":"ROD","logo":"","protected":false},{"id":7,"name":"Base Marc Bartra","short":"BAS","logo":"","protected":false},{"id":8,"name":"Torredembarra","short":"TOR","logo":"","protected":false},{"id":9,"name":"Escola Futbol Base Calafell","short":"ESC","logo":"","protected":false},{"id":10,"name":"Vendrell","short":"VEN","logo":"","protected":false},{"id":11,"name":"Tancat","short":"TAN","logo":"","protected":false},{"id":12,"name":"Col·legi Sant Pau Apòstol","short":"COL","logo":"","protected":false},{"id":13,"name":"Base Vilanova 2015","short":"BAS","logo":"","protected":false}],"players":[{"id":1001,"number":1,"name":"Gerard","surname":"Rodenes Coll","fullName":"Gerard Rodenes Coll","position":"Delantero","captain":true,"photo":"","goals":39,"yellow":0,"red":0,"starts":0,"appearances":0,"historicalImported":true},{"id":1002,"number":2,"name":"Eloy","surname":"Gomez Diaz","fullName":"Eloy Gomez Diaz","position":"Centrocampista","captain":false,"photo":"","goals":15,"yellow":0,"red":0,"starts":0,"appearances":0,"historicalImported":true},{"id":1003,"number":3,"name":"Adrià","surname":"Soler Solé","fullName":"Adrià Soler Solé","position":"Defensa","captain":false,"photo":"","goals":13,"yellow":0,"red":0,"starts":0,"appearances":0,"historicalImported":true},{"id":1004,"number":4,"name":"Axel","surname":"Garcia Sanchez","fullName":"Axel Garcia Sanchez","position":"Defensa","captain":false,"photo":"","goals":10,"yellow":0,"red":0,"starts":0,"appearances":0,"historicalImported":true},{"id":1005,"number":5,"name":"Jaume","surname":"Rovirosa Melendres","fullName":"Jaume Rovirosa Melendres","position":"Centrocampista","captain":false,"photo":"","goals":4,"yellow":0,"red":0,"starts":0,"appearances":0,"historicalImported":true},{"id":1006,"number":6,"name":"Amjad","surname":"Makroum Rabih","fullName":"Amjad Makroum Rabih","position":"Defensa","captain":false,"photo":"","goals":4,"yellow":0,"red":0,"starts":0,"appearances":0,"historicalImported":true},{"id":1007,"number":7,"name":"Luca","surname":"D’Alba Girones","fullName":"Luca D’Alba Girones","position":"Centrocampista","captain":false,"photo":"","goals":3,"yellow":0,"red":0,"starts":0,"appearances":0,"historicalImported":true},{"id":1008,"number":8,"name":"Roger","surname":"Caralt Jané","fullName":"Roger Caralt Jané","position":"Delantero","captain":false,"photo":"","goals":2,"yellow":0,"red":0,"starts":0,"appearances":0,"historicalImported":true},{"id":1009,"number":9,"name":"Guillem","surname":"Gomez Herraiz","fullName":"Guillem Gomez Herraiz","position":"Delantero","captain":false,"photo":"","goals":2,"yellow":0,"red":0,"starts":0,"appearances":0,"historicalImported":true},{"id":1010,"number":10,"name":"Álvaro","surname":"Montalban Rodriguez","fullName":"Álvaro Montalban Rodriguez","position":"Delantero","captain":false,"photo":"","goals":1,"yellow":0,"red":0,"starts":0,"appearances":0,"historicalImported":true},{"id":1011,"number":11,"name":"Pere","surname":"Guasch Sadurní","fullName":"Pere Guasch Sadurní","position":"Centrocampista","captain":false,"photo":"","goals":1,"yellow":0,"red":0,"starts":0,"appearances":0,"historicalImported":true},{"id":1012,"number":12,"name":"Adria","surname":"Serralabós Martínez","fullName":"Adria Serralabós Martínez","position":"Defensa","captain":false,"photo":"","goals":0,"yellow":0,"red":0,"starts":0,"appearances":0,"historicalImported":true},{"id":1013,"number":13,"name":"Lluc","surname":"Gil Espejo","fullName":"Lluc Gil Espejo","position":"Defensa","captain":false,"photo":"","goals":0,"yellow":0,"red":0,"starts":0,"appearances":0,"historicalImported":true},{"id":1014,"number":14,"name":"Alex","surname":"Arnal Garrido","fullName":"Alex Arnal Garrido","position":"Defensa","captain":false,"photo":"","goals":0,"yellow":0,"red":0,"starts":0,"appearances":0,"historicalImported":true},{"id":1015,"number":15,"name":"Arau","surname":"Kuipers Urgell","fullName":"Arau Kuipers Urgell","position":"Defensa","captain":false,"photo":"","goals":0,"yellow":0,"red":0,"starts":0,"appearances":0,"historicalImported":true},{"id":1018,"number":18,"name":"Aleix","surname":"Sendrós Saperas","fullName":"Aleix Sendrós Saperas","position":"Defensa","captain":false,"photo":"","goals":0,"yellow":0,"red":0,"starts":0,"appearances":0,"historicalImported":true},{"id":1019,"number":19,"name":"Enzo","surname":"Ros Martinez","fullName":"Enzo Ros Martinez","position":"Defensa","captain":false,"photo":"","goals":0,"yellow":0,"red":0,"starts":0,"appearances":0,"historicalImported":true},{"id":1020,"number":20,"name":"Jofré","surname":"Figueras Cejuela","fullName":"Jofré Figueras Cejuela","position":"Defensa","captain":false,"photo":"","goals":0,"yellow":0,"red":0,"starts":0,"appearances":0,"historicalImported":true},{"id":1024,"number":24,"name":"Jan","surname":"de la Cruz Batet","fullName":"Jan de la Cruz Batet","position":"Defensa","captain":false,"photo":"","goals":0,"yellow":0,"red":0,"starts":0,"appearances":0,"historicalImported":true},{"id":1028,"number":28,"name":"David","surname":"Moreno Lancho","fullName":"David Moreno Lancho","position":"Defensa","captain":false,"photo":"","goals":0,"yellow":0,"red":0,"starts":0,"appearances":0,"historicalImported":true}],"matches":[{"id":202425001,"jornada":1,"home":1,"away":2,"date":"2024-10-06","hour":"","competition":"Liga","field":"","status":"FINISHED","homeScore":1,"awayScore":0,"events":[{"id":202425101,"type":"goal","team":"home","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true}],"historical":true,"season":"2024/25"},{"id":202425002,"jornada":2,"home":3,"away":1,"date":"2024-10-13","hour":"","competition":"Liga","field":"","status":"FINISHED","homeScore":3,"awayScore":3,"events":[{"id":202425201,"type":"goal","team":"away","minute":null,"playerName":"Eloy","playerNumber":2,"score":"","historicalImported":true},{"id":202425211,"type":"goal","team":"away","minute":null,"playerName":"Axel","playerNumber":4,"score":"","historicalImported":true},{"id":202425221,"type":"goal","team":"away","minute":null,"playerName":"Roger","playerNumber":8,"score":"","historicalImported":true}],"historical":true,"season":"2024/25"},{"id":202425003,"jornada":3,"home":1,"away":4,"date":"2024-10-19","hour":"","competition":"Liga","field":"","status":"FINISHED","homeScore":2,"awayScore":3,"events":[{"id":202425301,"type":"goal","team":"home","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202425311,"type":"goal","team":"home","minute":null,"playerName":"Eloy","playerNumber":2,"score":"","historicalImported":true}],"historical":true,"season":"2024/25"},{"id":202425004,"jornada":4,"home":5,"away":1,"date":"2024-10-26","hour":"","competition":"Liga","field":"","status":"FINISHED","homeScore":1,"awayScore":6,"events":[{"id":202425401,"type":"goal","team":"away","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202425411,"type":"goal","team":"away","minute":null,"playerName":"Eloy","playerNumber":2,"score":"","historicalImported":true},{"id":202425412,"type":"goal","team":"away","minute":null,"playerName":"Eloy","playerNumber":2,"score":"","historicalImported":true},{"id":202425421,"type":"goal","team":"away","minute":null,"playerName":"Axel","playerNumber":4,"score":"","historicalImported":true},{"id":202425431,"type":"goal","team":"away","minute":null,"playerName":"Jaume","playerNumber":5,"score":"","historicalImported":true},{"id":202425432,"type":"goal","team":"away","minute":null,"playerName":"Jaume","playerNumber":5,"score":"","historicalImported":true}],"historical":true,"season":"2024/25"},{"id":202425005,"jornada":5,"home":1,"away":6,"date":"2024-11-02","hour":"","competition":"Liga","field":"","status":"FINISHED","homeScore":7,"awayScore":2,"events":[{"id":202425501,"type":"goal","team":"home","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202425502,"type":"goal","team":"home","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202425503,"type":"goal","team":"home","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202425511,"type":"goal","team":"home","minute":null,"playerName":"Eloy","playerNumber":2,"score":"","historicalImported":true},{"id":202425521,"type":"goal","team":"home","minute":null,"playerName":"Axel","playerNumber":4,"score":"","historicalImported":true},{"id":202425522,"type":"goal","team":"home","minute":null,"playerName":"Axel","playerNumber":4,"score":"","historicalImported":true},{"id":202425531,"type":"goal","team":"home","minute":null,"playerName":"Amjad","playerNumber":6,"score":"","historicalImported":true}],"historical":true,"season":"2024/25"},{"id":202425006,"jornada":6,"home":7,"away":1,"date":"2024-11-09","hour":"","competition":"Liga","field":"","status":"FINISHED","homeScore":1,"awayScore":6,"events":[{"id":202425601,"type":"goal","team":"away","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202425602,"type":"goal","team":"away","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202425603,"type":"goal","team":"away","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202425611,"type":"goal","team":"away","minute":null,"playerName":"Eloy","playerNumber":2,"score":"","historicalImported":true},{"id":202425612,"type":"goal","team":"away","minute":null,"playerName":"Eloy","playerNumber":2,"score":"","historicalImported":true},{"id":202425621,"type":"goal","team":"away","minute":null,"playerName":"Amjad","playerNumber":6,"score":"","historicalImported":true}],"historical":true,"season":"2024/25"},{"id":202425007,"jornada":7,"home":1,"away":8,"date":"2024-11-16","hour":"","competition":"Liga","field":"","status":"FINISHED","homeScore":3,"awayScore":0,"events":[{"id":202425701,"type":"goal","team":"home","minute":null,"playerName":"Amjad","playerNumber":6,"score":"","historicalImported":true},{"id":202425711,"type":"goal","team":"home","minute":null,"playerName":"Luca","playerNumber":7,"score":"","historicalImported":true},{"id":202425721,"type":"goal","team":"home","minute":null,"playerName":"Guillem","playerNumber":9,"score":"","historicalImported":true}],"historical":true,"season":"2024/25"},{"id":202425008,"jornada":8,"home":9,"away":1,"date":"2024-11-23","hour":"","competition":"Liga","field":"","status":"FINISHED","homeScore":2,"awayScore":1,"events":[{"id":202425801,"type":"goal","team":"away","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true}],"historical":true,"season":"2024/25"},{"id":202425009,"jornada":9,"home":10,"away":1,"date":"2024-11-30","hour":"","competition":"Liga","field":"","status":"FINISHED","homeScore":7,"awayScore":3,"events":[{"id":202425901,"type":"goal","team":"away","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202425902,"type":"goal","team":"away","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202425903,"type":"goal","team":"away","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true}],"historical":true,"season":"2024/25"},{"id":202425010,"jornada":10,"home":1,"away":11,"date":"2024-12-14","hour":"","competition":"Liga","field":"","status":"FINISHED","homeScore":4,"awayScore":3,"events":[{"id":202426001,"type":"goal","team":"home","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202426002,"type":"goal","team":"home","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202426003,"type":"goal","team":"home","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202426011,"type":"goal","team":"home","minute":null,"playerName":"Adrià","playerNumber":3,"score":"","historicalImported":true}],"historical":true,"season":"2024/25"},{"id":202425011,"jornada":11,"home":12,"away":1,"date":"2024-12-21","hour":"","competition":"Liga","field":"","status":"FINISHED","homeScore":1,"awayScore":2,"events":[{"id":202426101,"type":"goal","team":"away","minute":null,"playerName":"Adrià","playerNumber":3,"score":"","historicalImported":true},{"id":202426111,"type":"goal","team":"away","minute":null,"playerName":"Roger","playerNumber":8,"score":"","historicalImported":true}],"historical":true,"season":"2024/25"},{"id":202425012,"jornada":12,"home":1,"away":13,"date":"2025-01-11","hour":"","competition":"Liga","field":"","status":"FINISHED","homeScore":6,"awayScore":2,"events":[{"id":202426201,"type":"goal","team":"home","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202426202,"type":"goal","team":"home","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202426203,"type":"goal","team":"home","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202426204,"type":"goal","team":"home","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202426211,"type":"goal","team":"home","minute":null,"playerName":"Axel","playerNumber":4,"score":"","historicalImported":true},{"id":202426221,"type":"goal","team":"home","minute":null,"playerName":"Luca","playerNumber":7,"score":"","historicalImported":true}],"historical":true,"season":"2024/25"},{"id":202425013,"jornada":13,"home":1,"away":null,"date":"","hour":"","competition":"Liga","field":"","status":"PENDING","homeScore":0,"awayScore":0,"events":[],"historical":true,"sourceNote":"Sin resultado registrado"},{"id":202425014,"jornada":14,"home":2,"away":1,"date":"2025-01-24","hour":"","competition":"Liga","field":"","status":"FINISHED","homeScore":2,"awayScore":3,"events":[{"id":202426401,"type":"goal","team":"away","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202426402,"type":"goal","team":"away","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202426411,"type":"goal","team":"away","minute":null,"playerName":"Adrià","playerNumber":3,"score":"","historicalImported":true}],"historical":true,"season":"2024/25"},{"id":202425015,"jornada":15,"home":1,"away":3,"date":"2025-02-01","hour":"","competition":"Liga","field":"","status":"FINISHED","homeScore":3,"awayScore":4,"events":[{"id":202426501,"type":"goal","team":"home","minute":null,"playerName":"Eloy","playerNumber":2,"score":"","historicalImported":true},{"id":202426511,"type":"goal","team":"home","minute":null,"playerName":"Adrià","playerNumber":3,"score":"","historicalImported":true},{"id":202426521,"type":"goal","team":"home","minute":null,"playerName":"Luca","playerNumber":7,"score":"","historicalImported":true}],"historical":true,"season":"2024/25"},{"id":202425016,"jornada":16,"home":4,"away":1,"date":"2025-02-08","hour":"","competition":"Liga","field":"","status":"FINISHED","homeScore":3,"awayScore":4,"events":[{"id":202426601,"type":"goal","team":"away","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202426602,"type":"goal","team":"away","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202426611,"type":"goal","team":"away","minute":null,"playerName":"Adrià","playerNumber":3,"score":"","historicalImported":true},{"id":202426621,"type":"goal","team":"away","minute":null,"playerName":"Axel","playerNumber":4,"score":"","historicalImported":true}],"historical":true,"season":"2024/25"},{"id":202425017,"jornada":17,"home":1,"away":5,"date":"2025-02-15","hour":"","competition":"Liga","field":"","status":"FINISHED","homeScore":7,"awayScore":3,"events":[{"id":202426701,"type":"goal","team":"home","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202426702,"type":"goal","team":"home","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202426711,"type":"goal","team":"home","minute":null,"playerName":"Eloy","playerNumber":2,"score":"","historicalImported":true},{"id":202426712,"type":"goal","team":"home","minute":null,"playerName":"Eloy","playerNumber":2,"score":"","historicalImported":true},{"id":202426721,"type":"goal","team":"home","minute":null,"playerName":"Adrià","playerNumber":3,"score":"","historicalImported":true},{"id":202426731,"type":"goal","team":"home","minute":null,"playerName":"Axel","playerNumber":4,"score":"","historicalImported":true},{"id":202426741,"type":"goal","team":"home","minute":null,"playerName":"Pere","playerNumber":11,"score":"","historicalImported":true}],"historical":true,"season":"2024/25"},{"id":202425018,"jornada":18,"home":6,"away":1,"date":"2025-02-22","hour":"","competition":"Liga","field":"","status":"FINISHED","homeScore":1,"awayScore":4,"events":[{"id":202426801,"type":"goal","team":"away","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202426802,"type":"goal","team":"away","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202426811,"type":"goal","team":"away","minute":null,"playerName":"Eloy","playerNumber":2,"score":"","historicalImported":true},{"id":202426812,"type":"goal","team":"away","minute":null,"playerName":"Eloy","playerNumber":2,"score":"","historicalImported":true}],"historical":true,"season":"2024/25"},{"id":202425019,"jornada":19,"home":1,"away":7,"date":"2025-03-08","hour":"","competition":"Liga","field":"","status":"FINISHED","homeScore":12,"awayScore":0,"events":[{"id":202426901,"type":"goal","team":"home","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202426902,"type":"goal","team":"home","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202426903,"type":"goal","team":"home","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202426904,"type":"goal","team":"home","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202426905,"type":"goal","team":"home","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202426911,"type":"goal","team":"home","minute":null,"playerName":"Eloy","playerNumber":2,"score":"","historicalImported":true},{"id":202426921,"type":"goal","team":"home","minute":null,"playerName":"Adrià","playerNumber":3,"score":"","historicalImported":true},{"id":202426922,"type":"goal","team":"home","minute":null,"playerName":"Adrià","playerNumber":3,"score":"","historicalImported":true},{"id":202426923,"type":"goal","team":"home","minute":null,"playerName":"Adrià","playerNumber":3,"score":"","historicalImported":true},{"id":202426931,"type":"goal","team":"home","minute":null,"playerName":"Axel","playerNumber":4,"score":"","historicalImported":true},{"id":202426932,"type":"goal","team":"home","minute":null,"playerName":"Axel","playerNumber":4,"score":"","historicalImported":true},{"id":202426941,"type":"goal","team":"home","minute":null,"playerName":"Guillem","playerNumber":9,"score":"","historicalImported":true}],"historical":true,"season":"2024/25"},{"id":202425020,"jornada":20,"home":8,"away":1,"date":"2025-03-16","hour":"","competition":"Liga","field":"","status":"FINISHED","homeScore":1,"awayScore":2,"events":[{"id":202427001,"type":"goal","team":"away","minute":null,"playerName":"Eloy","playerNumber":2,"score":"","historicalImported":true},{"id":202427011,"type":"goal","team":"away","minute":null,"playerName":"Adrià","playerNumber":3,"score":"","historicalImported":true}],"historical":true,"season":"2024/25"},{"id":202425021,"jornada":21,"home":1,"away":9,"date":"2025-03-22","hour":"","competition":"Liga","field":"","status":"FINISHED","homeScore":2,"awayScore":3,"events":[{"id":202427101,"type":"goal","team":"home","minute":null,"playerName":"Jaume","playerNumber":5,"score":"","historicalImported":true},{"id":202427111,"type":"goal","team":"home","minute":null,"playerName":"Álvaro","playerNumber":10,"score":"","historicalImported":true}],"historical":true,"season":"2024/25"},{"id":202425022,"jornada":22,"home":1,"away":10,"date":"2025-03-29","hour":"","competition":"Liga","field":"","status":"FINISHED","homeScore":7,"awayScore":1,"events":[{"id":202427201,"type":"goal","team":"home","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202427202,"type":"goal","team":"home","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202427211,"type":"goal","team":"home","minute":null,"playerName":"Eloy","playerNumber":2,"score":"","historicalImported":true},{"id":202427221,"type":"goal","team":"home","minute":null,"playerName":"Adrià","playerNumber":3,"score":"","historicalImported":true},{"id":202427222,"type":"goal","team":"home","minute":null,"playerName":"Adrià","playerNumber":3,"score":"","historicalImported":true},{"id":202427231,"type":"goal","team":"home","minute":null,"playerName":"Axel","playerNumber":4,"score":"","historicalImported":true},{"id":202427241,"type":"goal","team":"home","minute":null,"playerName":"Jaume","playerNumber":5,"score":"","historicalImported":true}],"historical":true,"season":"2024/25"},{"id":202425023,"jornada":23,"home":11,"away":1,"date":"2025-04-05","hour":"","competition":"Liga","field":"","status":"FINISHED","homeScore":1,"awayScore":4,"events":[{"id":202427301,"type":"goal","team":"away","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202427302,"type":"goal","team":"away","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202427311,"type":"goal","team":"away","minute":null,"playerName":"Adrià","playerNumber":3,"score":"","historicalImported":true},{"id":202427321,"type":"goal","team":"away","minute":null,"playerName":"Amjad","playerNumber":6,"score":"","historicalImported":true}],"historical":true,"season":"2024/25"},{"id":202425024,"jornada":24,"home":1,"away":12,"date":"2025-04-12","hour":"","competition":"Liga","field":"","status":"FINISHED","homeScore":2,"awayScore":1,"events":[{"id":202427401,"type":"goal","team":"home","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true},{"id":202427402,"type":"goal","team":"home","minute":null,"playerName":"Gerard","playerNumber":1,"score":"","historicalImported":true}],"historical":true,"season":"2024/25"},{"id":202425025,"jornada":25,"home":13,"away":1,"date":"2025-04-26","hour":"","competition":"Liga","field":"","status":"FINISHED","homeScore":2,"awayScore":0,"events":[],"historical":true,"season":"2024/25"},{"id":202425026,"jornada":26,"home":1,"away":null,"date":"","hour":"","competition":"Liga","field":"","status":"PENDING","homeScore":0,"awayScore":0,"events":[],"historical":true,"sourceNote":"Sin resultado registrado"}],"activeMatch":202425001,"lineup":{"formation":"4-3-3","players":[]},"historicalSeason":"2024/25","historicalImportVersion":"RS-2024-25-V1"};
+  const VERSION="RS-2024-25-V1";
+
+  function importHistoricalSeason(force=false){
+    try{
+      if(!force && String(App?.historicalImportVersion||"")===VERSION) return false;
+      ignoreRemote=true;
+      App.club=HIST.club;
+      App.teams=HIST.teams.map(x=>({...x}));
+      App.players=HIST.players.map(x=>({...x}));
+      App.matches=HIST.matches.map(x=>({...x,events:(x.events||[]).map(e=>({...e}))}));
+      App.activeMatch=HIST.activeMatch;
+      App.lineup={formation:"4-3-3",players:[]};
+      App.historicalSeason=HIST.historicalSeason;
+      App.historicalImportVersion=VERSION;
+      Live.state="PREMATCH"; Live.homeScore=0; Live.awayScore=0; Live.events=[]; Live.lineup=[];
+      ignoreRemote=false;
+      return save().then(()=>{ renderAll(); toast("✅ Temporada 2024/25 cargada con todos los partidos y goleadores"); });
+    }catch(e){
+      ignoreRemote=false; console.error("V54 import",e); toast("❌ Error cargando la temporada 2024/25");
+    }
+  }
+
+  function enhanceHistoricalRows(){
+    const box=document.getElementById("matchList");
+    if(!box || !Array.isArray(App.matches)) return;
+    const rows=App.matches.slice().sort((a,b)=>{
+      const da=a.date||"9999-99-99", db=b.date||"9999-99-99";
+      if(da!==db)return da.localeCompare(db);
+      return Number(a.jornada||0)-Number(b.jornada||0);
+    });
+    box.innerHTML=rows.map(m=>{
+      const h=team(m.home), a=m.away?team(m.away):{name:"Sin rival registrado",logo:""};
+      const fin=m.status==="FINISHED";
+      const score=fin?`${Number(m.homeScore||0)} - ${Number(m.awayScore||0)}`:"—";
+      const details=fin?`<button class="btn small dark" onclick="v24ShowDetails(${m.id})">👁 Ver detalles</button>`:"";
+      return `<div class="matchRow matchRowV23">
+        <div class="matchDate"><b>J${m.jornada||"—"}</b><br>${m.date?formatDate(m.date):"Sin fecha"}${m.hour?`<br>${m.hour}`:""}</div>
+        <div class="matchTeams"><b>${esc(h.name)}</b><span>vs</span><b>${esc(a.name)}</b><br><small style="color:var(--muted)">${esc(m.competition||"Liga")}</small></div>
+        <div class="matchResultV23"><strong>${score}</strong>${fin?'<span class="finalBadgeV20">⚪ FINALIZADO</span>':'<span class="pendingBadgeV23">SIN RESULTADO</span>'}${details}</div>
+      </div>`;
+    }).join("");
+  }
+
+  function patchNoMinuteText(){
+    const old=v24ShowDetails;
+    if(typeof old!=="function" || window.__v54DetailsPatched) return;
+    window.__v54DetailsPatched=true;
+    window.v24ShowDetails=function(id){
+      old(id);
+      setTimeout(()=>{
+        document.querySelectorAll("#detailGoalsV20 .detailMinuteV20").forEach((el,i)=>{
+          const m=(App.matches||[]).find(x=>String(x.id)===String(id));
+          const ev=(m?.events||[]).filter(e=>String(e.type)==="goal").sort((a,b)=>Number(a.minute??999)-Number(b.minute??999));
+          if(ev[i] && ev[i].minute==null) el.textContent="—";
+        });
+      },30);
+    };
+  }
+
+  const oldRenderAll=window.renderAll;
+  window.renderAll=function(){
+    if(typeof oldRenderAll==="function")oldRenderAll.apply(this,arguments);
+    setTimeout(enhanceHistoricalRows,30);
+    patchNoMinuteText();
+  };
+
+  // Firebase may already contain the previous season. This explicit import is intentional:
+  // the user requested replacing the current data with the supplied 2024/25 historical dataset.
+  setTimeout(()=>importHistoricalSeason(false),1800);
+  setTimeout(enhanceHistoricalRows,2200);
+})();
+</script>
+
+<!-- V55 — Recupera diseño V40 de Partidos + gestión completa de partidos en Administrador -->
+<style id="v55-matches-admin-fix">
+/* PUBLICO: tarjetas horizontales tipo V40 */
+#matchList{display:grid!important;gap:14px!important}
+.matchRowV55{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 250px minmax(0,1fr)!important;
+  grid-template-areas:"home center away" "scorers scorers scorers"!important;
+  align-items:center!important;gap:12px 20px!important;
+  width:100%!important;box-sizing:border-box!important;padding:18px 22px 0!important;
+  margin:0!important;background:#030507!important;border:1px solid rgba(255,255,255,.14)!important;
+  border-radius:16px!important;overflow:hidden!important;color:#fff!important;
+}
+.matchTeamV55{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:7px!important;min-width:0!important;text-align:center!important}
+.matchTeamV55.home{grid-area:home!important}.matchTeamV55.away{grid-area:away!important}
+.matchCrestV55{width:68px!important;height:68px!important;object-fit:contain!important;display:block!important;filter:drop-shadow(0 5px 9px rgba(0,0,0,.4))!important}
+.matchNameV55{font-size:23px!important;line-height:1.08!important;font-weight:1000!important;color:#fff!important;overflow-wrap:anywhere!important}
+.matchCenterV55{grid-area:center!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;min-width:0!important}
+.matchMetaV55{display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;color:#aab5c4!important;font-size:11px!important;font-weight:800!important;margin-bottom:7px!important;white-space:nowrap!important}
+.matchScoreV55{min-width:190px!important;padding:9px 16px!important;border-radius:9px!important;color:#fff!important;font-size:43px!important;line-height:1!important;font-weight:1000!important;letter-spacing:2px!important;text-align:center!important;background:#18a94b!important;box-sizing:border-box!important}
+.matchRowV55.result-draw .matchScoreV55{background:#d4a800!important}.matchRowV55.result-loss .matchScoreV55{background:#c52b35!important}
+.matchFinalV55{margin-top:6px!important;font-size:13px!important;letter-spacing:4px!important;font-weight:1000!important;color:#fff!important}
+.matchDetailsBtnV55{margin-top:8px!important;background:#172235!important;border:1px solid rgba(255,255,255,.15)!important;color:#fff!important;border-radius:9px!important;padding:8px 15px!important;font-size:13px!important;font-weight:900!important;cursor:pointer!important}
+.matchScorersV55{grid-area:scorers!important;display:flex!important;align-items:center!important;gap:10px!important;min-height:36px!important;padding:7px 13px!important;background:#050505!important;border-top:1px solid rgba(255,255,255,.12)!important;color:#fff!important;font-size:12px!important;font-weight:800!important;box-sizing:border-box!important}
+.matchScorersV55 .scorerLabel{color:#f1cf00!important;font-weight:1000!important;white-space:nowrap!important}.matchScorersV55 .scorerText{color:#e8edf3!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+.matchScorersV55.empty{display:none!important}
+/* ADMIN: todos los partidos + edición */
+.v55AdminMatches{display:grid;gap:10px;margin-top:14px}
+.v55AdminMatch{background:#091728;border:1px solid #29405d;border-radius:14px;padding:13px}
+.v55AdminHead{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}
+.v55AdminTitle{font-weight:1000;color:#fff;font-size:14px}.v55AdminMeta{font-size:10px;color:#71869c;margin-top:3px}
+.v55AdminActions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.v55EditGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.v55EditGrid label{display:block;font-size:9px;color:#71869c;font-weight:900;margin-bottom:4px}
+.v55EditGrid input,.v55EditGrid select{width:100%;box-sizing:border-box;background:#06111f;color:#fff;border:1px solid #29405d;border-radius:9px;padding:9px;font-size:12px}
+.v55EditScore{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.v55EditFooter{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.v55Editing{border-color:#ffd400;box-shadow:0 0 0 1px #ffd40033}
+@media(max-width:700px){
+ .matchRowV55{grid-template-columns:minmax(0,1fr) 145px minmax(0,1fr)!important;gap:7px!important;padding:14px 9px 0!important}
+ .matchCrestV55{width:48px!important;height:48px!important}.matchNameV55{font-size:16px!important}.matchScoreV55{min-width:125px!important;font-size:28px!important;padding:8px 7px!important}.matchMetaV55{font-size:9px!important}.matchFinalV55{font-size:10px!important;letter-spacing:3px!important}.matchDetailsBtnV55{font-size:10px!important;padding:6px 8px!important}.matchScorersV55{font-size:10px!important;padding:7px 8px!important}
+ .v55AdminHead{align-items:flex-start;flex-direction:column}.v55AdminActions{justify-content:flex-start}.v55EditGrid{grid-template-columns:1fr}.v55EditScore{grid-template-columns:1fr 1fr}
+}
+</style>
+<script id="v55-matches-admin-fix-script">
+(function(){
+  "use strict";
+  function v55Crest(t){
+    return t && t.logo ? `<img class="matchCrestV55" src="${esc(t.logo)}" alt="${esc(t.name||'')}" loading="lazy">` : `<div class="matchCrestV55" style="display:grid;place-items:center;font-size:30px">⚽</div>`;
+  }
+  function v55Scorers(m){
+    const goals=(Array.isArray(m.events)?m.events:[]).filter(e=>e&&e.type==='goal'&&e.playerName);
+    if(!goals.length)return '';
+    const counts={}; goals.forEach(e=>{const n=String(e.playerName).trim();if(n)counts[n]=(counts[n]||0)+1});
+    const text=Object.entries(counts).map(([n,c])=>`${esc(n)}${c>1?` (${c})`:''}`).join(' · ');
+    return `<div class="matchScorersV55"><span class="scorerLabel">⚽ GOLEADORES:</span><span class="scorerText">${text}</span></div>`;
+  }
+  function v55Sorted(){
+    return (Array.isArray(App.matches)?App.matches:[]).slice().sort((a,b)=>{
+      const da=a.date||'9999-99-99',db=b.date||'9999-99-99';
+      if(da!==db)return da.localeCompare(db);
+      const ja=Number(a.jornada||999),jb=Number(b.jornada||999); if(ja!==jb)return ja-jb;
+      return String(a.id).localeCompare(String(b.id));
+    });
+  }
+  function v55RenderPublic(){
+    const box=document.getElementById('matchList'); if(!box)return;
+    const rows=v55Sorted();
+    box.innerHTML=rows.length?rows.map(m=>{
+      const h=team(m.home),a=m.away?team(m.away):{name:'Sin rival registrado',logo:''};
+      const fin=m.status==='FINISHED';
+      const active=String(m.id)===String(App.activeMatch);
+      const live=active&&(Live.state==='FIRST_HALF'||Live.state==='SECOND_HALF');
+      let hs=Number(m.homeScore||0),as=Number(m.awayScore||0);
+      if(active&&Live.state==='FINISHED'){hs=Number(Live.homeScore||hs);as=Number(Live.awayScore||as)}
+      const score=fin||live?`${hs} - ${as}`:'—';
+      if(!fin&&!live){
+        return `<div class="matchRowV55"><div class="matchTeamV55 home">${v55Crest(h)}<span class="matchNameV55">${esc(h.name)}</span></div><div class="matchCenterV55"><div class="matchMetaV55"><span>${m.jornada?`Jornada ${esc(m.jornada)} · `:''}${formatDate(m.date)}</span><span>•</span><span>${esc(m.competition||'Liga')}</span></div><div class="matchScoreV55">${esc(score)}</div><div class="matchFinalV55">PRÓXIMO</div></div><div class="matchTeamV55 away">${v55Crest(a)}<span class="matchNameV55">${esc(a.name)}</span></div></div>`;
+      }
+      const ramonHome=/ram[oó]n sicart/i.test(String(h.name||'')),ramonAway=/ram[oó]n sicart/i.test(String(a.name||''));
+      const cls=hs===as?'result-draw':((ramonHome&&hs>as)||(ramonAway&&as>hs)?'result-win':'result-loss');
+      return `<div class="matchRowV55 ${cls}"><div class="matchTeamV55 home">${v55Crest(h)}<span class="matchNameV55">${esc(h.name)}</span></div><div class="matchCenterV55"><div class="matchMetaV55"><span>${m.jornada?`Jornada ${esc(m.jornada)} · `:''}${formatDate(m.date)}</span><span>•</span><span>${esc(m.competition||'Liga')}</span></div><div class="matchScoreV55">${esc(score)}</div><div class="matchFinalV55">${live?'🔴 DIRECTO':'FINAL'}</div>${!live?`<button class="matchDetailsBtnV55" type="button" onclick="v25ShowDetails(${Number(m.id)});event.stopPropagation()">👁 Ver detalles</button>`:''}</div><div class="matchTeamV55 away">${v55Crest(a)}<span class="matchNameV55">${esc(a.name)}</span></div>${v55Scorers(m)}</div>`;
+    }).join(''):'<div class="empty">No hay partidos creados.</div>';
+  }
+  function optTeams(selected){
+    return (App.teams||[]).map(t=>`<option value="${esc(t.id)}" ${String(t.id)===String(selected)?'selected':''}>${esc(t.name)}</option>`).join('');
+  }
+  function v55EditRow(m){
+    const h=team(m.home),a=m.away?team(m.away):{name:'Sin rival registrado'};
+    return `<div class="v55AdminMatch v55Editing" id="v55Edit_${Number(m.id)}"><div class="v55AdminHead"><div><div class="v55AdminTitle">Editando J${esc(m.jornada||'—')} · ${esc(h.name)} vs ${esc(a.name)}</div><div class="v55AdminMeta">ID ${esc(m.id)} · partido ${m.status==='FINISHED'?'FINALIZADO':'PENDIENTE'}</div></div></div><div class="v55EditGrid"><div><label>Jornada</label><input id="v55j_${Number(m.id)}" type="number" min="1" value="${Number(m.jornada||'')||''}"></div><div><label>Estado</label><select id="v55s_${Number(m.id)}"><option value="PENDING" ${m.status!=='FINISHED'?'selected':''}>Pendiente</option><option value="FINISHED" ${m.status==='FINISHED'?'selected':''}>Finalizado</option></select></div><div><label>Local</label><select id="v55h_${Number(m.id)}">${optTeams(m.home)}</select></div><div><label>Visitante</label><select id="v55a_${Number(m.id)}"><option value="">Sin rival registrado</option>${optTeams(m.away)}</select></div><div><label>Fecha</label><input id="v55d_${Number(m.id)}" type="date" value="${esc(m.date||'')}"></div><div><label>Hora</label><input id="v55t_${Number(m.id)}" type="time" value="${esc(m.hour||'')}"></div><div><label>Competición</label><input id="v55c_${Number(m.id)}" value="${esc(m.competition||'Liga')}"></div><div><label>Campo</label><input id="v55f_${Number(m.id)}" value="${esc(m.field||'')}"></div><div><label>Marcador</label><div class="v55EditScore"><input id="v55hs_${Number(m.id)}" type="number" min="0" value="${Number(m.homeScore||0)}"><input id="v55as_${Number(m.id)}" type="number" min="0" value="${Number(m.awayScore||0)}"></div></div></div><div class="v55EditFooter"><button class="btn green small" onclick="v55SaveMatch(${Number(m.id)})">💾 Guardar cambios</button><button class="btn dark small" onclick="v55CancelEdit()">Cancelar</button></div></div>`;
+  }
+  function v55AdminCard(m){
+    const h=team(m.home),a=m.away?team(m.away):{name:'Sin rival registrado'};
+    const active=String(m.id)===String(App.activeMatch);
+    return `<div class="v55AdminMatch"><div class="v55AdminHead"><div><div class="v55AdminTitle">J${esc(m.jornada||'—')} · ${esc(h.name)} vs ${esc(a.name)}</div><div class="v55AdminMeta">${m.date?formatDate(m.date):'Sin fecha'}${m.hour?' · '+esc(m.hour):''} · ${esc(m.competition||'Liga')} · ${m.status==='FINISHED'?'FINALIZADO':'PENDIENTE'} · ${Number(m.homeScore||0)} - ${Number(m.awayScore||0)}</div></div><div class="v55AdminActions"><button class="btn small ${active?'green':'dark'}" onclick="setActive(${Number(m.id)})">${active?'Activo':'Activar'}</button><button class="btn small" onclick="v55EditMatch(${Number(m.id)})">✏️ Editar</button><button class="btn small red" onclick="deleteMatch(${Number(m.id)})">🗑 Eliminar</button></div></div></div>`;
+  }
+  function v55RenderAdmin(){
+    const admin=document.getElementById('adminMatches'); if(!admin)return;
+    const rows=v55Sorted();
+    admin.classList.add('v55AdminMatches');
+    admin.innerHTML=rows.length?rows.map(v55AdminCard).join(''):'<div class="empty">No hay partidos creados.</div>';
+  }
+  window.v55EditMatch=function(id){
+    const m=App.matches.find(x=>String(x.id)===String(id));if(!m)return;
+    const admin=document.getElementById('adminMatches');if(!admin)return;
+    admin.innerHTML=v55Sorted().map(x=>String(x.id)===String(id)?v55EditRow(x):v55AdminCard(x)).join('');
+    const el=document.getElementById('v55Edit_'+Number(id));if(el)el.scrollIntoView({behavior:'smooth',block:'center'});
+  };
+  window.v55CancelEdit=function(){v55RenderAdmin()};
+  window.v55SaveMatch=async function(id){
+    const m=App.matches.find(x=>String(x.id)===String(id));if(!m)return;
+    const num=id=>document.getElementById(id+Number(m.id));
+    const home=Number(document.getElementById('v55h_'+Number(m.id)).value);
+    const awayVal=document.getElementById('v55a_'+Number(m.id)).value;
+    const status=document.getElementById('v55s_'+Number(m.id)).value;
+    m.jornada=Number(document.getElementById('v55j_'+Number(m.id)).value)||null;
+    m.home=home;m.away=awayVal?Number(awayVal):null;
+    m.date=document.getElementById('v55d_'+Number(m.id)).value;
+    m.hour=document.getElementById('v55t_'+Number(m.id)).value;
+    m.competition=document.getElementById('v55c_'+Number(m.id)).value.trim()||'Liga';
+    m.field=document.getElementById('v55f_'+Number(m.id)).value.trim();
+    m.status=status;m.homeScore=Math.max(0,Number(document.getElementById('v55hs_'+Number(m.id)).value)||0);m.awayScore=Math.max(0,Number(document.getElementById('v55as_'+Number(m.id)).value)||0);
+    if(status==='PENDING'){m.homeScore=0;m.awayScore=0}
+    if(String(App.activeMatch)===String(id)){
+      Live.homeScore=m.homeScore;Live.awayScore=m.awayScore;Live.events=JSON.parse(JSON.stringify(m.events||[]));
+      if(status==='FINISHED'){Live.state='FINISHED';Live.half=2;Live.pausedSeconds=80*60;Live.manualMinute=80;Live.startTimestamp=null;}
+      else {Live.state='PREMATCH';Live.pausedSeconds=0;Live.manualMinute=0;Live.startTimestamp=null;}
+    }
+    try{await save();renderAll();toast('✅ Partido actualizado correctamente')}catch(e){toast('❌ No se pudo guardar el partido')}
+  };
+  const originalRenderMatches=window.renderMatches;
+  window.renderMatches=function(){v55RenderPublic();v55RenderAdmin()};
+  window.v55RenderMatches=function(){v55RenderPublic();v55RenderAdmin()};
+  setTimeout(()=>{v55RenderPublic();v55RenderAdmin()},50);
+})();
+</script>
+
+<style id="v57-event-crest-fix">
+.eventCrestFallbackV24,.eventCrestFallbackV26,.eventTeamCrestFallbackV19{
+  display:inline-grid!important;place-items:center!important;
+  background:#17283e!important;color:#ffd600!important;
+  border-radius:50%!important;padding:0!important;
+  font-size:15px!important;line-height:1!important;
+}
+</style>
+<script id="v57-event-crest-fix-script">
+(function(){
+  // V57: un único balón por evento. El primer icono es SIEMPRE el escudo;
+  // si no hay escudo cargado, se muestra un escudo de reserva, nunca otro balón.
+  window.RS_LIVE_EVENT_LAYOUT_V57 = 'CREST_THEN_BALL';
+})();
+</script>
