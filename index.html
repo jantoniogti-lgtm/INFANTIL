@@ -1813,7 +1813,9 @@ const firebaseConfig = {
 /* Firebase estable: usa SDK si hay credenciales reales; si el HTML solo conserva
    marcadores, utiliza Realtime Database REST para que la app siga funcionando. */
 let dbRef=null, storage=null, firebaseSdkReady=false;
-const firebaseRestUrl=firebaseConfig.databaseURL.replace(/\/$/,"")+"/clubManagerV6.json";
+const firebaseBaseUrl=firebaseConfig.databaseURL.replace(/\/$/,"");
+const firebaseRestUrl=firebaseBaseUrl+"/clubManagerV6.json";
+const firebaseMediaRestUrl=firebaseBaseUrl+"/clubManagerV6/media.json";
 try{
   const realConfig=firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("TU_") && firebaseConfig.appId && !firebaseConfig.appId.startsWith("TU_");
   if(realConfig && window.firebase && firebase.database){
@@ -1902,15 +1904,45 @@ function currentSeconds(){
   return Math.min(FULL,Math.max(0,Number(Live.pausedSeconds||Live.manualMinute*60||0)));
 }
 function displayMinute(){return Math.min(80,Math.max(0,Math.floor(currentSeconds()/60)))}
-function save(){
-  if(ignoreRemote)return Promise.resolve();
-  return dbRef.set({app:App,liveMatch:Live}).catch(err=>{
+async function save(){
+  if(ignoreRemote)return true;
+  try{
+    // Guardamos la estructura principal sin blobs de fotos/escudos.
+    // Las imágenes se guardan separadas por ID para que una imagen grande
+    // nunca pueda hacer que Firebase rechace toda la plantilla.
+    const appData=JSON.parse(JSON.stringify(App));
+    const media={players:{},teams:{}};
+    (appData.players||[]).forEach((pl,i)=>{
+      const original=App.players[i] || App.players.find(x=>String(x.id)===String(pl.id));
+      const photo=(original&&original.photo)||pl.photo||"";
+      if(photo) media.players[String(pl.id)]={photo};
+      delete pl.photo;
+    });
+    (appData.teams||[]).forEach((tm,i)=>{
+      const original=App.teams[i] || App.teams.find(x=>String(x.id)===String(tm.id));
+      const logo=(original&&original.logo)||tm.logo||"";
+      if(logo) media.teams[String(tm.id)]={logo};
+      delete tm.logo;
+    });
+    await dbRef.set({app:appData,liveMatch:Live});
+    // Media separada. Con SDK se usa la misma raíz mediante set; con REST
+    // se escribe directamente en /media.
+    if(firebaseSdkReady){
+      await firebase.database().ref("clubManagerV6/media").set(media);
+    }else{
+      const r=await fetch(firebaseMediaRestUrl,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(media)});
+      if(!r.ok) throw new Error("Firebase media PUT "+r.status);
+    }
+    const st=document.getElementById("syncText");
+    if(st)st.textContent="Firebase conectado • guardado";
+    return true;
+  }catch(err){
     console.error("Firebase save:",err);
     const st=document.getElementById("syncText");
     if(st)st.textContent="Error guardando Firebase";
     toast("No se pudo guardar en Firebase");
-    throw err;
-  });
+    return false;
+  }
 }
 function firebaseList(value){
   if(Array.isArray(value)) return value;
@@ -1932,6 +1964,19 @@ function applyData(data){
       App.lineup={formation:data.app.lineup.formation||"4-3-3",players:lp.map(Number)};
     }
   }
+  // Recuperar fotos y escudos guardados fuera de App.
+  if(data.media){
+    const pm=data.media.players||{};
+    const tm=data.media.teams||{};
+    App.players.forEach(p=>{
+      const media=pm[String(p.id)];
+      if(media && media.photo) p.photo=media.photo;
+    });
+    App.teams.forEach(t=>{
+      const media=tm[String(t.id)];
+      if(media && media.logo) t.logo=media.logo;
+    });
+  }
   if(data.liveMatch)Object.assign(Live,data.liveMatch);
   if(Live.state==="HALFTIME"){Live.pausedSeconds=40*60;Live.manualMinute=40;Live.startTimestamp=null;}
   if(Live.state==="FINISHED"){Live.pausedSeconds=80*60;Live.manualMinute=80;Live.startTimestamp=null;}
@@ -1944,7 +1989,7 @@ function startRealtime(){
       const m={id:Date.now(),home:1,away:2,date:"2026-09-12",hour:"18:00",competition:"Liga",field:"Municipal"};
       App.matches=[m];App.activeMatch=m.id;
       App.lineup={formation:"4-3-3",players:[1,2,3,4,7,11,14,9,10,12,15]};
-      dbRef.set({app:App,liveMatch:Live}).catch(err=>console.error("Firebase seed:",err));
+      save().catch(err=>console.error("Firebase seed:",err));
       renderAll();
       return;
     }
@@ -2235,9 +2280,20 @@ async function savePlayer(){
  let p=App.players.find(x=>x.id===editPlayerId);if(!p){p={id:Date.now(),number:num,name,surname:"",position:"Defensa",captain:false,photo:"",goals:0,yellow:0,red:0};App.players.push(p)}
  p.number=num;p.name=name;p.surname=document.getElementById("pSurname").value.trim();p.position=document.getElementById("pPosition").value;p.captain=document.getElementById("pCaptain").checked;p.status=document.getElementById("pStatus").value;
  const file=document.getElementById("pPhoto").files[0];if(file){toast("Subiendo foto…");p.photo=await uploadFile(file,"players")}
- App.players.sort((a,b)=>a.number-b.number);closeModal("playerModal");save();renderAll();toast("Jugador guardado")
+ App.players.sort((a,b)=>a.number-b.number);
+ const ok=await save();
+ if(!ok)return;
+ closeModal("playerModal");renderAll();toast("Jugador guardado correctamente")
 }
-function deletePlayer(id){if(!confirm("¿Eliminar jugador?"))return;App.players=App.players.filter(p=>p.id!==id);App.lineup.players=(App.lineup.players||[]).filter(n=>Number(n)!==Number(App.players.find(p=>p.id===id)?.number));save();renderAll()}
+async function deletePlayer(id){
+ if(!confirm("¿Eliminar jugador?"))return;
+ const old=App.players.find(p=>String(p.id)===String(id));
+ const oldNumber=old?.number;
+ App.players=App.players.filter(p=>String(p.id)!==String(id));
+ App.lineup.players=(App.lineup.players||[]).filter(n=>Number(n)!==Number(oldNumber));
+ const ok=await save(); if(!ok)return;
+ renderAll();toast("Jugador eliminado");
+}
 function editTeam(id){
  const t=App.teams.find(x=>Number(x.id)===Number(id)); if(!t)return;
  editTeamId=t.id;
@@ -2257,11 +2313,12 @@ async function addTeam(){
    editTeamId=null;
    document.getElementById("teamNameInput").value="";document.getElementById("teamLogoInput").value="";
    const btn=document.getElementById("addTeamBtn");if(btn)btn.textContent="Guardar equipo";
-   save();renderAll();toast("Equipo actualizado");return;
+   const ok=await save(); if(!ok)return;
+   renderAll();toast("Equipo actualizado");return;
  }
  const t={id:Date.now(),name,short:name.slice(0,3).toUpperCase(),logo:"",protected:false};
  if(file){toast("Subiendo escudo…");t.logo=await uploadFile(file,"teams")}
- App.teams.push(t);document.getElementById("teamNameInput").value="";document.getElementById("teamLogoInput").value="";save();renderAll();toast("Equipo guardado")
+ App.teams.push(t);document.getElementById("teamNameInput").value="";document.getElementById("teamLogoInput").value="";const ok=await save();if(!ok)return;renderAll();toast("Equipo guardado")
 }
 function deleteTeam(id){if(!confirm("¿Eliminar equipo?"))return;App.teams=App.teams.filter(t=>Number(t.id)!==Number(id));App.matches=App.matches.filter(m=>Number(m.home)!==Number(id)&&Number(m.away)!==Number(id));save();renderAll()}
 function createMatch(){
@@ -4022,6 +4079,216 @@ document.addEventListener("click",function(e){
   window.rsGoalPosterGenerate=rsGoalPosterGenerate;
   window.rsGoalPosterDownload=rsGoalPosterDownload;
   setTimeout(rsGoalPosterBuildAdmin,350);setTimeout(rsGoalPosterRefresh,800);
+})();
+</script>
+
+
+<!-- V63: persistencia local + Firebase y mejora visual de la alineación -->
+<style id="v63-final-persistence-and-lineup">
+/* Dorsales y nombres más visibles en TODAS las alineaciones */
+.publicShirtV11 b{
+  font-size:20px!important;
+  font-weight:1000!important;
+  letter-spacing:.2px!important;
+  color:#111!important;
+  text-shadow:0 1px 0 rgba(255,255,255,.28)!important;
+}
+.publicNameV11{
+  font-size:16px!important;
+  font-weight:1000!important;
+  padding:6px 10px!important;
+  border-radius:12px!important;
+  min-width:120px!important;
+  line-height:1.1!important;
+}
+.adminPitchPlayerV10 .adminShirtV10,
+.adminPitchPlayerV10 .jersey,
+.formationPlayer .jersey{
+  font-size:20px!important;
+  font-weight:1000!important;
+}
+.formationPlayer b{
+  font-size:15px!important;
+  font-weight:1000!important;
+  padding:6px 10px!important;
+  border-radius:11px!important;
+  max-width:145px!important;
+}
+.benchNameV11{font-size:18px!important;font-weight:1000!important;}
+@media(max-width:700px){
+  .publicShirtV11 b{font-size:18px!important;}
+  .publicNameV11{font-size:14px!important;min-width:104px!important;padding:6px 8px!important;}
+  .formationPlayer b{font-size:13px!important;}
+  .benchNameV11{font-size:16px!important;}
+}
+</style>
+
+<script id="v63-final-persistence">
+(function(){
+  "use strict";
+  const CACHE_KEY="RS_LIVE_V63_PERSISTENCE";
+
+  function clone(v){ return JSON.parse(JSON.stringify(v)); }
+
+  function snapshot(){
+    return {
+      savedAt:Date.now(),
+      app:clone(App),
+      liveMatch:clone(Live)
+    };
+  }
+
+  function writeCache(){
+    try{
+      localStorage.setItem(CACHE_KEY,JSON.stringify(snapshot()));
+      return true;
+    }catch(e){
+      console.warn("RS LIVE: no se pudo guardar la copia local",e);
+      return false;
+    }
+  }
+
+  function readCache(){
+    try{
+      const raw=localStorage.getItem(CACHE_KEY);
+      return raw?JSON.parse(raw):null;
+    }catch(e){ return null; }
+  }
+
+  function restoreMediaFromCache(){
+    const cached=readCache();
+    if(!cached || !cached.app) return;
+
+    const cachedPlayers=Array.isArray(cached.app.players)?cached.app.players:Object.values(cached.app.players||{});
+    const cachedTeams=Array.isArray(cached.app.teams)?cached.app.teams:Object.values(cached.app.teams||{});
+
+    const playersById=new Map(cachedPlayers.map(p=>[String(p.id),p]));
+    const teamsById=new Map(cachedTeams.map(t=>[String(t.id),t]));
+
+    (App.players||[]).forEach(p=>{
+      const cp=playersById.get(String(p.id));
+      if(cp && !p.photo && cp.photo) p.photo=cp.photo;
+      if(cp && p.status==null && cp.status!=null) p.status=cp.status;
+    });
+    (App.teams||[]).forEach(t=>{
+      const ct=teamsById.get(String(t.id));
+      if(ct && !t.logo && ct.logo) t.logo=ct.logo;
+    });
+  }
+
+  // Recuperación inmediata al abrir/actualizar la página.
+  const cached=readCache();
+  if(cached && cached.app){
+    try{
+      const cp=Array.isArray(cached.app.players)?cached.app.players:Object.values(cached.app.players||{});
+      const ct=Array.isArray(cached.app.teams)?cached.app.teams:Object.values(cached.app.teams||{});
+      const cm=Array.isArray(cached.app.matches)?cached.app.matches:Object.values(cached.app.matches||{});
+      if(cp.length) App.players=cp;
+      if(ct.length) App.teams=ct;
+      if(cm.length || Array.isArray(cached.app.matches)) App.matches=cm;
+      if(cached.app.activeMatch!=null) App.activeMatch=cached.app.activeMatch;
+      if(cached.app.lineup) App.lineup=cached.app.lineup;
+      if(cached.liveMatch) Object.assign(Live,cached.liveMatch);
+    }catch(e){ console.warn("RS LIVE: recuperación local",e); }
+  }
+
+  // Nunca dejar que una actualización remota temporal sin media borre fotos o escudos.
+  const previousApply=window.applyData;
+  window.applyData=function(data){
+    if(previousApply) previousApply(data);
+    restoreMediaFromCache();
+    writeCache();
+    try{ renderAll(); }catch(e){}
+  };
+
+  // Primero guardamos SIEMPRE una copia local y después sincronizamos Firebase.
+  const previousSave=window.save;
+  window.save=async function(){
+    writeCache();
+    let remoteOk=true;
+    try{
+      if(previousSave) remoteOk=await previousSave();
+    }catch(e){
+      console.warn("RS LIVE: Firebase no respondió; se conserva la copia local",e);
+      remoteOk=false;
+    }
+    // La copia local contiene también fotos y escudos completos.
+    writeCache();
+    return remoteOk!==false;
+  };
+
+  // Guardado robusto de jugadores, incluidos dorsal, foto y cambios de datos.
+  window.savePlayer=async function(){
+    try{
+      if(typeof v26EnsurePlayerStatsFields==="function") v26EnsurePlayerStatsFields();
+
+      const number=Number(document.getElementById("pNumber").value);
+      const name=document.getElementById("pName").value.trim();
+      if(!number || !name){
+        toast("Dorsal y nombre son obligatorios");
+        return false;
+      }
+
+      let p=(App.players||[]).find(x=>String(x.id)===String(editPlayerId));
+      if(!p){
+        p={id:Date.now(),number,name,surname:"",position:"Defensa",captain:false,photo:"",goals:0,yellow:0,red:0,starts:0,appearances:0};
+        App.players.push(p);
+        editPlayerId=p.id;
+      }
+
+      p.number=number;
+      p.name=name;
+      p.surname=document.getElementById("pSurname").value.trim();
+      p.position=document.getElementById("pPosition").value;
+      p.captain=!!document.getElementById("pCaptain").checked;
+      p.status=document.getElementById("pStatus").value;
+
+      const file=document.getElementById("pPhoto").files[0];
+      if(file){
+        toast("Guardando foto…");
+        p.photo=await uploadFile(file,"players");
+      }
+
+      App.players.sort((a,b)=>Number(a.number)-Number(b.number));
+
+      // Persistir localmente antes de cualquier espera de red.
+      writeCache();
+      if(typeof v26RecalcStats==="function") v26RecalcStats();
+
+      const ok=await window.save();
+      if(ok===false){
+        toast("Guardado local realizado. Firebase se sincronizará cuando esté disponible.");
+      }else{
+        toast("Jugador guardado correctamente");
+      }
+
+      closeModal("playerModal");
+      renderAll();
+      return true;
+    }catch(e){
+      console.error("RS LIVE: error guardando jugador",e);
+      writeCache();
+      toast("Cambios guardados localmente");
+      try{renderAll()}catch(_){}
+      return false;
+    }
+  };
+
+  // Reemplazar el listener anterior para que el botón siempre use la versión correcta.
+  const btn=document.getElementById("savePlayerBtn");
+  if(btn){
+    const clean=btn.cloneNode(true);
+    btn.replaceWith(clean);
+    clean.addEventListener("click",window.savePlayer);
+  }
+
+  // Guardado local adicional al salir o recargar.
+  window.addEventListener("pagehide",writeCache);
+  window.addEventListener("beforeunload",writeCache);
+
+  restoreMediaFromCache();
+  writeCache();
+  try{renderAll()}catch(e){}
 })();
 </script>
 
