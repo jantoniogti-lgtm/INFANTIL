@@ -5539,7 +5539,9 @@ document.addEventListener("click",function(e){
 
   // Firebase may already contain the previous season. This explicit import is intentional:
   // the user requested replacing the current data with the supplied 2024/25 historical dataset.
-  setTimeout(()=>importHistoricalSeason(false),1800);
+  // V63 FIX: no importar automáticamente la temporada histórica al cargar; evita sobrescribir cambios del administrador.
+  // La importación histórica queda disponible únicamente mediante una acción explícita.
+  // setTimeout(()=>importHistoricalSeason(false),1800);
   setTimeout(enhanceHistoricalRows,2200);
 })();
 </script>
@@ -5696,3 +5698,138 @@ document.addEventListener("click",function(e){
   window.RS_LIVE_EVENT_LAYOUT_V57 = 'CREST_THEN_BALL';
 })();
 </script>
+
+
+<!-- V64 — PERSISTENCIA DEFINITIVA: no sobrescribir cambios + media sincronizada -->
+<style id="v64-persistence-definitive">
+  .publicShirtV11 b{font-size:20px!important;font-weight:1000!important}
+  .publicNameV11{font-size:16px!important;font-weight:1000!important}
+  .formationPlayer .jersey b{font-size:20px!important;font-weight:1000!important}
+  .formationPlayer b{font-size:15px!important;font-weight:1000!important}
+</style>
+<script id="v64-persistence-definitive">
+(function(){
+  'use strict';
+  const KEY='RS_LIVE_V64_STATE';
+  const clone=v=>{try{return JSON.parse(JSON.stringify(v))}catch(e){return v}};
+  const read=()=>{try{const x=localStorage.getItem(KEY);return x?JSON.parse(x):null}catch(e){return null}};
+  const write=()=>{try{localStorage.setItem(KEY,JSON.stringify({savedAt:Date.now(),app:clone(App),liveMatch:clone(Live)}));return true}catch(e){console.warn('V64 local save',e);return false}};
+  const mergeMedia=(media)=>{
+    if(!media)return;
+    const pm=media.players||{}, tm=media.teams||{};
+    (App.players||[]).forEach(p=>{const x=pm[String(p.id)];if(x?.photo)p.photo=x.photo});
+    (App.teams||[]).forEach(t=>{const x=tm[String(t.id)];if(x?.logo)t.logo=x.logo});
+  };
+  const restoreCached=()=>{
+    const c=read(); if(!c?.app)return false;
+    try{
+      if(!c.app._dataRevision) c.app._dataRevision=Date.now();
+      if(Array.isArray(c.app.players)&&c.app.players.length) App.players=clone(c.app.players);
+      if(Array.isArray(c.app.teams)&&c.app.teams.length) App.teams=clone(c.app.teams);
+      if(Array.isArray(c.app.matches)) App.matches=clone(c.app.matches);
+      if(c.app.activeMatch!==undefined) App.activeMatch=c.app.activeMatch;
+      if(c.app.lineup) App.lineup=clone(c.app.lineup);
+      if(c.liveMatch) Object.assign(Live,clone(c.liveMatch));
+      return true;
+    }catch(e){console.warn('V64 restore',e);return false}
+  };
+
+  // Keep the latest local state immediately available on reload.
+  restoreCached();
+
+  // Firebase media lives below /media, while the main listener watches /clubManagerV6.
+  // Listen to /media explicitly so photos and crests are never lost after a refresh.
+  try{
+    if(typeof dbRef!=='undefined' && dbRef){
+      const mediaRef=dbRef.child ? dbRef.child('media') : null;
+      if(mediaRef && mediaRef.on){
+        mediaRef.on('value',snap=>{
+          mergeMedia(snap.exists()?snap.val():null);
+          write();
+          try{renderAll()}catch(e){}
+        });
+      }
+    }
+  }catch(e){console.warn('V64 media listener',e)}
+
+  // Replace the public save with an atomic local-first save and a revision marker.
+  const oldSave=window.save;
+  window.save=async function(){
+    try{App._dataRevision=Date.now();}catch(e){}
+    write();
+    let ok=true;
+    try{ if(typeof oldSave==='function') ok=await oldSave(); }
+    catch(e){ok=false;console.warn('V64 firebase save',e)}
+    write();
+    return ok!==false;
+  };
+
+  // After the original Firebase listener applies remote data, this second listener
+  // runs and prevents an older remote snapshot from replacing newer local edits.
+  try{
+    if(typeof dbRef!=='undefined' && dbRef && dbRef.on){
+      dbRef.on('value',snap=>{
+        const remote=snap.exists()?snap.val():null;
+        const c=read();
+        const remoteRev=Number(remote?.app?._dataRevision||0);
+        const localRev=Number(c?.app?._dataRevision||0);
+        if(c?.app && localRev>remoteRev){
+          restoreCached();
+          mergeMedia(c.media);
+          try{renderAll()}catch(e){}
+          // Push the newer local state once so future reloads see the same data.
+          setTimeout(()=>{try{window.save()}catch(e){}},0);
+        }
+      });
+    }
+  }catch(e){console.warn('V64 state listener',e)}
+
+  // Definitive player save: await the save and never render before persistence finishes.
+  window.savePlayer=async function(){
+    try{
+      const n=Number(document.getElementById('pNumber')?.value);
+      const name=(document.getElementById('pName')?.value||'').trim();
+      if(!n||!name){toast('Dorsal y nombre son obligatorios');return false;}
+      let p=(App.players||[]).find(x=>String(x.id)===String(editPlayerId));
+      if(!p){
+        p={id:Date.now(),number:n,name,surname:'',position:'Defensa',captain:false,status:'Disponible',photo:'',goals:0,yellow:0,red:0,starts:0,appearances:0};
+        App.players.push(p); editPlayerId=p.id;
+      }
+      p.number=n;
+      p.name=name;
+      p.surname=(document.getElementById('pSurname')?.value||'').trim();
+      p.position=document.getElementById('pPosition')?.value||'Defensa';
+      p.captain=!!document.getElementById('pCaptain')?.checked;
+      p.status=document.getElementById('pStatus')?.value||'Disponible';
+      if(document.getElementById('pGoals'))p.goals=Number(document.getElementById('pGoals').value||0);
+      if(document.getElementById('pYellow'))p.yellow=Number(document.getElementById('pYellow').value||0);
+      if(document.getElementById('pRed'))p.red=Number(document.getElementById('pRed').value||0);
+      if(document.getElementById('pStarts'))p.starts=Number(document.getElementById('pStarts').value||0);
+      if(document.getElementById('pApps'))p.appearances=Number(document.getElementById('pApps').value||0);
+      const file=document.getElementById('pPhoto')?.files?.[0];
+      if(file){toast('Guardando foto…');p.photo=await uploadFile(file,'players');}
+      App.players.sort((a,b)=>Number(a.number)-Number(b.number));
+      write();
+      const ok=await window.save();
+      if(!ok){toast('Cambios guardados localmente; Firebase no respondió');}
+      else toast('Jugador guardado correctamente');
+      try{closeModal('playerModal')}catch(e){}
+      renderAll();
+      return true;
+    }catch(e){
+      console.error('V64 savePlayer',e);
+      write();
+      toast('Cambios guardados localmente');
+      try{renderAll()}catch(_){}
+      return false;
+    }
+  };
+  const b=document.getElementById('savePlayerBtn');
+  if(b){const n=b.cloneNode(true);b.replaceWith(n);n.addEventListener('click',window.savePlayer);}
+
+  window.addEventListener('pagehide',write);
+  window.addEventListener('beforeunload',write);
+  setTimeout(()=>{mergeMedia(read()?.media);write();try{renderAll()}catch(e){}},250);
+})();
+</script>
+
