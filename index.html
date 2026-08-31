@@ -4292,6 +4292,146 @@ document.addEventListener("click",function(e){
 })();
 </script>
 
+
+<!-- V65 — ESCUDOS REALES EN TODAS LAS SECCIONES -->
+<style id="v65-team-crests-all-sections">
+  .v65Crest{width:58px!important;height:58px!important;object-fit:contain!important;display:block!important;flex:0 0 auto!important;filter:drop-shadow(0 4px 7px rgba(0,0,0,.35))!important}
+  .v65CrestSmall{width:34px!important;height:34px!important;object-fit:contain!important;display:block!important;flex:0 0 auto!important}
+  .v65CrestTiny{width:28px!important;height:28px!important;object-fit:contain!important;display:block!important;flex:0 0 auto!important}
+  .v65TeamLine{display:flex!important;align-items:center!important;justify-content:center!important;gap:10px!important;min-width:0!important}
+  .v65TeamLine img{object-fit:contain!important}
+  .v65StandingsTeam{display:flex!important;align-items:center!important;gap:9px!important;min-width:0!important}
+  .v65StandingsTeam img{width:32px!important;height:32px!important;object-fit:contain!important;flex:0 0 auto!important}
+  .v26MiniRow .v65StandingsTeam b{display:block;overflow-wrap:anywhere!important}
+  .v65AdminTeam{display:flex!important;align-items:center!important;gap:9px!important}
+  .v65AdminTeam img{width:38px!important;height:38px!important;object-fit:contain!important}
+  @media(max-width:700px){
+    .v65Crest{width:48px!important;height:48px!important}
+    .v65StandingsTeam img{width:28px!important;height:28px!important}
+  }
+</style>
+<script id="v65-team-crests-all-sections">
+(function(){
+  "use strict";
+
+  /* Resuelve el equipo siempre desde el ID del partido. Si una versión antigua
+     del partido conserva también el logo/nombre, se usa como respaldo. */
+  function v65Team(m, side){
+    const id=side==='home'?m?.home:m?.away;
+    const base=(typeof team==='function' ? team(id) : null) || {};
+    const extra=side==='home' ? (m?.homeTeam||{}) : (m?.awayTeam||{});
+    const logo=base.logo||base.crest||extra.logo||extra.crest||(side==='home'?m?.homeLogo:m?.awayLogo)||'';
+    const name=base.name||extra.name||(side==='home'?m?.homeName:m?.awayName)||'Equipo';
+    return {id,name,logo};
+  }
+  function v65Crest(t, cls){
+    return t.logo
+      ? `<img class="${cls||'v65Crest'}" src="${esc(t.logo)}" alt="${esc(t.name)}" loading="lazy">`
+      : `<span class="${cls||'v65Crest'}" style="display:grid;place-items:center;font-size:22px">🛡️</span>`;
+  }
+  function v65Sorted(){
+    return (Array.isArray(App.matches)?App.matches:[]).slice().sort((a,b)=>{
+      const da=String(a.date||'9999-99-99'),db=String(b.date||'9999-99-99');
+      if(da!==db)return da.localeCompare(db);
+      const ja=Number(a.jornada||999),jb=Number(b.jornada||999);
+      if(ja!==jb)return ja-jb;
+      return String(a.id).localeCompare(String(b.id));
+    });
+  }
+  function v65Scorers(m){
+    const goals=(Array.isArray(m?.events)?m.events:[]).filter(e=>e&&String(e.type||'').toLowerCase()==='goal'&&e.playerName);
+    if(!goals.length)return '';
+    const counts={}; goals.forEach(e=>{const n=String(e.playerName).trim();if(n)counts[n]=(counts[n]||0)+1});
+    const text=Object.entries(counts).map(([n,c])=>`${esc(n)}${c>1?` (${c})`:''}`).join(' · ');
+    return `<div class="matchScorersV55"><span class="scorerLabel">⚽ GOLEADORES:</span><span class="scorerText">${text}</span></div>`;
+  }
+  function v65RenderMatchesPublic(){
+    const box=document.getElementById('matchList');if(!box)return;
+    const rows=v65Sorted();
+    box.innerHTML=rows.length?rows.map(m=>{
+      const h=v65Team(m,'home'),a=v65Team(m,'away');
+      const fin=m.status==='FINISHED';
+      const active=String(m.id)===String(App.activeMatch);
+      const live=active&&(Live.state==='FIRST_HALF'||Live.state==='SECOND_HALF');
+      let hs=Number(m.homeScore||0),as=Number(m.awayScore||0);
+      if(active&&Live.state==='FINISHED'){hs=Number(Live.homeScore||hs);as=Number(Live.awayScore||as)}
+      const score=fin||live?`${hs} - ${as}`:'—';
+      const isRamonHome=Number(h.id)===Number(App.favoriteTeamId);
+      const isRamonAway=Number(a.id)===Number(App.favoriteTeamId);
+      const cls=(!fin&&!live)?'':hs===as?'result-draw':((isRamonHome&&hs>as)||(isRamonAway&&as>hs)?'result-win':'result-loss');
+      const details=(!fin&&!live)?'':(live?'':`<button class="matchDetailsBtnV55" type="button" onclick="v24ShowDetails(${Number(m.id)});event.stopPropagation()">👁 Ver detalles</button>`);
+      return `<div class="matchRowV55 ${cls}">
+        <div class="matchTeamV55 home">${v65Crest(h,'matchCrestV55')}<span class="matchNameV55">${esc(h.name)}</span></div>
+        <div class="matchCenterV55">
+          <div class="matchMetaV55"><span>${m.jornada?`Jornada ${esc(m.jornada)} · `:''}${formatDate(m.date)}</span><span>•</span><span>${esc(m.competition||'Liga')}</span></div>
+          <div class="matchScoreV55">${esc(score)}</div>
+          <div class="matchFinalV55">${live?'🔴 DIRECTO':fin?'FINAL':'PRÓXIMO'}</div>${details}
+        </div>
+        <div class="matchTeamV55 away">${v65Crest(a,'matchCrestV55')}<span class="matchNameV55">${esc(a.name)}</span></div>
+        ${fin?v65Scorers(m):''}
+      </div>`;
+    }).join(''):'<div class="empty">No hay partidos creados.</div>';
+  }
+
+  /* En el administrador conservamos exactamente el gestor existente y solo
+     añadimos el escudo real a la cabecera de cada partido. */
+  function v65EnhanceAdmin(){
+    const box=document.getElementById('adminMatches');if(!box)return;
+    box.querySelectorAll('.v55AdminMatch').forEach(card=>{
+      const title=card.querySelector('.v55AdminTitle');if(!title||title.querySelector('.v65AdminTeam'))return;
+      const idMatch=(title.textContent.match(/ID\s+(\d+)/)||[])[1];
+      if(!idMatch)return;
+      const m=(App.matches||[]).find(x=>String(x.id)===String(idMatch));if(!m)return;
+      const h=v65Team(m,'home'),a=v65Team(m,'away');
+      title.innerHTML=`<span class="v65AdminTeam">${v65Crest(h,'v65CrestTiny')} <span>J${esc(m.jornada||'—')} · ${esc(h.name)} vs ${esc(a.name)}</span> ${v65Crest(a,'v65CrestTiny')}</span>`;
+    });
+  }
+
+  const oldRenderMatches=window.renderMatches;
+  window.renderMatches=function(){
+    try{if(typeof oldRenderMatches==='function')oldRenderMatches.apply(this,arguments)}catch(e){console.warn('V65 old renderMatches',e)}
+    v65RenderMatchesPublic();
+    setTimeout(v65EnhanceAdmin,0);
+  };
+
+  /* Dashboard: escudos en PARTIDOS y CLASIFICACIÓN sin cambiar el cálculo de
+     la clasificación ni relacionarla con otra fuente de datos. */
+  const oldDashboard=window.renderHomeDashboardV26;
+  window.renderHomeDashboardV26=function(){
+    const matches=document.getElementById('homeMatchesV26'),table=document.getElementById('homeTableV26'),scorers=document.getElementById('homeScorersV26');
+    if(!matches||!table||!scorers){if(typeof oldDashboard==='function')oldDashboard();return;}
+
+    const rows=v65Sorted().slice(-3).reverse();
+    matches.innerHTML=rows.length?`<div class="v26MiniList">${rows.map(m=>{
+      const h=v65Team(m,'home'),a=v65Team(m,'away');
+      const fin=m.status==='FINISHED';const live=String(m.id)===String(App.activeMatch)&&['FIRST_HALF','SECOND_HALF'].includes(Live.state);
+      const sc=fin?`${m.homeScore??0} - ${m.awayScore??0}`:live?`${Live.homeScore} - ${Live.awayScore}`:'—';
+      return `<div class="v26MiniRow"><div><small>${formatDate(m.date)}<br>${esc(m.hour||'')}</small></div><div style="min-width:0"><div class="v65TeamLine"><span>${v65Crest(h,'v65CrestTiny')}</span><b>${esc(h.name)}</b><span style="color:var(--yellow);font-weight:1000">vs</span><b>${esc(a.name)}</b><span>${v65Crest(a,'v65CrestTiny')}</span></div><div class="v26StatLine">${fin?'FINALIZADO':live?'🔴 DIRECTO':esc(m.competition||'Liga')}</div></div><div class="v26Score">${esc(sc)}</div></div>`;
+    }).join('')}</div>`:'<div class="empty">No hay partidos.</div>';
+
+    const stats={};(App.teams||[]).forEach(t=>stats[t.id]={team:t,played:0,w:0,d:0,l:0,gf:0,ga:0,pts:0});
+    (App.matches||[]).filter(m=>m.status==='FINISHED').forEach(m=>{if(!stats[m.home]||!stats[m.away])return;const h=Number(m.homeScore||0),a=Number(m.awayScore||0),H=stats[m.home],A=stats[m.away];H.played++;A.played++;H.gf+=h;H.ga+=a;A.gf+=a;A.ga+=h;if(h>a){H.w++;A.l++;H.pts+=3}else if(a>h){A.w++;H.l++;A.pts+=3}else{H.d++;A.d++;H.pts++;A.pts++}});
+    const standings=Object.values(stats).sort((x,y)=>y.pts-x.pts||(y.gf-y.ga)-(x.gf-x.ga)||y.gf-x.gf).slice(0,5);
+    table.innerHTML=standings.length?`<div class="v26MiniList">${standings.map((r,i)=>`<div class="v26MiniRow"><div class="v26Rank">${i+1}</div><div class="v65StandingsTeam">${v65Crest(r.team,'v65CrestSmall')}<div><b>${esc(r.team.name)}</b><div class="v26StatLine">PJ ${r.played} · G ${r.w} · E ${r.d} · P ${r.l}</div></div></div><div><div class="v26Score">${r.pts} pts</div><small>${r.gf}:${r.ga}</small></div></div>`).join('')}</div>`:'<div class="empty">Sin clasificación todavía.</div>';
+
+    const top=(App.players||[]).filter(p=>Number(p.goals||0)>0).sort((a,b)=>Number(b.goals||0)-Number(a.goals||0)).slice(0,3);
+    scorers.innerHTML=top.length?`<div class="v26MiniList">${top.map((p,i)=>`<div class="v26MiniRow"><div class="v26Rank">${i+1}</div><div><b>${esc(p.name)}</b><div class="v26StatLine">#${p.number} · ${esc(p.position||'')}</div></div><div class="v26Score">${p.goals} ⚽</div></div>`).join('')}</div>`:'<div class="empty">Todavía no hay goles.</div>';
+  };
+
+  /* Refuerzo para el marcador de detalles, por si una versión anterior lo
+     dejó sin logo. */
+  const oldDetails=window.v24ShowDetails;
+  window.v24ShowDetails=function(id){
+    if(typeof oldDetails==='function')oldDetails(id);
+    const m=(App.matches||[]).find(x=>String(x.id)===String(id));if(!m)return;
+    const h=v65Team(m,'home'),a=v65Team(m,'away'),box=document.getElementById('completedScoreV20');if(!box)return;
+    box.innerHTML=`${v65Crest(h,'v65CrestSmall')}<span>${esc(h.name)}</span><strong>${Number(m.homeScore||0)} - ${Number(m.awayScore||0)}</strong><span>${esc(a.name)}</span>${v65Crest(a,'v65CrestSmall')}`;
+  };
+
+  setTimeout(function(){try{window.renderMatches();window.renderHomeDashboardV26();}catch(e){console.warn('V65 init',e)}},80);
+})();
+</script>
+
 </body>
 </html>
 
