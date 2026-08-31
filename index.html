@@ -4881,6 +4881,313 @@ document.addEventListener("click",function(e){
 })();
 </script>
 
+
+<style id="v67-once-inicial-match-reference">
+/* =========================================================
+   V67 — ONCE INICIAL · DISEÑO FIEL A LA REFERENCIA
+   Campo horizontal + ambiente de estadio + camisetas.
+   Este bloque prevalece sobre las versiones anteriores.
+   ========================================================= */
+
+.publicPitchV11{
+  width:100%!important;
+  max-width:none!important;
+  height:auto!important;
+  aspect-ratio:16/9!important;
+  min-height:0!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  overflow:hidden!important;
+  position:relative!important;
+  isolation:isolate!important;
+  background:
+    /* focos superiores */
+    radial-gradient(circle at 10% 17%,rgba(255,255,255,.95) 0 4px,rgba(255,255,255,.24) 6px,transparent 38px),
+    radial-gradient(circle at 27% 12%,rgba(255,255,255,.95) 0 4px,rgba(255,255,255,.22) 6px,transparent 42px),
+    radial-gradient(circle at 50% 9%,rgba(255,255,255,1) 0 5px,rgba(255,255,255,.25) 7px,transparent 45px),
+    radial-gradient(circle at 73% 12%,rgba(255,255,255,.95) 0 4px,rgba(255,255,255,.22) 6px,transparent 42px),
+    radial-gradient(circle at 90% 17%,rgba(255,255,255,.95) 0 4px,rgba(255,255,255,.24) 6px,transparent 38px),
+    /* focos difuminados */
+    radial-gradient(ellipse at 50% 24%,rgba(255,255,255,.12),transparent 34%),
+    /* grada / estadio */
+    linear-gradient(180deg,#142536 0%,#0b1723 17%,#07111b 25%,rgba(6,16,24,.15) 31%,transparent 34%),
+    /* césped */
+    repeating-linear-gradient(90deg,
+      #23834e 0 6.25%,
+      #1d7646 6.25% 12.5%)!important;
+  box-shadow:
+    inset 0 18px 35px rgba(0,0,0,.35),
+    inset 0 -25px 45px rgba(0,0,0,.22)!important;
+}
+
+/* Ambiente de grada: bandas luminosas y desenfoque visual */
+.publicPitchV11 > .stadiumAtmosphereV67{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.05),transparent 20%),
+    repeating-linear-gradient(90deg,transparent 0 9%,rgba(255,255,255,.035) 9.2% 9.8%,transparent 10% 20%);
+  filter:blur(.2px);
+}
+
+/* Campo interior con perspectiva visual */
+.publicPitchV11 .fieldSurfaceV67{
+  position:absolute;
+  left:2.4%;
+  right:2.4%;
+  top:18%;
+  bottom:2.5%;
+  z-index:1;
+  background:
+    repeating-linear-gradient(90deg,
+      rgba(255,255,255,.045) 0 6.25%,
+      rgba(0,0,0,.035) 6.25% 12.5%),
+    linear-gradient(180deg,#2a8c53,#1c7545 75%,#19683e);
+  clip-path:polygon(5% 0,95% 0,100% 100%,0 100%);
+  box-shadow:inset 0 0 40px rgba(0,0,0,.14);
+  pointer-events:none;
+}
+
+/* El marco del campo */
+.publicPitchV11:before{
+  content:""!important;
+  position:absolute!important;
+  left:3%!important;
+  right:3%!important;
+  top:19%!important;
+  bottom:3%!important;
+  z-index:2!important;
+  border:3px solid rgba(255,255,255,.94)!important;
+  border-radius:5px!important;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.12),
+    inset 0 0 20px rgba(255,255,255,.04)!important;
+  pointer-events:none!important;
+}
+
+/* Medio campo */
+.publicPitchV11:after{
+  content:""!important;
+  position:absolute!important;
+  left:3%!important;
+  right:3%!important;
+  top:59.5%!important;
+  height:3px!important;
+  z-index:3!important;
+  background:rgba(255,255,255,.94)!important;
+  transform:none!important;
+  box-shadow:0 1px 2px rgba(0,0,0,.25)!important;
+  pointer-events:none!important;
+}
+
+/* Áreas: ajustadas a la referencia horizontal */
+.publicPitchV11 .fieldMarkV33{
+  z-index:3!important;
+  border:3px solid rgba(255,255,255,.92)!important;
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.18))!important;
+}
+.publicPitchV11 .penaltyTopV33{
+  left:30%!important;
+  width:40%!important;
+  top:19%!important;
+  height:20%!important;
+  border-top:0!important;
+}
+.publicPitchV11 .penaltyBottomV33{
+  left:30%!important;
+  width:40%!important;
+  bottom:3%!important;
+  height:20%!important;
+  border-bottom:0!important;
+}
+.publicPitchV11 .goalAreaTopV33,
+.publicPitchV11 .goalAreaBottomV33{
+  z-index:3!important;
+  left:40%!important;
+  width:20%!important;
+  height:8%!important;
+  border:3px solid rgba(255,255,255,.9)!important;
+}
+.publicPitchV11 .goalAreaTopV33{top:19%!important;border-top:0!important}
+.publicPitchV11 .goalAreaBottomV33{bottom:3%!important;border-bottom:0!important}
+
+.publicPitchV11 .publicCircleV11{
+  z-index:3!important;
+  width:clamp(120px,17%,180px)!important;
+  height:clamp(120px,17%,180px)!important;
+  border:3px solid rgba(255,255,255,.92)!important;
+}
+.publicPitchV11 .centerSpotV33{
+  z-index:4!important;
+  width:14px!important;height:14px!important;
+  background:#fff!important;
+  box-shadow:0 0 0 2px rgba(0,0,0,.08)!important;
+}
+
+/* Arcos de penalti */
+.publicPitchV11 .penaltyArcTopV50,
+.publicPitchV11 .penaltyArcBottomV50{
+  z-index:4!important;
+  border-width:3px!important;
+  border-color:rgba(255,255,255,.88)!important;
+}
+
+/* Escudo: grande, limpio, sin recuadro */
+.publicPitchV11 .pitchRamonCrestV34{
+  right:5%!important;
+  top:4%!important;
+  width:clamp(80px,11%,125px)!important;
+  height:clamp(80px,11%,125px)!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  z-index:12!important;
+}
+.publicPitchV11 .pitchRamonCrestV34 img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  display:block!important;
+}
+
+/* Jugadores: más compactos como en la referencia */
+.publicPlayerV11{
+  width:clamp(90px,12%,125px)!important;
+  z-index:10!important;
+  text-align:center!important;
+}
+.publicShirtV11{
+  width:clamp(58px,6vw,78px)!important;
+  height:clamp(68px,7.2vw,90px)!important;
+  margin:0 auto!important;
+  border:2px solid rgba(255,255,255,.92)!important;
+  box-shadow:
+    0 10px 18px rgba(0,0,0,.48),
+    inset 0 -8px 12px rgba(0,0,0,.12)!important;
+}
+.publicShirtV11 b{
+  inset:24px 0 auto!important;
+  font-size:clamp(22px,2.5vw,31px)!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  color:#111!important;
+}
+
+/* Nombres tipo placa negra, como en la referencia */
+.publicNameV11{
+  margin:6px auto 0!important;
+  min-width:82px!important;
+  max-width:125px!important;
+  width:max-content!important;
+  padding:6px 10px!important;
+  border-radius:12px!important;
+  background:linear-gradient(180deg,rgba(2,17,11,.98),rgba(0,9,6,.96))!important;
+  border:1px solid rgba(255,255,255,.16)!important;
+  box-shadow:0 6px 13px rgba(0,0,0,.42)!important;
+  color:#fff!important;
+  font-size:clamp(13px,1.55vw,18px)!important;
+  font-weight:1000!important;
+  line-height:1.05!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+
+/* Elimina el texto de posición debajo del jugador en este diseño */
+.publicPlayerV11 small{display:none!important}
+
+/* Portero */
+.publicPlayerV11.goalkeeperV65 .publicShirtV11{
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.12),transparent 35%),
+    linear-gradient(90deg,#159447,#087038)!important;
+}
+
+/* Suplentes: visibles y proporcionados */
+.benchV11{
+  width:100%!important;
+  margin:0!important;
+  padding:18px 20px!important;
+  border-radius:0!important;
+}
+.benchTitleV11{
+  font-size:clamp(15px,1.8vw,20px)!important;
+}
+.benchGridV11{gap:12px!important}
+.benchPlayerV11{
+  padding:13px!important;
+  border-radius:12px!important;
+}
+.benchNameV11{font-size:clamp(13px,1.5vw,17px)!important}
+.benchPosV11{font-size:clamp(10px,1.2vw,13px)!important}
+
+/* Pantallas pequeñas: sigue siendo horizontal */
+@media(max-width:700px){
+  .publicPitchV11{
+    aspect-ratio:16/10!important;
+  }
+  .publicPitchV11 .pitchRamonCrestV34{
+    width:72px!important;height:72px!important;
+    right:4%!important;top:3%!important;
+  }
+  .publicPlayerV11{width:74px!important}
+  .publicShirtV11{width:44px!important;height:53px!important}
+  .publicShirtV11 b{inset:17px 0 auto!important;font-size:18px!important}
+  .publicNameV11{
+    min-width:62px!important;max-width:82px!important;
+    padding:5px 6px!important;font-size:10px!important;
+  }
+  .publicPitchV11 .publicCircleV11{
+    width:82px!important;height:82px!important;
+  }
+}
+
+@media(max-width:430px){
+  .publicPitchV11{
+    aspect-ratio:16/10!important;
+  }
+  .publicPlayerV11{width:58px!important}
+  .publicShirtV11{width:37px!important;height:45px!important}
+  .publicShirtV11 b{inset:14px 0 auto!important;font-size:15px!important}
+  .publicNameV11{
+    min-width:50px!important;max-width:65px!important;
+    padding:4px 4px!important;font-size:8px!important;
+  }
+}
+</style>
+<script id="v67-once-inicial-background">
+(function(){
+  function enhancePitch(){
+    const p=document.getElementById('publicPitchV11');
+    if(!p) return;
+    if(!p.querySelector('.stadiumAtmosphereV67')){
+      const a=document.createElement('div');
+      a.className='stadiumAtmosphereV67';
+      p.insertBefore(a,p.firstChild);
+    }
+    if(!p.querySelector('.fieldSurfaceV67')){
+      const f=document.createElement('div');
+      f.className='fieldSurfaceV67';
+      p.insertBefore(f,p.children[1]||null);
+    }
+  }
+  const oldRender=window.renderPublicTeamV11;
+  if(typeof oldRender==='function'){
+    window.renderPublicTeamV11=function(){
+      oldRender.apply(this,arguments);
+      setTimeout(enhancePitch,0);
+    };
+  }
+  setTimeout(enhancePitch,100);
+  setTimeout(enhancePitch,500);
+})();
+</script>
+
 </body>
 </html>
 
