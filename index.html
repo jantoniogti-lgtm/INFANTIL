@@ -5349,6 +5349,118 @@ document.addEventListener("click",function(e){
  .publicShirtV11 b{font-size:28px!important;top:31%!important;} .publicNameV11{font-size:10px!important;min-width:70px!important;padding:5px 7px!important;}
 }
 </style>
+
+<style id="rs-admin-tabs-v1">
+/* ===== ADMINISTRADOR · PANEL POR PESTAÑAS ===== */
+#adminPanel.rsAdminTabbed{display:block!important}
+.rsAdminTabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px;padding:6px;background:rgba(7,17,31,.72);border:1px solid var(--line);border-radius:16px;position:sticky;top:82px;z-index:20;backdrop-filter:blur(12px)}
+.rsAdminTab{appearance:none;border:1px solid transparent;background:transparent;color:#aebdd0;border-radius:11px;padding:11px 14px;font-size:12px;font-weight:900;display:inline-flex;align-items:center;gap:7px;transition:.18s ease}
+.rsAdminTab:hover{background:#122238;color:#fff;border-color:#29415f}
+.rsAdminTab.active{background:var(--yellow);color:#101010;border-color:var(--yellow);box-shadow:0 7px 20px rgba(255,212,0,.16)}
+.rsAdminPane{display:none;animation:rsAdminPaneIn .18s ease}
+.rsAdminPane.active{display:block}
+.rsAdminPane>.adminCard{margin-bottom:16px}
+.rsAdminPane>.adminCard:last-child{margin-bottom:0}
+.rsAdminGridHidden{display:block!important}
+@keyframes rsAdminPaneIn{from{opacity:.55;transform:translateY(3px)}to{opacity:1;transform:none}}
+@media(max-width:700px){
+  .rsAdminTabs{position:static;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .rsAdminTab{justify-content:center;padding:10px 8px;font-size:11px}
+}
+</style>
+<script id="rs-admin-tabs-v1-js">
+(function(){
+  'use strict';
+  const tabs=[
+    {id:'live',label:'🔴 Directo',match:['Consola rápida','Partido en directo']},
+    {id:'players',label:'👥 Plantilla',match:['Gestión de plantilla']},
+    {id:'teams',label:'🛡️ Equipos',match:['Equipos y escudos']},
+    {id:'matches',label:'📅 Partidos',match:['Crear partido']},
+    {id:'lineup',label:'👕 Alineación',match:['Alineación del partido activo']},
+    {id:'media',label:'🖼️ Imágenes',match:['Imagen del partido','Cartel de gol']}
+  ];
+  let active='live';
+  let observer=null;
+
+  function adminPanel(){return document.getElementById('adminPanel')}
+  function titleOf(el){return (el?.querySelector('h2')?.textContent||'').trim()}
+  function paneFor(id){return document.getElementById('rsAdminPane-'+id)}
+  function tabFor(id){return document.querySelector('.rsAdminTab[data-admin-tab="'+id+'"]')}
+
+  function classify(el){
+    if(!el || !el.classList || !el.classList.contains('adminCard')) return null;
+    const id=el.id||'';
+    if(id==='rsGoalPosterCard'||id==='rsV51ImageCard') return 'media';
+    const t=titleOf(el);
+    for(const tab of tabs){
+      if(tab.match.some(x=>t.toLowerCase().includes(x.toLowerCase()))) return tab.id;
+    }
+    return null;
+  }
+
+  function activate(id){
+    if(!paneFor(id)) return;
+    active=id;
+    document.querySelectorAll('.rsAdminTab').forEach(b=>b.classList.toggle('active',b.dataset.adminTab===id));
+    tabs.forEach(t=>{const p=paneFor(t.id);if(p)p.classList.toggle('active',t.id===id)});
+  }
+
+  function moveCard(card){
+    const type=classify(card); if(!type) return;
+    const pane=paneFor(type); if(!pane) return;
+    if(card.parentElement!==pane) pane.appendChild(card);
+  }
+
+  function build(){
+    const panel=adminPanel(); if(!panel || panel.dataset.rsTabsBuilt==='1') return;
+    const grid=panel.querySelector(':scope > .adminGrid'); if(!grid) return;
+
+    panel.classList.add('rsAdminTabbed');
+    panel.dataset.rsTabsBuilt='1';
+
+    const nav=document.createElement('div');
+    nav.className='rsAdminTabs';
+    nav.setAttribute('role','tablist');
+    nav.innerHTML=tabs.map((t,i)=>`<button type="button" class="rsAdminTab${i===0?' active':''}" data-admin-tab="${t.id}" role="tab">${t.label}</button>`).join('');
+    panel.insertBefore(nav,grid);
+
+    tabs.forEach(t=>{
+      const pane=document.createElement('div');
+      pane.className='rsAdminPane'+(t.id===active?' active':'');
+      pane.id='rsAdminPane-'+t.id;
+      pane.dataset.adminPane=t.id;
+      panel.insertBefore(pane,grid);
+    });
+
+    // Mover las tarjetas existentes a su pestaña correspondiente.
+    [...grid.children].forEach(moveCard);
+    grid.remove();
+
+    nav.querySelectorAll('.rsAdminTab').forEach(btn=>btn.addEventListener('click',()=>activate(btn.dataset.adminTab)));
+
+    observer=new MutationObserver(muts=>{
+      for(const m of muts){
+        for(const node of m.addedNodes){
+          if(node.nodeType!==1) continue;
+          if(node.classList?.contains('adminCard')) moveCard(node);
+          else node.querySelectorAll?.('.adminCard').forEach(moveCard);
+        }
+      }
+    });
+    observer.observe(panel,{childList:true,subtree:true});
+  }
+
+  function ensure(){
+    try{build()}catch(e){console.error('RS Admin Tabs:',e)}
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',ensure,{once:true});
+  else ensure();
+  // Algunas tarjetas del administrador se crean unos milisegundos después.
+  setTimeout(ensure,300);setTimeout(ensure,900);setTimeout(ensure,1800);
+})();
+</script>
+
 </body>
 </html>
 
