@@ -8978,3 +8978,109 @@ if(typeof oldRenderAll94==='function')window.renderAll=function(){const r=oldRen
 
 })();
 </script>
+
+<!-- V95 — CORRECCIÓN PROFUNDA: media no se pisa, goles editables y XI unificado -->
+<script id="v95-fix-real">
+(function(){
+'use strict';
+if(window.__RS_V95__)return;window.__RS_V95__=true;
+const ROOT95=(typeof firebaseBaseUrl!=='undefined'?String(firebaseBaseUrl):'').replace(/\/$/,'');
+if(!ROOT95)return;
+const BASE95=ROOT95+'/clubManagerV6', SYNC95=BASE95+'/rsSync', MEDIA95=BASE95+'/media', LEGACY95=BASE95+'/app';
+const cp95=v=>{try{return JSON.parse(JSON.stringify(v))}catch(e){return v}};
+const arr95=v=>Array.isArray(v)?v:Object.values(v||{});
+const norm95=v=>String(v??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+async function get95(path){const r=await fetch(path+'.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error('Firebase GET '+r.status);return r.json()}
+async function patch95(path,data){const r=await fetch(path+'.json?v='+Date.now(),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});if(!r.ok)throw new Error('Firebase PATCH '+r.status);return true}
+function mergeMedia95(media){
+ const pm=media?.players||{},tm=media?.teams||{};
+ (App.players||[]).forEach(p=>{const x=pm[String(p.id)];if(x?.photo)p.photo=x.photo});
+ (App.teams||[]).forEach(t=>{const x=tm[String(t.id)];if(x?.logo)t.logo=x.logo});
+}
+/* Recuperación: si alguna versión anterior dejó los escudos/fotos en /app,
+   los rescatamos sin sustituir nombres, jugadores ni partidos actuales. */
+async function recoverLegacyMedia95(){
+ try{
+   const [legacy,media]=await Promise.all([get95(LEGACY95),get95(MEDIA95)]);
+   const lm=legacy||{}, mm=media||{}; const players={...(mm.players||{})},teams={...(mm.teams||{})};
+   const lp=arr95(lm.players),lt=arr95(lm.teams);
+   const currentP=App.players||[], currentT=App.teams||[];
+   lp.forEach(x=>{if(!x||!x.id||!x.photo)return;const cur=currentP.find(p=>String(p.id)===String(x.id)||norm95(p.name)===norm95(x.name));const id=cur?.id??x.id;if(!players[String(id)]?.photo)players[String(id)]={photo:x.photo}});
+   lt.forEach(x=>{if(!x||!x.id||!x.logo)return;const cur=currentT.find(t=>String(t.id)===String(x.id)||norm95(t.name)===norm95(x.name));const id=cur?.id??x.id;if(!teams[String(id)]?.logo)teams[String(id)]={logo:x.logo}});
+   if(Object.keys(players).length||Object.keys(teams).length){await patch95(MEDIA95,{players,teams});mergeMedia95({players,teams});try{renderAll()}catch(e){}}
+ }catch(e){console.warn('V95 legacy media recovery',e)}
+}
+/* La operación genérica de guardar NO vuelve a escribir jugadores/equipos sin foto.
+   Primero lee Firebase y conserva media remota; así un guardado de goles/partidos
+   nunca puede borrar una foto o un escudo. */
+const oldSave95=window.save;
+window.save=async function(){
+ try{
+   const [remote,media]=await Promise.all([get95(SYNC95),get95(MEDIA95)]);
+   const rp=remote?.players||{},rt=remote?.teams||{},mp=media?.players||{},mt=media?.teams||{};
+   const players=cp95(App.players||[]),teams=cp95(App.teams||[]);
+   players.forEach(p=>{const id=String(p.id);if(!p.photo)p.photo=mp[id]?.photo||rp[id]?.photo||''});
+   teams.forEach(t=>{const id=String(t.id);if(!t.logo)t.logo=mt[id]?.logo||rt[id]?.logo||''});
+   const data={
+     players:Object.fromEntries(players.map(p=>[String(p.id),p])),
+     teams:Object.fromEntries(teams.map(t=>[String(t.id),t])),
+     matches:cp95(App.matches||[]),
+     lineup:cp95(App.lineup||{formation:'4-3-3',players:[]}),
+     activeMatchId:App.activeMatch==null?null:String(App.activeMatch),
+     live:cp95(Live),updatedAt:Date.now()
+   };
+   await patch95(SYNC95,data);
+   await patch95(MEDIA95,{players:Object.fromEntries(players.filter(p=>p.photo).map(p=>[String(p.id),{photo:p.photo}])),teams:Object.fromEntries(teams.filter(t=>t.logo).map(t=>[String(t.id),{logo:t.logo}]))});
+   mergeMedia95({players:Object.fromEntries(players.map(p=>[String(p.id),{photo:p.photo}])),teams:Object.fromEntries(teams.map(t=>[String(t.id),{logo:t.logo}]))});
+   try{localStorage.setItem('RS_LIVE_V95_OK','1')}catch(e){}
+   if(typeof status==='function')status(true,'Firebase conectado • guardado');
+   return true;
+ }catch(e){console.error('V95 save',e);if(typeof status==='function')status(false,'Error guardando Firebase');if(typeof toast==='function')toast('⚠️ No se pudo guardar en Firebase');return false}
+};
+/* Guardado de jugador: las estadísticas introducidas son el TOTAL que quiere el usuario.
+   Se calcula el ajuste contra las estadísticas reales de partidos para no duplicarlas. */
+window.savePlayer=async function(){
+ try{
+   const num=Number(document.getElementById('pNumber')?.value),name=(document.getElementById('pName')?.value||'').trim();
+   if(!num||!name){toast('Dorsal y nombre son obligatorios');return false}
+   let p=(App.players||[]).find(x=>String(x.id)===String(typeof editPlayerId!=='undefined'?editPlayerId:''));
+   if(!p){p={id:Date.now(),number:num,name,surname:'',position:'Defensa',captain:false,status:'Disponible',photo:'',goals:0,yellow:0,red:0,starts:0,appearances:0,statAdjust:{}};App.players.push(p);editPlayerId=p.id}
+   let raw={goals:0,yellow:0,red:0,starts:0,appearances:0};
+   try{if(typeof calcRaw==='function'){const all=calcRaw();raw=all[p.id]||raw}}catch(e){}
+   p.number=num;p.name=name;p.surname=(document.getElementById('pSurname')?.value||'').trim();p.position=document.getElementById('pPosition')?.value||p.position;p.captain=!!document.getElementById('pCaptain')?.checked;p.status=document.getElementById('pStatus')?.value||p.status;
+   const val=id=>Number(document.getElementById(id)?.value||0);
+   p.statAdjust={goals:val('pGoals')-raw.goals,yellow:val('pYellow')-raw.yellow,red:val('pRed')-raw.red,starts:val('pStarts')-raw.starts,appearances:val('pApps')-raw.appearances};
+   const file=document.getElementById('pPhoto')?.files?.[0];if(file){toast('Guardando foto del jugador…');p.photo=await (window.rsCompressImage94?window.rsCompressImage94(file):compressImage95(file))}
+   App.players.sort((a,b)=>(Number(a.number)||0)-(Number(b.number)||0));
+   if(typeof v26RecalcStats==='function')v26RecalcStats();
+   const ok=await window.save();if(!ok)return false;
+   renderAll();closeModal('playerModal');toast('✓ Jugador, estadísticas y foto guardados');return true;
+ }catch(e){console.error('V95 savePlayer',e);toast('⚠️ No se pudo guardar el jugador: '+e.message);return false}
+};
+async function compressImage95(file){if(!file)return '';return new Promise((resolve,reject)=>{const fr=new FileReader();fr.onerror=()=>reject(new Error('No se pudo leer la imagen'));fr.onload=()=>{const im=new Image();im.onload=()=>{const max=640,sc=Math.min(1,max/Math.max(im.naturalWidth||im.width,im.naturalHeight||im.height)),w=Math.max(1,Math.round((im.naturalWidth||im.width)*sc)),h=Math.max(1,Math.round((im.naturalHeight||im.height)*sc)),c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);resolve(c.toDataURL('image/jpeg',.68))};im.onerror=()=>reject(new Error('Imagen no válida'));im.src=fr.result};fr.readAsDataURL(file)})}
+/* Equipos: conserva el escudo anterior si se edita el nombre sin subir otro. */
+window.addTeam=async function(){
+ try{
+   const name=(document.getElementById('teamNameInput')?.value||'').trim();if(!name){toast('Escribe el nombre del equipo');return false}
+   let t=(typeof editTeamId!=='undefined'&&editTeamId!=null)?(App.teams||[]).find(x=>String(x.id)===String(editTeamId)):null;
+   if(!t){t={id:Date.now(),name,short:name.slice(0,3).toUpperCase(),logo:'',protected:false};App.teams.push(t)}
+   const file=document.getElementById('teamLogoInput')?.files?.[0];t.name=name;t.short=(t.short||name.slice(0,3)).toUpperCase();if(file){toast('Guardando escudo…');t.logo=await compressImage95(file)}
+   const ok=await window.save();if(!ok)return false;editTeamId=null;document.getElementById('teamNameInput').value='';document.getElementById('teamLogoInput').value='';const b=document.getElementById('addTeamBtn');if(b)b.textContent='Guardar equipo';renderAll();toast('✓ Equipo y escudo guardados');return true;
+ }catch(e){console.error('V95 addTeam',e);toast('⚠️ No se pudo guardar el equipo: '+e.message);return false}
+};
+/* Goles: editar y borrar usan SIEMPRE window.save (Firebase), no la función save lexical antigua. */
+window.v26SaveEventEditor=async function(){
+ const m=activeMatch();if(!m)return;const finished=m.status==='FINISHED';const ev=finished?(Array.isArray(m.events)?m.events:[]):(Array.isArray(Live.events)?Live.events:[]);const sorted=ev.slice().sort((a,b)=>Number(a.minute||0)-Number(b.minute||0));const idx=Number(document.getElementById('v26Index')?.value);const old=idx>=0?sorted[idx]:null;const e=old||{id:Date.now()};e.type=document.getElementById('v26Type').value;e.minute=Math.max(0,Math.min(80,Number(document.getElementById('v26Minute').value||0)));e.team=document.getElementById('v26Team').value;e.playerName=document.getElementById('v26Player').value.trim();e.playerInName=document.getElementById('v26In').value.trim();e.playerOutName=document.getElementById('v26Out').value.trim();if(idx<0)ev.push(e);const scores=typeof v26RebuildScores==='function'?v26RebuildScores(ev):{homeScore:0,awayScore:0};if(finished){m.events=ev;m.homeScore=scores.homeScore;m.awayScore=scores.awayScore}else{Live.events=ev;Live.homeScore=scores.homeScore;Live.awayScore=scores.awayScore;m.events=cp95(ev)};v26RecalcStats?.();const ok=await window.save();if(ok){closeModal('v26EventModal');renderAll();toast('✓ Gol/evento actualizado y guardado en Firebase')}else toast('⚠️ El evento no se pudo guardar');
+};
+window.v26DeleteEvent=async function(i){const m=activeMatch();if(!m||!confirm('¿Eliminar este evento?'))return;const finished=m.status==='FINISHED';const ev=(finished?(Array.isArray(m.events)?m.events:[]):(Array.isArray(Live.events)?Live.events:[])).slice().sort((a,b)=>Number(a.minute||0)-Number(b.minute||0));ev.splice(i,1);const scores=typeof v26RebuildScores==='function'?v26RebuildScores(ev):{homeScore:0,awayScore:0};if(finished){m.events=ev;m.homeScore=scores.homeScore;m.awayScore=scores.awayScore}else{Live.events=ev;Live.homeScore=scores.homeScore;Live.awayScore=scores.awayScore;m.events=cp95(ev)};v26RecalcStats?.();const ok=await window.save();if(ok){renderAll();toast('✓ Evento eliminado y guardado en Firebase')}else toast('⚠️ No se pudo guardar la eliminación');};
+/* Un solo resolver visual: público y administrador leen exactamente la misma foto de App. */
+function syncXIVisual95(rootId,benchId){
+ const pitch=document.getElementById(rootId);if(!pitch)return;const nums=((App.lineup?.players||Live.lineup||[]).map(Number).filter(Boolean)).slice(0,11);const els=[...pitch.querySelectorAll('.xiV79Player')];els.forEach((el,i)=>{const p=(App.players||[]).find(x=>Number(x.number)===nums[i]);if(!p)return;const src=String(p.photo||'').trim(),visual=el.querySelector('.xiV79Visual');if(!visual)return;let img=el.querySelector('.xiV79Photo'),fallback=el.querySelector('.xiV79PhotoFallback');if(src){if(!img){img=document.createElement('img');img.className='xiV79Photo';img.alt=p.name;visual.prepend(img)}img.src=src;img.style.display='block';if(fallback)fallback.style.display='none';el.classList.remove('noPhoto');img.onerror=()=>{el.classList.add('noPhoto');img.style.display='none';if(fallback)fallback.style.display='flex'}}else{if(img)img.style.display='none';if(fallback)fallback.style.display='flex';el.classList.add('noPhoto')}})
+}
+function syncBothXI95(){try{if(typeof renderAdminXI83==='function')renderAdminXI83()}catch(e){}try{if(typeof renderPublicTeamV11==='function')renderPublicTeamV11()}catch(e){}syncXIVisual95('adminPitchV10');syncXIVisual95('publicPitchV11')}
+const oldRenderAll95=window.renderAll;window.renderAll=function(){const r=oldRenderAll95?.apply(this,arguments);setTimeout(syncBothXI95,0);setTimeout(syncBothXI95,150);return r};
+/* Recuperamos primero media histórica y después mantenemos ambos XI iguales. */
+setTimeout(async()=>{await recoverLegacyMedia95();try{const media=await get95(MEDIA95);mergeMedia95(media||{})}catch(e){}syncBothXI95();},900);
+setTimeout(syncBothXI95,1800);setInterval(syncBothXI95,3000);
+})();
+</script>
