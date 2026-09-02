@@ -4506,14 +4506,18 @@ document.addEventListener("click",function(e){
   }
 
   function gpGoals(m){
-    /* En directo, los eventos viven en Live.events hasta que se finaliza el partido.
-       Al generar el cartel debemos usar esos eventos en tiempo real. */
-    const source=(m && String(m.id)===String(App.activeMatch) && Array.isArray(Live?.events))
-      ? Live.events
-      : (Array.isArray(m?.events)?m.events:[]);
-    return source
-      .filter(e=>e?.type==="goal")
-      .sort((a,b)=>Number(a.minute||0)-Number(b.minute||0) || Number(a.id||0)-Number(b.id||0));
+    /* FUENTE ROBUSTA DE GOLES: en directo usamos Live.events, pero al finalizar
+       el partido el histórico puede conservarlos en m.events. Nunca descartamos
+       una de las dos fuentes; las unimos y eliminamos duplicados por id. */
+    const all=[];
+    const push=(arr)=>{if(!Array.isArray(arr))return;arr.forEach(e=>{
+      if(!e || String(e.type||'').toLowerCase()!=='goal')return;
+      const key=e.id!=null?String(e.id):[e.minute,e.team,e.playerId,e.playerNumber,e.playerName].join('|');
+      if(!all.some(x=>x._gpKey===key)) all.push({...e,_gpKey:key});
+    })};
+    push(m?.events);
+    if(m && String(m.id)===String(App.activeMatch)) push(Live?.events);
+    return all.sort((a,b)=>Number(a.minute??999)-Number(b.minute??999) || Number(a.id||0)-Number(b.id||0));
   }
 
   function gpScore(m){
@@ -6514,9 +6518,17 @@ document.addEventListener("click",function(e){
   }
 
   function rsV51Goals(m){
-    return (Array.isArray(m?.events)?m.events:[])
-      .filter(e=>e && e.type==="goal")
-      .sort((a,b)=>Number(a.minute||0)-Number(b.minute||0));
+    /* Al finalizar, algunos estados pueden tener los eventos todavía en Live.events.
+       Unimos ambas fuentes para que el cartel final nunca pierda los goleadores. */
+    const all=[];
+    const push=(arr)=>{if(!Array.isArray(arr))return;arr.forEach(e=>{
+      if(!e || String(e.type||'').toLowerCase()!=='goal')return;
+      const key=e.id!=null?String(e.id):[e.minute,e.team,e.playerId,e.playerNumber,e.playerName].join('|');
+      if(!all.some(x=>x._gpKey===key))all.push({...e,_gpKey:key});
+    })};
+    push(m?.events);
+    if(m && String(m.id)===String(App.activeMatch))push(Live?.events);
+    return all.sort((a,b)=>Number(a.minute??999)-Number(b.minute??999) || Number(a.id||0)-Number(b.id||0));
   }
 
   function rsV51Logo(src){
@@ -6798,6 +6810,29 @@ document.addEventListener("click",function(e){
   window.renderAll=function(){
     if(typeof oldRenderAll==="function")oldRenderAll.apply(this,arguments);
     setTimeout(rsV51Refresh,80);
+  };
+
+  /* V84: al finalizar, generar también el cartel nuevo con TODOS los eventos.
+     Se ejecuta después del snapshot histórico y de su guardado. */
+  const finishV84=window.finish;
+  window.finish=async function(){
+    const before=activeMatch();
+    if(typeof finishV84==='function') await finishV84.apply(this,arguments);
+    setTimeout(async()=>{
+      try{
+        const m=before || activeMatch();
+        if(!m || m.status!=="FINISHED")return;
+        /* Si por sincronización el histórico aún está vacío, conservamos los eventos
+           que siguen en la consola antes de generar la imagen definitiva. */
+        if((!Array.isArray(m.events)||!m.events.length) && Array.isArray(Live?.events) && Live.events.length){
+          m.events=JSON.parse(JSON.stringify(Live.events));
+        }
+        if(typeof rsGoalPosterGenerate==='function') await rsGoalPosterGenerate(m,null,false);
+        await save();
+        if(typeof rsGoalPosterRefresh==='function') rsGoalPosterRefresh();
+        if(typeof rsV51Refresh==='function') rsV51Refresh();
+      }catch(err){console.warn('RS LIVE V84 cartel final',err)}
+    },900);
   };
 
   window.rsV51Generate=rsV51Generate;
