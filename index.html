@@ -2441,10 +2441,13 @@ function displayMinute(){return Math.min(80,Math.max(0,Math.floor(currentSeconds
 async function save(){
   if(ignoreRemote)return true;
   try{
-    // Guardamos la estructura principal sin blobs de fotos/escudos.
-    // Las imágenes se guardan separadas por ID para que una imagen grande
-    // nunca pueda hacer que Firebase rechace toda la plantilla.
+    // IMPORTANTE V87:
+    // Nunca hacemos dbRef.set() sobre la raíz completa. Ese set borraba
+    // momentáneamente /media y permitía que otro dispositivo recibiera una
+    // copia sin fotos. Tampoco guardamos App.activeMatch aquí: el partido
+    // activo es GLOBAL y vive exclusivamente en /liveMatch.activeMatchId.
     const appData=JSON.parse(JSON.stringify(App));
+    delete appData.activeMatch;
     const media={players:{},teams:{}};
     (appData.players||[]).forEach((pl,i)=>{
       const original=App.players[i] || App.players.find(x=>String(x.id)===String(pl.id));
@@ -2458,20 +2461,39 @@ async function save(){
       if(logo) media.teams[String(tm.id)]={logo};
       delete tm.logo;
     });
-    await dbRef.set({app:appData,liveMatch:Live});
-    // Media separada. Con SDK se usa la misma raíz mediante set; con REST
-    // se escribe directamente en /media.
-    if(firebaseSdkReady){
-      await firebase.database().ref("clubManagerV6/media").set(media);
+
+    const liveData=JSON.parse(JSON.stringify(Live));
+    liveData.activeMatchId=App.activeMatch==null?null:String(App.activeMatch);
+
+    if(firebaseSdkReady && dbRef){
+      // Cada rama se escribe por separado: nunca se elimina /media ni otra rama.
+      await dbRef.child("app").set(appData);
+      await dbRef.child("liveMatch").set(liveData);
+      // Media se actualiza por ID, nunca con set() de toda la colección.
+      const mediaRef=firebase.database().ref("clubManagerV6/media");
+      const pm={},tm={};
+      Object.keys(media.players).forEach(id=>pm[id]=media.players[id]);
+      Object.keys(media.teams).forEach(id=>tm[id]=media.teams[id]);
+      if(Object.keys(pm).length) await mediaRef.child("players").update(pm);
+      if(Object.keys(tm).length) await mediaRef.child("teams").update(tm);
     }else{
-      const r=await fetch(firebaseMediaRestUrl,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(media)});
-      if(!r.ok) throw new Error("Firebase media PUT "+r.status);
+      const appUrl=firebaseBaseUrl+"/clubManagerV6/app.json";
+      const liveUrl=firebaseBaseUrl+"/clubManagerV6/liveMatch.json";
+      let r=await fetch(appUrl,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(appData)});
+      if(!r.ok)throw new Error("Firebase app PUT "+r.status);
+      r=await fetch(liveUrl,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(liveData)});
+      if(!r.ok)throw new Error("Firebase liveMatch PUT "+r.status);
+      const pm={},tm={};
+      Object.keys(media.players).forEach(id=>pm[id]=media.players[id]);
+      Object.keys(media.teams).forEach(id=>tm[id]=media.teams[id]);
+      if(Object.keys(pm).length){r=await fetch(firebaseBaseUrl+"/clubManagerV6/media/players.json",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(pm)});if(!r.ok)throw new Error("Firebase players PATCH "+r.status)}
+      if(Object.keys(tm).length){r=await fetch(firebaseBaseUrl+"/clubManagerV6/media/teams.json",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(tm)});if(!r.ok)throw new Error("Firebase teams PATCH "+r.status)}
     }
     const st=document.getElementById("syncText");
     if(st)st.textContent="Firebase conectado • guardado";
     return true;
   }catch(err){
-    console.error("Firebase save:",err);
+    console.error("Firebase save V87:",err);
     const st=document.getElementById("syncText");
     if(st)st.textContent="Error guardando Firebase";
     toast("No se pudo guardar en Firebase");
@@ -2492,7 +2514,8 @@ function applyData(data){
     if(remotePlayers.length) App.players=remotePlayers;
     if(remoteTeams.length) App.teams=remoteTeams;
     if(remoteMatches.length || Array.isArray(data.app.matches)) App.matches=remoteMatches;
-    if(data.app.activeMatch!==undefined && data.app.activeMatch!==null) App.activeMatch=data.app.activeMatch;
+    // NO leer App.activeMatch desde /app: ese valor puede pertenecer a otro dispositivo.
+    // El único estado global del partido activo es /liveMatch.activeMatchId.
     if(data.app.lineup && data.app.lineup.players!=null){
       const lp=firebaseList(data.app.lineup.players);
       App.lineup={formation:data.app.lineup.formation||"4-3-3",players:lp.map(Number)};
@@ -2511,7 +2534,13 @@ function applyData(data){
       if(media && media.logo) t.logo=media.logo;
     });
   }
-  if(data.liveMatch)Object.assign(Live,data.liveMatch);
+  if(data.liveMatch){
+    Object.assign(Live,data.liveMatch);
+    if(Object.prototype.hasOwnProperty.call(data.liveMatch,"activeMatchId")){
+      const id=data.liveMatch.activeMatchId;
+      App.activeMatch=(id===null||id===undefined||id==="")?null:id;
+    }
+  }
   if(Live.state==="HALFTIME"){Live.pausedSeconds=40*60;Live.manualMinute=40;Live.startTimestamp=null;}
   if(Live.state==="FINISHED"){Live.pausedSeconds=80*60;Live.manualMinute=80;Live.startTimestamp=null;}
   renderAll();
@@ -8616,6 +8645,10 @@ window.rsGenerateXIImage=generateXI83;
   const LOCAL_KEY='RS_LIVE_V86_SAFE_STATE';
   let applyingRemote=false;
   let writeSeq=0;
+  // Cola única de escrituras: evita que dos acciones rápidas o dos eventos
+  // simultáneos terminen guardándose en orden inverso.
+  let saveChain=Promise.resolve();
+  let applyingRemoteMatchesV87=false;
 
   function clone(v){try{return JSON.parse(JSON.stringify(v))}catch(e){return v}}
   function playersArray(){return Array.isArray(App.players)?App.players:[]}
@@ -8676,7 +8709,7 @@ window.rsGenerateXIImage=generateXI83;
     return true;
   }
 
-  async function saveGlobal(){
+  async function saveGlobalCore(){
     if(ignoreRemote||applyingRemote)return true;
     const seq=++writeSeq;
     const media=mediaSnapshot();
@@ -8700,11 +8733,9 @@ window.rsGenerateXIImage=generateXI83;
         await updateJSON(ROOT_URL.replace('/clubManagerV6.json','/clubManagerV6/media/players.json'),pm);
         await updateJSON(ROOT_URL.replace('/clubManagerV6.json','/clubManagerV6/media/teams.json'),tm);
       }
-      // 4) Mantener la rama independiente de partidos sin tocarla con estado de otro dispositivo.
-      if(MATCHES_URL){
-        const obj={};matchesArray().forEach(m=>{if(m&&m.id!=null)obj[String(m.id)]=clone(m)});
-        await putJSON(MATCHES_URL,obj);
-      }
+      // 4) La sincronización de partidos se hace desde /app y el listener
+      // específico de matchesById. NO reemplazamos toda la colección aquí,
+      // porque un PUT completo podía borrar cambios hechos desde otro dispositivo.
       if(seq===writeSeq){
         const st=document.getElementById('syncText');if(st)st.textContent='Firebase conectado · guardado';
       }
@@ -8716,6 +8747,15 @@ window.rsGenerateXIImage=generateXI83;
       toast('⚠️ No se pudo sincronizar con Firebase');
       return false;
     }
+  }
+
+  // Todas las operaciones de guardado pasan por una cola. Así, si PC y móvil
+  // realizan cambios casi a la vez, cada escritura termina antes de comenzar
+  // la siguiente y no se pisan por orden de llegada.
+  function saveGlobal(){
+    const run=()=>saveGlobalCore();
+    saveChain=saveChain.then(run,run);
+    return saveChain;
   }
 
   // Carga remota final: conserva las fotos locales mientras llega /media y usa
@@ -8804,23 +8844,98 @@ window.rsGenerateXIImage=generateXI83;
   const oldMergeMatches=window.mergeMatchesObject;
   // No es una API pública; el polling seguirá funcionando con su propia función.
 
-  // Sincronización periódica del estado global. El listener de la raíz ya llama a
-  // applyData; este GET adicional permite recuperar el estado activo aunque otra
-  // rama haya cambiado después de una escritura.
+  // SINCRONIZACIÓN REAL V87: dejamos de escuchar la raíz completa.
+  // Cada rama tiene su propio listener, evitando que una copia antigua de /app
+  // pueda pisar el partido activo o el estado del directo.
+  function startScopedRealtime(){
+    if(!dbRef || !dbRef.child)return;
+    try{ dbRef.off('value'); }catch(e){}
+
+    dbRef.child('app').on('value',snap=>{
+      if(applyingRemote || !snap.exists())return;
+      const data=snap.val()||{};
+      applyingRemote=true;
+      try{
+        const before=mediaSnapshot();
+        const remotePlayers=firebaseList(data.players);
+        const remoteTeams=firebaseList(data.teams);
+        const remoteMatches=firebaseList(data.matches);
+        if(remotePlayers.length || Array.isArray(data.players)) App.players=remotePlayers;
+        if(remoteTeams.length || Array.isArray(data.teams)) App.teams=remoteTeams;
+        if(remoteMatches.length || Array.isArray(data.matches)) App.matches=remoteMatches;
+        if(data.lineup && data.lineup.players!=null){
+          const lp=firebaseList(data.lineup.players);
+          App.lineup={formation:data.lineup.formation||'4-3-3',players:lp.map(Number)};
+        }
+        mergeLocalMedia(before);
+        localWrite();
+        renderAll();
+      }catch(e){console.warn('V87 app realtime',e)}
+      finally{applyingRemote=false}
+    },err=>console.warn('V87 app listener',err));
+
+    dbRef.child('liveMatch').on('value',snap=>{
+      if(applyingRemote || !snap.exists())return;
+      const remote=snap.val()||{};
+      applyingRemote=true;
+      try{
+        Object.assign(Live,remote);
+        if(Object.prototype.hasOwnProperty.call(remote,'activeMatchId')){
+          const id=remote.activeMatchId;
+          App.activeMatch=(id==null||id==='')?null:id;
+        }
+        if(Live.state==='HALFTIME'){Live.pausedSeconds=40*60;Live.manualMinute=40;Live.startTimestamp=null}
+        if(Live.state==='FINISHED'){Live.pausedSeconds=80*60;Live.manualMinute=80;Live.startTimestamp=null}
+        localWrite();renderAll();
+      }catch(e){console.warn('V87 live realtime',e)}
+      finally{applyingRemote=false}
+    },err=>console.warn('V87 live listener',err));
+
+    dbRef.child('media').on('value',snap=>{
+      if(applyingRemote || !snap.exists())return;
+      applyingRemote=true;
+      try{mergeMediaIntoApp(snap.val()||{});localWrite();renderAll()}
+      catch(e){console.warn('V87 media realtime',e)}
+      finally{applyingRemote=false}
+    },err=>console.warn('V87 media listener',err));
+
+    // Sincronización adicional de partidos por ID, sin reemplazar la colección.
+    if(MATCHES_URL){
+      dbRef.child('matchesById').on('value',snap=>{
+        if(applyingRemoteMatchesV87||!snap.exists())return;
+        applyingRemoteMatchesV87=true;
+        try{
+          const data=snap.val()||{};
+          const incoming=Object.values(data).filter(Boolean);
+          const byId=new Map((App.matches||[]).map(m=>[String(m.id),m]));
+          incoming.forEach(r=>{if(r?.id!=null)byId.set(String(r.id),clone(r))});
+          App.matches=Array.from(byId.values());
+          renderAll();localWrite();
+        }catch(e){console.warn('V87 matches realtime',e)}
+        finally{applyingRemoteMatchesV87=false}
+      },err=>console.warn('V87 matches listener',err));
+    }
+
+    const okDot=document.getElementById('syncDot');
+    if(okDot)okDot.className='dot ok';
+    const st=document.getElementById('syncText');
+    if(st)st.textContent='Firebase conectado • tiempo real';
+  }
+
+  // Respaldo muy ligero para el caso de que un navegador pierda el listener.
   async function pullGlobal(){
     if(!ROOT||applyingRemote)return;
     try{
-      const r=await fetch(ROOT+'/clubManagerV6/liveMatch.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;
-      const remote=await r.json();if(!remote)return;
+      const r=await fetch(ROOT+'/clubManagerV6/liveMatch.json?t='+Date.now(),{cache:'no-store'});
+      if(!r.ok)return; const remote=await r.json(); if(!remote)return;
       applyingRemote=true;
       if(Object.prototype.hasOwnProperty.call(remote,'activeMatchId'))App.activeMatch=remote.activeMatchId==null?null:remote.activeMatchId;
       Object.assign(Live,remote);
       if(Live.state==='HALFTIME'){Live.pausedSeconds=40*60;Live.manualMinute=40;Live.startTimestamp=null}
       if(Live.state==='FINISHED'){Live.pausedSeconds=80*60;Live.manualMinute=80;Live.startTimestamp=null}
-      localWrite();try{renderAll()}catch(e){};
-    }catch(e){}
-    finally{applyingRemote=false}
-    setTimeout(pullGlobal,1500);
+      localWrite();renderAll();
+    }catch(e){} finally{applyingRemote=false}
+    setTimeout(pullGlobal,5000);
   }
 
   // Reparar una posible pérdida previa: si la plantilla local tiene fotos y Firebase
@@ -8836,7 +8951,8 @@ window.rsGenerateXIImage=generateXI83;
   }
 
   localWrite();
+  setTimeout(startScopedRealtime,250);
   setTimeout(healMedia,1200);
-  setTimeout(pullGlobal,1600);
+  setTimeout(pullGlobal,5000);
 })();
 </script>
