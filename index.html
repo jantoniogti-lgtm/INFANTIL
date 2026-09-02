@@ -2351,9 +2351,16 @@ const firebaseBaseUrl=firebaseConfig.databaseURL.replace(/\/$/,"");
 const firebaseRestUrl=firebaseBaseUrl+"/clubManagerV6.json";
 const firebaseMediaRestUrl=firebaseBaseUrl+"/clubManagerV6/media.json";
 try{
-  const realConfig=firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("TU_") && firebaseConfig.appId && !firebaseConfig.appId.startsWith("TU_");
-  if(realConfig && window.firebase && firebase.database){
-    firebase.initializeApp(firebaseConfig);
+  /*
+   * Firebase Realtime Database no necesita que la API key sea secreta ni que
+   * esté presente para leer/escribir cuando las reglas de la base permiten
+   * acceso. La versión anterior rechazaba el SDK porque veía TU_API_KEY y
+   * entonces caía al modo REST, mientras el resto de la aplicación esperaba
+   * dbRef.child(...). Esto provocaba "No se puede sincronizar con Firebase".
+   * Usamos el SDK siempre que esté cargado y dejamos REST solo como respaldo.
+   */
+  if(window.firebase && firebase.database){
+    if(!firebase.apps || !firebase.apps.length) firebase.initializeApp(firebaseConfig);
     dbRef=firebase.database().ref("clubManagerV6");
     firebaseSdkReady=true;
     try{storage=firebase.storage();}catch(e){console.warn("Storage no disponible",e)}
