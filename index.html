@@ -5680,6 +5680,203 @@ document.addEventListener("click",function(e){
 })();
 </script>
 
+
+<!-- V88 — SINCRONIZACIÓN CANÓNICA: un único estado global para todos los dispositivos -->
+<script id="v88-canonical-sync">
+(function(){
+  'use strict';
+  if(window.__RS_V88_CANONICAL__) return;
+  window.__RS_V88_CANONICAL__=true;
+
+  const ROOT=(typeof firebaseBaseUrl!=='undefined'?String(firebaseBaseUrl):'').replace(/\/$/,'');
+  const BASE=ROOT+'/clubManagerV6';
+  const APP_URL=BASE+'/app.json';
+  const LIVE_URL=BASE+'/liveMatch.json';
+  const MATCHES_URL=BASE+'/matchesById.json';
+  const MEDIA_PLAYERS_URL=BASE+'/media/players.json';
+  const MEDIA_TEAMS_URL=BASE+'/media/teams.json';
+  let remoteApplying=false;
+  let chain=Promise.resolve();
+  let lastLive='__v88_live__';
+  let lastMatches='__v88_matches__';
+
+  const clone=v=>{try{return JSON.parse(JSON.stringify(v))}catch(e){return v}};
+  const arr=v=>Array.isArray(v)?v:(v&&typeof v==='object'?Object.values(v):[]);
+  const cleanApp=()=>{
+    const a=clone(App)||{};
+    // App.activeMatch NUNCA se sincroniza aquí. El estado activo es liveMatch.
+    delete a.activeMatch;
+    // Las imágenes viven exclusivamente en /media.
+    (a.players||[]).forEach(x=>{if(x)delete x.photo});
+    (a.teams||[]).forEach(x=>{if(x)delete x.logo});
+    // Los carteles son blobs grandes y no forman parte del estado de sincronización.
+    (a.matches||[]).forEach(x=>{if(x)delete x.goalPosterData});
+    // Los partidos se sincronizan por ID en matchesById, no dentro de /app.
+    delete a.matches;
+    return a;
+  };
+  const matchesObject=()=>{
+    const o={};
+    (App.matches||[]).forEach(m=>{if(m&&m.id!=null){const x=clone(m);delete x.goalPosterData;o[String(m.id)]=x}});
+    return o;
+  };
+  const liveObject=()=>{
+    const l=clone(Live)||{};
+    l.activeMatchId=App.activeMatch==null?null:String(App.activeMatch);
+    return l;
+  };
+  const mediaObject=()=>{
+    const p={},t={};
+    (App.players||[]).forEach(x=>{if(x?.id!=null&&x.photo)p[String(x.id)]={photo:x.photo}});
+    (App.teams||[]).forEach(x=>{if(x?.id!=null&&x.logo)t[String(x.id)]={logo:x.logo}});
+    return {p,t};
+  };
+  async function put(url,data){
+    const r=await fetch(url+'?v='+Date.now(),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    if(!r.ok)throw new Error('PUT '+r.status+' '+url);
+    return true;
+  }
+  async function patch(url,data){
+    if(!Object.keys(data||{}).length)return true;
+    const r=await fetch(url+'?v='+Date.now(),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    if(!r.ok)throw new Error('PATCH '+r.status+' '+url);
+    return true;
+  }
+  function localBackup(){
+    try{localStorage.setItem('RS_LIVE_V88_STATE',JSON.stringify({savedAt:Date.now(),app:clone(App),liveMatch:clone(Live)}))}catch(e){}
+  }
+  async function saveCore(){
+    if(remoteApplying)return true;
+    localBackup();
+    const media=mediaObject();
+    // ORDEN INTENCIONAL: primero LIVE. Así activar/reiniciar un partido se replica
+    // aunque una escritura pesada de datos del club falle después.
+    await put(LIVE_URL,liveObject());
+    await put(APP_URL,cleanApp());
+    await put(MATCHES_URL,matchesObject());
+    await patch(MEDIA_PLAYERS_URL,media.p);
+    await patch(MEDIA_TEAMS_URL,media.t);
+    localBackup();
+    const st=document.getElementById('syncText');if(st)st.textContent='Firebase conectado · tiempo real';
+    return true;
+  }
+  window.save=async function(){
+    const run=()=>saveCore().catch(e=>{console.error('V88 save',e);const st=document.getElementById('syncText');if(st)st.textContent='Error guardando Firebase';toast('⚠️ Error guardando Firebase');return false});
+    chain=chain.then(run,run);return chain;
+  };
+
+  function applyLive(remote){
+    if(!remote)return;
+    remoteApplying=true;
+    try{
+      Object.assign(Live,remote);
+      if(Object.prototype.hasOwnProperty.call(remote,'activeMatchId'))App.activeMatch=remote.activeMatchId==null?null:remote.activeMatchId;
+      if(Live.state==='HALFTIME'){Live.pausedSeconds=2400;Live.manualMinute=40;Live.startTimestamp=null}
+      if(Live.state==='FINISHED'){Live.pausedSeconds=4800;Live.manualMinute=80;Live.startTimestamp=null}
+      localBackup();renderAll();
+    }finally{remoteApplying=false}
+  }
+  function applyApp(remote){
+    if(!remote)return;
+    remoteApplying=true;
+    try{
+      const beforePlayers=new Map((App.players||[]).map(x=>[String(x.id),x.photo]));
+      const beforeTeams=new Map((App.teams||[]).map(x=>[String(x.id),x.logo]));
+      const ps=arr(remote.players),ts=arr(remote.teams);
+      if(ps.length||Array.isArray(remote.players))App.players=ps;
+      if(ts.length||Array.isArray(remote.teams))App.teams=ts;
+      App.players.forEach(x=>{if(!x.photo&&beforePlayers.get(String(x.id)))x.photo=beforePlayers.get(String(x.id))});
+      App.teams.forEach(x=>{if(!x.logo&&beforeTeams.get(String(x.id)))x.logo=beforeTeams.get(String(x.id))});
+      if(remote.lineup&&remote.lineup.players!=null)App.lineup={formation:remote.lineup.formation||'4-3-3',players:arr(remote.lineup.players).map(Number)};
+      localBackup();renderAll();
+    }finally{remoteApplying=false}
+  }
+  function applyMatches(remote){
+    if(remote==null)return;
+    remoteApplying=true;
+    try{
+      const incoming=arr(remote).filter(x=>x&&x.id!=null).map(clone);
+      App.matches=incoming;
+      // El estado activo NO se toca aquí.
+      localBackup();renderAll();
+    }finally{remoteApplying=false}
+  }
+  function applyMedia(remote){
+    if(!remote)return;
+    remoteApplying=true;
+    try{
+      const pm=remote.players||{},tm=remote.teams||{};
+      (App.players||[]).forEach(x=>{const m=pm[String(x.id)];if(m?.photo)x.photo=m.photo});
+      (App.teams||[]).forEach(x=>{const m=tm[String(x.id)];if(m?.logo)x.logo=m.logo});
+      localBackup();renderAll();
+    }finally{remoteApplying=false}
+  }
+  async function poll(url,last,apply){
+    try{
+      const r=await fetch(url+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error(String(r.status));
+      const data=await r.json();const key=JSON.stringify(data);
+      if(key!==last.value){last.value=key;apply(data)}
+    }catch(e){console.warn('V88 poll',url,e)}
+  }
+  async function loop(){
+    await Promise.all([
+      poll(LIVE_URL,{get value(){return lastLive},set value(v){lastLive=v}},applyLive),
+      poll(APP_URL,{get value(){return loop._appLast||'__v88_app__'},set value(v){loop._appLast=v}},applyApp),
+      poll(MATCHES_URL,{get value(){return lastMatches},set value(v){lastMatches=v}},applyMatches),
+      poll(BASE+'/media.json',{get value(){return loop._mediaLast||'__v88_media__'},set value(v){loop._mediaLast=v}},applyMedia)
+    ]);
+    setTimeout(loop,1200);
+  }
+
+  // Desactivar listeners SDK/pollers anteriores cuando sea posible. El polling REST
+  // antiguo de la raíz no puede cancelarse, pero applyData seguirá sin leer activeMatch
+  // desde /app; el listener canónico siempre vuelve a imponer liveMatch como autoridad.
+  try{if(typeof dbRef!=='undefined'&&dbRef&&dbRef.off)dbRef.off()}catch(e){}
+  try{if(typeof dbRef!=='undefined'&&dbRef&&dbRef.child){dbRef.child('matchesById').off();dbRef.child('app').off();dbRef.child('liveMatch').off();dbRef.child('media').off()}}catch(e){}
+
+  // Reforzar setActive sin resetear datos locales de la plantilla y guardarlo en LIVE.
+  window.setActive=async function(id){
+    const m=(App.matches||[]).find(x=>String(x.id)===String(id));
+    if(!m){toast('Partido no encontrado');return}
+    App.activeMatch=m.id;
+    if(m.status==='FINISHED'){
+      Live.state='FINISHED';Live.half=2;Live.homeScore=Number(m.homeScore||0);Live.awayScore=Number(m.awayScore||0);Live.events=clone(m.events||[]);Live.pausedSeconds=4800;Live.manualMinute=80;Live.startTimestamp=null;
+    }else{
+      Live.state='PREMATCH';Live.half=1;Live.homeScore=0;Live.awayScore=0;Live.events=[];Live.pausedSeconds=0;Live.manualMinute=0;Live.startTimestamp=null;
+      Live.lineup=clone(m.lineup||m.lineupSnapshot?.players||App.lineup?.players||[]);
+      Live.formation=m.formation||m.lineupSnapshot?.formation||App.lineup?.formation||'4-3-3';
+    }
+    renderAll();await window.save();toast('Partido activo sincronizado en todos los dispositivos');
+  };
+
+  window.resetLive=async function(ask=true){
+    const m=activeMatch();
+    if(ask&&!confirm(m?`¿Reiniciar el partido activo ${team(m.home).name} vs ${team(m.away).name}?\n\nSe reiniciará para TODOS los dispositivos.`:'¿Reiniciar la consola del partido?'))return;
+    Live.state='PREMATCH';Live.half=1;Live.homeScore=0;Live.awayScore=0;Live.events=[];Live.startTimestamp=null;Live.pausedSeconds=0;Live.manualMinute=0;
+    renderAll();await window.save();toast('Partido reiniciado para todos los dispositivos');
+  };
+
+  window.createMatch=async function(){
+    const home=Number(document.getElementById('matchHome')?.value),away=Number(document.getElementById('matchAway')?.value);
+    if(!home||!away||home===away){toast('Local y visitante deben ser diferentes');return}
+    const m={id:Date.now(),home,away,date:document.getElementById('matchDateInput')?.value||'',hour:document.getElementById('matchHourInput')?.value||'',competition:(document.getElementById('matchCompetitionInput')?.value||'').trim()||'Liga',field:(document.getElementById('matchFieldInput')?.value||'').trim()};
+    App.matches=Array.isArray(App.matches)?App.matches:[];App.matches.push(m);App.activeMatch=m.id;
+    Live.state='PREMATCH';Live.half=1;Live.homeScore=0;Live.awayScore=0;Live.events=[];Live.startTimestamp=null;Live.pausedSeconds=0;Live.manualMinute=0;
+    renderAll();await window.save();toast('Partido creado y activo para todos los dispositivos');
+  };
+
+  window.deleteMatch=async function(id){
+    const m=(App.matches||[]).find(x=>String(x.id)===String(id));if(!m)return;
+    if(!confirm(`¿Eliminar definitivamente el partido ${team(m.home).name} vs ${team(m.away).name}?\n\nLas fotos de jugadores NO se borrarán.`))return;
+    const was=String(App.activeMatch)===String(id);App.matches=(App.matches||[]).filter(x=>String(x.id)!==String(id));
+    if(was){const next=App.matches.find(x=>x.status!=='FINISHED')||App.matches[0]||null;App.activeMatch=next?next.id:null;if(next){Live.state=next.status==='FINISHED'?'FINISHED':'PREMATCH';Live.homeScore=Number(next.homeScore||0);Live.awayScore=Number(next.awayScore||0);Live.events=clone(next.events||[])}else{Live.state='PREMATCH';Live.homeScore=0;Live.awayScore=0;Live.events=[]}}
+    renderAll();await window.save();toast('Partido eliminado · fotos conservadas');
+  };
+
+  // Arranque: primera lectura remota gana sobre cualquier copia local.
+  setTimeout(()=>{loop();},300);
+})();
+</script>
 </body>
 </html>
 
