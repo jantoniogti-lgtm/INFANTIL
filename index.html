@@ -2328,6 +2328,7 @@ button{cursor:pointer}
 <div id="toast" class="toast"></div>
 
 <!-- Firebase: misma base de conexión del HTML facilitado -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
@@ -2772,8 +2773,9 @@ function commitEvent(num){
  const rsHome=Number(m.home)===Number((App.favoriteTeamId ?? (App.teams||[]).find(t=>t.protected)?.id ?? 1));
  const eventIsFavoriteTeam=(eventTeam==="home")===rsHome;
  const eventMinute=Math.max(0,displayMinute()+eventMinuteOffset);
- const pl=eventTeam==="home"?(eventIsFavoriteTeam?App.players.find(p=>Number(p.number)===num):{number:num,name:"Jugador "+num}):(eventIsFavoriteTeam?{number:num,name:"Jugador "+num}:App.players.find(p=>Number(p.number)===num));
  const player=eventIsFavoriteTeam?App.players.find(p=>Number(p.number)===num):null;
+ /* El dorsal del rival nunca se debe resolver contra la plantilla del Ramón Sicart. */
+ const pl=player || {number:num,name:"Jugador "+num};
  const ev={id:Date.now(),type:eventType,team:eventTeam,minute:eventMinute,playerId:player?.id??null,playerNumber:num,playerName:pl?.name||("Jugador "+num)};
  if(eventType==="goal"){
    if(eventTeam==="home")Live.homeScore++;else Live.awayScore++;
@@ -4504,7 +4506,12 @@ document.addEventListener("click",function(e){
   }
 
   function gpGoals(m){
-    return (Array.isArray(m?.events)?m.events:[])
+    /* En directo, los eventos viven en Live.events hasta que se finaliza el partido.
+       Al generar el cartel debemos usar esos eventos en tiempo real. */
+    const source=(m && String(m.id)===String(App.activeMatch) && Array.isArray(Live?.events))
+      ? Live.events
+      : (Array.isArray(m?.events)?m.events:[]);
+    return source
       .filter(e=>e?.type==="goal")
       .sort((a,b)=>Number(a.minute||0)-Number(b.minute||0) || Number(a.id||0)-Number(b.id||0));
   }
@@ -8375,5 +8382,140 @@ window.renderPublicTeamV11=render79;document.addEventListener('DOMContentLoaded'
     toast(list.length ? ('Fotos guardadas: '+list.length) : 'No hay fotos guardadas en la plantilla');
     return list;
   };
+})();
+</script>
+
+
+<!-- V83 — EVENTOS RIVAL + COMPARTIR GOL + XI ADMIN IGUAL AL PUBLICO -->
+<style id="v83-live-goal-xi">
+  /* La vista táctica del administrador reutiliza exactamente el lenguaje visual del XI público. */
+  #adminPitchV10.xiV79Pitch{min-height:0!important;aspect-ratio:9/14!important;width:100%!important;background:#0a6a3d!important;border:4px solid #d9f0dc!important;border-radius:22px!important;overflow:hidden!important;position:relative!important}
+  #adminPitchV10.xiV79Pitch .publicPlayerV11{position:absolute!important;width:clamp(105px,15%,175px)!important;transform:translate(-50%,-50%)!important;z-index:80!important;text-align:center!important;filter:drop-shadow(0 10px 12px rgba(0,0,0,.42))!important}
+  #adminPitchV10.xiV79Pitch .xiV79Player{position:absolute!important;width:clamp(105px,15%,175px)!important;transform:translate(-50%,-50%)!important;z-index:80!important;text-align:center!important}
+  #adminPitchV10.xiV79Pitch .xiV79Visual{height:clamp(88px,10vw,132px)!important;display:flex!important;align-items:flex-end!important;justify-content:center!important;position:relative!important}
+  #adminPitchV10.xiV79Pitch .xiV79Photo{height:100%!important;width:auto!important;max-width:100%!important;object-fit:contain!important;object-position:center bottom!important;filter:drop-shadow(0 7px 7px rgba(0,0,0,.48))!important}
+  #adminPitchV10.xiV79Pitch .xiV79PhotoFallback{height:100%!important;display:flex!important;align-items:flex-end!important;justify-content:center!important}
+  #adminPitchV10.xiV79Pitch .xiV79Shirt{width:clamp(56px,7vw,88px)!important;height:clamp(68px,8vw,108px)!important}
+  #adminPitchV10.xiV79Pitch .xiV79Name{font-size:clamp(12px,1.45vw,19px)!important}
+  .rsAdminXIBenchV83{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-top:12px}
+  .rsAdminXIBenchV83 .benchPlayerV11{min-height:54px}
+  .rsXIShareBoxV83{margin-top:12px;padding:12px;border:1px solid #294766;border-radius:14px;background:#07111b}
+  .rsXIShareBoxV83 .rsShareMsg{width:100%;min-height:78px;resize:vertical;background:#02070d;color:#fff;border:1px solid #294766;border-radius:10px;padding:9px;font:700 12px Arial;box-sizing:border-box}
+  .rsGoalShareBoxV83{margin-top:10px;padding:10px;border:1px solid #294766;border-radius:12px;background:#07111b}
+  .rsGoalShareBoxV83 textarea{width:100%;min-height:80px;box-sizing:border-box;background:#02070d;color:#fff;border:1px solid #294766;border-radius:9px;padding:8px;font:700 12px Arial;resize:vertical}
+  @media(max-width:700px){#adminPitchV10.xiV79Pitch{aspect-ratio:1.12/1!important}.rsAdminXIBenchV83{grid-template-columns:1fr 1fr}}
+</style>
+<script id="v83-live-goal-xi-script">
+(function(){
+'use strict';
+if(window.__RS_V83__)return;window.__RS_V83__=true;
+
+function e83(v){return typeof esc==='function'?esc(v==null?'':String(v)):String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function active83(){try{return typeof activeMatch==='function'?activeMatch():null}catch(e){return null}}
+function fav83(){return Number(App.favoriteTeamId ?? (App.teams||[]).find(t=>t.protected)?.id ?? 1)}
+function isFavEvent83(m,e){return Number(e?.team==='home'?m?.home:m?.away)===fav83()}
+function player83(e){if(!e)return null;const players=Array.isArray(App.players)?App.players:[];if(e.playerId!=null){const p=players.find(x=>String(x.id)===String(e.playerId));if(p)return p}return players.find(x=>Number(x.number)===Number(e.playerNumber))||null}
+function goalMessage83(m,e){
+  const h=team(m.home),a=team(m.away);const scorer=e?.playerName||'Gol';const score=e?.score||`${m.homeScore??Live.homeScore??0}-${m.awayScore??Live.awayScore??0}`;
+  const fav=isFavEvent83(m,e);
+  if(fav) return `⚽ ¡GOOOOOL DEL RAMÓN SICART!\n\n⏱️ ${Number(e?.minute||0)}'\n👤 ${String(scorer).toUpperCase()}\n🔢 ${h.name} ${score} ${a.name}\n\n🔥 ¡VAMOS RAMÓN SICART! 💛❤️`;
+  return `⚽ GOL DEL RIVAL\n\n⏱️ ${Number(e?.minute||0)}'\n👤 ${String(scorer).toUpperCase()}\n🔢 ${h.name} ${score} ${a.name}`;
+}
+function lastGoal83(m){const ev=Array.isArray(m?.events)&&String(m.id)!==String(App.activeMatch)?m.events:(Live.events||m?.events||[]);return ev.slice().reverse().find(e=>e?.type==='goal')||null}
+async function dataBlob83(data){const r=await fetch(data);return await r.blob()}
+async function shareGoal83(m,e){
+  if(!m||!e)return;
+  const data=m.matchPosterData||e.goalPosterData;
+  const text=goalMessage83(m,e);
+  try{
+    if(data && navigator.share){
+      const blob=await dataBlob83(data);const file=new File([blob],`gol_${Number(e.minute||0)}.jpg`,{type:'image/jpeg'});
+      if(!navigator.canShare || navigator.canShare({files:[file]})){
+        await navigator.share({files:[file],text,title:'RS LIVE · Gol'});return;
+      }
+    }
+  }catch(err){if(err?.name==='AbortError')return;console.warn('RS LIVE share',err)}
+  try{await navigator.clipboard?.writeText(text)}catch(err){}
+  const url='https://wa.me/?text='+encodeURIComponent(text);
+  window.open(url,'_blank');
+  if(data){const a=document.createElement('a');a.href=data;a.download=`RS_LIVE_GOL_${Number(e.minute||0)}.jpg`;document.body.appendChild(a);a.click();a.remove();}
+}
+window.rsShareLastGoal=async()=>{const m=active83(),e=lastGoal83(m);if(!m||!e){toast('No hay ningún gol para compartir');return}await shareGoal83(m,e)};
+
+function ensureGoalShareUI83(){
+ const card=document.getElementById('rsGoalPosterCard');if(!card)return;
+ let box=document.getElementById('rsGoalShareBoxV83');if(!box){box=document.createElement('div');box.id='rsGoalShareBoxV83';box.className='rsGoalShareBoxV83';card.appendChild(box)}
+ const m=active83(),e=lastGoal83(m);if(!m||!e){box.innerHTML='<small style="color:#71869c">Cuando se marque un gol, aquí aparecerán el mensaje y el botón para compartirlo.</small>';return}
+ box.innerHTML=`<div style="font-size:10px;color:#ffd400;font-weight:900;margin-bottom:6px">📲 MENSAJE DEL GOL</div><textarea readonly>${e83(goalMessage83(m,e))}</textarea><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn green" id="rsShareLastGoalBtn">📲 Compartir gol</button><button class="btn dark" id="rsCopyGoalMsgBtn">📋 Copiar mensaje</button></div>`;
+ document.getElementById('rsShareLastGoalBtn').onclick=()=>shareGoal83(m,e);
+ document.getElementById('rsCopyGoalMsgBtn').onclick=async()=>{try{await navigator.clipboard.writeText(goalMessage83(m,e));toast('Mensaje copiado')}catch(err){toast('No se pudo copiar el mensaje')}};
+}
+
+/* ---------- XI DEL ADMIN: misma representación visual que el XI público ---------- */
+function renderAdminXI83(){
+ const form=document.getElementById('formationV10'),pitch=document.getElementById('adminPitchV10'),list=document.getElementById('xiOrderV10'),avail=document.getElementById('availV10');
+ if(!form||!pitch||!list||!avail)return;
+ const players=Array.isArray(App.players)?App.players:[];App.lineup=App.lineup||{formation:'4-3-3',players:[]};
+ const formation=App.lineup.formation||Live.formation||'4-3-3';form.value=formation;
+ let nums=(App.lineup.players||[]).map(Number).slice(0,11);if(!nums.length&&Array.isArray(Live.lineup))nums=Live.lineup.map(Number).slice(0,11);
+ const pos=typeof positions==='function'?positions(formation):[];
+ pitch.classList.add('xiV79Pitch');pitch.innerHTML=`<div class="fieldMarkV33 penaltyTopV33"></div><div class="fieldMarkV33 penaltyBottomV33"></div><div class="goalAreaTopV33"></div><div class="goalAreaBottomV33"></div><div class="penaltyArcTopV50"></div><div class="penaltyArcBottomV50"></div><div class="cornerTLV50"></div><div class="cornerTRV50"></div><div class="cornerBLV50"></div><div class="cornerBRV50"></div><div class="publicCircleV11"></div><div class="centerSpotV33"></div>`;
+ const ramon=(App.teams||[]).find(t=>Number(t.id)===fav83());if(ramon?.logo){const c=document.createElement('div');c.className='pitchRamonCrestV34';c.innerHTML=`<img src="${e83(ramon.logo)}" alt="Ramón Sicart">`;pitch.appendChild(c)}
+ nums.forEach((n,i)=>{const p=players.find(x=>Number(x.number)===n);if(!p)return;const xy=pos[i]||[50,50],photo=!!String(p.photo||'').trim();const el=document.createElement('div');el.className='xiV79Player '+(/portero/i.test(String(p.position||''))?'goalkeeper ':'')+(photo?'':'noPhoto');el.style.left=xy[0]+'%';el.style.top=xy[1]+'%';el.innerHTML=`<div class="xiV79Visual">${photo?`<img class="xiV79Photo" src="${e83(p.photo)}" alt="${e83(p.name)}">`:''}<div class="xiV79PhotoFallback"><div class="xiV79Shirt"><b>${e83(p.number)}</b></div></div></div><div class="xiV79Name"><span class="num">#${e83(p.number)}</span>${e83(p.name)}</div>`;pitch.appendChild(el)});
+ let bench=document.getElementById('rsAdminXIBenchV83');if(!bench){bench=document.createElement('div');bench.id='rsAdminXIBenchV83';bench.className='rsAdminXIBenchV83';pitch.parentElement?.appendChild(bench)}
+ const starters=new Set(nums);const subs=players.filter(p=>!starters.has(Number(p.number))).sort((a,b)=>Number(a.number)-Number(b.number));bench.innerHTML=subs.length?subs.map(p=>`<div class="benchPlayerV11"><div class="benchShirtV11">${e83(p.number)}</div><div style="min-width:0"><div class="benchNameV11">#${e83(p.number)} ${e83(p.name)}</div><div class="benchPosV11">${e83(p.position||'Jugador')}</div></div></div>`).join(''):'<div style="color:#71869c;font-size:12px">No hay suplentes configurados.</div>';
+ let share=document.getElementById('rsXIShareBoxV83');if(!share){share=document.createElement('div');share.id='rsXIShareBoxV83';share.className='rsXIShareBoxV83';const card=document.getElementById('adminLineupV10');card?.appendChild(share)}
+ const m=active83();const h=m?team(m.home):null,a=m?team(m.away):null;const msg=`👕 ONCE INICIAL · RAMÓN SICART\n🏆 ${formation}\n${h?.name||'Ramón Sicart'}${a?' vs '+a.name:''}\n\n${nums.map(n=>{const p=players.find(x=>Number(x.number)===n);return p?`#${p.number} ${p.name}`:''}).filter(Boolean).join('\n')}`;
+ share.innerHTML=`<div style="font-size:10px;color:#ffd400;font-weight:900;margin-bottom:6px">📸 IMAGEN DEL ONCE INICIAL</div><textarea class="rsShareMsg" readonly>${e83(msg)}</textarea><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn green" id="rsGenerateXIImageBtn">📸 Generar imagen del once</button><button class="btn dark" id="rsShareXIImageBtn">📲 Compartir once</button></div><div id="rsXIImageStatus" style="font-size:10px;color:#71869c;margin-top:7px">La imagen se generará con el mismo XI que se ve en pantalla.</div>`;
+ document.getElementById('rsGenerateXIImageBtn').onclick=()=>generateXI83(false);document.getElementById('rsShareXIImageBtn').onclick=()=>generateXI83(true);
+ list.innerHTML=nums.length?nums.map((n,i)=>{const p=players.find(x=>Number(x.number)===n);return `<div class="xiRowV10"><div class="slot">${i+1}</div><div><div class="pname">#${p?.number??n} ${e83(p?.name||'Jugador')}</div><div class="pmeta">${e83(p?.position||'Jugador')}</div></div><div class="xiBtnsV10"><button ${i===0?'disabled':''} onclick="moveXI10(${i},-1)">▲</button><button ${i===nums.length-1?'disabled':''} onclick="moveXI10(${i},1)">▼</button><button onclick="removeXI10(${n})">×</button></div></div>`}).join(''):'<div style="padding:18px;text-align:center;color:#71869c;font-size:10px">Selecciona jugadores para formar el XI.</div>';
+ avail.innerHTML=players.slice().sort((a,b)=>Number(a.number)-Number(b.number)).map(p=>{const on=nums.includes(Number(p.number));return `<button class="${on?'on':''}" onclick="toggleXI10(${Number(p.number)})"><b>#${p.number}</b>${e83(p.name)} ${on?'✓':''}</button>`}).join('');
+}
+async function generateXI83(shareIt){
+ const node=document.getElementById('adminLineupV10');if(!node){return}
+ const status=document.getElementById('rsXIImageStatus');if(status)status.textContent='Generando imagen…';
+ try{
+   if(typeof html2canvas!=='function')throw new Error('html2canvas no disponible');
+   const canvas=await html2canvas(node,{backgroundColor:'#02070d',scale:2,useCORS:true,allowTaint:false,logging:false});
+   const data=canvas.toDataURL('image/jpeg',.92);window.__RS_XI_IMAGE83=data;
+   const a=document.createElement('a');a.href=data;a.download='RS_LIVE_ONCE_INICIAL.jpg';if(!shareIt){document.body.appendChild(a);a.click();a.remove()}
+   if(shareIt){
+     const blob=await dataBlob83(data);
+     const file=new File([blob],'RS_LIVE_ONCE_INICIAL.jpg',{type:'image/jpeg'});
+     if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))){
+       await navigator.share({files:[file],text:'👕 ONCE INICIAL · RAMÓN SICART\n'+(App.lineup?.formation||Live.formation||'4-3-3')});
+     }else{
+       try{if(navigator.clipboard)await navigator.clipboard.writeText('👕 ONCE INICIAL · RAMÓN SICART')}catch(e){}
+       window.open('https://wa.me/?text='+encodeURIComponent('👕 ONCE INICIAL · RAMÓN SICART'),'_blank');
+       const dl=document.createElement('a');dl.href=data;dl.download='RS_LIVE_ONCE_INICIAL.jpg';document.body.appendChild(dl);dl.click();dl.remove();
+     }
+   }
+   if(status)status.textContent='Imagen del once generada correctamente.';toast(shareIt?'Once preparado para compartir 📲':'Imagen del once guardada 📸');
+ }catch(err){console.error('RS LIVE XI image',err);if(status)status.textContent='No se pudo generar la imagen.';toast('⚠️ No se pudo generar la imagen del once')}
+}
+
+/* Asegura que el botón de imagen del XI quede también visible junto a los controles actuales. */
+function ensureXIButton83(){const row=document.querySelector('#adminLineupV10 .row');if(!row||document.getElementById('rsXIQuickBtn83'))return;const b=document.createElement('button');b.id='rsXIQuickBtn83';b.className='btn green';b.textContent='📸 Generar imagen del once';b.onclick=()=>generateXI83(false);row.appendChild(b)}
+
+/* Sustituimos el commit para que el jugador rival se resuelva SOLO como rival y el gol genere cartel + mensaje inmediatamente. */
+const oldCommit83=window.commitEvent;
+window.commitEvent=function(num){
+ const m=active83();if(!m)return;
+ const favId=fav83();const scoringId=Number(eventTeam==='home'?m.home:m.away);const isFav=scoringId===favId;const player=isFav?App.players.find(p=>Number(p.number)===Number(num)):null;const pl=player||{number:Number(num),name:'Jugador '+Number(num)};const minute=Math.max(0,displayMinute()+eventMinuteOffset);const ev={id:Date.now(),type:eventType,team:eventTeam,minute,playerId:player?.id??null,playerNumber:Number(num),playerName:pl.name};
+ if(eventType==='goal'){if(eventTeam==='home')Live.homeScore++;else Live.awayScore++;ev.score=`${Live.homeScore}-${Live.awayScore}`;if(player)player.goals=(player.goals||0)+1}
+ if(eventType==='yellow'||eventType==='red'){if(player)player[eventType==='yellow'?'yellow':'red']=(player[eventType==='yellow'?'yellow':'red']||0)+1}
+ Live.events.push(ev);closeModal('eventModal');save();renderAll();
+ if(eventType==='goal'&&typeof rsGoalPosterGenerate==='function'){
+   Promise.resolve(rsGoalPosterGenerate(m,ev,true)).then(()=>{ensureGoalShareUI83();toast('⚽ Cartel y mensaje del gol generados');}).catch(err=>console.warn('RS LIVE goal poster',err));
+ }
+ if(eventType!=='goal')toast('Evento publicado en directo');
+};
+
+/* Re-render admin XI after any normal render. */
+const oldRenderAll83=window.renderAll;
+window.renderAll=function(){const r=oldRenderAll83.apply(this,arguments);setTimeout(()=>{try{renderAdminXI83();ensureXIButton83();ensureGoalShareUI83()}catch(e){console.warn('V83 render',e)}},0);return r};
+
+document.addEventListener('DOMContentLoaded',()=>{setTimeout(()=>{renderAdminXI83();ensureXIButton83();ensureGoalShareUI83()},400);setTimeout(()=>{ensureGoalShareUI83()},1200)});
+window.rsGenerateXIImage=generateXI83;
 })();
 </script>
