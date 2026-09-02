@@ -9160,3 +9160,246 @@ window.rsGenerateXIImage=generateXI83;
   setTimeout(pullGlobal,5000);
 })();
 </script>
+
+<!-- V90 — SINCRONIZACIÓN CANÓNICA ÚNICA + MEDIA ROBUSTA -->
+<script id="v90-canonical-sync">
+(function(){
+  'use strict';
+  if(window.__RS_V90_CANONICAL__) return;
+  window.__RS_V90_CANONICAL__=true;
+  const base=(typeof firebaseBaseUrl!=='undefined'?String(firebaseBaseUrl):'').replace(/\/$/,'');
+  const root=base+'/clubManagerV6';
+  const canon=root+'/rsSync';
+  const canonUrl=canon+'.json';
+  let remoteApplying=false, initialized=false, chain=Promise.resolve();
+
+  const clone=v=>{try{return JSON.parse(JSON.stringify(v))}catch(e){return v}};
+  const arr=v=>Array.isArray(v)?v:Object.values(v||{});
+  const uid=v=>String(v?.id??'');
+  const getPlayers=()=>Array.isArray(App.players)?App.players:[];
+  const getTeams=()=>Array.isArray(App.teams)?App.teams:[];
+  const getMatches=()=>Array.isArray(App.matches)?App.matches:[];
+  const playerMap=()=>Object.fromEntries(getPlayers().filter(p=>p&&p.id!=null).map(p=>[uid(p),clone(p)]));
+  const teamMap=()=>Object.fromEntries(getTeams().filter(t=>t&&t.id!=null).map(t=>[uid(t),clone(t)]));
+  const matchMap=()=>Object.fromEntries(getMatches().filter(m=>m&&m.id!=null).map(m=>[uid(m),clone(m)]));
+  function stripMedia(obj){const o=clone(obj)||{};Object.values(o).forEach(x=>{if(x&&typeof x==='object'){delete x.photo;delete x.logo}});return o}
+  function mediaMap(){
+    const players={},teams={};
+    getPlayers().forEach(p=>{if(p?.id!=null&&String(p.photo||'').trim())players[uid(p)]={photo:p.photo}});
+    getTeams().forEach(t=>{if(t?.id!=null&&String(t.logo||'').trim())teams[uid(t)]={logo:t.logo}});
+    return {players,teams};
+  }
+  function applyMedia(media){
+    const pm=media?.players||{},tm=media?.teams||{};
+    getPlayers().forEach(p=>{const x=pm[uid(p)];if(x?.photo)p.photo=x.photo});
+    getTeams().forEach(t=>{const x=tm[uid(t)];if(x?.logo)t.logo=x.logo});
+  }
+  function localSave(){try{localStorage.setItem('RS_LIVE_V90_CACHE',JSON.stringify({app:clone(App),live:clone(Live),savedAt:Date.now()}))}catch(e){}}
+  function showSync(ok){const st=document.getElementById('syncText');if(st)st.textContent=ok?'Firebase conectado • tiempo real':'Error guardando Firebase'}
+  async function getJSON(url){const r=await fetch(url+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error('GET '+r.status);return r.json()}
+  async function putJSON(url,data){const r=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});if(!r.ok)throw new Error('PUT '+r.status);return true}
+  async function patchJSON(url,data){if(!Object.keys(data).length)return true;const r=await fetch(url,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});if(!r.ok)throw new Error('PATCH '+r.status);return true}
+
+  // Las fotos ya no dependen de Firebase Storage. Se comprimen y se guardan en
+  // Realtime Database, dentro de /rsSync/media. Esto evita URLs temporales o SDK
+  // de Storage incompatibles.
+  window.uploadFile=async function(file,path){
+    if(!file)return '';
+    if(!file.type || !/^image\//i.test(file.type)) throw new Error('El archivo no es una imagen');
+    return await new Promise((resolve,reject)=>{
+      const fr=new FileReader();
+      fr.onerror=reject;
+      fr.onload=()=>{
+        const img=new Image();
+        img.onerror=reject;
+        img.onload=()=>{
+          const max=480,scale=Math.min(1,max/Math.max(img.naturalWidth||img.width,img.naturalHeight||img.height));
+          const w=Math.max(1,Math.round((img.naturalWidth||img.width)*scale));
+          const h=Math.max(1,Math.round((img.naturalHeight||img.height)*scale));
+          const c=document.createElement('canvas');c.width=w;c.height=h;
+          const ctx=c.getContext('2d');ctx.drawImage(img,0,0,w,h);
+          resolve(c.toDataURL('image/jpeg',0.82));
+        };
+        img.src=fr.result;
+      };
+      fr.readAsDataURL(file);
+    });
+  };
+
+  // Quitar TODOS los listeners anteriores que podían reintroducir datos antiguos.
+  function detachOld(){
+    try{dbRef?.off();}catch(e){}
+    try{dbRef?.child('app').off();}catch(e){}
+    try{dbRef?.child('liveMatch').off();}catch(e){}
+    try{dbRef?.child('media').off();}catch(e){}
+    try{dbRef?.child('matchesById').off();}catch(e){}
+    try{dbRef?.child('rsSync').off();}catch(e){}
+  }
+
+  function canonicalPayload(){
+    return {
+      players:stripMedia(playerMap()),
+      teams:stripMedia(teamMap()),
+      matches:matchMap(),
+      lineup:clone(App.lineup||{formation:'4-3-3',players:[]}),
+      activeMatchId:App.activeMatch==null?null:String(App.activeMatch),
+      live:clone(Live),
+      media:mediaMap(),
+      updatedAt:Date.now()
+    };
+  }
+
+  async function writeCanonical(){
+    if(remoteApplying||!base)return true;
+    const payload=canonicalPayload();
+    localSave();
+    try{
+      // Un solo documento canónico para leer; escrituras por PATCH evitan que
+      // una operación de otro dispositivo borre ramas no relacionadas.
+      await patchJSON(canon+'.json',payload);
+      showSync(true);localSave();return true;
+    }catch(e){
+      console.error('V90 canonical save',e);showSync(false);
+      const st=document.getElementById('syncText');if(st)st.textContent='Error guardando Firebase';
+      toast('⚠️ No se pudo sincronizar con Firebase');return false;
+    }
+  }
+  function saveCanonical(){const run=()=>writeCanonical();chain=chain.then(run,run);return chain}
+  window.save=saveCanonical;
+
+  function applyCanonical(data){
+    if(!data)return;
+    remoteApplying=true;
+    try{
+      const oldMedia=mediaMap();
+      const ps=arr(data.players); const ts=arr(data.teams); const ms=arr(data.matches);
+      if(ps.length || data.players) App.players=ps;
+      if(ts.length || data.teams) App.teams=ts;
+      if(ms.length || data.matches) App.matches=ms;
+      if(data.lineup)App.lineup=clone(data.lineup);
+      if(Object.prototype.hasOwnProperty.call(data,'activeMatchId'))App.activeMatch=data.activeMatchId==null?null:data.activeMatchId;
+      if(data.live)Object.assign(Live,clone(data.live));
+      applyMedia(data.media||{});
+      // Si el servidor aún no tiene una foto que este dispositivo sí tenía,
+      // conservarla; nunca sustituir una foto existente por vacío.
+      getPlayers().forEach(p=>{const x=oldMedia.players[uid(p)];if(x&&!String(p.photo||'').trim())p.photo=x});
+      getTeams().forEach(t=>{const x=oldMedia.teams[uid(t)];if(x&&!String(t.logo||'').trim())t.logo=x});
+      localSave();renderAll();
+    }finally{remoteApplying=false}
+  }
+
+  function attach(){
+    if(!dbRef||!dbRef.child)return;
+    detachOld();
+    dbRef.child('rsSync').on('value',snap=>{
+      if(!snap.exists())return;
+      applyCanonical(snap.val()||{});
+      showSync(true);
+    },err=>{console.error('V90 realtime',err);showSync(false)});
+    const dot=document.getElementById('syncDot');if(dot)dot.className='dot ok';
+    const st=document.getElementById('syncText');if(st)st.textContent='Firebase conectado • tiempo real';
+  }
+
+  async function boot(){
+    if(!base)return;
+    try{
+      detachOld();
+      let remote=await getJSON(canonUrl);
+      if(!remote){
+        // Primera puesta en marcha de V90: migrar los datos que ya existen en
+        // clubManagerV6/app + media + liveMatch, en lugar de sustituirlos por
+        // los valores locales de este navegador.
+        let oldApp=null, oldMedia=null, oldLive=null;
+        try{oldApp=await getJSON(root+'/app.json')}catch(e){}
+        try{oldMedia=await getJSON(root+'/media.json')}catch(e){}
+        try{oldLive=await getJSON(root+'/liveMatch.json')}catch(e){}
+        if(oldApp){
+          const ps=arr(oldApp.players), ts=arr(oldApp.teams), ms=arr(oldApp.matches);
+          if(ps.length||oldApp.players)App.players=ps;
+          if(ts.length||oldApp.teams)App.teams=ts;
+          if(ms.length||oldApp.matches)App.matches=ms;
+          if(oldApp.lineup)App.lineup=clone(oldApp.lineup);
+        }
+        if(oldLive){
+          if(Object.prototype.hasOwnProperty.call(oldLive,'activeMatchId'))App.activeMatch=oldLive.activeMatchId==null?null:oldLive.activeMatchId;
+          Object.assign(Live,oldLive);
+        }
+        applyMedia(oldMedia||{});
+        // Si no existe aún un activeMatch global, respetar el que venía en
+        // App solo como dato de migración inicial. Después V90 será la autoridad.
+        remote=canonicalPayload();
+        await putJSON(canonUrl,remote);
+      }else{
+        applyCanonical(remote);
+      }
+      initialized=true;
+      attach();
+      localSave();
+    }catch(e){
+      console.error('V90 boot',e);showSync(false);
+      const st=document.getElementById('syncText');if(st)st.textContent='Error guardando Firebase';
+      toast('⚠️ No se puede sincronizar con Firebase');
+    }
+  }
+
+  // Partidos: operaciones atómicas dentro del documento canónico.
+  window.setActive=async function(id){
+    const m=getMatches().find(x=>String(x.id)===String(id));if(!m)return;
+    App.activeMatch=m.id;
+    if(m.status==='FINISHED'){
+      Live.state='FINISHED';Live.half=2;Live.homeScore=Number(m.homeScore||0);Live.awayScore=Number(m.awayScore||0);Live.events=clone(m.events||[]);Live.pausedSeconds=80*60;Live.manualMinute=80;Live.startTimestamp=null;
+    }else{
+      Live.state='PREMATCH';Live.half=1;Live.homeScore=0;Live.awayScore=0;Live.events=[];Live.startTimestamp=null;Live.pausedSeconds=0;Live.manualMinute=0;
+      if(Array.isArray(m.lineup)){App.lineup=clone(m.lineup)}
+      if(m.formation)App.lineup.formation=m.formation;
+    }
+    localSave();renderAll();await saveCanonical();toast('Partido activo sincronizado');
+  };
+  window.resetLive=async function(ask=true){
+    const m=activeMatch();
+    if(ask&&!confirm(m?`¿Reiniciar ${team(m.home).name} vs ${team(m.away).name}?\n\nNo se borrarán jugadores, fotos ni partidos.`:'¿Reiniciar el partido activo?'))return;
+    Live.state='PREMATCH';Live.half=1;Live.homeScore=0;Live.awayScore=0;Live.events=[];Live.startTimestamp=null;Live.pausedSeconds=0;Live.manualMinute=0;
+    localSave();renderAll();await saveCanonical();toast('Partido reiniciado en todos los dispositivos');
+  };
+  window.deleteMatch=async function(id){
+    const target=getMatches().find(x=>String(x.id)===String(id));if(!target)return;
+    if(!confirm(`¿Eliminar definitivamente ${team(target.home).name} vs ${team(target.away).name}?\n\nLas fotos de jugadores y escudos NO se borrarán.`))return;
+    const was=String(App.activeMatch)===String(id);
+    App.matches=getMatches().filter(x=>String(x.id)!==String(id));
+    if(was){
+      const next=getMatches().find(x=>x.status!=='FINISHED')||getMatches()[0]||null;
+      App.activeMatch=next?next.id:null;
+      if(next){Live.state=next.status==='FINISHED'?'FINISHED':'PREMATCH';Live.homeScore=Number(next.homeScore||0);Live.awayScore=Number(next.awayScore||0);Live.events=clone(next.events||[]);}
+      else{Live.state='PREMATCH';Live.homeScore=0;Live.awayScore=0;Live.events=[];}
+    }
+    localSave();renderAll();await saveCanonical();toast('Partido eliminado en todos los dispositivos');
+  };
+
+  // Guardado de jugador: la foto queda en /rsSync/media y los datos en players.
+  window.savePlayer=async function(){
+    try{
+      const number=Number(document.getElementById('pNumber')?.value),name=(document.getElementById('pName')?.value||'').trim();
+      if(!number||!name){toast('Dorsal y nombre son obligatorios');return false}
+      let p=getPlayers().find(x=>String(x.id)===String(editPlayerId));
+      if(!p){p={id:Date.now(),number,name,surname:'',position:'Defensa',captain:false,status:'Disponible',photo:'',goals:0,yellow:0,red:0,starts:0,appearances:0};App.players.push(p);editPlayerId=p.id;}
+      p.number=number;p.name=name;p.surname=(document.getElementById('pSurname')?.value||'').trim();p.position=document.getElementById('pPosition')?.value||p.position;p.captain=!!document.getElementById('pCaptain')?.checked;p.status=document.getElementById('pStatus')?.value||p.status;
+      const file=document.getElementById('pPhoto')?.files?.[0];if(file){toast('Guardando foto…');p.photo=await uploadFile(file,'players');}
+      App.players.sort((a,b)=>Number(a.number)-Number(b.number));
+      localSave();renderAll();const ok=await saveCanonical();
+      if(ok){closeModal('playerModal');toast('Jugador y foto guardados correctamente');}
+      return ok;
+    }catch(e){console.error('V90 savePlayer',e);toast('No se pudo guardar el jugador');return false}
+  };
+
+  // Crear partido: no modifica ni reemplaza la plantilla ni media.
+  window.createMatch=async function(){
+    const home=Number(document.getElementById('matchHome')?.value),away=Number(document.getElementById('matchAway')?.value);if(!home||!away||home===away){toast('Local y visitante deben ser diferentes');return}
+    const m={id:Date.now(),home,away,date:document.getElementById('matchDateInput')?.value||'',hour:document.getElementById('matchHourInput')?.value||'',competition:(document.getElementById('matchCompetitionInput')?.value||'').trim()||'Liga',field:(document.getElementById('matchFieldInput')?.value||'').trim(),status:'PENDING',homeScore:0,awayScore:0,events:[],lineup:clone(App.lineup?.players||[]),formation:App.lineup?.formation||'4-3-3'};
+    App.matches.push(m);App.activeMatch=m.id;Live.state='PREMATCH';Live.half=1;Live.homeScore=0;Live.awayScore=0;Live.events=[];Live.startTimestamp=null;Live.pausedSeconds=0;Live.manualMinute=0;
+    localSave();renderAll();const ok=await saveCanonical();if(ok)toast('Partido creado y sincronizado');
+  };
+
+  // Iniciar la única sincronización después de que todo el HTML haya cargado.
+  setTimeout(boot,800);
+})();
+</script>
