@@ -4672,33 +4672,38 @@ document.addEventListener("click",function(e){
       goalAssets.forEach((g,i)=>{
         const col=i%cols,row=Math.floor(i/cols),x=startX+col*(cardW+gap),y=startY+row*(cardH+22);
         gpRound(ctx,x,y,cardW,cardH,24,"rgba(7,18,30,.96)",g.isFav?"#ffd400":"#294764",3);
-        const photoSize=cardH-46;
+        /* Foto más baja y con encuadre superior para evitar cortar la cabeza y reducir el exceso de cuerpo. */
+        const photoW=photoSize-8, photoH=photoSize-22;
+        const photoX=x+12, photoY=y+24;
         if(g.isFav && g.photo){
-          gpDrawCover(ctx,g.photo,x+12,y+12,photoSize,photoSize);
+          gpDrawCover(ctx,g.photo,photoX,photoY,photoW,photoH);
         }else{
-          gpRound(ctx,x+12,y+12,photoSize,photoSize,18,"#101d2c","#233b55",2);
-          gpDrawContain(ctx,g.e.team==="home"?teamImages[0]:teamImages[1],x+28,y+28,photoSize-32,photoSize-32);
+          gpRound(ctx,photoX,photoY,photoW,photoH,18,"#101d2c","#233b55",2);
+          gpDrawContain(ctx,g.e.team==="home"?teamImages[0]:teamImages[1],photoX+16,photoY+12,photoW-32,photoH-24);
         }
-        const tx=x+photoSize+30,tw=cardW-photoSize-48;
-        gpText(ctx,`${Number(g.e.minute||0)}’`,tx,y+65,"900 43px Arial","#ffd400","left");
-        gpText(ctx,gpFit(ctx,(g.e.playerName||"Gol").toUpperCase(),tw,"900 27px Arial"),tx,y+108,"900 27px Arial","#fff","left");
-        gpText(ctx,g.isFav?"RAMÓN SICART":(g.e.team==="home"?home.name:away.name),tx,y+146,"700 19px Arial","#9fb1c6","left");
-        if(g.e.score)gpText(ctx,String(g.e.score),tx,y+178,"900 22px Arial","#fff","left");
+        const tx=x+photoW+42,tw=cardW-photoW-54;
+        gpText(ctx,`${Number(g.e.minute||0)}’`,tx,y+66,"900 43px Arial","#ffd400","left");
+        const player=(g.e.playerName||"Gol").toUpperCase();
+        const scoreLabel=String(g.e.score||"");
+        /* Resultado del gol junto al nombre del jugador. */
+        if(scoreLabel){
+          const scoreWidth=ctx.measureText(scoreLabel).width;
+          const nameMax=Math.max(90,tw-95);
+          gpText(ctx,gpFit(ctx,player,nameMax,"900 25px Arial"),tx,y+111,"900 25px Arial","#fff","left");
+          gpText(ctx,scoreLabel,tx+tw,y+111,"900 23px Arial","#ffd400","right");
+        }else{
+          gpText(ctx,gpFit(ctx,player,tw,"900 25px Arial"),tx,y+111,"900 25px Arial","#fff","left");
+        }
       });
     }
 
     const goalsBottom=startY+(rowsN*cardH)+((rowsN-1)*22)+25;
     const resultY=Math.max(900,goalsBottom+18);
 
-    /* Resultado final repetido en formato protagonista, como el ejemplo. */
-    gpRound(ctx,48,resultY,984,150,26,"#eef1f5","#ffd400",3);
-    gpDrawContain(ctx,teamImages[0],70,resultY+15,115,120);gpDrawContain(ctx,teamImages[1],895,resultY+15,115,120);
-    gpText(ctx,gpFit(ctx,home.name,270,"900 25px Arial"),250,resultY+78,"900 25px Arial","#152238");
-    gpText(ctx,gpFit(ctx,away.name,270,"900 25px Arial"),830,resultY+78,"900 25px Arial","#152238");
-    gpText(ctx,`${score.h} – ${score.a}`,W/2,resultY+96,"900 76px Arial","#151b31");
+    /* Se elimina el segundo bloque de resultado con fondo blanco: el marcador protagonista de arriba es el único resultado mostrado. */
 
     /* Clasificación: exactamente 4 equipos siempre que haya 4 o más, con RS incluido. */
-    const classY=resultY+182;
+    const classY=resultY+18;
     gpText(ctx,"⚡ CLASIFICACIÓN",W/2,classY,"900 38px Arial","#ffd400");
     gpText(ctx,"ACTUALIZADA CON ESTE PARTIDO",W/2,classY+32,"700 18px Arial","#9fb1c6");
     const tableY=classY+52,rowH=73;
@@ -4720,7 +4725,7 @@ document.addEventListener("click",function(e){
       gpText(ctx,String(r.pts),955,y+35,"900 25px Arial",isFav?"#ffd400":"#fff");
     });
 
-    gpText(ctx,"RS LIVE · RAMÓN SICART · MATCH CENTER",W/2,H-24,"700 18px Arial","#71849a");
+    /* Sin pie de cartel con el nombre del Ramón Sicart. */
 
     let data=null;
     try{data=c.toDataURL("image/jpeg",0.92);}catch(err){
