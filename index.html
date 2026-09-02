@@ -4506,9 +4506,9 @@ document.addEventListener("click",function(e){
   }
 
   function gpGoals(m){
-    /* FUENTE ROBUSTA DE GOLES: en directo usamos Live.events, pero al finalizar
-       el partido el histórico puede conservarlos en m.events. Nunca descartamos
-       una de las dos fuentes; las unimos y eliminamos duplicados por id. */
+    /* FUENTE ÚNICA Y ROBUSTA DE GOLES.
+       Al finalizar un partido puede haber una copia en m.events, otra en Live.events
+       y, según la sincronización, una copia histórica. Las unimos sin perder goles. */
     const all=[];
     const push=(arr)=>{if(!Array.isArray(arr))return;arr.forEach(e=>{
       if(!e || String(e.type||'').toLowerCase()!=='goal')return;
@@ -4516,8 +4516,21 @@ document.addEventListener("click",function(e){
       if(!all.some(x=>x._gpKey===key)) all.push({...e,_gpKey:key});
     })};
     push(m?.events);
+    push(m?.liveEvents);
+    push(m?.goals);
     if(m && String(m.id)===String(App.activeMatch)) push(Live?.events);
-    return all.sort((a,b)=>Number(a.minute??999)-Number(b.minute??999) || Number(a.id||0)-Number(b.id||0));
+    try{ if(typeof v26Events==='function') push(v26Events(m)); }catch(_e){}
+
+    all.sort((a,b)=>Number(a.minute??999)-Number(b.minute??999) || Number(a.id||0)-Number(b.id||0));
+
+    /* Nunca dependemos de que el evento tenga guardado el resultado. Lo reconstruimos
+       cronológicamente para que el cartel final siempre muestre 1-0, 2-0, 2-1, etc. */
+    let h=0,a=0;
+    all.forEach(e=>{
+      if(e.team==='home')h++; else if(e.team==='away')a++;
+      if(!e.score && (e.team==='home'||e.team==='away')) e.score=`${h}-${a}`;
+    });
+    return all;
   }
 
   function gpScore(m){
@@ -6721,7 +6734,7 @@ document.addEventListener("click",function(e){
     const preview=document.getElementById("rsV51ImagePreview");
     if(preview)preview.src=data;
     const status=document.getElementById("rsV51ImageStatus");
-    if(status)status.textContent="Imagen generada automáticamente · "+new Date().toLocaleString("es-ES");
+    if(status)status.textContent="Imagen generada · "+new Date().toLocaleString("es-ES");
 
     try{ await save(); }catch(e){ console.warn("No se pudo guardar la imagen en Firebase",e); }
     return data;
@@ -6748,7 +6761,7 @@ document.addEventListener("click",function(e){
     card.innerHTML=`
       <h2>🖼️ Imagen del partido</h2>
       <p style="color:var(--muted);font-size:11px;margin:-7px 0 12px">
-        Al finalizar un partido se genera automáticamente una imagen con el resultado y todos los goles registrados en los eventos.
+        La imagen del partido se genera únicamente cuando pulses «Generar imagen», con el resultado y todos los goles registrados en los eventos.
       </p>
       <div class="rsV51ImageActions">
         <button class="btn green" id="rsV51GenerateBtn">🖼️ Generar imagen</button>
@@ -6793,17 +6806,7 @@ document.addEventListener("click",function(e){
   const oldFinish=window.finish;
   window.finish=async function(){
     const before=activeMatch();
-    if(typeof oldFinish==="function") oldFinish.apply(this,arguments);
-    setTimeout(async()=>{
-      try{
-        const m=before || activeMatch();
-        if(m && m.status==="FINISHED"){
-          await rsV51Generate(m);
-          rsV51Refresh();
-          toast("🏁 Partido finalizado · imagen generada automáticamente");
-        }
-      }catch(e){console.error("RS V51 image generation",e);}
-    },450);
+    if(typeof oldFinish==="function") return await oldFinish.apply(this,arguments);
   };
 
   const oldRenderAll=window.renderAll;
@@ -6812,27 +6815,11 @@ document.addEventListener("click",function(e){
     setTimeout(rsV51Refresh,80);
   };
 
-  /* V84: al finalizar, generar también el cartel nuevo con TODOS los eventos.
-     Se ejecuta después del snapshot histórico y de su guardado. */
+  /* V84/V85: finalizar NO genera ninguna imagen automáticamente.
+     El usuario decide cuándo crear el cartel desde la pestaña Imágenes. */
   const finishV84=window.finish;
   window.finish=async function(){
-    const before=activeMatch();
-    if(typeof finishV84==='function') await finishV84.apply(this,arguments);
-    setTimeout(async()=>{
-      try{
-        const m=before || activeMatch();
-        if(!m || m.status!=="FINISHED")return;
-        /* Si por sincronización el histórico aún está vacío, conservamos los eventos
-           que siguen en la consola antes de generar la imagen definitiva. */
-        if((!Array.isArray(m.events)||!m.events.length) && Array.isArray(Live?.events) && Live.events.length){
-          m.events=JSON.parse(JSON.stringify(Live.events));
-        }
-        if(typeof rsGoalPosterGenerate==='function') await rsGoalPosterGenerate(m,null,false);
-        await save();
-        if(typeof rsGoalPosterRefresh==='function') rsGoalPosterRefresh();
-        if(typeof rsV51Refresh==='function') rsV51Refresh();
-      }catch(err){console.warn('RS LIVE V84 cartel final',err)}
-    },900);
+    if(typeof finishV84==='function') return await finishV84.apply(this,arguments);
   };
 
   window.rsV51Generate=rsV51Generate;
@@ -8540,10 +8527,10 @@ window.commitEvent=function(num){
  if(eventType==='goal'){if(eventTeam==='home')Live.homeScore++;else Live.awayScore++;ev.score=`${Live.homeScore}-${Live.awayScore}`;if(player)player.goals=(player.goals||0)+1}
  if(eventType==='yellow'||eventType==='red'){if(player)player[eventType==='yellow'?'yellow':'red']=(player[eventType==='yellow'?'yellow':'red']||0)+1}
  Live.events.push(ev);closeModal('eventModal');save();renderAll();
- if(eventType==='goal'&&typeof rsGoalPosterGenerate==='function'){
-   Promise.resolve(rsGoalPosterGenerate(m,ev,true)).then(()=>{ensureGoalShareUI83();toast('⚽ Cartel y mensaje del gol generados');}).catch(err=>console.warn('RS LIVE goal poster',err));
- }
- if(eventType!=='goal')toast('Evento publicado en directo');
+ if(eventType==='goal'){
+   setTimeout(()=>{try{ensureGoalShareUI83();}catch(e){console.warn('RS LIVE goal share',e)}},0);
+   toast('⚽ Gol registrado · mensaje preparado para compartir');
+ }else toast('Evento publicado en directo');
 };
 
 /* Re-render admin XI after any normal render. */
@@ -8552,5 +8539,65 @@ window.renderAll=function(){const r=oldRenderAll83.apply(this,arguments);setTime
 
 document.addEventListener('DOMContentLoaded',()=>{setTimeout(()=>{renderAdminXI83();ensureXIButton83();ensureGoalShareUI83()},400);setTimeout(()=>{ensureGoalShareUI83()},1200)});
 window.rsGenerateXIImage=generateXI83;
+})();
+</script>
+
+<!-- V85 — CARTEL MANUAL + GOLES FINALES + ADMIN IMAGENES SOLO EN SU PESTAÑA -->
+<style id="v85-final-poster-admin">
+  /* Las herramientas de generación de imágenes solo ocupan su propia pestaña. */
+  #rsGoalPosterCard{margin-bottom:16px!important}
+  #rsGoalPosterCard .rsGoalShareBoxV83{margin-top:10px}
+</style>
+<script id="v85-final-poster-admin-js">
+(function(){
+  'use strict';
+  if(window.__RS_V85__)return; window.__RS_V85__=true;
+
+  function moveImageCardsToMedia(){
+    const panel=document.getElementById('adminPanel');
+    const pane=document.getElementById('rsAdminPane-media');
+    if(!panel||!pane)return;
+    panel.querySelectorAll('.adminCard').forEach(card=>{
+      const title=(card.querySelector('h2')?.textContent||'').toLowerCase();
+      const id=card.id||'';
+      if(id==='rsGoalPosterCard' || /imagen|cartel/.test(title)){
+        if(card.parentElement!==pane) pane.appendChild(card);
+      }
+    });
+  }
+
+  function repairAdminLayout(){
+    try{moveImageCardsToMedia();}catch(e){console.warn('RS LIVE V85 admin layout',e)}
+  }
+
+  /* El cartel completo NO se genera al marcar un gol. Solo se genera al pulsar
+     "Generar cartel del partido". El mensaje del gol sí se prepara en directo. */
+  const originalPoster=window.rsGoalPosterGenerate;
+  if(typeof originalPoster==='function'){
+    window.rsGoalPosterGenerate=function(m,e,automatic){
+      if(automatic) return Promise.resolve(null);
+      return originalPoster(m,e,false);
+    };
+  }
+
+  /* Al finalizar, no generamos imagen: dejamos el partido y sus goles guardados.
+     Cuando el usuario pulse Generar cartel, la función anterior recuperará todos. */
+  const originalFinish=window.finish;
+  if(typeof originalFinish==='function'){
+    window.finish=async function(){
+      const r=originalFinish.apply(this,arguments);
+      try{await Promise.resolve(r)}catch(_e){}
+      setTimeout(repairAdminLayout,0);
+      return r;
+    };
+  }
+
+  /* Si se crea la tarjeta después de construir las pestañas, el MutationObserver
+     también la coloca en Imágenes; estos reintentos cubren ambos órdenes de carga. */
+  document.addEventListener('DOMContentLoaded',()=>{
+    [0,300,900,1800,3000].forEach(ms=>setTimeout(repairAdminLayout,ms));
+  });
+  [500,1200,2200,3500].forEach(ms=>setTimeout(repairAdminLayout,ms));
+  window.rsRepairAdminImages=repairAdminLayout;
 })();
 </script>
