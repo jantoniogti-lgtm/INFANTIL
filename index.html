@@ -8601,3 +8601,242 @@ window.rsGenerateXIImage=generateXI83;
   window.rsRepairAdminImages=repairAdminLayout;
 })();
 </script>
+
+<!-- V86 — ESTADO GLOBAL ÚNICO + MEDIA INMUTABLE -->
+<script id="v86-global-state-media">
+(function(){
+  'use strict';
+  if(window.__RS_V86_GLOBAL_STATE__) return;
+  window.__RS_V86_GLOBAL_STATE__=true;
+
+  const ROOT=(typeof firebaseBaseUrl!=='undefined'?String(firebaseBaseUrl):'').replace(/\/$/,'');
+  const ROOT_URL=ROOT?ROOT+'/clubManagerV6.json':'';
+  const MEDIA_URL=ROOT?ROOT+'/clubManagerV6/media.json':'';
+  const MATCHES_URL=ROOT?ROOT+'/clubManagerV6/matchesById.json':'';
+  const LOCAL_KEY='RS_LIVE_V86_SAFE_STATE';
+  let applyingRemote=false;
+  let writeSeq=0;
+
+  function clone(v){try{return JSON.parse(JSON.stringify(v))}catch(e){return v}}
+  function playersArray(){return Array.isArray(App.players)?App.players:[]}
+  function teamsArray(){return Array.isArray(App.teams)?App.teams:[]}
+  function matchesArray(){return Array.isArray(App.matches)?App.matches:[]}
+
+  function mediaSnapshot(){
+    const players={},teams={};
+    playersArray().forEach(p=>{if(p&&p.id!=null&&String(p.photo||'').trim())players[String(p.id)]=p.photo});
+    teamsArray().forEach(t=>{if(t&&t.id!=null&&String(t.logo||'').trim())teams[String(t.id)]=t.logo});
+    return {players,teams};
+  }
+  function mergeMediaIntoApp(media){
+    if(!media)return;
+    const pm=media.players||{},tm=media.teams||{};
+    playersArray().forEach(p=>{const x=pm[String(p.id)];if(x?.photo)p.photo=x.photo});
+    teamsArray().forEach(t=>{const x=tm[String(t.id)];if(x?.logo)t.logo=x.logo});
+  }
+  function mergeLocalMedia(before){
+    if(!before)return;
+    playersArray().forEach(p=>{const x=before.players?.[String(p.id)];if(x&&!String(p.photo||'').trim())p.photo=x});
+    teamsArray().forEach(t=>{const x=before.teams?.[String(t.id)];if(x&&!String(t.logo||'').trim())t.logo=x});
+  }
+
+  function localWrite(){
+    try{
+      const a=clone(App);a.activeMatch=App.activeMatch;
+      localStorage.setItem(LOCAL_KEY,JSON.stringify({savedAt:Date.now(),app:a,liveMatch:clone(Live),media:mediaSnapshot()}));
+    }catch(e){}
+  }
+  function localRead(){try{const r=localStorage.getItem(LOCAL_KEY);return r?JSON.parse(r):null}catch(e){return null}}
+
+  function buildAppData(){
+    const a=clone(App)||{};
+    // El estado activo es global y vive exclusivamente en liveMatch.activeMatchId.
+    delete a.activeMatch;
+    (a.players||[]).forEach(p=>delete p.photo);
+    (a.teams||[]).forEach(t=>delete t.logo);
+    return a;
+  }
+  function buildLiveData(){
+    const l=clone(Live)||{};
+    l.activeMatchId=App.activeMatch==null?null:String(App.activeMatch);
+    l.state=l.state||'PREMATCH';
+    return l;
+  }
+
+  async function putJSON(url,data){
+    if(!url)return true;
+    const r=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    if(!r.ok)throw new Error('Firebase PUT '+r.status);
+    return true;
+  }
+  async function updateJSON(url,data){
+    if(!url||!Object.keys(data).length)return true;
+    const r=await fetch(url,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    if(!r.ok)throw new Error('Firebase PATCH '+r.status);
+    return true;
+  }
+
+  async function saveGlobal(){
+    if(ignoreRemote||applyingRemote)return true;
+    const seq=++writeSeq;
+    const media=mediaSnapshot();
+    localWrite();
+    try{
+      // 1) Datos de club/plantilla, SIN estado activo y SIN blobs.
+      if(typeof dbRef!=='undefined'&&dbRef&&dbRef.child){
+        await dbRef.child('app').set(buildAppData());
+        // 2) Estado de directo y partido activo en una rama global compartida.
+        await dbRef.child('liveMatch').set(buildLiveData());
+        // 3) Media SOLO con PATCH: jamás se reemplaza /media completa.
+        const pm={};Object.keys(media.players).forEach(id=>pm[id]={photo:media.players[id]});
+        const tm={};Object.keys(media.teams).forEach(id=>tm[id]={logo:media.teams[id]});
+        if(Object.keys(pm).length)await dbRef.child('media/players').update(pm);
+        if(Object.keys(tm).length)await dbRef.child('media/teams').update(tm);
+      }else if(ROOT_URL){
+        await putJSON(ROOT_URL+'/app.json',buildAppData());
+        await putJSON(ROOT_URL+'/liveMatch.json',buildLiveData());
+        const pm={};Object.keys(media.players).forEach(id=>pm[id]={photo:media.players[id]});
+        const tm={};Object.keys(media.teams).forEach(id=>tm[id]={logo:media.teams[id]});
+        await updateJSON(ROOT_URL.replace('/clubManagerV6.json','/clubManagerV6/media/players.json'),pm);
+        await updateJSON(ROOT_URL.replace('/clubManagerV6.json','/clubManagerV6/media/teams.json'),tm);
+      }
+      // 4) Mantener la rama independiente de partidos sin tocarla con estado de otro dispositivo.
+      if(MATCHES_URL){
+        const obj={};matchesArray().forEach(m=>{if(m&&m.id!=null)obj[String(m.id)]=clone(m)});
+        await putJSON(MATCHES_URL,obj);
+      }
+      if(seq===writeSeq){
+        const st=document.getElementById('syncText');if(st)st.textContent='Firebase conectado · guardado';
+      }
+      localWrite();
+      return true;
+    }catch(e){
+      console.error('V86 save',e);
+      const st=document.getElementById('syncText');if(st)st.textContent='Error guardando Firebase';
+      toast('⚠️ No se pudo sincronizar con Firebase');
+      return false;
+    }
+  }
+
+  // Carga remota final: conserva las fotos locales mientras llega /media y usa
+  // liveMatch.activeMatchId como única autoridad para el partido activo.
+  const oldApply=window.applyData;
+  window.applyData=function(data){
+    const before=mediaSnapshot();
+    applyingRemote=true;
+    try{if(typeof oldApply==='function')oldApply.apply(this,arguments)}finally{applyingRemote=false}
+    mergeLocalMedia(before);
+    if(data?.media)mergeMediaIntoApp(data.media);
+    if(data?.liveMatch && Object.prototype.hasOwnProperty.call(data.liveMatch,'activeMatchId')){
+      const id=data.liveMatch.activeMatchId;
+      App.activeMatch=(id==null||id==='')?null:id;
+    }
+    localWrite();
+    try{renderAll()}catch(e){}
+  };
+
+  // Un único save definitivo. No llama a ninguna de las versiones antiguas que
+  // hacían dbRef.set({app,liveMatch}) y podían pisar media/estado con datos viejos.
+  window.save=saveGlobal;
+
+  // Activación GLOBAL: todos los dispositivos reciben el mismo partido activo.
+  window.setActive=async function(id){
+    const m=matchesArray().find(x=>String(x.id)===String(id));
+    if(!m){toast('Partido no encontrado');return}
+    const before=mediaSnapshot();
+    App.activeMatch=m.id;
+    if(m.status==='FINISHED'){
+      Live.state='FINISHED';Live.half=2;Live.homeScore=Number(m.homeScore||0);Live.awayScore=Number(m.awayScore||0);
+      Live.events=clone(m.events||[]);Live.pausedSeconds=80*60;Live.manualMinute=80;Live.startTimestamp=null;
+    }else{
+      Live.state='PREMATCH';Live.half=1;Live.homeScore=0;Live.awayScore=0;Live.events=[];Live.lineup=clone(m.lineup||m.lineupSnapshot?.players||Live.lineup||[]);Live.formation=m.formation||m.lineupSnapshot?.formation||'4-3-3';Live.startTimestamp=null;Live.pausedSeconds=0;Live.manualMinute=0;
+    }
+    mergeLocalMedia(before);localWrite();renderAll();
+    const ok=await saveGlobal();
+    if(ok)toast('Partido activo sincronizado en todos los dispositivos');
+  };
+
+  // Reiniciar SOLO reinicia la consola del partido ACTIVO y mantiene ese partido
+  // como activo globalmente. No elimina partidos ni jugadores ni media.
+  window.resetLive=async function(ask=true){
+    const m=activeMatch();
+    if(ask){
+      const msg=m?`¿Reiniciar el partido activo ${team(m.home).name} vs ${team(m.away).name}?\n\nSe borrarán marcador, cronómetro y eventos de la consola, pero NO el partido, jugadores, fotos ni escudos.`:'¿Reiniciar la consola del partido?';
+      if(!confirm(msg))return;
+    }
+    Live.state='PREMATCH';Live.half=1;Live.homeScore=0;Live.awayScore=0;Live.events=[];Live.startTimestamp=null;Live.pausedSeconds=0;Live.manualMinute=0;
+    localWrite();renderAll();
+    await saveGlobal();
+    toast('Partido reiniciado · estado sincronizado en todos los dispositivos');
+  };
+
+  // Crear partido sin tocar plantilla/media y con activación global.
+  window.createMatch=async function(){
+    const home=Number(document.getElementById('matchHome')?.value),away=Number(document.getElementById('matchAway')?.value);
+    if(!home||!away||home===away){toast('Local y visitante deben ser diferentes');return}
+    const m={id:Date.now(),home,away,date:document.getElementById('matchDateInput')?.value||'',hour:document.getElementById('matchHourInput')?.value||'',competition:(document.getElementById('matchCompetitionInput')?.value||'').trim()||'Liga',field:(document.getElementById('matchFieldInput')?.value||'').trim()};
+    const before=mediaSnapshot();
+    matchesArray().push(m);App.activeMatch=m.id;
+    Live.state='PREMATCH';Live.half=1;Live.homeScore=0;Live.awayScore=0;Live.events=[];Live.startTimestamp=null;Live.pausedSeconds=0;Live.manualMinute=0;
+    mergeLocalMedia(before);renderAll();
+    const ok=await saveGlobal();
+    if(ok)toast('Partido creado y activado en todos los dispositivos');
+  };
+
+  // Eliminar un partido no toca /media. Si era el activo, el siguiente partido
+  // pasa a ser activo GLOBALMENTE y todos los dispositivos reciben el cambio.
+  window.deleteMatch=async function(id){
+    const m=matchesArray().find(x=>String(x.id)===String(id));if(!m)return;
+    if(!confirm(`¿Eliminar definitivamente el partido ${team(m.home).name} vs ${team(m.away).name}?\n\nLas fotos de jugadores y escudos NO se borrarán.`))return;
+    const wasActive=String(App.activeMatch)===String(id);
+    App.matches=matchesArray().filter(x=>String(x.id)!==String(id));
+    if(wasActive){
+      const next=App.matches.find(x=>x.status!=='FINISHED')||App.matches[0]||null;
+      App.activeMatch=next?next.id:null;
+      if(next){Live.state=next.status==='FINISHED'?'FINISHED':'PREMATCH';Live.homeScore=Number(next.homeScore||0);Live.awayScore=Number(next.awayScore||0);Live.events=clone(next.events||[])}
+      else{Live.state='PREMATCH';Live.homeScore=0;Live.awayScore=0;Live.events=[]}
+    }
+    renderAll();await saveGlobal();toast('Partido eliminado · plantilla y fotos conservadas');
+  };
+
+  // Importante: nunca aceptar un snapshot de partido como autoridad del estado activo.
+  // El polling V77 puede actualizar partidos, pero no App.activeMatch/Live.
+  const oldMergeMatches=window.mergeMatchesObject;
+  // No es una API pública; el polling seguirá funcionando con su propia función.
+
+  // Sincronización periódica del estado global. El listener de la raíz ya llama a
+  // applyData; este GET adicional permite recuperar el estado activo aunque otra
+  // rama haya cambiado después de una escritura.
+  async function pullGlobal(){
+    if(!ROOT||applyingRemote)return;
+    try{
+      const r=await fetch(ROOT+'/clubManagerV6/liveMatch.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;
+      const remote=await r.json();if(!remote)return;
+      applyingRemote=true;
+      if(Object.prototype.hasOwnProperty.call(remote,'activeMatchId'))App.activeMatch=remote.activeMatchId==null?null:remote.activeMatchId;
+      Object.assign(Live,remote);
+      if(Live.state==='HALFTIME'){Live.pausedSeconds=40*60;Live.manualMinute=40;Live.startTimestamp=null}
+      if(Live.state==='FINISHED'){Live.pausedSeconds=80*60;Live.manualMinute=80;Live.startTimestamp=null}
+      localWrite();try{renderAll()}catch(e){};
+    }catch(e){}
+    finally{applyingRemote=false}
+    setTimeout(pullGlobal,1500);
+  }
+
+  // Reparar una posible pérdida previa: si la plantilla local tiene fotos y Firebase
+  // aún no las tiene, se suben con PATCH, nunca se borran las existentes.
+  async function healMedia(){
+    if(!ROOT)return;
+    try{
+      const local=mediaSnapshot();
+      const pm={},tm={};Object.keys(local.players).forEach(id=>pm[id]={photo:local.players[id]});Object.keys(local.teams).forEach(id=>tm[id]={logo:local.teams[id]});
+      await updateJSON(ROOT+'/clubManagerV6/media/players.json',pm);
+      await updateJSON(ROOT+'/clubManagerV6/media/teams.json',tm);
+    }catch(e){console.warn('V86 heal media',e)}
+  }
+
+  localWrite();
+  setTimeout(healMedia,1200);
+  setTimeout(pullGlobal,1600);
+})();
+</script>
