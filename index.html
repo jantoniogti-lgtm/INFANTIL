@@ -2833,18 +2833,32 @@ function openPlayer(id){
 }
 function editPlayer(id){openPlayer(id)}
 async function uploadFile(file,path){
+ // V93: las fotos y escudos se guardan SIEMPRE como imagen comprimida en
+ // Realtime Database. No dependemos de Firebase Storage, que puede estar
+ // deshabilitado o tener reglas distintas y hacía que el guardado fallase.
  if(!file)return"";
- if(!storage){
-   return await new Promise((resolve,reject)=>{
-     const r=new FileReader();
-     r.onload=()=>resolve(r.result);
-     r.onerror=reject;
-     r.readAsDataURL(file);
-   });
- }
- const ref=storage.ref().child(path+"/"+Date.now()+"_"+file.name.replace(/[^\w.-]/g,"_"));
- const snap=await ref.put(file);
- return await snap.ref.getDownloadURL();
+ if(!file.type || !/^image\//i.test(file.type)) throw new Error("El archivo no es una imagen");
+ return await new Promise((resolve,reject)=>{
+   const fr=new FileReader();
+   fr.onerror=()=>reject(new Error("No se pudo leer la imagen"));
+   fr.onload=()=>{
+     const img=new Image();
+     img.onerror=()=>reject(new Error("No se pudo procesar la imagen"));
+     img.onload=()=>{
+       try{
+         const max=900;
+         const scale=Math.min(1,max/Math.max(img.naturalWidth||img.width,img.naturalHeight||img.height));
+         const w=Math.max(1,Math.round((img.naturalWidth||img.width)*scale));
+         const h=Math.max(1,Math.round((img.naturalHeight||img.height)*scale));
+         const c=document.createElement("canvas");c.width=w;c.height=h;
+         const ctx=c.getContext("2d");ctx.drawImage(img,0,0,w,h);
+         resolve(c.toDataURL("image/jpeg",0.78));
+       }catch(e){reject(e)}
+     };
+     img.src=fr.result;
+   };
+   fr.readAsDataURL(file);
+ });
 }
 async function savePlayer(){
  const num=Number(document.getElementById("pNumber").value),name=document.getElementById("pName").value.trim();if(!num||!name){toast("Dorsal y nombre son obligatorios");return}
@@ -5892,6 +5906,57 @@ document.addEventListener("click",function(e){
 })();
 </script>
 
+
+<!-- V93 — PERSISTENCIA DEFINITIVA DE FOTOS Y ESCUDOS -->
+<script id="v93-media-persistence">
+(function(){
+  'use strict';
+  if(window.__RS_V93_MEDIA__)return; window.__RS_V93_MEDIA__=true;
+  const ROOT=(typeof firebaseBaseUrl!=='undefined'?String(firebaseBaseUrl):'').replace(/\/$/,'');
+  if(!ROOT)return;
+  const BASE=ROOT+'/clubManagerV6', SYNC=BASE+'/rsSync', MEDIA=BASE+'/media';
+  const clone=v=>{try{return JSON.parse(JSON.stringify(v))}catch(e){return v}};
+  const arr=v=>Array.isArray(v)?v:Object.values(v||{});
+  async function patch(path,data){const r=await fetch(path+'.json?v='+Date.now(),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});if(!r.ok)throw new Error('Firebase PATCH '+r.status);return true}
+  async function get(path){const r=await fetch(path+'.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error('Firebase GET '+r.status);return r.json()}
+  function mediaFromApp(){const players={},teams={};(App.players||[]).forEach(p=>{if(p&&p.id!=null&&p.photo)players[String(p.id)]={photo:p.photo}});(App.teams||[]).forEach(t=>{if(t&&t.id!=null&&t.logo)teams[String(t.id)]={logo:t.logo}});return {players,teams}}
+  function mergeMedia(m){const pm=m?.players||{},tm=m?.teams||{};(App.players||[]).forEach(p=>{const x=pm[String(p.id)];if(x?.photo)p.photo=x.photo});(App.teams||[]).forEach(t=>{const x=tm[String(t.id)];if(x?.logo)t.logo=x.logo})}
+  async function persistMedia(){
+    try{
+      const remote=await get(MEDIA)||{};
+      mergeMedia(remote);
+      const local=mediaFromApp();
+      const players=Object.assign({},remote.players||{},local.players||{});
+      const teams=Object.assign({},remote.teams||{},local.teams||{});
+      await patch(MEDIA,{players,teams});
+      // Mantener también una copia dentro de rsSync para que una lectura inicial
+      // pueda reconstruir las imágenes aunque la rama media llegue después.
+      await patch(SYNC,{media:{players,teams}});
+      try{localStorage.setItem('RS_LIVE_V93_MEDIA',JSON.stringify({players,teams,savedAt:Date.now()}))}catch(e){}
+      return true;
+    }catch(e){console.error('V93 media persistence',e);return false}
+  }
+  // Reforzamos savePlayer: después del guardado normal volvemos a persistir media.
+  const oldPlayer=window.savePlayer;
+  if(typeof oldPlayer==='function'){
+    window.savePlayer=async function(){const ok=await oldPlayer.apply(this,arguments);if(ok!==false)await persistMedia();return ok};
+  }
+  // Reforzamos addTeam de la versión original: después de guardar, media queda persistida.
+  const oldTeam=window.addTeam;
+  if(typeof oldTeam==='function'){
+    window.addTeam=async function(){const before=mediaFromApp();const r=await oldTeam.apply(this,arguments);mergeMedia(before);await persistMedia();return r};
+  }
+  // Antes de cualquier reinicio, aseguramos media; el reinicio NO la reemplaza.
+  const oldReset=window.resetLive;
+  if(typeof oldReset==='function'){
+    window.resetLive=async function(){const ok=await persistMedia();if(!ok){toast('⚠️ No se pudo verificar fotos/escudos en Firebase');return false}return await oldReset.apply(this,arguments)};
+  }
+  // Al arrancar, primero recuperamos media y después renderizamos.
+  setTimeout(async()=>{
+    try{const remote=await get(MEDIA);mergeMedia(remote||{});try{renderAll()}catch(e){}}catch(e){}
+  },1200);
+})();
+</script>
 </body>
 </html>
 
