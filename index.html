@@ -8267,3 +8267,113 @@ function renderFooter79(){const host=document.getElementById('publicTeamV11');if
 window.renderPublicTeamV11=render79;document.addEventListener('DOMContentLoaded',function(){setTimeout(render79,100);setTimeout(render79,500);setTimeout(render79,1200);setTimeout(render79,2500)});const oldAll=window.renderAll;if(typeof oldAll==='function'){window.renderAll=function(){const r=oldAll.apply(this,arguments);setTimeout(render79,0);return r}}setTimeout(render79,300)
 })();
 </script>
+
+<!-- V82 — PROTECCIÓN DEFINITIVA DE FOTOS DE JUGADORES AL CREAR/SINCRONIZAR PARTIDOS -->
+<style id="v82-media-protection"></style>
+<script id="v82-media-protection">
+(function(){
+  'use strict';
+  if(window.__RS_V82_MEDIA_PROTECTION__) return;
+  window.__RS_V82_MEDIA_PROTECTION__=true;
+
+  const mediaSnapshot=()=>({
+    players:Object.fromEntries((Array.isArray(App.players)?App.players:[])
+      .filter(p=>p && p.id!=null && typeof p.photo==='string' && p.photo.trim())
+      .map(p=>[String(p.id),p.photo])),
+    teams:Object.fromEntries((Array.isArray(App.teams)?App.teams:[])
+      .filter(t=>t && t.id!=null && typeof t.logo==='string' && t.logo.trim())
+      .map(t=>[String(t.id),t.logo]))
+  });
+
+  const mergeSnapshot=(snap)=>{
+    if(!snap) return;
+    (App.players||[]).forEach(p=>{
+      const photo=snap.players?.[String(p.id)];
+      if(photo && (!p.photo || !String(p.photo).trim())) p.photo=photo;
+    });
+    (App.teams||[]).forEach(t=>{
+      const logo=snap.teams?.[String(t.id)];
+      if(logo && (!t.logo || !String(t.logo).trim())) t.logo=logo;
+    });
+  };
+
+  // Protege las fotos cuando Firebase envía primero la estructura principal
+  // (sin media) y la rama /media llega unas décimas después.
+  const oldApply=window.applyData;
+  if(typeof oldApply==='function'){
+    window.applyData=function(data){
+      const before=mediaSnapshot();
+      oldApply.apply(this,arguments);
+      mergeSnapshot(before);
+      try{renderAll()}catch(e){}
+    };
+  }
+
+  // Si una operación de guardado provoca un snapshot remoto intermedio,
+  // volvemos a insertar inmediatamente las fotos que ya tenía la plantilla.
+  const oldSave=window.save;
+  if(typeof oldSave==='function'){
+    window.save=async function(){
+      const before=mediaSnapshot();
+      const result=await oldSave.apply(this,arguments);
+      mergeSnapshot(before);
+      return result;
+    };
+  }
+
+  // Crear partido NO debe tocar ni resetear las fotografías de la plantilla.
+  // Además esperamos al guardado antes de volver a pintar la interfaz.
+  const oldCreate=window.createMatch;
+  if(typeof oldCreate==='function'){
+    window.createMatch=async function(){
+      const before=mediaSnapshot();
+      const home=Number(document.getElementById('matchHome')?.value);
+      const away=Number(document.getElementById('matchAway')?.value);
+      if(home===away){toast('Local y visitante deben ser diferentes');return;}
+
+      const m={
+        id:Date.now(),
+        home,
+        away,
+        date:document.getElementById('matchDateInput')?.value||'',
+        hour:document.getElementById('matchHourInput')?.value||'',
+        competition:(document.getElementById('matchCompetitionInput')?.value||'').trim()||'Liga',
+        field:(document.getElementById('matchFieldInput')?.value||'').trim()
+      };
+
+      App.matches=Array.isArray(App.matches)?App.matches:[];
+      App.matches.push(m);
+      App.activeMatch=m.id;
+      Live.state='PREMATCH';
+      Live.homeScore=0;
+      Live.awayScore=0;
+      Live.events=[];
+      Live.pausedSeconds=0;
+      Live.startTimestamp=null;
+      Live.manualMinute=0;
+
+      mergeSnapshot(before);
+      try{renderAll()}catch(e){}
+
+      const ok=await window.save();
+      mergeSnapshot(before);
+      if(ok===false){
+        toast('Partido creado · las fotos de la plantilla se mantienen guardadas');
+      }else{
+        // Segundo guardado: garantiza que el estado restaurado de las fotos
+        // también queda presente antes de terminar la creación del partido.
+        await window.save();
+        toast('Partido creado y activado · fotos de jugadores conservadas');
+      }
+      try{renderAll()}catch(e){}
+    };
+  }
+
+  // Exponer una pequeña función de diagnóstico para el administrador.
+  window.rsV82MediaCheck=function(){
+    const list=(App.players||[]).filter(p=>p?.photo).map(p=>p.name);
+    toast(list.length ? ('Fotos guardadas: '+list.length) : 'No hay fotos guardadas en la plantilla');
+    return list;
+  };
+})();
+</script>
