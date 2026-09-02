@@ -8799,3 +8799,182 @@ window.rsGenerateXIImage=generateXI83;
   setTimeout(()=>{pull();setInterval(pull,1000)},250);
 })();
 </script>
+
+<!-- V94 — AJUSTES SOLICITADOS: GUARDADO DE DATOS + CLASIFICACIÓN SOLO LIGA + XI SIN DUPLICAR FOTO/CAMISETA -->
+<style id="v94-xi-photo-only">
+  /* Si existe foto del jugador, no se muestra la camiseta debajo/al lado. */
+  #adminPitchV10.xiV79Pitch .xiV79Player:not(.noPhoto) .xiV79PhotoFallback{display:none!important}
+  #adminPitchV10.xiV79Pitch .xiV79Player:not(.noPhoto) .xiV79Photo{display:block!important}
+</style>
+<script id="v94-ajustes-finales">
+(function(){
+'use strict';
+if(window.__RS_V94__)return;window.__RS_V94__=true;
+
+const ROOT=(typeof firebaseBaseUrl!=='undefined'?String(firebaseBaseUrl):'').replace(/\/$/,'');
+const BASE=ROOT?ROOT+'/clubManagerV6':'';
+const SYNC=BASE+'/rsSync';
+const MEDIA=BASE+'/media';
+const clone94=v=>{try{return JSON.parse(JSON.stringify(v))}catch(e){return v}};
+const esc94=v=>typeof esc==='function'?esc(v):String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+const norm94=v=>String(v??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+function leagueMatch94(m){
+  const c=norm94(m?.competition||m?.competicion||m?.type||'liga');
+  if(/amistos|friendly|pretemporada|torneo|copa|cup|trofeo/.test(c))return false;
+  return /liga|preferente|divisi[oó]n|categoria|cadete/.test(c);
+}
+
+/* ---------- CLASIFICACIÓN: SOLO PARTIDOS DE LIGA ---------- */
+function calculateLeague94(includeActive){
+  const stats={};
+  (App.teams||[]).forEach(t=>stats[String(t.id)]={team:t,played:0,w:0,d:0,l:0,gf:0,ga:0,pts:0});
+  let leaguePlayed=false;
+  (App.matches||[]).forEach(m=>{
+    if(!m||m.status!=='FINISHED'||!leagueMatch94(m))return;
+    if(!stats[String(m.home)]||!stats[String(m.away)])return;
+    leaguePlayed=true;
+    const h=Number(m.homeScore||0),a=Number(m.awayScore||0),H=stats[String(m.home)],A=stats[String(m.away)];
+    H.played++;A.played++;H.gf+=h;H.ga+=a;A.gf+=a;A.ga+=h;
+    if(h>a){H.w++;A.l++;H.pts+=3}else if(a>h){A.w++;H.l++;A.pts+=3}else{H.d++;A.d++;H.pts++;A.pts++}
+  });
+  if(includeActive){
+    const m=typeof activeMatch==='function'?activeMatch():null;
+    if(m&&leagueMatch94(m)&&m.status!=='FINISHED'&&stats[String(m.home)]&&stats[String(m.away)]){
+      const live=['FIRST_HALF','SECOND_HALF'].includes(Live?.state);
+      if(live){
+        leaguePlayed=true;
+        const h=Number(Live.homeScore||0),a=Number(Live.awayScore||0),H=stats[String(m.home)],A=stats[String(m.away)];
+        H.played++;A.played++;H.gf+=h;H.ga+=a;A.gf+=a;A.ga+=h;
+        if(h>a){H.w++;A.l++;H.pts+=3}else if(a>h){A.w++;H.l++;A.pts+=3}else{H.d++;A.d++;H.pts++;A.pts++}
+      }
+    }
+  }
+  if(!leaguePlayed)return [];
+  return Object.values(stats).sort((x,y)=>y.pts-x.pts||(y.gf-y.ga)-(x.gf-x.ga)||y.gf-x.gf||String(x.team.name||'').localeCompare(String(y.team.name||'')));
+}
+
+function renderLeagueHome94(){
+  const table=document.getElementById('homeTableV26');if(!table)return;
+  const rows=calculateLeague94(true);
+  if(!rows.length){table.innerHTML='<div class="empty">No hay partidos de liga jugados todavía.</div>';return;}
+  const top=rows.slice(0,5);
+  table.innerHTML='<div class="v26MiniList">'+top.map((r,i)=>`<div class="v26MiniRow"><div class="v26Rank">${i+1}</div><div class="v65StandingsTeam">${typeof v65Crest==='function'?v65Crest(r.team,'v65CrestSmall'):''}<div><b>${esc94(r.team.name)}</b><div class="v26StatLine">PJ ${r.played} · G ${r.w} · E ${r.d} · P ${r.l}</div></div></div><div><div class="v26Score">${r.pts} pts</div><small>${r.gf}:${r.ga}</small></div></div>`).join('')+'</div>';
+}
+const oldDash94=window.renderHomeDashboardV26;
+window.renderHomeDashboardV26=function(){
+  try{if(typeof oldDash94==='function')oldDash94.apply(this,arguments)}catch(e){console.warn('V94 dashboard',e)}
+  renderLeagueHome94();
+};
+
+/* ---------- FOTOS: siempre se convierten a una imagen ligera y se guardan en RTDB ---------- */
+async function compressImage94(file){
+  if(!file)return '';
+  return new Promise((resolve,reject)=>{
+    const fr=new FileReader();
+    fr.onerror=()=>reject(new Error('No se pudo leer la imagen'));
+    fr.onload=()=>{
+      const im=new Image();
+      im.onload=()=>{
+        const max=640,scale=Math.min(1,max/Math.max(im.naturalWidth||im.width,im.naturalHeight||im.height));
+        const w=Math.max(1,Math.round((im.naturalWidth||im.width)*scale)),h=Math.max(1,Math.round((im.naturalHeight||im.height)*scale));
+        const c=document.createElement('canvas');c.width=w;c.height=h;const ctx=c.getContext('2d');ctx.drawImage(im,0,0,w,h);
+        resolve(c.toDataURL('image/jpeg',.68));
+      };
+      im.onerror=()=>reject(new Error('Formato de imagen no válido'));im.src=fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
+window.rsCompressImage94=compressImage94;
+
+async function patch94(path,data){
+  const r=await fetch(path+'.json?v='+Date.now(),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  if(!r.ok)throw new Error('Firebase PATCH '+r.status);return true;
+}
+function backup94(){try{localStorage.setItem('RS_LIVE_V94_BACKUP',JSON.stringify({app:clone94(App),live:clone94(Live),savedAt:Date.now()}))}catch(e){}}
+
+/* ---------- JUGADORES: guarda también TODOS los campos editables y la foto ---------- */
+async function savePlayer94(){
+  try{
+    const num=Number(document.getElementById('pNumber')?.value),name=(document.getElementById('pName')?.value||'').trim();
+    if(!num||!name){toast('Dorsal y nombre son obligatorios');return false}
+    let p=(App.players||[]).find(x=>String(x.id)===String(editPlayerId));
+    if(!p){p={id:Date.now(),number:num,name,surname:'',position:'Defensa',captain:false,status:'Disponible',photo:'',goals:0,yellow:0,red:0,starts:0,appearances:0,statAdjust:{}};App.players.push(p);editPlayerId=p.id}
+    p.number=num;p.name=name;p.surname=(document.getElementById('pSurname')?.value||'').trim();
+    p.position=document.getElementById('pPosition')?.value||p.position;p.captain=!!document.getElementById('pCaptain')?.checked;p.status=document.getElementById('pStatus')?.value||p.status;
+    if(document.getElementById('pGoals'))p.statAdjust={goals:Number(document.getElementById('pGoals').value||0),yellow:Number(document.getElementById('pYellow').value||0),red:Number(document.getElementById('pRed').value||0),starts:Number(document.getElementById('pStarts').value||0),appearances:Number(document.getElementById('pApps').value||0)};
+    const file=document.getElementById('pPhoto')?.files?.[0];
+    if(file){toast('Guardando foto del jugador…');p.photo=await compressImage94(file)}
+    App.players.sort((a,b)=>Number(a.number||0)-Number(b.number||0));
+    backup94();
+    if(!ROOT)throw new Error('Firebase no configurado');
+    const data=clone94(p);const photo=data.photo||'';delete data.photo;
+    await patch94(SYNC+'/players',{[String(p.id)]:data});
+    if(photo)await patch94(MEDIA+'/players',{[String(p.id)]:{photo}});
+    try{localStorage.setItem('rs_lineup',JSON.stringify(App.lineup||{formation:'4-3-3',players:[]}))}catch(e){}
+    if(typeof v26RecalcStats==='function')v26RecalcStats();
+    backup94();renderAll();closeModal('playerModal');toast('✓ Datos del jugador guardados en Firebase');return true;
+  }catch(e){console.error('V94 savePlayer',e);backup94();toast('⚠️ No se pudo guardar el jugador: '+(e.message||e));return false}
+}
+window.savePlayer=savePlayer94;
+const spBtn=document.getElementById('savePlayerBtn');
+if(spBtn){const b=spBtn.cloneNode(true);spBtn.replaceWith(b);b.addEventListener('click',savePlayer94)}
+
+/* ---------- EQUIPOS/ESCUDOS: mismo sistema de guardado por ID ---------- */
+async function addTeam94(){
+  try{
+    const name=(document.getElementById('teamNameInput')?.value||'').trim();if(!name){toast('Escribe el nombre del equipo');return false}
+    const file=document.getElementById('teamLogoInput')?.files?.[0];
+    let t=editTeamId!=null?(App.teams||[]).find(x=>String(x.id)===String(editTeamId)):null;
+    if(!t){t={id:Date.now(),name,short:name.slice(0,3).toUpperCase(),logo:'',protected:false};App.teams.push(t)}
+    t.name=name;t.short=(t.short||name.slice(0,3)).toUpperCase();
+    if(file){toast('Guardando escudo…');t.logo=await compressImage94(file)}
+    const data=clone94(t),logo=data.logo||'';delete data.logo;
+    await patch94(SYNC+'/teams',{[String(t.id)]:data});if(logo)await patch94(MEDIA+'/teams',{[String(t.id)]:{logo}});
+    editTeamId=null;document.getElementById('teamNameInput').value='';document.getElementById('teamLogoInput').value='';
+    const btn=document.getElementById('addTeamBtn');if(btn)btn.textContent='Guardar equipo';backup94();renderAll();toast('✓ Equipo y escudo guardados en Firebase');return true;
+  }catch(e){console.error('V94 addTeam',e);backup94();toast('⚠️ No se pudo guardar el equipo');return false}
+}
+window.addTeam=addTeam94;
+const atBtn=document.getElementById('addTeamBtn');
+if(atBtn){const b=atBtn.cloneNode(true);atBtn.replaceWith(b);b.addEventListener('click',addTeam94)}
+
+/* ---------- ONCE: foto O camiseta, nunca las dos ---------- */
+const oldRenderXI94=window.renderAdminXI83;
+window.renderAdminXI83=function(){
+  try{if(typeof oldRenderXI94==='function')oldRenderXI94.apply(this,arguments)}catch(e){console.warn('V94 XI render',e)}
+  const pitch=document.getElementById('adminPitchV10');if(!pitch)return;
+  pitch.querySelectorAll('.xiV79Player').forEach(el=>{
+    const photo=el.querySelector('.xiV79Photo');
+    const fallback=el.querySelector('.xiV79PhotoFallback');
+    if(photo&&String(photo.getAttribute('src')||'').trim()){el.classList.remove('noPhoto');if(fallback)fallback.style.display='none'}
+    else{el.classList.add('noPhoto');if(fallback)fallback.style.display='flex'}
+  });
+};
+
+/* Guardar el XI también al modificarlo desde el editor, no solo al pulsar el botón. */
+function saveXI94(){
+  try{
+    App.lineup=App.lineup||{formation:'4-3-3',players:[]};
+    const a=(App.lineup.players||[]).map(Number).slice(0,11);Live.lineup=a.slice();Live.formation=App.lineup.formation||'4-3-3';
+    const m=typeof activeMatch==='function'?activeMatch():null;
+    if(m){m.lineup=a.slice();m.formation=App.lineup.formation;m.lineupSnapshot={formation:m.formation,players:a.slice(),savedAt:Date.now()}}
+    backup94();return window.save();
+  }catch(e){console.warn('V94 save XI',e);return false}
+}
+['toggleXI10','moveXI10','removeXI10'].forEach(fn=>{
+  const old=window[fn];if(typeof old!=='function')return;
+  window[fn]=function(){const r=old.apply(this,arguments);setTimeout(()=>saveXI94(),30);return r};
+});
+const f94=document.getElementById('formationV10');if(f94)f94.addEventListener('change',()=>setTimeout(saveXI94,30));
+
+/* Primera limpieza visual cuando ya está todo cargado. */
+function fixXI94(){try{if(typeof window.renderAdminXI83==='function')window.renderAdminXI83();else if(typeof renderAdminXI83==='function')renderAdminXI83()}catch(e){}document.querySelectorAll('#adminPitchV10 .xiV79Player').forEach(el=>{const photo=el.querySelector('.xiV79Photo'),fallback=el.querySelector('.xiV79PhotoFallback');if(photo&&photo.src&&photo.getAttribute('src')){el.classList.remove('noPhoto');if(fallback)fallback.style.display='none'}})}
+setTimeout(fixXI94,300);setTimeout(fixXI94,1200);setTimeout(fixXI94,2500);
+
+/* Re-pintar la clasificación después de cualquier render general. */
+const oldRenderAll94=window.renderAll;
+if(typeof oldRenderAll94==='function')window.renderAll=function(){const r=oldRenderAll94.apply(this,arguments);setTimeout(renderLeagueHome94,0);setTimeout(fixXI94,0);return r};
+
+})();
+</script>
