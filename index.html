@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ca">
+<html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -2072,7 +2072,30 @@ button{cursor:pointer}
 }
 </style>
 <script id="v72-fixed-reference-field-render">
-/* Disabled: V79 is the single authoritative XI renderer. */
+(function(){
+  const FIELD_CLASS='v72FixedReferenceField';
+  function applyFixedReferenceField(){
+    const pitch=document.getElementById('publicPitchV11');
+    if(!pitch) return;
+    pitch.classList.add(FIELD_CLASS);
+    // El campo ya contiene toda la geometría: conservamos solo jugadores y escudo.
+    pitch.querySelectorAll('.stadiumAtmosphereV67,.fieldSurfaceV67,.fieldPlaneV68,.goalFrameV68,.fieldMarkV33,.goalAreaTopV33,.goalAreaBottomV33,.penaltyArcTopV50,.penaltyArcBottomV50,.cornerTLV50,.cornerTRV50,.cornerBLV50,.cornerBRV50,.publicCircleV11,.centerSpotV33').forEach(el=>el.remove());
+  }
+  const original=window.renderPublicTeamV11;
+  if(typeof original==='function'){
+    window.renderPublicTeamV11=function(){
+      const result=original.apply(this,arguments);
+      applyFixedReferenceField();
+      return result;
+    };
+  }
+  document.addEventListener('DOMContentLoaded',()=>{
+    setTimeout(applyFixedReferenceField,50);
+    setTimeout(applyFixedReferenceField,700);
+    setTimeout(applyFixedReferenceField,1500);
+    setTimeout(applyFixedReferenceField,3000);
+  });
+})();
 </script>
 
 </head>
@@ -2200,7 +2223,7 @@ button{cursor:pointer}
     <p style="color:var(--muted);font-size:12px;margin-bottom:14px">Acceso privado para gestionar plantilla, partidos y directo.</p>
     <div class="row"><input id="pinInput" type="password" placeholder="PIN"><button class="btn" id="pinBtn">Entrar</button></div>
   </div>
-  <div id="adminPanel" style="display:none">
+  <div id="adminPanel" class="adminLocked" style="display:none">
     <div class="sectionTitle"><h2>⚙️ Centro de control</h2><p id="adminActiveMatch">Sin partido activo</p></div>
     <div class="adminGrid">
       <div class="card adminCard">
@@ -2308,17 +2331,16 @@ button{cursor:pointer}
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 <script>
 const firebaseConfig = {
-  apiKey: "AIzaSyA2WgBQxFSPWTQMk3NTWBFPc8K5XyCOcDw",
+  apiKey: "TU_API_KEY",
   authDomain: "club-manager-9a242.firebaseapp.com",
   databaseURL: "https://club-manager-9a242-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "club-manager-9a242",
-  storageBucket: "club-manager-9a242.firebasestorage.app",
-  messagingSenderId: "931689419367",
-  appId: "1:931689419367:web:b638b313cf639ee8dd3ac2",
-  measurementId: "G-92X2B8ESXS"
+  storageBucket: "club-manager-9a242.appspot.com",
+  messagingSenderId: "TU_MESSAGING_SENDER_ID",
+  appId: "TU_APP_ID"
 };
 
 /* Firebase estable: usa SDK si hay credenciales reales; si el HTML solo conserva
@@ -2848,13 +2870,30 @@ function saveLineup(){
 }
 function closeModal(id){document.getElementById(id).classList.remove("open")}
 function unlock(){
- if(document.getElementById("pinInput").value!==PIN){toast("PIN incorrecto");return}
- document.getElementById("adminLock").style.display="none";document.getElementById("adminPanel").style.display="block";toast("Administrador desbloqueado")
+ const lock=document.getElementById("adminLock");
+ const panel=document.getElementById("adminPanel");
+ const input=document.getElementById("pinInput");
+ if(!input || !panel || !lock) return;
+ if(input.value!==PIN){toast("PIN incorrecto");input.value="";input.focus();return}
+ lock.style.display="none";
+ panel.classList.remove("adminLocked");
+ panel.style.display="block";
+ input.value="";
+ toast("Administrador desbloqueado");
 }
 function nav(){
  document.querySelectorAll("#mainNav button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));document.getElementById(b.dataset.page).classList.add("active");document.querySelectorAll("#mainNav button").forEach(x=>x.classList.remove("active"));b.classList.add("active")})
 }
 document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>closeModal(b.dataset.close));
+(function enforceAdminLock(){
+ const lock=document.getElementById("adminLock");
+ const panel=document.getElementById("adminPanel");
+ if(lock && panel){
+   lock.style.display="block";
+   panel.classList.add("adminLocked");
+   panel.style.display="none";
+ }
+})();
 document.getElementById("pinBtn").onclick=unlock;document.getElementById("newPlayerBtn").onclick=()=>{editPlayerId=null;document.getElementById("playerModalTitle").textContent="Nuevo jugador";document.querySelectorAll("#playerModal input").forEach(x=>{if(x.type!=="checkbox"&&x.type!=="file")x.value=""});document.getElementById("pCaptain").checked=false;document.getElementById("playerModal").classList.add("open")};
 document.getElementById("savePlayerBtn")?.addEventListener("click",savePlayer);
 document.getElementById("addTeamBtn")?.addEventListener("click",addTeam);
@@ -4421,9 +4460,12 @@ document.addEventListener("click",function(e){
 })();
 </script>
 
-<script id="rsGoalPosterV58">
+<script id="rsGoalPosterV59">
 (function(){
   "use strict";
+
+  /* Cartel de partido estilo gráfico deportivo, adaptado a RS LIVE.
+     Se regenera con cada gol y siempre utiliza los datos reales del partido activo. */
 
   function gpTeam(m, side){
     const id=side==="home"?m?.home:m?.away;
@@ -4440,151 +4482,291 @@ document.addEventListener("click",function(e){
   }
 
   function gpNorm(v){
-    return String(v||"").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase().trim();
+    return String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
   }
 
   function gpPlayer(e){
     const players=App.players||[];
     if(e?.playerId!=null){
       const byId=players.find(p=>String(p.id)===String(e.playerId));
-      if(byId) return byId;
+      if(byId)return byId;
     }
     if(e?.playerName){
       const n=gpNorm(e.playerName);
       const byName=players.find(p=>gpNorm(p.name)===n || gpNorm(`${p.name} ${p.surname||""}`)===n);
-      if(byName) return byName;
+      if(byName)return byName;
     }
     if(e?.playerNumber!=null){
       const byNumber=players.find(p=>Number(p.number)===Number(e.playerNumber));
-      if(byNumber) return byNumber;
+      if(byNumber)return byNumber;
     }
     return null;
   }
 
-  function gpScoreForEvent(m,e){
-    if(e?.score && /^\\d+\\s*-\\s*\\d+$/.test(String(e.score))) return String(e.score).replace(/\\s+/g,"");
-    let h=0,a=0;
-    const events=Array.isArray(m?.events)?m.events:[];
-    const idx=events.indexOf(e);
-    const upto=idx>=0?events.slice(0,idx+1):events;
-    upto.forEach(x=>{if(x?.type!=="goal")return;if(x.team==="home")h++;else if(x.team==="away")a++;});
-    return `${h}-${a}`;
+  function gpGoals(m){
+    return (Array.isArray(m?.events)?m.events:[])
+      .filter(e=>e?.type==="goal")
+      .sort((a,b)=>Number(a.minute||0)-Number(b.minute||0) || Number(a.id||0)-Number(b.id||0));
+  }
+
+  function gpScore(m){
+    let h=Number(m?.status==="FINISHED"?m?.homeScore:Live?.homeScore)||0;
+    let a=Number(m?.status==="FINISHED"?m?.awayScore:Live?.awayScore)||0;
+    const goals=gpGoals(m);
+    if(m?.status!=="FINISHED" && goals.length){
+      h=0;a=0;
+      goals.forEach(e=>e.team==="home"?h++:e.team==="away"?a++:null);
+    }
+    return {h,a};
   }
 
   function gpLoad(src){
     return new Promise(resolve=>{
       if(!src){resolve(null);return;}
       const im=new Image();
-      if(/^https?:\/\//i.test(String(src))) im.crossOrigin="anonymous";
-      im.onload=()=>resolve(im); im.onerror=()=>resolve(null); im.src=src;
+      if(/^https?:\/\//i.test(String(src)))im.crossOrigin="anonymous";
+      im.onload=()=>resolve(im);im.onerror=()=>resolve(null);im.src=src;
     });
   }
 
   function gpFit(ctx,text,max,font){
-    ctx.font=font; let s=String(text||"");
+    ctx.font=font;
+    let s=String(text||"");
     if(ctx.measureText(s).width<=max)return s;
     while(s.length>2 && ctx.measureText(s+"…").width>max)s=s.slice(0,-1);
     return s+"…";
   }
 
-  function gpRound(ctx,x,y,w,h,r,fill,stroke){
+  function gpRound(ctx,x,y,w,h,r,fill,stroke,lineWidth=2){
     ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();
-    if(fill){ctx.fillStyle=fill;ctx.fill();} if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=3;ctx.stroke();}
+    if(fill){ctx.fillStyle=fill;ctx.fill();}
+    if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lineWidth;ctx.stroke();}
   }
 
   function gpDrawContain(ctx,im,x,y,w,h){
     if(!im)return false;
     const r=Math.min(w/im.width,h/im.height),dw=im.width*r,dh=im.height*r;
-    ctx.drawImage(im,x+(w-dw)/2,y+(h-dh)/2,dw,dh); return true;
+    ctx.drawImage(im,x+(w-dw)/2,y+(h-dh)/2,dw,dh);return true;
+  }
+
+  function gpDrawCover(ctx,im,x,y,w,h){
+    if(!im)return false;
+    const r=Math.max(w/im.width,h/im.height),dw=im.width*r,dh=im.height*r;
+    ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
+    ctx.drawImage(im,x+(w-dw)/2,y+(h-dh)/2,dw,dh);ctx.restore();return true;
+  }
+
+  function gpText(ctx,text,x,y,font,fill="#fff",align="center"){
+    ctx.font=font;ctx.fillStyle=fill;ctx.textAlign=align;ctx.textBaseline="alphabetic";ctx.fillText(text,x,y);
+  }
+
+  function gpBuildStandings(m){
+    const stats={};
+    (App.teams||[]).forEach(t=>stats[String(t.id)]={team:t,played:0,w:0,d:0,l:0,gf:0,ga:0,pts:0});
+
+    (App.matches||[]).forEach(mx=>{
+      if(!mx || mx===m || !stats[String(mx.home)] || !stats[String(mx.away)])return;
+      if(mx.status!=="FINISHED")return;
+      const h=Number(mx.homeScore||0),a=Number(mx.awayScore||0);
+      const H=stats[String(mx.home)],A=stats[String(mx.away)];
+      H.played++;A.played++;H.gf+=h;H.ga+=a;A.gf+=a;A.ga+=h;
+      if(h>a){H.w++;A.l++;H.pts+=3;}
+      else if(a>h){A.w++;H.l++;A.pts+=3;}
+      else{H.d++;A.d++;H.pts++;A.pts++;}
+    });
+
+    /* El partido que estamos mostrando también cuenta para que la clasificación
+       quede actualizada con el marcador del cartel, aunque todavía esté en directo. */
+    const score=gpScore(m);
+    if(m && stats[String(m.home)] && stats[String(m.away)]){
+      const H=stats[String(m.home)],A=stats[String(m.away)];
+      H.played++;A.played++;H.gf+=score.h;H.ga+=score.a;A.gf+=score.a;A.ga+=score.h;
+      if(score.h>score.a){H.w++;A.l++;H.pts+=3;}
+      else if(score.a>score.h){A.w++;H.l++;A.pts+=3;}
+      else{H.d++;A.d++;H.pts++;A.pts++;}
+    }
+
+    const rows=Object.values(stats).sort((x,y)=>y.pts-x.pts||(y.gf-y.ga)-(x.gf-x.ga)||y.gf-x.gf||String(x.team.name||"").localeCompare(String(y.team.name||"")));
+    const fav=String(gpFavoriteTeamId());
+    let idx=rows.findIndex(r=>String(r.team.id)===fav);
+    if(idx<0){
+      const ft=(App.teams||[]).find(t=>String(t.id)===fav);
+      if(ft){
+        rows.push({team:ft,played:0,w:0,d:0,l:0,gf:0,ga:0,pts:0});
+        rows.sort((x,y)=>y.pts-x.pts||(y.gf-y.ga)-(x.gf-x.ga)||y.gf-x.gf);
+        idx=rows.findIndex(r=>String(r.team.id)===fav);
+      }
+    }
+
+    if(!rows.length)return [];
+    if(rows.length<=4)return rows;
+    let start=Math.max(0,idx-1);
+    if(start+4>rows.length)start=rows.length-4;
+    return rows.slice(start,start+4);
   }
 
   async function rsGoalPosterGenerate(m,e,automatic){
-    if(!m||!e||e.type!=="goal") return null;
+    if(!m)return null;
     const home=gpTeam(m,"home"),away=gpTeam(m,"away");
     const favoriteId=gpFavoriteTeamId();
-    const scoringId=Number(e.team==="home"?m.home:m.away);
-    const favoriteScorer=scoringId===favoriteId;
-    const player=favoriteScorer?gpPlayer(e):null;
-    const him=await gpLoad(home.logo),aim=await gpLoad(away.logo);
-    const pim=player?.photo?await gpLoad(player.photo):null;
-    const W=1080,H=1350,c=document.createElement("canvas");c.width=W;c.height=H;
+    const goals=gpGoals(m);
+    const score=gpScore(m);
+    const homeIsFav=Number(m.home)===favoriteId;
+    const margin=Math.abs(score.h-score.a);
+    const favScore=homeIsFav?score.h:score.a;
+    const oppScore=homeIsFav?score.a:score.h;
+    let headline="¡PARTIDAZO!";
+    if(favScore>oppScore)headline=margin>=3?"¡GOLEADA!":"¡VICTORIA!";
+    else if(favScore===oppScore)headline="¡EMPATE!";
+    else headline="¡A POR LA REMONTADA!";
+
+    const teamImages=await Promise.all([gpLoad(home.logo),gpLoad(away.logo)]);
+    const goalAssets=await Promise.all(goals.map(async g=>{
+      const scoringId=Number(g.team==="home"?m.home:m.away);
+      const isFav=scoringId===favoriteId;
+      const pl=isFav?gpPlayer(g):null;
+      return {e:g,isFav,player:pl,photo:pl?.photo?await gpLoad(pl.photo):null};
+    }));
+
+    const standings=gpBuildStandings(m);
+    const standingLogos=await Promise.all(standings.map(r=>gpLoad(r.team?.logo)));
+
+    const W=1080,H=1620,c=document.createElement("canvas");c.width=W;c.height=H;
     const ctx=c.getContext("2d");
 
-    const bg=ctx.createLinearGradient(0,0,W,H);bg.addColorStop(0,"#05080d");bg.addColorStop(.5,"#10223a");bg.addColorStop(1,"#05080d");ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
-    ctx.fillStyle="#ffd400";ctx.fillRect(55,55,W-110,6);
-    ctx.textAlign="center";ctx.fillStyle="#fff";ctx.font="900 74px Arial";ctx.fillText("GOOOOL",W/2,170);
-    ctx.fillStyle="#ffd400";ctx.font="900 34px Arial";ctx.fillText(`DEL ${gpFit(ctx,(scoringId===Number(m.home)?home.name:away.name).toUpperCase(),850,"900 34px Arial")}`,W/2,220);
+    /* Fondo inspirado en el ejemplo: oscuro, deportivo y con sensación de estadio. */
+    const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,"#020407");bg.addColorStop(.35,"#0a1624");bg.addColorStop(.62,"#07111d");bg.addColorStop(1,"#020407");ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+    const glow=ctx.createRadialGradient(W/2,390,30,W/2,390,600);glow.addColorStop(0,"rgba(255,210,0,.16)");glow.addColorStop(1,"rgba(255,210,0,0)");ctx.fillStyle=glow;ctx.fillRect(0,0,W,820);
+    for(let i=0;i<14;i++){ctx.fillStyle=`rgba(255,255,255,${0.025+(i%3)*0.012})`;ctx.fillRect(40+i*78,250+(i%2)*18,3,190);}
 
-    // Marcador: escudos reales + nombres + resultado.
-    gpRound(ctx,55,285,970,250,28,"rgba(5,12,22,.82)","#294764");
-    gpDrawContain(ctx,him,105,325,155,145);gpDrawContain(ctx,aim,820,325,155,145);
-    ctx.fillStyle="#fff";ctx.font="900 31px Arial";
-    ctx.fillText(gpFit(ctx,home.name,300,"900 31px Arial"),182,505);
-    ctx.fillText(gpFit(ctx,away.name,300,"900 31px Arial"),898,505);
-    ctx.fillStyle="#ffd400";ctx.font="900 30px Arial";ctx.fillText("VS",W/2,405);
-    const score=gpScoreForEvent(m,e);ctx.fillStyle="#fff";ctx.font="900 82px Arial";ctx.fillText(score.replace("-","  –  "),W/2,490);
+    ctx.fillStyle="#ffd400";ctx.fillRect(48,48,W-96,8);
+    gpText(ctx,headline,W/2,150,"900 82px Arial","#fff");
+    gpText(ctx,`RAMÓN SICART · ${m.competition||"PARTIDO"}`.toUpperCase(),W/2,202,"900 28px Arial","#ffd400");
+    if(m.field)gpText(ctx,String(m.field).toUpperCase(),W/2,242,"700 24px Arial","#aebdd0");
 
-    ctx.fillStyle="#aabbd0";ctx.font="700 27px Arial";ctx.fillText(m.date?formatDate(m.date):"",W/2,585);
-    ctx.fillStyle="#ffd400";ctx.font="900 54px Arial";ctx.fillText(`${Number(e.minute||0)}’`,W/2,660);
-    ctx.fillStyle="#fff";ctx.font="900 45px Arial";ctx.fillText(gpFit(ctx,(e.playerName||"Gol").toUpperCase(),780,"900 45px Arial"),W/2,720);
+    /* Bloque marcador final/actual con escudos reales. */
+    gpRound(ctx,48,280,984,245,30,"rgba(4,10,18,.90)","#314a63",3);
+    gpDrawContain(ctx,teamImages[0],85,318,190,150);gpDrawContain(ctx,teamImages[1],805,318,190,150);
+    gpText(ctx,gpFit(ctx,home.name,300,"900 31px Arial"),180,493,"900 31px Arial","#fff");
+    gpText(ctx,gpFit(ctx,away.name,300,"900 31px Arial"),900,493,"900 31px Arial","#fff");
+    gpText(ctx,`${score.h}  –  ${score.a}`,W/2,435,"900 88px Arial","#fff");
+    gpText(ctx,m.status==="FINISHED"?"RESULTADO FINAL":"MARCADOR ACTUAL",W/2,500,"900 23px Arial","#ffd400");
 
-    if(favoriteScorer){
-      // Foto únicamente si el goleador pertenece al equipo favorito.
-      gpRound(ctx,340,770,400,400,32,"#0b1728","#ffd400");
-      if(pim){
-        ctx.save();ctx.beginPath();ctx.arc(540,970,170,0,Math.PI*2);ctx.clip();ctx.drawImage(pim,370,800,340,340);ctx.restore();
-      }else{
-        ctx.fillStyle="#23364d";ctx.beginPath();ctx.arc(540,970,170,0,Math.PI*2);ctx.fill();
-        ctx.fillStyle="#a9b9cc";ctx.font="900 150px Arial";ctx.fillText("👤",540,1020);
-      }
-      ctx.fillStyle="#fff";ctx.font="800 24px Arial";ctx.fillText("GOLEADOR",540,1215);
+    const dateText=m.date?formatDate(m.date):"";
+    if(dateText)gpText(ctx,dateText,W/2,560,"700 25px Arial","#aebdd0");
+
+    /* Goles: todos los minutos del partido, en tarjetas dinámicas. */
+    gpText(ctx,"⚽ GOLES DEL PARTIDO",W/2,625,"900 34px Arial","#fff");
+    const count=Math.max(goals.length,1),cols=goals.length<=2?2:goals.length<=4?2:3;
+    const cardW=goals.length<=2?440:goals.length<=4?455:315;
+    const gap=goals.length<=2?30:goals.length<=4?28:22;
+    const rowsN=Math.ceil(Math.max(goals.length,1)/cols);
+    const cardH=goals.length<=2?200:goals.length<=4?180:165;
+    const startX=(W-(cols*cardW+(cols-1)*gap))/2;
+    const startY=660;
+
+    if(!goals.length){
+      gpRound(ctx,180,690,720,130,24,"rgba(12,24,38,.9)","#294764",2);
+      gpText(ctx,"Todavía no hay goles",W/2,770,"800 34px Arial","#aebdd0");
     }else{
-      ctx.fillStyle="#aabbd0";ctx.font="700 30px Arial";ctx.fillText("Gol del equipo visitante/local",W/2,850);
+      goalAssets.forEach((g,i)=>{
+        const col=i%cols,row=Math.floor(i/cols),x=startX+col*(cardW+gap),y=startY+row*(cardH+22);
+        gpRound(ctx,x,y,cardW,cardH,24,"rgba(7,18,30,.96)",g.isFav?"#ffd400":"#294764",3);
+        const photoSize=cardH-46;
+        if(g.isFav && g.photo){
+          gpDrawCover(ctx,g.photo,x+12,y+12,photoSize,photoSize);
+        }else{
+          gpRound(ctx,x+12,y+12,photoSize,photoSize,18,"#101d2c","#233b55",2);
+          gpDrawContain(ctx,g.e.team==="home"?teamImages[0]:teamImages[1],x+28,y+28,photoSize-32,photoSize-32);
+        }
+        const tx=x+photoSize+30,tw=cardW-photoSize-48;
+        gpText(ctx,`${Number(g.e.minute||0)}’`,tx,y+65,"900 43px Arial","#ffd400","left");
+        gpText(ctx,gpFit(ctx,(g.e.playerName||"Gol").toUpperCase(),tw,"900 27px Arial"),tx,y+108,"900 27px Arial","#fff","left");
+        gpText(ctx,g.isFav?"RAMÓN SICART":(g.e.team==="home"?home.name:away.name),tx,y+146,"700 19px Arial","#9fb1c6","left");
+        if(g.e.score)gpText(ctx,String(g.e.score),tx,y+178,"900 22px Arial","#fff","left");
+      });
     }
 
-    ctx.fillStyle="#65758c";ctx.font="600 22px Arial";ctx.fillText("RS LIVE · RAMÓN SICART · MATCH CENTER",W/2,1310);
+    const goalsBottom=startY+(rowsN*cardH)+((rowsN-1)*22)+25;
+    const resultY=Math.max(900,goalsBottom+18);
+
+    /* Resultado final repetido en formato protagonista, como el ejemplo. */
+    gpRound(ctx,48,resultY,984,150,26,"#eef1f5","#ffd400",3);
+    gpDrawContain(ctx,teamImages[0],70,resultY+15,115,120);gpDrawContain(ctx,teamImages[1],895,resultY+15,115,120);
+    gpText(ctx,gpFit(ctx,home.name,270,"900 25px Arial"),250,resultY+78,"900 25px Arial","#152238");
+    gpText(ctx,gpFit(ctx,away.name,270,"900 25px Arial"),830,resultY+78,"900 25px Arial","#152238");
+    gpText(ctx,`${score.h} – ${score.a}`,W/2,resultY+96,"900 76px Arial","#151b31");
+
+    /* Clasificación: exactamente 4 equipos siempre que haya 4 o más, con RS incluido. */
+    const classY=resultY+182;
+    gpText(ctx,"⚡ CLASIFICACIÓN",W/2,classY,"900 38px Arial","#ffd400");
+    gpText(ctx,"ACTUALIZADA CON ESTE PARTIDO",W/2,classY+32,"700 18px Arial","#9fb1c6");
+    const tableY=classY+52,rowH=73;
+    gpRound(ctx,48,tableY,984,rowH*4+22,24,"rgba(3,10,17,.96)","#2d4358",2);
+    ["POS","EQUIPO","PJ","DG","PTS"].forEach((t,i)=>{
+      const xs=[75,150,760,855,955];
+      gpText(ctx,t,xs[i],tableY+30,i===1?"900 18px Arial":"900 16px Arial","#9fb1c6",i===1?"left":"center");
+    });
+    standings.slice(0,4).forEach((r,i)=>{
+      const y=tableY+48+i*rowH,isFav=String(r.team.id)===String(favoriteId);
+      if(isFav){gpRound(ctx,58,y,964,rowH-8,16,"rgba(255,212,0,.13)","#ffd400",2);}
+      else if(i%2===0){gpRound(ctx,58,y,964,rowH-8,16,"rgba(255,255,255,.025)",null,0);}
+      const logo=standingLogos[i];
+      gpText(ctx,`${i+1}º`,75,y+39,"900 26px Arial",isFav?"#ffd400":"#fff");
+      gpDrawContain(ctx,logo,105,y+8,50,50);
+      gpText(ctx,gpFit(ctx,String(r.team.name||"Equipo").toUpperCase(),535,"900 23px Arial"),175,y+35,"900 23px Arial",isFav?"#fff":"#e9eef5","left");
+      gpText(ctx,String(r.played),760,y+35,"800 22px Arial","#fff");
+      gpText(ctx,`${r.gf-r.ga>=0?"+":""}${r.gf-r.ga}`,855,y+35,"800 22px Arial",r.gf-r.ga>=0?"#dce8f4":"#ff8e8e");
+      gpText(ctx,String(r.pts),955,y+35,"900 25px Arial",isFav?"#ffd400":"#fff");
+    });
+
+    gpText(ctx,"RS LIVE · RAMÓN SICART · MATCH CENTER",W/2,H-24,"700 18px Arial","#71849a");
 
     let data=null;
     try{data=c.toDataURL("image/jpeg",0.92);}catch(err){
-      console.warn("RS LIVE: no se pudo exportar el cartel de gol",err);
+      console.warn("RS LIVE: no se pudo exportar el cartel",err);
       toast("⚠️ No se pudo generar el cartel. Revisa los permisos/CORS de las imágenes.");
       return null;
     }
 
-    // Se conserva el cartel en el mismo evento para que el directo y el administrador trabajen con el mismo dato.
-    e.goalPosterData=data;e.goalPosterGeneratedAt=Date.now();e.goalPosterFavoriteScorer=!!favoriteScorer;
-    const card=document.getElementById("rsGoalPosterCard");
-    const preview=document.getElementById("rsGoalPosterPreview");
-    const status=document.getElementById("rsGoalPosterStatus");
+    /* El cartel queda guardado en el último evento de gol para mantener la misma lógica existente. */
+    if(e){
+      e.goalPosterData=data;e.goalPosterGeneratedAt=Date.now();e.goalPosterFavoriteScorer=true;
+    }
+    m.matchPosterData=data;m.matchPosterGeneratedAt=Date.now();
+
+    const preview=document.getElementById("rsGoalPosterPreview"),status=document.getElementById("rsGoalPosterStatus");
     if(preview){preview.src=data;preview.style.display="block";}
-    if(status)status.textContent=`Cartel generado · ${e.minute||0}’ · ${e.playerName||"Gol"}${favoriteScorer?" · foto del jugador":" · sin foto rival"}`;
+    if(status)status.textContent=`Cartel actualizado · ${goals.length} gol${goals.length===1?"":"es"} · ${score.h}-${score.a}`;
     try{await save();}catch(err){console.warn("RS LIVE: no se pudo guardar el cartel",err);}
-    if(automatic) toast(favoriteScorer?"⚽ Cartel de gol generado con la foto del jugador":"⚽ Cartel de gol generado");
+    if(automatic)toast("⚽ Cartel del partido actualizado");
     return data;
   }
 
   function rsGoalPosterDownload(){
-    const m=activeMatch();const events=Array.isArray(m?.events)?m.events:[];const e=[...events].reverse().find(x=>x?.type==="goal"&&x.goalPosterData);
-    if(!e){toast("Genera primero el cartel de un gol");return;}
+    const m=activeMatch();
+    const data=m?.matchPosterData || [...(m?.events||[])].reverse().find(x=>x?.goalPosterData)?.goalPosterData;
+    if(!data){toast("Todavía no hay cartel generado");return;}
     const home=gpTeam(m,"home"),away=gpTeam(m,"away");
     const safe=s=>String(s||"equipo").replace(/[^a-z0-9áéíóúüñ_-]+/gi,"_");
-    const a=document.createElement("a");a.href=e.goalPosterData;a.download=`RS_LIVE_GOL_${safe(home.name)}_${e.minute||0}min_${safe(e.playerName||"gol")}_${safe(away.name)}.jpg`;document.body.appendChild(a);a.click();a.remove();
+    const a=document.createElement("a");a.href=data;a.download=`RS_LIVE_PARTIDO_${safe(home.name)}_${safe(away.name)}.jpg`;document.body.appendChild(a);a.click();a.remove();
   }
 
   function rsGoalPosterBuildAdmin(){
     const panel=document.getElementById("adminPanel");if(!panel||document.getElementById("rsGoalPosterCard"))return;
     const card=document.createElement("div");card.className="card adminCard rsV51ImageCard";card.id="rsGoalPosterCard";
-    card.innerHTML=`<h2>⚽ Cartel de gol</h2><p style="color:var(--muted);font-size:11px;margin:-7px 0 12px">Se genera desde el mismo evento del directo: escudos reales, minuto, marcador y foto del goleador solo cuando pertenece al equipo favorito.</p><div class="rsV51ImageActions"><button class="btn green" id="rsGoalPosterGenerateBtn">⚽ Generar último gol</button><button class="btn dark" id="rsGoalPosterDownloadBtn">💾 Guardar cartel</button></div><div id="rsGoalPosterStatus" class="rsV51ImageStatus">No hay cartel generado.</div><img id="rsGoalPosterPreview" class="rsV51ImagePreview" alt="Cartel de gol" style="display:none">`;
+    card.innerHTML=`<h2>⚽ Cartel del partido</h2><p style="color:var(--muted);font-size:11px;margin:-7px 0 12px">Estilo gráfico deportivo: todos los minutos y goleadores, escudos reales, resultado actualizado y clasificación con 4 equipos incluyendo siempre al Ramón Sicart.</p><div class="rsV51ImageActions"><button class="btn green" id="rsGoalPosterGenerateBtn">⚽ Generar cartel del partido</button><button class="btn dark" id="rsGoalPosterDownloadBtn">💾 Guardar cartel</button></div><div id="rsGoalPosterStatus" class="rsV51ImageStatus">No hay cartel generado.</div><img id="rsGoalPosterPreview" class="rsV51ImagePreview" alt="Cartel del partido" style="display:none">`;
     panel.appendChild(card);
-    document.getElementById("rsGoalPosterGenerateBtn").onclick=async()=>{const m=activeMatch();const e=[...(m?.events||[])].reverse().find(x=>x?.type==="goal");if(!m||!e){toast("No hay goles en el partido activo");return;}await rsGoalPosterGenerate(m,e,false);};
+    document.getElementById("rsGoalPosterGenerateBtn").onclick=async()=>{const m=activeMatch();if(!m){toast("No hay partido activo");return;}const e=[...(m.events||[])].reverse().find(x=>x?.type==="goal")||null;await rsGoalPosterGenerate(m,e,false);};
     document.getElementById("rsGoalPosterDownloadBtn").onclick=rsGoalPosterDownload;
   }
 
   function rsGoalPosterRefresh(){
     rsGoalPosterBuildAdmin();
-    const m=activeMatch();const e=[...(m?.events||[])].reverse().find(x=>x?.type==="goal"&&x.goalPosterData);
-    const img=document.getElementById("rsGoalPosterPreview"),status=document.getElementById("rsGoalPosterStatus");if(!img||!status)return;
-    if(e){img.src=e.goalPosterData;img.style.display="block";status.textContent=`Cartel guardado · ${e.minute||0}’ · ${e.playerName||"Gol"}`;}else{img.style.display="none";status.textContent="No hay cartel generado.";}
+    const m=activeMatch(),img=document.getElementById("rsGoalPosterPreview"),status=document.getElementById("rsGoalPosterStatus");if(!img||!status)return;
+    const data=m?.matchPosterData || [...(m?.events||[])].reverse().find(x=>x?.goalPosterData)?.goalPosterData;
+    if(data){img.src=data;img.style.display="block";status.textContent="Cartel guardado · partido activo";}
+    else{img.style.display="none";status.textContent="No hay cartel generado.";}
   }
 
   window.rsGoalPosterGenerate=rsGoalPosterGenerate;
@@ -4635,7 +4817,172 @@ document.addEventListener("click",function(e){
 </style>
 
 <script id="v63-final-persistence">
-/* Disabled: consolidated V81 persistence/synchronization. */
+(function(){
+  "use strict";
+  const CACHE_KEY="RS_LIVE_V63_PERSISTENCE";
+
+  function clone(v){ return JSON.parse(JSON.stringify(v)); }
+
+  function snapshot(){
+    return {
+      savedAt:Date.now(),
+      app:clone(App),
+      liveMatch:clone(Live)
+    };
+  }
+
+  function writeCache(){
+    try{
+      localStorage.setItem(CACHE_KEY,JSON.stringify(snapshot()));
+      return true;
+    }catch(e){
+      console.warn("RS LIVE: no se pudo guardar la copia local",e);
+      return false;
+    }
+  }
+
+  function readCache(){
+    try{
+      const raw=localStorage.getItem(CACHE_KEY);
+      return raw?JSON.parse(raw):null;
+    }catch(e){ return null; }
+  }
+
+  function restoreMediaFromCache(){
+    const cached=readCache();
+    if(!cached || !cached.app) return;
+
+    const cachedPlayers=Array.isArray(cached.app.players)?cached.app.players:Object.values(cached.app.players||{});
+    const cachedTeams=Array.isArray(cached.app.teams)?cached.app.teams:Object.values(cached.app.teams||{});
+
+    const playersById=new Map(cachedPlayers.map(p=>[String(p.id),p]));
+    const teamsById=new Map(cachedTeams.map(t=>[String(t.id),t]));
+
+    (App.players||[]).forEach(p=>{
+      const cp=playersById.get(String(p.id));
+      if(cp && !p.photo && cp.photo) p.photo=cp.photo;
+      if(cp && p.status==null && cp.status!=null) p.status=cp.status;
+    });
+    (App.teams||[]).forEach(t=>{
+      const ct=teamsById.get(String(t.id));
+      if(ct && !t.logo && ct.logo) t.logo=ct.logo;
+    });
+  }
+
+  // Recuperación inmediata al abrir/actualizar la página.
+  const cached=readCache();
+  if(cached && cached.app){
+    try{
+      const cp=Array.isArray(cached.app.players)?cached.app.players:Object.values(cached.app.players||{});
+      const ct=Array.isArray(cached.app.teams)?cached.app.teams:Object.values(cached.app.teams||{});
+      const cm=Array.isArray(cached.app.matches)?cached.app.matches:Object.values(cached.app.matches||{});
+      if(cp.length) App.players=cp;
+      if(ct.length) App.teams=ct;
+      if(cm.length || Array.isArray(cached.app.matches)) App.matches=cm;
+      if(cached.app.activeMatch!=null) App.activeMatch=cached.app.activeMatch;
+      if(cached.app.lineup) App.lineup=cached.app.lineup;
+      if(cached.liveMatch) Object.assign(Live,cached.liveMatch);
+    }catch(e){ console.warn("RS LIVE: recuperación local",e); }
+  }
+
+  // Nunca dejar que una actualización remota temporal sin media borre fotos o escudos.
+  const previousApply=window.applyData;
+  window.applyData=function(data){
+    if(previousApply) previousApply(data);
+    restoreMediaFromCache();
+    writeCache();
+    try{ renderAll(); }catch(e){}
+  };
+
+  // Primero guardamos SIEMPRE una copia local y después sincronizamos Firebase.
+  const previousSave=window.save;
+  window.save=async function(){
+    writeCache();
+    let remoteOk=true;
+    try{
+      if(previousSave) remoteOk=await previousSave();
+    }catch(e){
+      console.warn("RS LIVE: Firebase no respondió; se conserva la copia local",e);
+      remoteOk=false;
+    }
+    // La copia local contiene también fotos y escudos completos.
+    writeCache();
+    return remoteOk!==false;
+  };
+
+  // Guardado robusto de jugadores, incluidos dorsal, foto y cambios de datos.
+  window.savePlayer=async function(){
+    try{
+      if(typeof v26EnsurePlayerStatsFields==="function") v26EnsurePlayerStatsFields();
+
+      const number=Number(document.getElementById("pNumber").value);
+      const name=document.getElementById("pName").value.trim();
+      if(!number || !name){
+        toast("Dorsal y nombre son obligatorios");
+        return false;
+      }
+
+      let p=(App.players||[]).find(x=>String(x.id)===String(editPlayerId));
+      if(!p){
+        p={id:Date.now(),number,name,surname:"",position:"Defensa",captain:false,photo:"",goals:0,yellow:0,red:0,starts:0,appearances:0};
+        App.players.push(p);
+        editPlayerId=p.id;
+      }
+
+      p.number=number;
+      p.name=name;
+      p.surname=document.getElementById("pSurname").value.trim();
+      p.position=document.getElementById("pPosition").value;
+      p.captain=!!document.getElementById("pCaptain").checked;
+      p.status=document.getElementById("pStatus").value;
+
+      const file=document.getElementById("pPhoto").files[0];
+      if(file){
+        toast("Guardando foto…");
+        p.photo=await uploadFile(file,"players");
+      }
+
+      App.players.sort((a,b)=>Number(a.number)-Number(b.number));
+
+      // Persistir localmente antes de cualquier espera de red.
+      writeCache();
+      if(typeof v26RecalcStats==="function") v26RecalcStats();
+
+      const ok=await window.save();
+      if(ok===false){
+        toast("Guardado local realizado. Firebase se sincronizará cuando esté disponible.");
+      }else{
+        toast("Jugador guardado correctamente");
+      }
+
+      closeModal("playerModal");
+      renderAll();
+      return true;
+    }catch(e){
+      console.error("RS LIVE: error guardando jugador",e);
+      writeCache();
+      toast("Cambios guardados localmente");
+      try{renderAll()}catch(_){}
+      return false;
+    }
+  };
+
+  // Reemplazar el listener anterior para que el botón siempre use la versión correcta.
+  const btn=document.getElementById("savePlayerBtn");
+  if(btn){
+    const clean=btn.cloneNode(true);
+    btn.replaceWith(clean);
+    clean.addEventListener("click",window.savePlayer);
+  }
+
+  // Guardado local adicional al salir o recargar.
+  window.addEventListener("pagehide",writeCache);
+  window.addEventListener("beforeunload",writeCache);
+
+  restoreMediaFromCache();
+  writeCache();
+  try{renderAll()}catch(e){}
+})();
 </script>
 
 
@@ -5058,7 +5405,31 @@ document.addEventListener("click",function(e){
 }
 </style>
 <script id="v67-once-inicial-background">
-/* Disabled: V79 is the single authoritative XI renderer. */
+(function(){
+  function enhancePitch(){
+    const p=document.getElementById('publicPitchV11');
+    if(!p) return;
+    if(!p.querySelector('.stadiumAtmosphereV67')){
+      const a=document.createElement('div');
+      a.className='stadiumAtmosphereV67';
+      p.insertBefore(a,p.firstChild);
+    }
+    if(!p.querySelector('.fieldSurfaceV67')){
+      const f=document.createElement('div');
+      f.className='fieldSurfaceV67';
+      p.insertBefore(f,p.children[1]||null);
+    }
+  }
+  const oldRender=window.renderPublicTeamV11;
+  if(typeof oldRender==='function'){
+    window.renderPublicTeamV11=function(){
+      oldRender.apply(this,arguments);
+      setTimeout(enhancePitch,0);
+    };
+  }
+  setTimeout(enhancePitch,100);
+  setTimeout(enhancePitch,500);
+})();
 </script>
 
 
@@ -5076,7 +5447,19 @@ document.addEventListener("click",function(e){
 @media(max-width:700px){#publicPitchV11.v72FixedReferenceField .publicPlayerV11{width:82px!important;min-width:82px!important}#publicPitchV11.v72FixedReferenceField .publicShirtV11{width:64px!important;height:76px!important}#publicPitchV11.v72FixedReferenceField .publicShirtV11 b{font-size:27px!important}#publicPitchV11.v72FixedReferenceField .publicNameV11{min-width:68px!important;max-width:105px!important;font-size:11px!important;padding:6px 8px!important;border-radius:16px!important}}
 </style>
 <script id="v74-player-reference-render">
-/* Disabled: V79 is the single authoritative XI renderer. */
+(function(){
+ function renderV74(){
+  const pitch=document.getElementById('publicPitchV11'),bench=document.getElementById('publicBenchV11'),formationEl=document.getElementById('publicFormationV11');if(!pitch||!bench)return;
+  const players=Array.isArray(App.players)?App.players:[];const stored=Array.isArray(App.lineup?.players)?App.lineup.players:[];const liveXI=Array.isArray(Live.lineup)?Live.lineup:[];let localXI=[];try{localXI=JSON.parse(localStorage.getItem('rs_lineup')||'{}').players||[]}catch(e){}
+  const src=stored.length?stored:(liveXI.length?liveXI:localXI);const nums=src.map(Number).filter(n=>players.some(p=>Number(p.number)===n)).slice(0,11);const formation=App.lineup?.formation||Live.formation||'4-3-3';const pos=positions(formation);
+  pitch.classList.add('v72FixedReferenceField');pitch.innerHTML='';
+  const crest=document.createElement('div');crest.className='pitchRamonCrestV34';crest.innerHTML='<img id="pitchRamonCrestV34" alt="Ramón Sicart">';pitch.appendChild(crest);const head=document.getElementById('headerRamonCrestV29'),ci=crest.querySelector('img');if(ci&&head&&head.src)ci.src=head.src;
+  nums.forEach((n,i)=>{const p=players.find(x=>Number(x.number)===n);if(!p)return;const xy=pos[i]||[50,50];const el=document.createElement('div');el.className='publicPlayerV11 '+(/portero/i.test(String(p.position||''))?'goalkeeperV65':'');el.style.left=xy[0]+'%';el.style.top=xy[1]+'%';el.innerHTML='<div class="publicShirtV11"><b>'+esc(p.number)+'</b></div><div class="publicNameV11">'+esc(p.name)+'</div>';pitch.appendChild(el)});
+  const starters=new Set(nums),subs=players.filter(p=>!starters.has(Number(p.number))).slice().sort((a,b)=>Number(a.number)-Number(b.number));bench.innerHTML=subs.length?subs.map(p=>'<div class="benchPlayerV11"><div class="benchShirtV11">'+esc(p.number)+'</div><div style="min-width:0"><div class="benchNameV11">'+esc(p.name)+'</div><div class="benchPosV11">'+esc(p.position||'Jugador')+'</div></div></div>').join(''):'<div style="color:#71869c;font-size:11px">No hay suplentes configurados.</div>';
+  if(formationEl)formationEl.textContent=formation+' · '+nums.length+'/11 titulares';const trainer=document.querySelector('#xiClubFooterV68 .xiInfoItemV68:first-child b');if(trainer)trainer.textContent='ALVARO H.';
+ }
+ window.renderPublicTeamV11=renderV74;document.addEventListener('DOMContentLoaded',()=>{setTimeout(renderV74,150);setTimeout(renderV74,700);setTimeout(renderV74,1500)});setTimeout(renderV74,250);setTimeout(renderV74,1000);
+})();
 </script>
 
 <style id="V75-realistic-jerseys">
@@ -5129,7 +5512,8 @@ document.addEventListener("click",function(e){
 
 <style id="rs-admin-tabs-v1">
 /* ===== ADMINISTRADOR · PANEL POR PESTAÑAS ===== */
-#adminPanel.rsAdminTabbed{display:block!important}
+#adminPanel.rsAdminTabbed{display:none}
+#adminPanel.adminLocked{display:none!important}
 .rsAdminTabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px;padding:6px;background:rgba(7,17,31,.72);border:1px solid var(--line);border-radius:16px;position:sticky;top:82px;z-index:20;backdrop-filter:blur(12px)}
 .rsAdminTab{appearance:none;border:1px solid transparent;background:transparent;color:#aebdd0;border-radius:11px;padding:11px 14px;font-size:12px;font-weight:900;display:inline-flex;align-items:center;gap:7px;transition:.18s ease}
 .rsAdminTab:hover{background:#122238;color:#fff;border-color:#29415f}
@@ -5237,93 +5621,6 @@ document.addEventListener("click",function(e){
   setTimeout(ensure,300);setTimeout(ensure,900);setTimeout(ensure,1800);
 })();
 </script>
-
-
-<script id="rs-live-catalan-v80">
-(function(){
-  const pairs = [('Se genera desde el mismo evento del directo: escudos reales, minuto, marcador y foto del goleador solo cuando pertenece al equipo favorito.', "Es genera des del mateix esdeveniment del directe: escuts reals, minut, marcador i foto del golejador només quan pertany a l'equip favorit."), ('El partido finalizado se conservará. Se limpiará solo la consola para poder preparar otro partido. ¿Continuar?', 'El partit finalitzat es conservarà. Només es netejarà la consola per poder preparar un altre partit. Vols continuar?'), ('El partido finalizado se conservará. Solo se reiniciará la consola para preparar otro partido. ¿Continuar?', 'El partit finalitzat es conservarà. Només es reiniciarà la consola per preparar un altre partit. Vols continuar?'), ('Selecciona los 11 jugadores y usa ▲ / ▼. El orden determina automáticamente su sitio en el campo.', "Selecciona els 11 jugadors i utilitza ▲ / ▼. L'ordre determina automàticament la seva posició al camp."), ('RS LIVE: canvas bloqueado por un recurso externo. Se genera una versión sin logos.', 'RS LIVE: canvas bloquejat per un recurs extern. Es genera una versió sense logotips.'), ('Guardado local realizado. Firebase se sincronizará cuando esté disponible.', 'Desat local realitzat. Firebase se sincronitzarà quan estigui disponible.'), ('⚠️ No se pudo generar el cartel. Revisa los permisos/CORS de las imágenes.', "⚠️ No s'ha pogut generar el cartell. Revisa els permisos/CORS de les imatges."), ('No se pudo generar el cartel. Revisa los permisos/CORS de las imágenes.', "No s'ha pogut generar el cartell. Revisa els permisos/CORS de les imatges."), ('El encuentro terminó en empate después de un partido equilibrado.', "L'encontre va acabar en empat després d'un partit equilibrat."), ('Partido finalizado · datos guardados y estadísticas actualizadas', 'Partit finalitzat · dades desades i estadístiques actualitzades'), ('Todo el equipo, partidos y actualidad del club en un solo lugar.', "Tot l'equip, els partits i l'actualitat del club en un sol lloc."), ('✅ Temporada 2024/25 cargada con todos los partidos y goleadores', '✅ Temporada 2024/25 carregada amb tots els partits i golejadors'), ('Todo lo que pulses aquí se publica inmediatamente en Firebase.', 'Tot el que premis aquí es publica immediatament a Firebase.'), ('Consola reiniciada. El histórico de partidos se ha conservado.', "Consola reiniciada. L'històric de partits s'ha conservat."), ('Partido finalizado conservado. Ya puedes crear otro partido.', 'El partit finalitzat es conserva. Ja pots crear un altre partit.'), ('Acceso privado para gestionar plantilla, partidos y directo.', 'Accés privat per gestionar la plantilla, els partits i el directe.'), ('RS LIVE: Firebase no respondió; se conserva la copia local', 'RS LIVE: Firebase no ha respost; es conserva la còpia local'), ('Partido finalizado. Genera la imagen para este encuentro.', 'Partit finalitzat. Genera la imatge per a aquest encontre.'), ('🏁 Partido finalizado · imagen generada automáticamente', '🏁 Partit finalitzat · imatge generada automàticament'), ('El marcador no se movió y no hubo goles registrados.', 'El marcador no es va moure i no hi ha gols registrats.'), ('¿Reiniciar únicamente la consola del partido activo?', 'Vols reiniciar únicament la consola del partit actiu?'), ('Partido finalizado · imagen generada automáticamente', 'Partit finalitzat · imatge generada automàticament'), ('Cambios guardados localmente; Firebase no respondió', 'Canvis desats localment; Firebase no ha respost'), ('Firebase conectado · error sincronizando partidos', 'Firebase connectat · error sincronitzant els partits'), ('⚽ Cartel de gol generado con la foto del jugador', '⚽ Cartell de gol generat amb la foto del jugador'), ('No hay imagen generada para el partido activo.', 'No hi ha cap imatge generada per al partit actiu.'), ('¿Reiniciar marcador, cronómetro y eventos?', 'Vols reiniciar el marcador, el cronòmetre i els esdeveniments?'), ('RS LIVE: no se pudo guardar la copia local', "RS LIVE: no s'ha pogut desar la còpia local"), ('No se pudo guardar la imagen en Firebase', "No s'ha pogut desar la imatge a Firebase"), ('Partido finalizado · resultado guardado', 'Partit finalitzat · resultat desat'), ('RS LIVE · RAMÓN SICART · MATCH CENTER', 'RS LIVE · RAMÓN SICART · MATCH CENTER'), ('PLANTILLA · TOCA PARA AÑADIR / QUITAR', 'PLANTILLA · TOCA PER A AFEGIR / TREURE'), ('🎮 Consola rápida · Partido en directo', '🎮 Consola ràpida · Partit en directe'), ('Sin goles registrados en los eventos.', 'No hi ha gols registrats als esdeveniments.'), ('RS LIVE: no se pudo guardar el cartel', "RS LIVE: no s'ha pogut desar el cartell"), ('❌ Error cargando la temporada 2024/25', '❌ Error carregant la temporada 2024/25'), ('Genera primero la imagen del partido', 'Genera primer la imatge del partit'), ('No se pudo exportar el cartel de gol', "No s'ha pogut exportar el cartell de gol"), ('No hubo goles durante el encuentro.', "No hi va haver gols durant l'encontre."), ('Genera primero el cartel de un gol', "Genera primer el cartell d'un gol"), ('Partido actualizado correctamente', 'Partit actualitzat correctament'), ('El marcador final quedó fijado en', 'El marcador final ha quedat fixat en'), ('Imagen generada automáticamente ·', 'Imatge generada automàticament ·'), ('No hay goles en el partido activo', 'No hi ha gols al partit actiu'), ('Alineación guardada en el partido', 'Alineació desada al partit'), ('Dorsal y nombre son obligatorios', 'El dorsal i el nom són obligatoris'), ('Crea o activa un partido primero', 'Crea o activa primer un partit'), ('RS LIVE: error guardando jugador', 'RS LIVE: error desant el jugador'), ('👕 Alineación del partido activo', '👕 Alineació del partit actiu'), ('Partido finalizado seleccionado', 'Partit finalitzat seleccionat'), ('RS LIVE: error generando imagen', 'RS LIVE: error generant la imatge'), ('Ya tienes 11 jugadores en el XI', "Ja tens 11 jugadors a l'XI"), ('Jugador guardado correctamente', 'Jugador desat correctament'), ('XI INICIAL · ▲ SUBIR / ▼ BAJAR', 'XI INICIAL · ▲ PUJAR / ▼ BAIXAR'), ('Gol del equipo visitante/local', "Gol de l'equip visitant/local"), ('No se pudo guardar en Firebase', "No s'ha pogut desar a Firebase"), ('❌ No se pudo generar la imagen', "❌ No s'ha pogut generar la imatge"), ('Alineación del partido activo', 'Alineació del partit actiu'), ('Cambios guardados localmente', 'Canvis desats localment'), ('No se pudo generar la imagen', "No s'ha pogut generar la imatge"), ('No hay tarjetas registradas.', 'No hi ha targetes registrades.'), ('RAMÓN SICART · MATCH CENTER', 'RAMÓN SICART · MATCH CENTER'), ('Partido activo seleccionado', 'Partit actiu seleccionat'), ('Primero finaliza el partido', 'Primer finalitza el partit'), ('No hay cambios registrados.', 'No hi ha canvis registrats.'), ('RS LIVE: recuperación local', 'RS LIVE: recuperació local'), ('Sin clasificación todavía.', 'Encara no hi ha classificació.'), ('Administrador desbloqueado', 'Administrador desbloquejat'), ('Nombre del rival / equipo', 'Nom del rival / equip'), ('Partido creado y activado', 'Partit creat i activat'), ('Sin resultado registrado.', 'Sense resultat registrat.'), ('Sin tarjetas registradas.', 'No hi ha targetes registrades.'), ('Partido finalizado entre', 'Partit finalitzat entre'), ('Sin resultado registrado', 'Sense resultat registrat'), ('🔐 Panel de administrador', "🔐 Panell d'administrador"), ('Error guardando Firebase', 'Error desant a Firebase'), ('⚽ Cartel de gol generado', '⚽ Cartell de gol generat'), ('RS LIVE • Ramón Sicart', 'RS LIVE • Ramón Sicart'), ('RS LIVE · RAMÓN SICART', 'RS LIVE · RAMÓN SICART'), ('RS LIVE · Ramón Sicart', 'RS LIVE · Ramón Sicart'), ('👥 Gestión de plantilla', '👥 Gestió de la plantilla'), ('¿Eliminar este evento?', 'Eliminar aquest esdeveniment?'), ('Partidos profesionales', 'Partits professionals'), ('Sin goles registrados.', 'No hi ha gols registrats.'), ('Calendario del equipo', "Calendari de l'equip"), ('📰 CRÓNICA DEL PARTIDO', '📰 CRÒNICA DEL PARTIT'), ('Todavía no hay goles.', 'Encara no hi ha gols.'), ('Gestión de plantilla', 'Gestió de la plantilla'), ('Sin rival registrado', 'Sense rival registrat'), ('⚙️ Centro de control', '⚙️ Centre de control'), ('Conectando Firebase…', 'Connectant amb Firebase…'), ('Detalles del partido', 'Detalls del partit'), ('EVENTOS DEL PARTIDO', 'ESDEVENIMENTS DEL PARTIT'), ('⚽ GOLES DEL PARTIDO', '⚽ GOLS DEL PARTIT'), ('Gol del visitante ⚽', "Gol de l'equip visitant ⚽"), ('Partido actualizado', 'Partit actualitzat'), ('CRÓNICA DEL PARTIDO', 'CRÒNICA DEL PARTIT'), ('Alineación guardada', 'Alineació desada'), ('Goles del visitante', "Gols de l'equip visitant"), ('Últimos y próximos', 'Últims i propers'), ('¿Eliminar jugador?', 'Eliminar el jugador?'), ('🟨 Tarjeta amarilla', '🟨 Targeta groga'), ('Partido en directo', 'Partit en directe'), ('Sin partido activo', 'No hi ha cap partit actiu'), ('Firebase conectado', 'Firebase connectat'), ('Equipo actualizado', 'Equip actualitzat'), ('¿Eliminar partido?', 'Eliminar el partit?'), ('Imagen del partido', 'Imatge del partit'), ('DESDE 1 HORA ANTES', "DES D'1 HORA ABANS"), ('Nombre del estadio', "Nom de l'estadi"), ('Jugador eliminado', 'Jugador eliminat'), ('Activa un partido', 'Activa un partit'), ('Centro de control', 'Centre de control'), ('💾 Guardar cambios', '💾 Desar canvis'), ('¿Eliminar equipo?', "Eliminar l'equip?"), ('Escribe el nombre', 'Escriu el nom'), ('Imagen guardada ·', 'Imatge desada ·'), ('Temporada 2024/25', 'Temporada 2024/25'), ('Equipo visitante', 'Equip visitant'), ('Jugador guardado', 'Jugador desat'), ('Subiendo escudo…', "Pujant l'escut…"), ('⚙️ Administrador', '⚙️ Administrador'), ('💾 Guardar evento', '💾 Desar esdeveniment'), ('✏️ Editar evento', '✏️ Editar esdeveniment'), ('PRÓXIMO PARTIDO', 'PROPER PARTIT'), ('＋ Nuevo jugador', '＋ Nou jugador'), ('Guardar jugador', 'Desar jugador'), ('Guardando foto…', 'Desant la foto…'), ('⚽ Añadir evento', '⚽ Afegir esdeveniment'), ('⚽ Gol detallado', '⚽ Gol detallat'), ('Gol del local ⚽', "Gol de l'equip local ⚽"), ('Resultado final', 'Resultat final'), ('🏆 Clasificación', '🏆 Classificació'), ('Guardar cambios', 'Desar canvis'), ('＋ Crear partido', '＋ Crear partit'), ('📅 Crear partido', '📅 Crear partit'), ('Goles del local', "Gols de l'equip local"), ('Editar jugador', 'Editar jugador'), ('Subiendo foto…', 'Pujant la foto…'), ('Centrocampista', 'Centrecampista'), ('🟢 Once inicial', '🟢 Onze inicial'), ('💾 Guardar once', "💾 Desar l'onze"), ('🟥 Tarjeta roja', '🟥 Targeta vermella'), ('Sin registros.', 'Sense registres.'), ('Consola rápida', 'Consola ràpida'), ('Error Firebase', 'Error de Firebase'), ('Guardar equipo', 'Desar equip'), ('Administración', 'Administració'), ('Guardar evento', 'Desar esdeveniment'), ('Nuevo jugador', 'Nou jugador'), ('Vista táctica', 'Vista tàctica'), ('SIN RESULTADO', 'SENSE RESULTAT'), ('Clasificación', 'Classificació'), ('Administrador', 'Administrador'), ('Crear partido', 'Crear partit'), ('Cartel de gol', 'Cartell de gol'), ('Editar evento', 'Editar esdeveniment'), ('Campo/estadio', 'Camp/estadi'), ('Equipo local', 'Equip local'), ('🟢 Alineación', '🟢 Alineació'), ('Once inicial', 'Onze inicial'), ('Guardar once', "Desar l'onze"), ('⚽ Añadir gol', '⚽ Afegir gol'), ('⚽ Goleadores', '⚽ Golejadors'), ('⚪ PREPARTIDO', '⚪ PREPARTIT'), ('🏁 FINALIZADO', '🏁 FINALITZAT'), ('👥 Plantilla', '👥 Plantilla'), ('🪑 SUPLENTES', '🪑 SUPLENTS'), ('🟨🟥 TARJETAS', '🟨🟥 TARGETES'), ('El marcador', 'El marcador'), ('Competición', 'Competició'), ('🔄 Reiniciar', '🔄 Reiniciar'), ('↺ Reiniciar', '↺ Reiniciar'), ('🧹 Vaciar XI', '🧹 Buidar XI'), ('Se conserva', 'Es conserva'), ('📅 Partidos', '📅 Partits'), ('Disponible', 'Disponible'), ('Sancionado', 'Sancionat'), ('Alineación', 'Alineació'), ('🟨 Amarilla', '🟨 Groga'), ('⏱ 1ª PARTE', '⏱ 1a PART'), ('⏸ Descanso', '⏸ Descans'), ('▶ 2ª parte', '▶ 2a part'), ('EN DIRECTO', 'EN DIRECTE'), ('PREPARTIDO', 'PREPARTIT'), ('FINALIZADO', 'FINALITZAT'), ('Resultados', 'Resultats'), ('Entrenador', 'Entrenador'), ('Abrir menú', 'Obrir menú'), ('Calendario', 'Calendari'), ('Actualidad', 'Actualitat'), ('Apellidos', 'Cognoms'), ('Plantilla', 'Plantilla'), ('Convocado', 'Convocat'), ('Lesionado', 'Lesionat'), ('Delantero', 'Davanter'), ('Suplentes', 'Suplents'), ('🔄 CAMBIOS', '🔄 CANVIS'), ('▶ Iniciar', '▶ Iniciar'), ('🔴 DIRECTO', '🔴 EN DIRECTE'), ('🔴 Directo', '🔴 En directe'), ('resultado', 'resultat'), ('Sin fecha', 'Sense data'), ('Visitante', 'Visitant'), ('✏️ Editar', '✏️ Editar'), ('Temporada', 'Temporada'), ('Localidad', 'Localitat'), ('🏠 Inicio', '🏠 Inici'), ('Partidos', 'Partits'), ('Jugador ', 'Jugador '), ('Posición', 'Posició'), ('🔄 Cambio', '🔄 Canvi'), ('Descanso', 'Descans'), ('✕ Cerrar', '✕ Tancar'), ('Subiendo', 'Pujant'), ('Noticias', 'Notícies'), ('Jugador', 'Jugador'), ('Capitán', 'Capità'), ('Portero', 'Porter'), ('Defensa', 'Defensa'), ('Eventos', 'Esdeveniments'), ('⚽ GOLES', '⚽ GOLS'), ('🏁 Final', '🏁 Final'), ('Guardar', 'Desar'), ('Partido', 'Partit'), ('Titular', 'Titular'), ('Estadio', 'Estadi'), ('Próximo', 'Proper'), ('PRÓXIMO', 'PROPER'), ('Inicio', 'Inici'), ('Equipo', 'Equip'), ('Dorsal', 'Dorsal'), ('Nombre', 'Nom'), ('Escudo', 'Escut'), ('🟥 Roja', '🟥 Vermella'), ('Cerrar', 'Tancar'), ('Entrar', 'Entrar'), ('Editar', 'Editar'), ('Rival', 'Rival'), ('Fecha', 'Data'), ('Campo', 'Camp'), ('LOCAL', 'LOCAL'), ('Top 3', 'Top 3'), ('Top 5', 'Top 5'), ('Goles', 'Gols'), ('Foto', 'Foto'), ('Hora', 'Hora'), ('Liga', 'Lliga')];
-
-  function tr(value){
-    if(value == null || typeof value !== 'string') return value;
-    let s = value;
-    for(const [a,b] of pairs){
-      if(a && s.indexOf(a) !== -1) s = s.split(a).join(b);
-    }
-    // Common dynamic fragments.
-    const wordRules = [
-      [/\\bPartido\\b/g,'Partit'],
-      [/\\bpartido\\b/g,'partit'],
-      [/\\bPartidos\\b/g,'Partits'],
-      [/\\bpartidos\\b/g,'partits'],
-      [/\\bJugador(es)?\\b/g,'Jugador$1'],
-      [/\\bEquipo(s)?\\b/g,'Equip$1'],
-      [/\\bGoles\\b/g,'Gols'],
-      [/\\bgoles\\b/g,'gols'],
-      [/\\bFecha\\b/g,'Data'],
-      [/\\bHora\\b/g,'Hora'],
-      [/\\bCompetición\\b/g,'Competició'],
-      [/\\bAlineación\\b/g,'Alineació'],
-      [/\\bSuplentes\\b/g,'Suplents'],
-      [/\\bPortero\\b/g,'Porter'],
-      [/\\bDelantero\\b/g,'Davanter'],
-      [/\\bCentrocampista\\b/g,'Centrecampista'],
-      [/\\bDefensa\\b/g,'Defensa'],
-      [/\\bCambios\\b/g,'Canvis'],
-      [/\\bTarjetas\\b/g,'Targetes'],
-      [/\\bFinalizado\\b/g,'Finalitzat'],
-      [/\\bfinalizado\\b/g,'finalitzat'],
-      [/\\bSin resultado registrado\\b/g,'Sense resultat registrat'],
-      [/\\bSin partido activo\\b/g,'No hi ha cap partit actiu'],
-    ];
-    for(const [rx,repl] of wordRules) s=s.replace(rx,repl);
-    return s;
-  }
-
-  function translateNode(node){
-    if(node.nodeType===Node.TEXT_NODE){
-      const old=node.nodeValue, neu=tr(old);
-      if(neu!==old) node.nodeValue=neu;
-      return;
-    }
-    if(node.nodeType!==Node.ELEMENT_NODE) return;
-    if(node.tagName==='SCRIPT' || node.tagName==='STYLE' || node.id==='rs-live-catalan-v80') return;
-    for(const attr of ['placeholder','title','aria-label','alt']){
-      if(node.hasAttribute(attr)){
-        const old=node.getAttribute(attr), neu=tr(old);
-        if(neu!==old) node.setAttribute(attr,neu);
-      }
-    }
-    for(const child of node.childNodes) translateNode(child);
-  }
-
-  document.documentElement.lang='ca';
-  document.title='RS LIVE • Ramón Sicart';
-  function run(){ translateNode(document.body); }
-
-  const originalAlert = window.alert;
-  window.alert = function(msg){ return originalAlert.call(window,tr(String(msg))); };
-  const originalConfirm = window.confirm;
-  window.confirm = function(msg){ return originalConfirm.call(window,tr(String(msg))); };
-  const originalPrompt = window.prompt;
-  window.prompt = function(msg, def){ return originalPrompt.call(window,tr(String(msg)),def); };
-
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',run);
-  else run();
-
-  const observer = new MutationObserver(function(mutations){
-    for(const m of mutations){
-      for(const n of m.addedNodes) {
-        if(n.nodeType===Node.TEXT_NODE || n.nodeType===Node.ELEMENT_NODE) translateNode(n);
-      }
-    }
-  });
-  observer.observe(document.documentElement, {childList:true,subtree:true});
-})();
-</script>
-
-
-
-
 
 </body>
 </html>
@@ -6741,7 +7038,129 @@ document.addEventListener("click",function(e){
   .formationPlayer b{font-size:15px!important;font-weight:1000!important}
 </style>
 <script id="v64-persistence-definitive">
-/* Disabled: consolidated V81 persistence/synchronization. */
+(function(){
+  'use strict';
+  const KEY='RS_LIVE_V64_STATE';
+  const clone=v=>{try{return JSON.parse(JSON.stringify(v))}catch(e){return v}};
+  const read=()=>{try{const x=localStorage.getItem(KEY);return x?JSON.parse(x):null}catch(e){return null}};
+  const write=()=>{try{localStorage.setItem(KEY,JSON.stringify({savedAt:Date.now(),app:clone(App),liveMatch:clone(Live)}));return true}catch(e){console.warn('V64 local save',e);return false}};
+  const mergeMedia=(media)=>{
+    if(!media)return;
+    const pm=media.players||{}, tm=media.teams||{};
+    (App.players||[]).forEach(p=>{const x=pm[String(p.id)];if(x?.photo)p.photo=x.photo});
+    (App.teams||[]).forEach(t=>{const x=tm[String(t.id)];if(x?.logo)t.logo=x.logo});
+  };
+  const restoreCached=()=>{
+    const c=read(); if(!c?.app)return false;
+    try{
+      if(!c.app._dataRevision) c.app._dataRevision=Date.now();
+      if(Array.isArray(c.app.players)&&c.app.players.length) App.players=clone(c.app.players);
+      if(Array.isArray(c.app.teams)&&c.app.teams.length) App.teams=clone(c.app.teams);
+      if(Array.isArray(c.app.matches)) App.matches=clone(c.app.matches);
+      if(c.app.activeMatch!==undefined) App.activeMatch=c.app.activeMatch;
+      if(c.app.lineup) App.lineup=clone(c.app.lineup);
+      if(c.liveMatch) Object.assign(Live,clone(c.liveMatch));
+      return true;
+    }catch(e){console.warn('V64 restore',e);return false}
+  };
+
+  // Keep the latest local state immediately available on reload.
+  restoreCached();
+
+  // Firebase media lives below /media, while the main listener watches /clubManagerV6.
+  // Listen to /media explicitly so photos and crests are never lost after a refresh.
+  try{
+    if(typeof dbRef!=='undefined' && dbRef){
+      const mediaRef=dbRef.child ? dbRef.child('media') : null;
+      if(mediaRef && mediaRef.on){
+        mediaRef.on('value',snap=>{
+          mergeMedia(snap.exists()?snap.val():null);
+          write();
+          try{renderAll()}catch(e){}
+        });
+      }
+    }
+  }catch(e){console.warn('V64 media listener',e)}
+
+  // Replace the public save with an atomic local-first save and a revision marker.
+  const oldSave=window.save;
+  window.save=async function(){
+    try{App._dataRevision=Date.now();}catch(e){}
+    write();
+    let ok=true;
+    try{ if(typeof oldSave==='function') ok=await oldSave(); }
+    catch(e){ok=false;console.warn('V64 firebase save',e)}
+    write();
+    return ok!==false;
+  };
+
+  // After the original Firebase listener applies remote data, this second listener
+  // runs and prevents an older remote snapshot from replacing newer local edits.
+  try{
+    if(typeof dbRef!=='undefined' && dbRef && dbRef.on){
+      dbRef.on('value',snap=>{
+        const remote=snap.exists()?snap.val():null;
+        const c=read();
+        const remoteRev=Number(remote?.app?._dataRevision||0);
+        const localRev=Number(c?.app?._dataRevision||0);
+        if(c?.app && localRev>remoteRev){
+          restoreCached();
+          mergeMedia(c.media);
+          try{renderAll()}catch(e){}
+          // Push the newer local state once so future reloads see the same data.
+          setTimeout(()=>{try{window.save()}catch(e){}},0);
+        }
+      });
+    }
+  }catch(e){console.warn('V64 state listener',e)}
+
+  // Definitive player save: await the save and never render before persistence finishes.
+  window.savePlayer=async function(){
+    try{
+      const n=Number(document.getElementById('pNumber')?.value);
+      const name=(document.getElementById('pName')?.value||'').trim();
+      if(!n||!name){toast('Dorsal y nombre son obligatorios');return false;}
+      let p=(App.players||[]).find(x=>String(x.id)===String(editPlayerId));
+      if(!p){
+        p={id:Date.now(),number:n,name,surname:'',position:'Defensa',captain:false,status:'Disponible',photo:'',goals:0,yellow:0,red:0,starts:0,appearances:0};
+        App.players.push(p); editPlayerId=p.id;
+      }
+      p.number=n;
+      p.name=name;
+      p.surname=(document.getElementById('pSurname')?.value||'').trim();
+      p.position=document.getElementById('pPosition')?.value||'Defensa';
+      p.captain=!!document.getElementById('pCaptain')?.checked;
+      p.status=document.getElementById('pStatus')?.value||'Disponible';
+      if(document.getElementById('pGoals'))p.goals=Number(document.getElementById('pGoals').value||0);
+      if(document.getElementById('pYellow'))p.yellow=Number(document.getElementById('pYellow').value||0);
+      if(document.getElementById('pRed'))p.red=Number(document.getElementById('pRed').value||0);
+      if(document.getElementById('pStarts'))p.starts=Number(document.getElementById('pStarts').value||0);
+      if(document.getElementById('pApps'))p.appearances=Number(document.getElementById('pApps').value||0);
+      const file=document.getElementById('pPhoto')?.files?.[0];
+      if(file){toast('Guardando foto…');p.photo=await uploadFile(file,'players');}
+      App.players.sort((a,b)=>Number(a.number)-Number(b.number));
+      write();
+      const ok=await window.save();
+      if(!ok){toast('Cambios guardados localmente; Firebase no respondió');}
+      else toast('Jugador guardado correctamente');
+      try{closeModal('playerModal')}catch(e){}
+      renderAll();
+      return true;
+    }catch(e){
+      console.error('V64 savePlayer',e);
+      write();
+      toast('Cambios guardados localmente');
+      try{renderAll()}catch(_){}
+      return false;
+    }
+  };
+  const b=document.getElementById('savePlayerBtn');
+  if(b){const n=b.cloneNode(true);b.replaceWith(n);n.addEventListener('click',window.savePlayer);}
+
+  window.addEventListener('pagehide',write);
+  window.addEventListener('beforeunload',write);
+  setTimeout(()=>{mergeMedia(read()?.media);write();try{renderAll()}catch(e){}},250);
+})();
 </script>
 
 
@@ -7148,7 +7567,49 @@ document.addEventListener("click",function(e){
 }
 </style>
 <script id="v68-once-inicial-render-final">
-/* Disabled: V79 is the single authoritative XI renderer. */
+(function(){
+  function renderFinalXI(){
+    const pitch=document.getElementById('publicPitchV11'),bench=document.getElementById('publicBenchV11'),formationEl=document.getElementById('publicFormationV11');
+    if(!pitch||!bench)return;
+    const safePlayers=Array.isArray(App.players)?App.players:[];
+    const stored=Array.isArray(App.lineup?.players)?App.lineup.players:[];
+    const liveXI=Array.isArray(Live.lineup)?Live.lineup:[];
+    let localXI=[];try{localXI=JSON.parse(localStorage.getItem('rs_lineup')||'{}').players||[]}catch(e){}
+    const sourceXI=stored.length?stored:(liveXI.length?liveXI:localXI);
+    const nums=sourceXI.map(Number).filter(n=>safePlayers.some(p=>Number(p.number)===n)).slice(0,11);
+    const formation=App.lineup?.formation||Live.formation||'4-3-3';
+    const pos=positions(formation);
+
+    pitch.innerHTML='<div class="stadiumAtmosphereV67"></div><div class="fieldSurfaceV67"></div><div class="fieldPlaneV68"></div>';
+    const plane=pitch.querySelector('.fieldPlaneV68');
+    plane.innerHTML='<div class="fieldMarkV33 penaltyTopV33"></div><div class="fieldMarkV33 penaltyBottomV33"></div><div class="goalAreaTopV33"></div><div class="goalAreaBottomV33"></div><div class="penaltyArcTopV50"></div><div class="penaltyArcBottomV50"></div><div class="cornerTLV50"></div><div class="cornerTRV50"></div><div class="cornerBLV50"></div><div class="cornerBRV50"></div><div class="publicCircleV11"></div><div class="centerSpotV33"></div><div class="goalFrameV68 top"></div><div class="goalFrameV68 bottom"></div><div class="pitchRamonCrestV34"><img id="pitchRamonCrestV34" alt="Ramón Sicart"></div>';
+    nums.forEach((n,i)=>{
+      const p=safePlayers.find(x=>Number(x.number)===n);if(!p)return;
+      const xy=pos[i]||[50,50];
+      plane.insertAdjacentHTML('beforeend',`<div class="publicPlayerV11 ${/portero/i.test(String(p.position||''))?'goalkeeperV65':''}" style="left:${xy[0]}%;top:${xy[1]}%"><div class="publicShirtV11"><b>${p.number}</b></div><div class="publicNameV11">${esc(p.name)}</div></div>`);
+    });
+    const starters=new Set(nums);
+    const subs=safePlayers.filter(p=>!starters.has(Number(p.number))).slice().sort((a,b)=>Number(a.number)-Number(b.number));
+    bench.innerHTML=subs.length?subs.map(p=>`<div class="benchPlayerV11"><div class="benchShirtV11">${p.number}</div><div style="min-width:0"><div class="benchNameV11">${esc(p.name)}</div><div class="benchPosV11">${esc(p.position||'Jugador')}</div></div></div>`).join(''):'<div style="color:#71869c;font-size:11px">No hay suplentes configurados.</div>';
+    if(formationEl)formationEl.textContent=`${formation} · ${nums.length}/11 titulares`;
+    ensureClubFooter();
+    const crest=document.getElementById('pitchRamonCrestV34');
+    const team=typeof activeMatch==='function'?activeMatch():null;
+    const ramon=team&&typeof v65Team==='function'?v65Team(team,'home'):null;
+    if(crest && typeof getTeamLogo==='function'){}
+    const headerCrest=document.getElementById('headerRamonCrestV29');
+    if(crest&&headerCrest&&headerCrest.src)crest.src=headerCrest.src;
+  }
+  function ensureClubFooter(){
+    const host=document.getElementById('publicTeamV11');if(!host)return;
+    let f=document.getElementById('xiClubFooterV68');
+    if(!f){f=document.createElement('div');f.id='xiClubFooterV68';f.className='xiClubFooterV68';host.appendChild(f)}
+    const src=document.getElementById('headerRamonCrestV29')?.src||'';
+    f.innerHTML=`<div class="xiClubIdentityV68">${src?`<img src="${esc(src)}" alt="Ramón Sicart">`:''}<div><strong>RAMÓN SICART</strong><span>LLORENÇ DEL PENEDÈS</span></div></div><div class="xiInfoGridV68"><div class="xiInfoItemV68"><div class="xiInfoIconV68">👤</div><div><small>Entrenador</small><b>ALVARO H.</b></div></div><div class="xiInfoItemV68"><div class="xiInfoIconV68">🏟️</div><div><small>Campo</small><b>MPAL. RAMÓN SICART</b></div></div><div class="xiInfoItemV68"><div class="xiInfoIconV68">🏆</div><div><small>Competición</small><b>3ª CATALANA · GRUPO 17</b></div></div></div>`;
+  }
+  window.renderPublicTeamV11=renderFinalXI;
+  setTimeout(renderFinalXI,250);setTimeout(renderFinalXI,900);setTimeout(renderFinalXI,1800);
+})();
 </script>
 
 <!-- V69 PASO 1 — SOLO CAMPO: perspectiva de estadio como la referencia. Camisetas sin modificar. -->
@@ -7244,7 +7705,31 @@ document.addEventListener("click",function(e){
 }
 </style>
 <script id="v69-paso1-campo-render">
-/* Disabled: V79 is the single authoritative XI renderer. */
+(function(){
+ function renderV69(){
+   const pitch=document.getElementById('publicPitchV11'),bench=document.getElementById('publicBenchV11'),formationEl=document.getElementById('publicFormationV11'); if(!pitch||!bench)return;
+   const players=Array.isArray(App.players)?App.players:[];
+   const stored=Array.isArray(App.lineup?.players)?App.lineup.players:[], liveXI=Array.isArray(Live.lineup)?Live.lineup:[];
+   let localXI=[];try{localXI=JSON.parse(localStorage.getItem('rs_lineup')||'{}').players||[]}catch(e){}
+   const src=stored.length?stored:(liveXI.length?liveXI:localXI);
+   const nums=src.map(Number).filter(n=>players.some(p=>Number(p.number)===n)).slice(0,11);
+   const formation=App.lineup?.formation||Live.formation||'4-3-3', pos=positions(formation);
+   pitch.innerHTML='<div class="stadiumAtmosphereV67"></div><div class="fieldSurfaceV67"></div><div class="fieldPlaneV68"><div class="fieldMarkV33 penaltyTopV33"></div><div class="fieldMarkV33 penaltyBottomV33"></div><div class="goalAreaTopV33"></div><div class="goalAreaBottomV33"></div><div class="cornerTLV50"></div><div class="cornerTRV50"></div><div class="cornerBLV50"></div><div class="cornerBRV50"></div><div class="publicCircleV11"></div><div class="centerSpotV33"></div><div class="goalFrameV68 top"></div><div class="goalFrameV68 bottom"></div></div><div class="pitchRamonCrestV34"><img id="pitchRamonCrestV34" alt="Ramón Sicart"></div>';
+   /* jugadores fuera del plano trapezoidal para que las camisetas NO se deformen */
+   nums.forEach((n,i)=>{const p=players.find(x=>Number(x.number)===n);if(!p)return;const xy=pos[i]||[50,50];
+     /* convertir Y de formación al área visual del césped (25%..94%) */
+     const y=25+(xy[1]*.69), x=50+(xy[0]-50)*(0.72+0.28*(xy[1]/100));
+     pitch.insertAdjacentHTML('beforeend',`<div class="publicPlayerV11 ${/portero/i.test(String(p.position||''))?'goalkeeperV65':''}" style="left:${x}%;top:${y}%"><div class="publicShirtV11"><b>${p.number}</b></div><div class="publicNameV11">${esc(p.name)}</div></div>`);
+   });
+   const starters=new Set(nums),subs=players.filter(p=>!starters.has(Number(p.number))).sort((a,b)=>Number(a.number)-Number(b.number));
+   bench.innerHTML=subs.length?subs.map(p=>`<div class="benchPlayerV11"><div class="benchShirtV11">${p.number}</div><div style="min-width:0"><div class="benchNameV11">${esc(p.name)}</div><div class="benchPosV11">${esc(p.position||'Jugador')}</div></div></div>`).join(''):'<div style="color:#71869c;font-size:11px">No hay suplentes configurados.</div>';
+   if(formationEl)formationEl.textContent=`${formation} · ${nums.length}/11 titulares`;
+   const crest=document.getElementById('pitchRamonCrestV34'),head=document.getElementById('headerRamonCrestV29');if(crest&&head&&head.src)crest.src=head.src;
+ }
+ window.renderPublicTeamV11=renderV69;
+ document.addEventListener('DOMContentLoaded',()=>setTimeout(renderV69,500));
+ setTimeout(renderV69,1200);setTimeout(renderV69,2400);
+})();
 </script>
 
 <!-- V70 — PASO 2: CAMISETAS DEL ONCE INICIAL -->
@@ -7493,7 +7978,23 @@ document.addEventListener("click",function(e){
 }
 </style>
 <script id="v71-reference-data">
-/* Disabled: V79 is the single authoritative XI renderer. */
+(function(){
+  function applyReferenceFooter(){
+    const f=document.getElementById('xiClubFooterV68');
+    if(!f)return;
+    const m=typeof activeMatch==='function'?activeMatch():null;
+    const field=(m&&m.field&&String(m.field).trim())?String(m.field).trim():'Mpal. Ramón Sicart';
+    const comp=(m&&m.competition&&String(m.competition).trim())?String(m.competition).trim():'Liga';
+    const src=document.getElementById('headerRamonCrestV29')?.src||'';
+    f.innerHTML=`<div class="xiClubIdentityV68">${src?`<img src="${esc(src)}" alt="Ramón Sicart">`:''}<div><strong>RAMÓN SICART</strong><span>LLORENÇ DEL PENEDÈS</span></div></div><div class="xiInfoGridV68"><div class="xiInfoItemV68"><div class="xiInfoIconV68">👤</div><div><small>Entrenador</small><b>ALVARO H.</b></div></div><div class="xiInfoItemV68"><div class="xiInfoIconV68">🏟️</div><div><small>Estadio</small><b>${esc(field)}</b></div></div><div class="xiInfoItemV68"><div class="xiInfoIconV68">🏆</div><div><small>Competición</small><b>${esc(comp)}</b></div></div></div>`;
+  }
+  function patch(){applyReferenceFooter();}
+  const old=window.renderPublicTeamV11;
+  if(typeof old==='function'){
+    window.renderPublicTeamV11=function(){const r=old.apply(this,arguments);setTimeout(patch,0);setTimeout(patch,80);return r};
+  }
+  document.addEventListener('DOMContentLoaded',()=>{setTimeout(patch,500);setTimeout(patch,1400);});
+})();
 </script>
 
 <!-- V73 — CORRECCIÓN FINAL CAMPO FIJO DE REFERENCIA -->
@@ -7550,13 +8051,172 @@ document.addEventListener("click",function(e){
   }
 </style>
 <script id="v73-fixed-field-final-script">
-/* Disabled: V79 is the single authoritative XI renderer. */
+(function(){
+  const PITCH_ID='publicPitchV11';
+  const FIELD_CLASS='v72FixedReferenceField';
+  const FIELD_SELECTOR='.fieldPlaneV68,.fieldSurfaceV67,.stadiumAtmosphereV67,.goalFrameV68,.fieldMarkV33,.goalAreaTopV33,.goalAreaBottomV33,.penaltyArcTopV50,.penaltyArcBottomV50,.cornerTLV50,.cornerTRV50,.cornerBLV50,.cornerBRV50,.publicCircleV11,.centerSpotV33';
+  const pitch=document.getElementById(PITCH_ID);
+  if(!pitch)return;
+
+  /* Recupera la imagen de fondo ya embebida en V72, evitando otra copia enorme. */
+  const previous=Array.from(document.querySelectorAll('style')).find(s=>s.textContent.includes('.publicPitchV11.v72FixedReferenceField{') && s.textContent.includes('background-image:url("data:image/png;base64,'));
+  let dataUrl='';
+  if(previous){
+    const match=previous.textContent.match(/background-image:url\("(data:image\/png;base64,[^"]+)"\)/);
+    if(match)dataUrl=match[1];
+  }
+  if(dataUrl){
+    pitch.style.setProperty('background-image', 'url(\"'+dataUrl+'\")', 'important');
+  }
+
+  let locking=false;
+  function apply(){
+    if(locking)return;
+    locking=true;
+    pitch.classList.add(FIELD_CLASS);
+    pitch.querySelectorAll(FIELD_SELECTOR).forEach(el=>el.remove());
+    /* Si algún render vuelve a insertar una geometría antigua, la eliminamos inmediatamente. */
+    pitch.style.backgroundRepeat='no-repeat';
+    pitch.style.backgroundPosition='center center';
+    pitch.style.backgroundSize='100% 100%';
+    locking=false;
+  }
+
+  /* El problema era que los renderizadores posteriores de V69/V70/V71 reconstruían el campo.
+     Este parche se coloca al FINAL del HTML y vuelve a aplicar el campo fijo después de cada render. */
+  const current=window.renderPublicTeamV11;
+  if(typeof current==='function'){
+    window.renderPublicTeamV11=function(){
+      const result=current.apply(this,arguments);
+      apply();
+      setTimeout(apply,0);
+      setTimeout(apply,50);
+      return result;
+    };
+  }
+
+  const observer=new MutationObserver(function(){apply();});
+  observer.observe(pitch,{childList:true});
+  apply();
+  setTimeout(apply,100);
+  setTimeout(apply,500);
+  setTimeout(apply,1500);
+})();
 </script>
 
 
 <!-- V77 — SINCRONIZACIÓN REAL DE PARTIDOS ENTRE DISPOSITIVOS -->
 <script id="v77-matches-realtime-sync">
-/* Disabled: consolidated V81 persistence/synchronization. */
+(function(){
+  'use strict';
+  /*
+   * Los jugadores ya se sincronizan correctamente. Para los partidos añadimos
+   * una rama independiente en Realtime Database:
+   *   clubManagerV6/matchesById/{id}
+   * Así una edición de un partido no depende de que otro dispositivo tenga
+   * exactamente la misma copia del array App.matches.
+   */
+  const base = (typeof firebaseBaseUrl !== 'undefined' ? firebaseBaseUrl : '').replace(/\/$/,'');
+  const matchesUrl = base ? base + '/clubManagerV6/matchesById.json' : '';
+  let applyingRemoteMatches = false;
+  let matchPollTimer = null;
+  let lastMatchesRemote = '__v77_initial__';
+
+  function cleanMatch(m){
+    try{return JSON.parse(JSON.stringify(m));}catch(e){return m;}
+  }
+  function matchesObject(){
+    const out={};
+    (Array.isArray(App.matches)?App.matches:[]).forEach(m=>{
+      if(m && m.id!=null) out[String(m.id)]=cleanMatch(m);
+    });
+    return out;
+  }
+  function mergeMatchesObject(data){
+    if(!data || typeof data!=='object') return;
+    const incoming=Object.values(data).filter(Boolean);
+    if(!incoming.length) return;
+    const current=Array.isArray(App.matches)?App.matches:[];
+    const byId=new Map(current.map(m=>[String(m.id),m]));
+    incoming.forEach(remote=>{
+      if(remote.id==null)return;
+      const key=String(remote.id);
+      const old=byId.get(key);
+      if(old) Object.assign(old,cleanMatch(remote));
+      else current.push(cleanMatch(remote));
+    });
+    App.matches=current;
+    App.matches.sort((a,b)=>{
+      const da=a.date||'9999-99-99',db=b.date||'9999-99-99';
+      if(da!==db)return da.localeCompare(db);
+      return Number(a.jornada||999)-Number(b.jornada||999);
+    });
+  }
+  async function putMatches(){
+    if(!matchesUrl) return false;
+    const r=await fetch(matchesUrl,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(matchesObject())});
+    if(!r.ok) throw new Error('Firebase matches PUT '+r.status);
+    return true;
+  }
+  async function pullMatches(){
+    if(!matchesUrl || applyingRemoteMatches)return;
+    try{
+      const r=await fetch(matchesUrl+'?t='+Date.now(),{cache:'no-store'});
+      if(!r.ok)throw new Error('Firebase matches GET '+r.status);
+      const data=await r.json();
+      const key=JSON.stringify(data);
+      if(key===lastMatchesRemote)return;
+      lastMatchesRemote=key;
+      if(data){
+        applyingRemoteMatches=true;
+        mergeMatchesObject(data);
+        try{localStorage.setItem('RS_LIVE_V64_STATE',JSON.stringify({savedAt:Date.now(),app:JSON.parse(JSON.stringify(App)),liveMatch:JSON.parse(JSON.stringify(Live))}));}catch(e){}
+        try{renderAll()}catch(e){}
+        applyingRemoteMatches=false;
+      }
+    }catch(e){console.warn('V77 matches poll',e)}
+    matchPollTimer=setTimeout(pullMatches,1200);
+  }
+
+  /* Guardamos la copia completa de partidos después de cada save. */
+  const oldSaveV77=window.save;
+  window.save=async function(){
+    const ok=await oldSaveV77();
+    if(ok!==false && !applyingRemoteMatches){
+      try{
+        await putMatches();
+        lastMatchesRemote=JSON.stringify(matchesObject());
+      }catch(e){
+        console.warn('V77 matches save',e);
+        const st=document.getElementById('syncText');
+        if(st)st.textContent='Firebase conectado · error sincronizando partidos';
+      }
+    }
+    return ok!==false;
+  };
+
+  /* Primera sincronización: si Firebase todavía no tiene la rama nueva,
+     publicamos los partidos que ya existen en la aplicación. */
+  async function init(){
+    try{
+      if(!matchesUrl)return;
+      const r=await fetch(matchesUrl+'?t='+Date.now(),{cache:'no-store'});
+      if(r.ok){
+        const remote=await r.json();
+        if(remote && Object.keys(remote).length){
+          mergeMatchesObject(remote);
+          lastMatchesRemote=JSON.stringify(remote);
+          try{renderAll()}catch(e){}
+        }else if((App.matches||[]).length){
+          await putMatches();
+          lastMatchesRemote=JSON.stringify(matchesObject());
+        }
+      }
+    }catch(e){console.warn('V77 matches init',e)}
+    pullMatches();
+  }
+  setTimeout(init,1800);
+})();
 </script>
 
 
@@ -7600,323 +8260,5 @@ function render79(){
 }
 function renderFooter79(){const host=document.getElementById('publicTeamV11');if(!host)return;let f=document.getElementById('xiClubFooterV68');if(!f){f=document.createElement('div');f.id='xiClubFooterV68';f.className='xiClubFooterV68';host.appendChild(f)}const m=active79();const field=m?.field||m?.estadio||m?.venue||m?.campo||'MPAL. RAMÓN SICART';const competition=m?.competition||m?.competicion||'3ª CATALANA · GRUPO 17';const src=crest79();f.innerHTML='<div class="xiClubIdentityV68">'+(src?'<img src="'+esc79(src)+'" alt="Ramón Sicart">':'')+'<div><strong>RAMÓN SICART</strong><span>LLORENÇ DEL PENEDÈS</span></div></div><div class="xiInfoGridV68"><div class="xiInfoItemV68"><div class="xiInfoIconV68">👤</div><div><small>Entrenador</small><b>ALVARO H.</b></div></div><div class="xiInfoItemV68"><div class="xiInfoIconV68">🏟️</div><div><small>Campo</small><b>'+esc79(field)+'</b></div></div><div class="xiInfoItemV68"><div class="xiInfoIconV68">🏆</div><div><small>Competición</small><b>'+esc79(competition)+'</b></div></div></div>'}
 window.renderPublicTeamV11=render79;document.addEventListener('DOMContentLoaded',function(){setTimeout(render79,100);setTimeout(render79,500);setTimeout(render79,1200);setTimeout(render79,2500)});const oldAll=window.renderAll;if(typeof oldAll==='function'){window.renderAll=function(){const r=oldAll.apply(this,arguments);setTimeout(render79,0);return r}}setTimeout(render79,300)
-})();
-</script>
-
-<!-- V81 — PERSISTENCIA Y SINCRONIZACIÓN CONSOLIDADAS -->
-<script id="v81-persistence-sync">
-(function(){
-  'use strict';
-  const ROOT='clubManagerV6';
-  const DEVICE_KEY='RS_LIVE_V81_DEVICE_ID';
-  const CACHE_KEY='RS_LIVE_V81_CACHE';
-  const deviceId=localStorage.getItem(DEVICE_KEY)||('d_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,10));
-  localStorage.setItem(DEVICE_KEY,deviceId);
-  let applyingRemote=false;
-  let saveChain=Promise.resolve();
-  let lastRemoteRevision=0;
-
-  const clone=v=>{try{return JSON.parse(JSON.stringify(v));}catch(e){return v;}};
-  const num=v=>Number(v||0);
-  const normArr=v=>Array.isArray(v)?v:(v&&typeof v==='object'?Object.values(v):[]);
-
-  function cache(){
-    try{localStorage.setItem(CACHE_KEY,JSON.stringify({savedAt:Date.now(),app:clone(App),liveMatch:clone(Live)}));}catch(e){console.warn('V81 cache',e);}
-  }
-  function restoreCache(){
-    try{
-      const c=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');
-      if(!c?.app)return false;
-      if(Array.isArray(c.app.players)&&c.app.players.length)App.players=clone(c.app.players);
-      if(Array.isArray(c.app.teams)&&c.app.teams.length)App.teams=clone(c.app.teams);
-      if(Array.isArray(c.app.matches))App.matches=clone(c.app.matches);
-      if(c.app.activeMatch!==undefined)App.activeMatch=c.app.activeMatch;
-      if(c.app.lineup)App.lineup=clone(c.app.lineup);
-      if(c.liveMatch)Object.assign(Live,clone(c.liveMatch));
-      return true;
-    }catch(e){return false;}
-  }
-
-  function mediaFromApp(){
-    const media={players:{},teams:{}};
-    (App.players||[]).forEach(p=>{if(p?.photo)media.players[String(p.id)]={photo:p.photo};});
-    (App.teams||[]).forEach(t=>{if(t?.logo)media.teams[String(t.id)]={logo:t.logo};});
-    return media;
-  }
-  function mergeMedia(media){
-    if(!media)return;
-    const pm=media.players||{},tm=media.teams||{};
-    (App.players||[]).forEach(p=>{const x=pm[String(p.id)];if(x?.photo&&!p.photo)p.photo=x.photo;});
-    (App.teams||[]).forEach(t=>{const x=tm[String(t.id)];if(x?.logo&&!t.logo)t.logo=x.logo;});
-  }
-  function sanitizeState(){
-    App.players=normArr(App.players);
-    App.teams=normArr(App.teams);
-    App.matches=normArr(App.matches);
-    App.lineup=App.lineup||{formation:'4-3-3',players:[]};
-    App.lineup.players=normArr(App.lineup.players).map(Number);
-    (App.matches||[]).forEach(m=>{
-      if(Array.isArray(m.lineup))m.lineup=m.lineup.map(Number);
-      if(Array.isArray(m.events))m.events=m.events.map(e=>clone(e));
-    });
-  }
-
-  function buildPayload(revision){
-    sanitizeState();
-    const app=clone(App);
-    app._dataRevision=revision;
-    app._lastSavedBy=deviceId;
-    app._lastSavedAt=Date.now();
-    return {app,liveMatch:clone(Live),media:mediaFromApp(),_sync:{revision,deviceId,savedAt:Date.now()}};
-  }
-
-  async function put(payload){
-    if(typeof firebase!=='undefined' && firebase.database){
-      const ref=firebase.database().ref(ROOT);
-      const result=await ref.transaction(current=>{
-        const remoteRev=Number(current?.app?._dataRevision||current?._sync?.revision||0);
-        const localRev=Number(payload.app?._dataRevision||0);
-        if(remoteRev>localRev)return;
-        return payload;
-      });
-      if(!result.committed)throw new Error('Firebase rechazó el guardado por existir una versión más nueva');
-      return true;
-    }
-    const base=(typeof firebaseBaseUrl!=='undefined'?firebaseBaseUrl:'').replace(/\/$/,'');
-    if(!base)throw new Error('Firebase URL no disponible');
-    const r=await fetch(base+'/'+ROOT+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),cache:'no-store'});
-    if(!r.ok)throw new Error('Firebase PUT '+r.status); return true;
-  }
-  async function saveV81(){
-    if(applyingRemote)return true;
-    const revision=Math.max(Date.now(),Number(App._dataRevision||0)+1);
-    App._dataRevision=revision;
-    cache();
-    const payload=buildPayload(revision);
-    saveChain=saveChain.then(async()=>{
-      await put(payload);
-      lastRemoteRevision=revision;
-      cache();
-    }).catch(err=>{
-      console.error('V81 save error',err);
-      cache();
-      const st=document.getElementById('syncText');
-      if(st)st.textContent='Firebase: error al guardar';
-      toast('⚠️ No se han podido guardar los cambios en Firebase');
-      throw err;
-    });
-    try{await saveChain;return true;}catch(e){return false;}
-  }
-  window.save=saveV81;
-
-  // Reemplaza el guardado de jugador para que todos los campos se persistan y el modal solo se cierre tras guardar.
-  window.savePlayer=async function(){
-    try{
-      if(typeof v26EnsurePlayerStatsFields==='function')v26EnsurePlayerStatsFields();
-      const number=num(document.getElementById('pNumber')?.value),name=(document.getElementById('pName')?.value||'').trim();
-      if(!number||!name){toast('Dorsal y nombre son obligatorios');return false;}
-      let p=(App.players||[]).find(x=>String(x.id)===String(editPlayerId));
-      if(!p){p={id:'p_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),number,name,surname:'',position:'Defensa',captain:false,status:'Disponible',photo:'',goals:0,yellow:0,red:0,starts:0,appearances:0};App.players.push(p);editPlayerId=p.id;}
-      p.number=number;p.name=name;p.surname=(document.getElementById('pSurname')?.value||'').trim();
-      p.position=document.getElementById('pPosition')?.value||'Defensa';p.captain=!!document.getElementById('pCaptain')?.checked;p.status=document.getElementById('pStatus')?.value||'Disponible';
-      const raw={goals:0,yellow:0,red:0,starts:0,appearances:0};
-      (App.matches||[]).filter(m=>m?.status==='FINISHED'&&isLeagueMatch(m)).forEach(m=>{
-        const side=Number(m.home)===1?'home':Number(m.away)===1?'away':null;if(!side)return;
-        (Array.isArray(m.lineup)?m.lineup:[]).forEach(n=>{if(Number(n)===number)raw.starts++;});
-        (Array.isArray(m.events)?m.events:[]).forEach(e=>{if(e.team!==side||Number(e.playerNumber)!==number)return;if(e.type==='goal')raw.goals++;if(e.type==='yellow')raw.yellow++;if(e.type==='red')raw.red++;if(e.type==='change'&&e.playerInNumber!=null&&Number(e.playerInNumber)===number)raw.appearances++;});
-      });
-      const entered={goals:num(document.getElementById('pGoals')?.value),yellow:num(document.getElementById('pYellow')?.value),red:num(document.getElementById('pRed')?.value),starts:num(document.getElementById('pStarts')?.value),appearances:num(document.getElementById('pApps')?.value)};
-      p.statAdjust={goals:entered.goals-raw.goals,yellow:entered.yellow-raw.yellow,red:entered.red-raw.red,starts:entered.starts-raw.starts,appearances:entered.appearances-raw.appearances};
-      p.goals=entered.goals;p.yellow=entered.yellow;p.red=entered.red;p.starts=entered.starts;p.appearances=entered.appearances;
-      const file=document.getElementById('pPhoto')?.files?.[0];
-      if(file){toast('Subiendo foto…');p.photo=await uploadFile(file,'players');if(!p.photo)throw new Error('No se obtuvo la foto');}
-      App.players.sort((a,b)=>num(a.number)-num(b.number));
-      if(typeof v26RecalcStats==='function')v26RecalcStats();
-      const ok=await saveV81();
-      if(!ok)return false;
-      closeModal('playerModal');renderAll();toast('Jugador guardado correctamente');return true;
-    }catch(e){console.error('V81 savePlayer',e);cache();toast('⚠️ Error guardando el jugador');return false;}
-  };
-  const savePlayerBtn=document.getElementById('savePlayerBtn');
-  if(savePlayerBtn){const b=savePlayerBtn.cloneNode(true);savePlayerBtn.replaceWith(b);b.addEventListener('click',window.savePlayer);}
-
-  // Guardado de equipos con el mismo mecanismo único.
-  window.addTeam=async function(){
-    const name=(document.getElementById('teamNameInput')?.value||'').trim();if(!name){toast('Escribe el nombre');return;}
-    try{
-      const file=document.getElementById('teamLogoInput')?.files?.[0];let t=null;
-      if(editTeamId!==null&&editTeamId!==undefined)t=(App.teams||[]).find(x=>String(x.id)===String(editTeamId));
-      if(!t){t={id:'t_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),name,short:name.slice(0,3).toUpperCase(),logo:'',protected:false};App.teams.push(t);}else{t.name=name;t.short=(t.short||name.slice(0,3)).toUpperCase();}
-      if(file){toast('Subiendo escudo…');t.logo=await uploadFile(file,'teams');if(!t.logo)throw new Error('No se obtuvo el escudo');}
-      editTeamId=null;document.getElementById('teamNameInput').value='';document.getElementById('teamLogoInput').value='';
-      const btn=document.getElementById('addTeamBtn');if(btn)btn.textContent='Guardar equipo';
-      const ok=await saveV81();if(!ok)return;renderAll();toast('Equipo guardado correctamente');
-    }catch(e){console.error('V81 addTeam',e);cache();toast('⚠️ Error guardando el equipo/escudo');}
-  };
-  const addTeamBtn=document.getElementById('addTeamBtn');
-  if(addTeamBtn){const b=addTeamBtn.cloneNode(true);addTeamBtn.replaceWith(b);b.addEventListener('click',window.addTeam);}
-
-  // Reiniciar SOLO afecta al partido activo y elimina de ese partido los eventos/resultado guardados.
-  window.resetLive=async function(ask=true){
-    if(ask&&!confirm('¿Reiniciar este partido? Se borrarán el resultado y los eventos de este partido, pero NO los jugadores, fotos, escudos ni otros partidos.'))return;
-    const m=activeMatch();
-    if(!m){toast('No hay partido activo');return;}
-    m.status='PREMATCH';delete m.homeScore;delete m.awayScore;delete m.events;delete m.finishedAt;
-    // Conservamos la alineación guardada del partido.
-    Live.state='PREMATCH';Live.half=1;Live.homeScore=0;Live.awayScore=0;Live.events=[];Live.startTimestamp=null;Live.pausedSeconds=0;Live.manualMinute=0;
-    const ok=await saveV81();if(!ok)return;renderAll();toast('Partido reiniciado correctamente');
-  };
-
-  // Seleccionar partido activo: un único valor global, siempre acompañado por su estado real.
-  window.setActive=async function(id){
-    const m=(App.matches||[]).find(x=>String(x.id)===String(id));if(!m)return;
-    App.activeMatch=m.id;
-    if(m.status==='FINISHED'){
-      Live.state='FINISHED';Live.half=2;Live.homeScore=num(m.homeScore);Live.awayScore=num(m.awayScore);Live.events=clone(m.events||[]);Live.pausedSeconds=80*60;Live.manualMinute=80;Live.startTimestamp=null;
-    }else{
-      Live.state=m.liveState||'PREMATCH';Live.half=num(m.liveHalf)||1;Live.homeScore=num(m.liveHomeScore);Live.awayScore=num(m.liveAwayScore);Live.events=clone(m.liveEvents||[]);Live.pausedSeconds=num(m.livePausedSeconds);Live.manualMinute=num(m.liveManualMinute);Live.startTimestamp=m.liveStartTimestamp||null;
-    }
-    App.lineup=m.lineupSnapshot?clone(m.lineupSnapshot):{formation:App.lineup?.formation||'4-3-3',players:Array.isArray(m.lineup)?m.lineup.map(Number):[]};
-    Live.lineup=Array.isArray(App.lineup.players)?App.lineup.players.slice():[];Live.formation=App.lineup.formation||'4-3-3';
-    const ok=await saveV81();if(!ok)return;renderAll();toast('Partido activo sincronizado');
-  };
-
-  // Persistir también el estado vivo dentro del partido, evitando que otro partido pueda contaminar el directo.
-  function snapshotLiveToMatch(){
-    const m=activeMatch();if(!m)return;
-    m.liveState=Live.state;m.liveHalf=Live.half;m.liveHomeScore=Live.homeScore;m.liveAwayScore=Live.awayScore;
-    m.liveEvents=clone(Live.events||[]);m.livePausedSeconds=Live.pausedSeconds;m.liveManualMinute=Live.manualMinute;m.liveStartTimestamp=Live.startTimestamp||null;
-    if(Array.isArray(Live.lineup)&&Live.lineup.length)m.lineup=Live.lineup.slice(0,11);
-  }
-  const origStart=window.startMatch,origHalf=window.halftime,origSecond=window.secondHalf,origFinish=window.finish,origAdjust=window.adjustMinute,origCommit=window.commitEvent;
-  window.startMatch=async function(){if(!activeMatch()){toast('Activa un partido primero');return;}if(origStart)origStart();snapshotLiveToMatch();await saveV81();renderAll();};
-  window.halftime=async function(){if(origHalf)origHalf();snapshotLiveToMatch();await saveV81();renderAll();};
-  window.secondHalf=async function(){if(origSecond)origSecond();snapshotLiveToMatch();await saveV81();renderAll();};
-  window.finish=async function(){if(origFinish)origFinish();const m=activeMatch();if(m){m.status='FINISHED';m.homeScore=num(Live.homeScore);m.awayScore=num(Live.awayScore);m.events=clone(Live.events||[]);m.finishedAt=Date.now();m.liveState='FINISHED';m.liveHalf=2;m.liveHomeScore=m.homeScore;m.liveAwayScore=m.awayScore;m.liveEvents=clone(m.events);m.livePausedSeconds=80*60;m.liveManualMinute=80;m.liveStartTimestamp=null;if(!m.lineupSnapshot&&Array.isArray(Live.lineup)&&Live.lineup.length)m.lineupSnapshot={formation:Live.formation||'4-3-3',players:Live.lineup.slice(0,11),savedAt:Date.now()};if(Array.isArray(Live.lineup)&&Live.lineup.length)m.lineup=Live.lineup.slice(0,11);}await saveV81();renderAll();};
-  window.adjustMinute=async function(n){if(origAdjust)origAdjust(n);snapshotLiveToMatch();await saveV81();renderAll();};
-  window.commitEvent=function(num){if(origCommit)origCommit(num);setTimeout(async()=>{snapshotLiveToMatch();const m=activeMatch();if(m&&Live.state!=='FINISHED'){m.status=m.status==='FINISHED'?'FINISHED':'LIVE';}await saveV81();renderAll();},80);};
-
-  // Editor de eventos: modifica el evento real, recalcula marcador y guarda antes de cerrar.
-  window.v26SaveEventEditor=async function(){
-    const m=activeMatch();if(!m)return;
-    const finished=m.status==='FINISHED';
-    const target=finished?(Array.isArray(m.events)?m.events:[]):(Array.isArray(Live.events)?Live.events:[]);
-    const sorted=target.slice().sort((a,b)=>Number(a.minute||0)-Number(b.minute||0)||Number(a.id||0)-Number(b.id||0));
-    const idx=Number(document.getElementById('v26Index')?.value);const old=idx>=0?sorted[idx]:null;const e=old||{id:'e_'+Date.now()+'_'+Math.random().toString(36).slice(2,6)};
-    e.type=document.getElementById('v26Type')?.value||'goal';e.minute=Math.max(0,Math.min(80,num(document.getElementById('v26Minute')?.value)));
-    e.team=document.getElementById('v26Team')?.value||'home';e.playerName=(document.getElementById('v26Player')?.value||'').trim();
-    e.playerInName=(document.getElementById('v26In')?.value||'').trim();e.playerOutName=(document.getElementById('v26Out')?.value||'').trim();
-    if(e.type==='goal'||e.type==='yellow'||e.type==='red'){
-      const ramonSide=Number(m.home)===1?'home':Number(m.away)===1?'away':null;
-      if(e.team===ramonSide){const p=(App.players||[]).find(x=>String(x.name||'').trim().toLowerCase()===e.playerName.toLowerCase());if(p){e.playerId=p.id;e.playerNumber=num(p.number);e.playerName=p.name;}}
-    }
-    if(idx<0)target.push(e);
-    const sortedAfter=target.slice().sort((a,b)=>Number(a.minute||0)-Number(b.minute||0)||Number(a.id||0)-Number(b.id||0));
-    let hs=0,as=0;sortedAfter.forEach(ev=>{if(String(ev.type).toLowerCase()==='goal'){if(ev.team==='home')hs++;if(ev.team==='away')as++;ev.score=`${hs}-${as}`;}});
-    if(finished){m.events=sortedAfter;m.homeScore=hs;m.awayScore=as;}else{Live.events=sortedAfter;Live.homeScore=hs;Live.awayScore=as;snapshotLiveToMatch();}
-    if(typeof v26RecalcStats==='function')v26RecalcStats();
-    const ok=await saveV81();if(!ok)return;
-    closeModal('v26EventModal');renderAll();toast('Evento actualizado y sincronizado');
-  };
-  window.v26DeleteEvent=async function(i){
-    const m=activeMatch();if(!m||!confirm('¿Eliminar este evento?'))return;
-    const finished=m.status==='FINISHED';const target=finished?(Array.isArray(m.events)?m.events:[]):(Array.isArray(Live.events)?Live.events:[]);
-    const sorted=target.slice().sort((a,b)=>Number(a.minute||0)-Number(b.minute||0)||Number(a.id||0)-Number(b.id||0));sorted.splice(i,1);
-    let hs=0,as=0;sorted.forEach(ev=>{if(String(ev.type).toLowerCase()==='goal'){if(ev.team==='home')hs++;if(ev.team==='away')as++;ev.score=`${hs}-${as}`;}});
-    if(finished){m.events=sorted;m.homeScore=hs;m.awayScore=as;}else{Live.events=sorted;Live.homeScore=hs;Live.awayScore=as;snapshotLiveToMatch();}
-    if(typeof v26RecalcStats==='function')v26RecalcStats();const ok=await saveV81();if(!ok)return;renderAll();toast('Evento eliminado y sincronizado');
-  };
-
-  // Elimina un partido sin tocar jugadores, escudos ni fotos.
-  window.deleteMatch=async function(id){
-    if(!confirm('¿Eliminar este partido? Los jugadores, fotos y escudos no se borrarán.'))return;
-    App.matches=(App.matches||[]).filter(m=>String(m.id)!==String(id));
-    if(String(App.activeMatch)===String(id)){
-      App.activeMatch=App.matches[0]?.id??null;
-      Live.state='PREMATCH';Live.half=1;Live.homeScore=0;Live.awayScore=0;Live.events=[];Live.startTimestamp=null;Live.pausedSeconds=0;Live.manualMinute=0;
-    }
-    const ok=await saveV81();if(!ok)return;renderAll();toast('Partido eliminado');
-  };
-
-  // Restauración inicial local y luego Firebase. La nube es la fuente común entre dispositivos.
-  function applyRemote(data){
-    if(!data?.app)return;
-    const rev=Number(data.app._dataRevision||data._sync?.revision||0);
-    if(rev && rev<Number(App._dataRevision||0))return;
-    applyingRemote=true;
-    try{
-      const localMedia=mediaFromApp();
-      const remoteApp=clone(data.app);
-      App.version=remoteApp.version||App.version;App.club=remoteApp.club||App.club;App.favoriteTeamId=remoteApp.favoriteTeamId??App.favoriteTeamId;
-      if(Array.isArray(remoteApp.players))App.players=remoteApp.players;
-      if(Array.isArray(remoteApp.teams))App.teams=remoteApp.teams;
-      if(Array.isArray(remoteApp.matches))App.matches=remoteApp.matches;
-      if(remoteApp.activeMatch!==undefined)App.activeMatch=remoteApp.activeMatch;
-      if(remoteApp.lineup)App.lineup=remoteApp.lineup;
-      mergeMedia(localMedia);mergeMedia(data.media);
-      if(data.liveMatch)Object.assign(Live,data.liveMatch);
-      const m=activeMatch();
-      if(m&&m.status==='FINISHED'){Live.state='FINISHED';Live.homeScore=num(m.homeScore);Live.awayScore=num(m.awayScore);Live.events=clone(m.events||[]);Live.pausedSeconds=80*60;Live.manualMinute=80;Live.startTimestamp=null;}
-      lastRemoteRevision=rev;App._dataRevision=rev;cache();renderAll();
-    }finally{applyingRemote=false;}
-  }
-
-  function start(){
-    try{
-      if(typeof firebase!=='undefined'&&firebase.database){
-        const ref=firebase.database().ref(ROOT);
-        ref.on('value',snap=>{
-          if(!snap.exists()){
-            if(restoreCache())saveV81();
-            return;
-          }
-          applyRemote(snap.val());
-          const dot=document.getElementById('syncDot'),st=document.getElementById('syncText');if(dot)dot.className='dot ok';if(st)st.textContent='Firebase conectado · tiempo real';
-        },err=>{console.error('V81 Firebase',err);const st=document.getElementById('syncText');if(st)st.textContent='Firebase: error de conexión';});
-      }
-    }catch(e){console.error('V81 realtime init',e);}
-  }
-  // Clasificación: solo partidos de Liga. Los amistosos no cuentan.
-  function isLeagueMatch(m){return !/amistoso|friendly/i.test(String(m?.competition||'Liga').trim());}
-  function renderLeagueClassificationV81(){
-    const table=document.getElementById('homeTableV26');if(!table)return;
-    const card=table.closest('.v26DashCard');
-    const played=(App.matches||[]).filter(m=>m?.status==='FINISHED'&&isLeagueMatch(m));
-    if(!played.length){if(card)card.style.display='none';return;} if(card)card.style.display='block';
-    const stats={};(App.teams||[]).forEach(t=>stats[String(t.id)]={team:t,played:0,w:0,d:0,l:0,gf:0,ga:0,pts:0});
-    played.forEach(m=>{const H=stats[String(m.home)],A=stats[String(m.away)];if(!H||!A)return;const h=num(m.homeScore),a=num(m.awayScore);H.played++;A.played++;H.gf+=h;H.ga+=a;A.gf+=a;A.ga+=h;if(h>a){H.w++;A.l++;H.pts+=3}else if(a>h){A.w++;H.l++;A.pts+=3}else{H.d++;A.d++;H.pts++;A.pts++;}});
-    const sort=(x,y)=>y.pts-x.pts||(y.gf-y.ga)-(x.gf-x.ga)||y.gf-x.gf||x.team.name.localeCompare(y.team.name);
-    const sorted=Object.values(stats).filter(r=>r.played>0).sort(sort),ramon=sorted.find(r=>String(r.team.id)===String(App.favoriteTeamId||1));
-    const top=sorted.slice(0,4);if(ramon&&!top.includes(ramon))top[top.length-1]=ramon;top.sort(sort);
-    table.innerHTML=top.map((r,i)=>`<div class="v26MiniRow"><div class="v26Rank">${i+1}</div><div><b>${esc(r.team.name)}</b><div class="v26StatLine">PJ ${r.played} · G ${r.w} · E ${r.d} · P ${r.l}</div></div><div><div class="v26Score">${r.pts} pts</div><small>${r.gf}:${r.ga}</small></div></div>`).join('');
-  }
-  const oldDashboardV81=window.renderHomeDashboardV26;
-  window.renderHomeDashboardV26=function(){if(oldDashboardV81)oldDashboardV81();renderLeagueClassificationV81();};
-
-  // Once inicial único: público y administrador usan los mismos datos y la misma foto.
-  function renderAdminXI81(){
-    const form=document.getElementById('formationV10'),list=document.getElementById('xiOrderV10'),avail=document.getElementById('availV10'),pitch=document.getElementById('adminPitchV10');if(!form||!list||!avail||!pitch)return;
-    const players=Array.isArray(App.players)?App.players:[];App.lineup=App.lineup||{formation:'4-3-3',players:[]};form.value=App.lineup.formation||'4-3-3';const nums=(App.lineup.players||[]).map(Number).slice(0,11),pos=positions(App.lineup.formation||'4-3-3');
-    pitch.querySelectorAll('.adminXiPlayerV81').forEach(x=>x.remove());nums.forEach((n,i)=>{const p=players.find(x=>Number(x.number)===n);if(!p)return;const xy=pos[i]||[50,50],photo=!!String(p.photo||'').trim(),cls='adminXiPlayerV81 '+(/portero/i.test(String(p.position||''))?'goalkeeper ':'')+(!photo?'noPhoto':'');pitch.insertAdjacentHTML('beforeend',`<div class="${cls}" style="left:${xy[0]}%;top:${xy[1]}%"><div class="adminXiVisualV81">${photo?`<img src="${esc(p.photo)}" alt="${esc(p.name)}">`:`<div class="adminXiShirtV81"><b>${esc(p.number)}</b></div>`}</div><div class="adminXiNameV81"><span>#${esc(p.number)}</span>${esc(p.name)}</div></div>`);});
-    list.innerHTML=nums.length?nums.map((n,i)=>{const p=players.find(x=>Number(x.number)===n);return `<div class="xiRowV10"><div class="slot">${i+1}</div><div><div class="pname">#${p?.number??n} ${esc(p?.name||'Jugador')}</div><div class="pmeta">${esc(p?.position||'Jugador')}</div></div><div class="xiBtnsV10"><button ${i===0?'disabled':''} onclick="moveXI10(${i},-1)">▲</button><button ${i===nums.length-1?'disabled':''} onclick="moveXI10(${i},1)">▼</button><button onclick="removeXI10(${n})">×</button></div></div>`}).join(''):'<div style="padding:18px;text-align:center;color:#71869c;font-size:10px">Selecciona jugadores para formar el XI.</div>';
-    avail.innerHTML=players.slice().sort((a,b)=>num(a.number)-num(b.number)).map(p=>{const on=nums.includes(num(p.number));return `<button class="${on?'on':''}" onclick="toggleXI10(${num(p.number)})"><b>#${esc(p.number)}</b>${esc(p.name)} ${on?'✓':''}</button>`}).join('');
-  }
-  const adminStyle=document.createElement('style');adminStyle.textContent=`.adminXiPlayerV81{position:absolute;transform:translate(-50%,-50%);width:clamp(105px,15%,170px);text-align:center;z-index:20;pointer-events:none;filter:drop-shadow(0 8px 10px rgba(0,0,0,.4))}.adminXiVisualV81{height:clamp(100px,12vw,160px);display:flex;align-items:flex-end;justify-content:center}.adminXiVisualV81 img{width:100%;height:100%;object-fit:contain;object-position:center bottom;display:block}.adminXiShirtV81{position:relative;width:clamp(58px,7vw,90px);height:clamp(72px,8.5vw,110px);clip-path:polygon(19% 0,34% 9%,66% 9%,81% 0,100% 18%,88% 30%,88% 100%,12% 100%,12% 30%,0 18%);background:repeating-linear-gradient(90deg,#ffd21a 0 18%,#ed2430 18% 48%,#ffd21a 48% 74%,#ed2430 74% 100%);border:2px solid #fff9;display:grid;place-items:center;color:#111;font-size:30px;font-weight:1000}.adminXiPlayerV81.goalkeeper .adminXiShirtV81{background:linear-gradient(90deg,#0c9f53,#1fc46d 48%,#0b914a);color:#fff}.adminXiNameV81{display:inline-flex;align-items:center;justify-content:center;min-width:90px;max-width:170px;margin:3px auto 0;padding:7px 12px;border:2px solid #2c4862;border-radius:20px;background:linear-gradient(#071016,#02070a);color:#fff;font-size:14px;font-weight:1000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.adminXiNameV81 span{color:#ffd21a;margin-right:6px}@media(max-width:700px){.adminXiPlayerV81{width:78px}.adminXiVisualV81{height:76px}.adminXiShirtV81{width:46px;height:59px;font-size:22px}.adminXiNameV81{min-width:62px;max-width:95px;padding:5px 7px;font-size:9px}}`;
-  document.head.appendChild(adminStyle);window.renderAdminXI10=renderAdminXI81;
-  const oldToggle=window.toggleXI10;window.toggleXI10=function(n){if(oldToggle)oldToggle(n);renderAdminXI81();};const oldRemove=window.removeXI10;window.removeXI10=function(n){if(oldRemove)oldRemove(n);renderAdminXI81();};const oldMove=window.moveXI10;window.moveXI10=function(i,d){if(oldMove)oldMove(i,d);renderAdminXI81();};
-  const xiSave=document.getElementById('saveXI10');if(xiSave){const b=xiSave.cloneNode(true);xiSave.replaceWith(b);b.addEventListener('click',async()=>{App.lineup=App.lineup||{formation:'4-3-3',players:[]};const a=(App.lineup.players||[]).map(Number);if(a.length!==11||new Set(a).size!==11){toast('Debes seleccionar 11 jugadores sin repetir');return;}Live.lineup=a.slice();Live.formation=App.lineup.formation||'4-3-3';const m=activeMatch();if(m){m.lineupSnapshot={formation:Live.formation,players:a.slice(),savedAt:Date.now()};m.lineup=a.slice();}localStorage.setItem('rs_lineup',JSON.stringify({formation:Live.formation,players:a}));const ok=await saveV81();if(ok){renderAll();renderAdminXI81();if(typeof renderPublicTeamV11==='function')renderPublicTeamV11();toast('Once guardado y sincronizado');}});}
-  setTimeout(renderAdminXI81,200);
-
-  async function loadLegacyMedia(){
-    try{
-      if(typeof firebase!=='undefined'&&firebase.database){
-        const snap=await firebase.database().ref(ROOT+'/media').once('value');
-        if(snap.exists()){mergeMedia(snap.val());cache();try{renderAll()}catch(e){}}
-      }
-    }catch(e){console.warn('V81 legacy media',e)}
-  }
-  start();
-  loadLegacyMedia();
-  cache();
 })();
 </script>
