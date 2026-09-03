@@ -2223,7 +2223,7 @@ button{cursor:pointer}
     <p style="color:var(--muted);font-size:12px;margin-bottom:14px">Acceso privado para gestionar plantilla, partidos y directo.</p>
     <div class="row"><input id="pinInput" type="password" placeholder="PIN"><button class="btn" id="pinBtn">Entrar</button></div>
   </div>
-  <div id="adminPanel" class="adminLocked" style="display:none">
+  <div id="adminPanel" style="display:none">
     <div class="sectionTitle"><h2>⚙️ Centro de control</h2><p id="adminActiveMatch">Sin partido activo</p></div>
     <div class="adminGrid">
       <div class="card adminCard">
@@ -2870,30 +2870,13 @@ function saveLineup(){
 }
 function closeModal(id){document.getElementById(id).classList.remove("open")}
 function unlock(){
- const lock=document.getElementById("adminLock");
- const panel=document.getElementById("adminPanel");
- const input=document.getElementById("pinInput");
- if(!input || !panel || !lock) return;
- if(input.value!==PIN){toast("PIN incorrecto");input.value="";input.focus();return}
- lock.style.display="none";
- panel.classList.remove("adminLocked");
- panel.style.display="block";
- input.value="";
- toast("Administrador desbloqueado");
+ if(document.getElementById("pinInput").value!==PIN){toast("PIN incorrecto");return}
+ document.getElementById("adminLock").style.display="none";document.getElementById("adminPanel").style.display="block";toast("Administrador desbloqueado")
 }
 function nav(){
  document.querySelectorAll("#mainNav button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));document.getElementById(b.dataset.page).classList.add("active");document.querySelectorAll("#mainNav button").forEach(x=>x.classList.remove("active"));b.classList.add("active")})
 }
 document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>closeModal(b.dataset.close));
-(function enforceAdminLock(){
- const lock=document.getElementById("adminLock");
- const panel=document.getElementById("adminPanel");
- if(lock && panel){
-   lock.style.display="block";
-   panel.classList.add("adminLocked");
-   panel.style.display="none";
- }
-})();
 document.getElementById("pinBtn").onclick=unlock;document.getElementById("newPlayerBtn").onclick=()=>{editPlayerId=null;document.getElementById("playerModalTitle").textContent="Nuevo jugador";document.querySelectorAll("#playerModal input").forEach(x=>{if(x.type!=="checkbox"&&x.type!=="file")x.value=""});document.getElementById("pCaptain").checked=false;document.getElementById("playerModal").classList.add("open")};
 document.getElementById("savePlayerBtn")?.addEventListener("click",savePlayer);
 document.getElementById("addTeamBtn")?.addEventListener("click",addTeam);
@@ -4460,12 +4443,9 @@ document.addEventListener("click",function(e){
 })();
 </script>
 
-<script id="rsGoalPosterV59">
+<script id="rsGoalPosterV58">
 (function(){
   "use strict";
-
-  /* Cartel de partido estilo gráfico deportivo, adaptado a RS LIVE.
-     Se regenera con cada gol y siempre utiliza los datos reales del partido activo. */
 
   function gpTeam(m, side){
     const id=side==="home"?m?.home:m?.away;
@@ -4482,291 +4462,151 @@ document.addEventListener("click",function(e){
   }
 
   function gpNorm(v){
-    return String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+    return String(v||"").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase().trim();
   }
 
   function gpPlayer(e){
     const players=App.players||[];
     if(e?.playerId!=null){
       const byId=players.find(p=>String(p.id)===String(e.playerId));
-      if(byId)return byId;
+      if(byId) return byId;
     }
     if(e?.playerName){
       const n=gpNorm(e.playerName);
       const byName=players.find(p=>gpNorm(p.name)===n || gpNorm(`${p.name} ${p.surname||""}`)===n);
-      if(byName)return byName;
+      if(byName) return byName;
     }
     if(e?.playerNumber!=null){
       const byNumber=players.find(p=>Number(p.number)===Number(e.playerNumber));
-      if(byNumber)return byNumber;
+      if(byNumber) return byNumber;
     }
     return null;
   }
 
-  function gpGoals(m){
-    return (Array.isArray(m?.events)?m.events:[])
-      .filter(e=>e?.type==="goal")
-      .sort((a,b)=>Number(a.minute||0)-Number(b.minute||0) || Number(a.id||0)-Number(b.id||0));
-  }
-
-  function gpScore(m){
-    let h=Number(m?.status==="FINISHED"?m?.homeScore:Live?.homeScore)||0;
-    let a=Number(m?.status==="FINISHED"?m?.awayScore:Live?.awayScore)||0;
-    const goals=gpGoals(m);
-    if(m?.status!=="FINISHED" && goals.length){
-      h=0;a=0;
-      goals.forEach(e=>e.team==="home"?h++:e.team==="away"?a++:null);
-    }
-    return {h,a};
+  function gpScoreForEvent(m,e){
+    if(e?.score && /^\\d+\\s*-\\s*\\d+$/.test(String(e.score))) return String(e.score).replace(/\\s+/g,"");
+    let h=0,a=0;
+    const events=Array.isArray(m?.events)?m.events:[];
+    const idx=events.indexOf(e);
+    const upto=idx>=0?events.slice(0,idx+1):events;
+    upto.forEach(x=>{if(x?.type!=="goal")return;if(x.team==="home")h++;else if(x.team==="away")a++;});
+    return `${h}-${a}`;
   }
 
   function gpLoad(src){
     return new Promise(resolve=>{
       if(!src){resolve(null);return;}
       const im=new Image();
-      if(/^https?:\/\//i.test(String(src)))im.crossOrigin="anonymous";
-      im.onload=()=>resolve(im);im.onerror=()=>resolve(null);im.src=src;
+      if(/^https?:\/\//i.test(String(src))) im.crossOrigin="anonymous";
+      im.onload=()=>resolve(im); im.onerror=()=>resolve(null); im.src=src;
     });
   }
 
   function gpFit(ctx,text,max,font){
-    ctx.font=font;
-    let s=String(text||"");
+    ctx.font=font; let s=String(text||"");
     if(ctx.measureText(s).width<=max)return s;
     while(s.length>2 && ctx.measureText(s+"…").width>max)s=s.slice(0,-1);
     return s+"…";
   }
 
-  function gpRound(ctx,x,y,w,h,r,fill,stroke,lineWidth=2){
+  function gpRound(ctx,x,y,w,h,r,fill,stroke){
     ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();
-    if(fill){ctx.fillStyle=fill;ctx.fill();}
-    if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lineWidth;ctx.stroke();}
+    if(fill){ctx.fillStyle=fill;ctx.fill();} if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=3;ctx.stroke();}
   }
 
   function gpDrawContain(ctx,im,x,y,w,h){
     if(!im)return false;
     const r=Math.min(w/im.width,h/im.height),dw=im.width*r,dh=im.height*r;
-    ctx.drawImage(im,x+(w-dw)/2,y+(h-dh)/2,dw,dh);return true;
-  }
-
-  function gpDrawCover(ctx,im,x,y,w,h){
-    if(!im)return false;
-    const r=Math.max(w/im.width,h/im.height),dw=im.width*r,dh=im.height*r;
-    ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
-    ctx.drawImage(im,x+(w-dw)/2,y+(h-dh)/2,dw,dh);ctx.restore();return true;
-  }
-
-  function gpText(ctx,text,x,y,font,fill="#fff",align="center"){
-    ctx.font=font;ctx.fillStyle=fill;ctx.textAlign=align;ctx.textBaseline="alphabetic";ctx.fillText(text,x,y);
-  }
-
-  function gpBuildStandings(m){
-    const stats={};
-    (App.teams||[]).forEach(t=>stats[String(t.id)]={team:t,played:0,w:0,d:0,l:0,gf:0,ga:0,pts:0});
-
-    (App.matches||[]).forEach(mx=>{
-      if(!mx || mx===m || !stats[String(mx.home)] || !stats[String(mx.away)])return;
-      if(mx.status!=="FINISHED")return;
-      const h=Number(mx.homeScore||0),a=Number(mx.awayScore||0);
-      const H=stats[String(mx.home)],A=stats[String(mx.away)];
-      H.played++;A.played++;H.gf+=h;H.ga+=a;A.gf+=a;A.ga+=h;
-      if(h>a){H.w++;A.l++;H.pts+=3;}
-      else if(a>h){A.w++;H.l++;A.pts+=3;}
-      else{H.d++;A.d++;H.pts++;A.pts++;}
-    });
-
-    /* El partido que estamos mostrando también cuenta para que la clasificación
-       quede actualizada con el marcador del cartel, aunque todavía esté en directo. */
-    const score=gpScore(m);
-    if(m && stats[String(m.home)] && stats[String(m.away)]){
-      const H=stats[String(m.home)],A=stats[String(m.away)];
-      H.played++;A.played++;H.gf+=score.h;H.ga+=score.a;A.gf+=score.a;A.ga+=score.h;
-      if(score.h>score.a){H.w++;A.l++;H.pts+=3;}
-      else if(score.a>score.h){A.w++;H.l++;A.pts+=3;}
-      else{H.d++;A.d++;H.pts++;A.pts++;}
-    }
-
-    const rows=Object.values(stats).sort((x,y)=>y.pts-x.pts||(y.gf-y.ga)-(x.gf-x.ga)||y.gf-x.gf||String(x.team.name||"").localeCompare(String(y.team.name||"")));
-    const fav=String(gpFavoriteTeamId());
-    let idx=rows.findIndex(r=>String(r.team.id)===fav);
-    if(idx<0){
-      const ft=(App.teams||[]).find(t=>String(t.id)===fav);
-      if(ft){
-        rows.push({team:ft,played:0,w:0,d:0,l:0,gf:0,ga:0,pts:0});
-        rows.sort((x,y)=>y.pts-x.pts||(y.gf-y.ga)-(x.gf-x.ga)||y.gf-x.gf);
-        idx=rows.findIndex(r=>String(r.team.id)===fav);
-      }
-    }
-
-    if(!rows.length)return [];
-    if(rows.length<=4)return rows;
-    let start=Math.max(0,idx-1);
-    if(start+4>rows.length)start=rows.length-4;
-    return rows.slice(start,start+4);
+    ctx.drawImage(im,x+(w-dw)/2,y+(h-dh)/2,dw,dh); return true;
   }
 
   async function rsGoalPosterGenerate(m,e,automatic){
-    if(!m)return null;
+    if(!m||!e||e.type!=="goal") return null;
     const home=gpTeam(m,"home"),away=gpTeam(m,"away");
     const favoriteId=gpFavoriteTeamId();
-    const goals=gpGoals(m);
-    const score=gpScore(m);
-    const homeIsFav=Number(m.home)===favoriteId;
-    const margin=Math.abs(score.h-score.a);
-    const favScore=homeIsFav?score.h:score.a;
-    const oppScore=homeIsFav?score.a:score.h;
-    let headline="¡PARTIDAZO!";
-    if(favScore>oppScore)headline=margin>=3?"¡GOLEADA!":"¡VICTORIA!";
-    else if(favScore===oppScore)headline="¡EMPATE!";
-    else headline="¡A POR LA REMONTADA!";
-
-    const teamImages=await Promise.all([gpLoad(home.logo),gpLoad(away.logo)]);
-    const goalAssets=await Promise.all(goals.map(async g=>{
-      const scoringId=Number(g.team==="home"?m.home:m.away);
-      const isFav=scoringId===favoriteId;
-      const pl=isFav?gpPlayer(g):null;
-      return {e:g,isFav,player:pl,photo:pl?.photo?await gpLoad(pl.photo):null};
-    }));
-
-    const standings=gpBuildStandings(m);
-    const standingLogos=await Promise.all(standings.map(r=>gpLoad(r.team?.logo)));
-
-    const W=1080,H=1620,c=document.createElement("canvas");c.width=W;c.height=H;
+    const scoringId=Number(e.team==="home"?m.home:m.away);
+    const favoriteScorer=scoringId===favoriteId;
+    const player=favoriteScorer?gpPlayer(e):null;
+    const him=await gpLoad(home.logo),aim=await gpLoad(away.logo);
+    const pim=player?.photo?await gpLoad(player.photo):null;
+    const W=1080,H=1350,c=document.createElement("canvas");c.width=W;c.height=H;
     const ctx=c.getContext("2d");
 
-    /* Fondo inspirado en el ejemplo: oscuro, deportivo y con sensación de estadio. */
-    const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,"#020407");bg.addColorStop(.35,"#0a1624");bg.addColorStop(.62,"#07111d");bg.addColorStop(1,"#020407");ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
-    const glow=ctx.createRadialGradient(W/2,390,30,W/2,390,600);glow.addColorStop(0,"rgba(255,210,0,.16)");glow.addColorStop(1,"rgba(255,210,0,0)");ctx.fillStyle=glow;ctx.fillRect(0,0,W,820);
-    for(let i=0;i<14;i++){ctx.fillStyle=`rgba(255,255,255,${0.025+(i%3)*0.012})`;ctx.fillRect(40+i*78,250+(i%2)*18,3,190);}
+    const bg=ctx.createLinearGradient(0,0,W,H);bg.addColorStop(0,"#05080d");bg.addColorStop(.5,"#10223a");bg.addColorStop(1,"#05080d");ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+    ctx.fillStyle="#ffd400";ctx.fillRect(55,55,W-110,6);
+    ctx.textAlign="center";ctx.fillStyle="#fff";ctx.font="900 74px Arial";ctx.fillText("GOOOOL",W/2,170);
+    ctx.fillStyle="#ffd400";ctx.font="900 34px Arial";ctx.fillText(`DEL ${gpFit(ctx,(scoringId===Number(m.home)?home.name:away.name).toUpperCase(),850,"900 34px Arial")}`,W/2,220);
 
-    ctx.fillStyle="#ffd400";ctx.fillRect(48,48,W-96,8);
-    gpText(ctx,headline,W/2,150,"900 82px Arial","#fff");
-    gpText(ctx,`RAMÓN SICART · ${m.competition||"PARTIDO"}`.toUpperCase(),W/2,202,"900 28px Arial","#ffd400");
-    if(m.field)gpText(ctx,String(m.field).toUpperCase(),W/2,242,"700 24px Arial","#aebdd0");
+    // Marcador: escudos reales + nombres + resultado.
+    gpRound(ctx,55,285,970,250,28,"rgba(5,12,22,.82)","#294764");
+    gpDrawContain(ctx,him,105,325,155,145);gpDrawContain(ctx,aim,820,325,155,145);
+    ctx.fillStyle="#fff";ctx.font="900 31px Arial";
+    ctx.fillText(gpFit(ctx,home.name,300,"900 31px Arial"),182,505);
+    ctx.fillText(gpFit(ctx,away.name,300,"900 31px Arial"),898,505);
+    ctx.fillStyle="#ffd400";ctx.font="900 30px Arial";ctx.fillText("VS",W/2,405);
+    const score=gpScoreForEvent(m,e);ctx.fillStyle="#fff";ctx.font="900 82px Arial";ctx.fillText(score.replace("-","  –  "),W/2,490);
 
-    /* Bloque marcador final/actual con escudos reales. */
-    gpRound(ctx,48,280,984,245,30,"rgba(4,10,18,.90)","#314a63",3);
-    gpDrawContain(ctx,teamImages[0],85,318,190,150);gpDrawContain(ctx,teamImages[1],805,318,190,150);
-    gpText(ctx,gpFit(ctx,home.name,300,"900 31px Arial"),180,493,"900 31px Arial","#fff");
-    gpText(ctx,gpFit(ctx,away.name,300,"900 31px Arial"),900,493,"900 31px Arial","#fff");
-    gpText(ctx,`${score.h}  –  ${score.a}`,W/2,435,"900 88px Arial","#fff");
-    gpText(ctx,m.status==="FINISHED"?"RESULTADO FINAL":"MARCADOR ACTUAL",W/2,500,"900 23px Arial","#ffd400");
+    ctx.fillStyle="#aabbd0";ctx.font="700 27px Arial";ctx.fillText(m.date?formatDate(m.date):"",W/2,585);
+    ctx.fillStyle="#ffd400";ctx.font="900 54px Arial";ctx.fillText(`${Number(e.minute||0)}’`,W/2,660);
+    ctx.fillStyle="#fff";ctx.font="900 45px Arial";ctx.fillText(gpFit(ctx,(e.playerName||"Gol").toUpperCase(),780,"900 45px Arial"),W/2,720);
 
-    const dateText=m.date?formatDate(m.date):"";
-    if(dateText)gpText(ctx,dateText,W/2,560,"700 25px Arial","#aebdd0");
-
-    /* Goles: todos los minutos del partido, en tarjetas dinámicas. */
-    gpText(ctx,"⚽ GOLES DEL PARTIDO",W/2,625,"900 34px Arial","#fff");
-    const count=Math.max(goals.length,1),cols=goals.length<=2?2:goals.length<=4?2:3;
-    const cardW=goals.length<=2?440:goals.length<=4?455:315;
-    const gap=goals.length<=2?30:goals.length<=4?28:22;
-    const rowsN=Math.ceil(Math.max(goals.length,1)/cols);
-    const cardH=goals.length<=2?200:goals.length<=4?180:165;
-    const startX=(W-(cols*cardW+(cols-1)*gap))/2;
-    const startY=660;
-
-    if(!goals.length){
-      gpRound(ctx,180,690,720,130,24,"rgba(12,24,38,.9)","#294764",2);
-      gpText(ctx,"Todavía no hay goles",W/2,770,"800 34px Arial","#aebdd0");
+    if(favoriteScorer){
+      // Foto únicamente si el goleador pertenece al equipo favorito.
+      gpRound(ctx,340,770,400,400,32,"#0b1728","#ffd400");
+      if(pim){
+        ctx.save();ctx.beginPath();ctx.arc(540,970,170,0,Math.PI*2);ctx.clip();ctx.drawImage(pim,370,800,340,340);ctx.restore();
+      }else{
+        ctx.fillStyle="#23364d";ctx.beginPath();ctx.arc(540,970,170,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle="#a9b9cc";ctx.font="900 150px Arial";ctx.fillText("👤",540,1020);
+      }
+      ctx.fillStyle="#fff";ctx.font="800 24px Arial";ctx.fillText("GOLEADOR",540,1215);
     }else{
-      goalAssets.forEach((g,i)=>{
-        const col=i%cols,row=Math.floor(i/cols),x=startX+col*(cardW+gap),y=startY+row*(cardH+22);
-        gpRound(ctx,x,y,cardW,cardH,24,"rgba(7,18,30,.96)",g.isFav?"#ffd400":"#294764",3);
-        const photoSize=cardH-46;
-        if(g.isFav && g.photo){
-          gpDrawCover(ctx,g.photo,x+12,y+12,photoSize,photoSize);
-        }else{
-          gpRound(ctx,x+12,y+12,photoSize,photoSize,18,"#101d2c","#233b55",2);
-          gpDrawContain(ctx,g.e.team==="home"?teamImages[0]:teamImages[1],x+28,y+28,photoSize-32,photoSize-32);
-        }
-        const tx=x+photoSize+30,tw=cardW-photoSize-48;
-        gpText(ctx,`${Number(g.e.minute||0)}’`,tx,y+65,"900 43px Arial","#ffd400","left");
-        gpText(ctx,gpFit(ctx,(g.e.playerName||"Gol").toUpperCase(),tw,"900 27px Arial"),tx,y+108,"900 27px Arial","#fff","left");
-        gpText(ctx,g.isFav?"RAMÓN SICART":(g.e.team==="home"?home.name:away.name),tx,y+146,"700 19px Arial","#9fb1c6","left");
-        if(g.e.score)gpText(ctx,String(g.e.score),tx,y+178,"900 22px Arial","#fff","left");
-      });
+      ctx.fillStyle="#aabbd0";ctx.font="700 30px Arial";ctx.fillText("Gol del equipo visitante/local",W/2,850);
     }
 
-    const goalsBottom=startY+(rowsN*cardH)+((rowsN-1)*22)+25;
-    const resultY=Math.max(900,goalsBottom+18);
-
-    /* Resultado final repetido en formato protagonista, como el ejemplo. */
-    gpRound(ctx,48,resultY,984,150,26,"#eef1f5","#ffd400",3);
-    gpDrawContain(ctx,teamImages[0],70,resultY+15,115,120);gpDrawContain(ctx,teamImages[1],895,resultY+15,115,120);
-    gpText(ctx,gpFit(ctx,home.name,270,"900 25px Arial"),250,resultY+78,"900 25px Arial","#152238");
-    gpText(ctx,gpFit(ctx,away.name,270,"900 25px Arial"),830,resultY+78,"900 25px Arial","#152238");
-    gpText(ctx,`${score.h} – ${score.a}`,W/2,resultY+96,"900 76px Arial","#151b31");
-
-    /* Clasificación: exactamente 4 equipos siempre que haya 4 o más, con RS incluido. */
-    const classY=resultY+182;
-    gpText(ctx,"⚡ CLASIFICACIÓN",W/2,classY,"900 38px Arial","#ffd400");
-    gpText(ctx,"ACTUALIZADA CON ESTE PARTIDO",W/2,classY+32,"700 18px Arial","#9fb1c6");
-    const tableY=classY+52,rowH=73;
-    gpRound(ctx,48,tableY,984,rowH*4+22,24,"rgba(3,10,17,.96)","#2d4358",2);
-    ["POS","EQUIPO","PJ","DG","PTS"].forEach((t,i)=>{
-      const xs=[75,150,760,855,955];
-      gpText(ctx,t,xs[i],tableY+30,i===1?"900 18px Arial":"900 16px Arial","#9fb1c6",i===1?"left":"center");
-    });
-    standings.slice(0,4).forEach((r,i)=>{
-      const y=tableY+48+i*rowH,isFav=String(r.team.id)===String(favoriteId);
-      if(isFav){gpRound(ctx,58,y,964,rowH-8,16,"rgba(255,212,0,.13)","#ffd400",2);}
-      else if(i%2===0){gpRound(ctx,58,y,964,rowH-8,16,"rgba(255,255,255,.025)",null,0);}
-      const logo=standingLogos[i];
-      gpText(ctx,`${i+1}º`,75,y+39,"900 26px Arial",isFav?"#ffd400":"#fff");
-      gpDrawContain(ctx,logo,105,y+8,50,50);
-      gpText(ctx,gpFit(ctx,String(r.team.name||"Equipo").toUpperCase(),535,"900 23px Arial"),175,y+35,"900 23px Arial",isFav?"#fff":"#e9eef5","left");
-      gpText(ctx,String(r.played),760,y+35,"800 22px Arial","#fff");
-      gpText(ctx,`${r.gf-r.ga>=0?"+":""}${r.gf-r.ga}`,855,y+35,"800 22px Arial",r.gf-r.ga>=0?"#dce8f4":"#ff8e8e");
-      gpText(ctx,String(r.pts),955,y+35,"900 25px Arial",isFav?"#ffd400":"#fff");
-    });
-
-    gpText(ctx,"RS LIVE · RAMÓN SICART · MATCH CENTER",W/2,H-24,"700 18px Arial","#71849a");
+    ctx.fillStyle="#65758c";ctx.font="600 22px Arial";ctx.fillText("RS LIVE · RAMÓN SICART · MATCH CENTER",W/2,1310);
 
     let data=null;
     try{data=c.toDataURL("image/jpeg",0.92);}catch(err){
-      console.warn("RS LIVE: no se pudo exportar el cartel",err);
+      console.warn("RS LIVE: no se pudo exportar el cartel de gol",err);
       toast("⚠️ No se pudo generar el cartel. Revisa los permisos/CORS de las imágenes.");
       return null;
     }
 
-    /* El cartel queda guardado en el último evento de gol para mantener la misma lógica existente. */
-    if(e){
-      e.goalPosterData=data;e.goalPosterGeneratedAt=Date.now();e.goalPosterFavoriteScorer=true;
-    }
-    m.matchPosterData=data;m.matchPosterGeneratedAt=Date.now();
-
-    const preview=document.getElementById("rsGoalPosterPreview"),status=document.getElementById("rsGoalPosterStatus");
+    // Se conserva el cartel en el mismo evento para que el directo y el administrador trabajen con el mismo dato.
+    e.goalPosterData=data;e.goalPosterGeneratedAt=Date.now();e.goalPosterFavoriteScorer=!!favoriteScorer;
+    const card=document.getElementById("rsGoalPosterCard");
+    const preview=document.getElementById("rsGoalPosterPreview");
+    const status=document.getElementById("rsGoalPosterStatus");
     if(preview){preview.src=data;preview.style.display="block";}
-    if(status)status.textContent=`Cartel actualizado · ${goals.length} gol${goals.length===1?"":"es"} · ${score.h}-${score.a}`;
+    if(status)status.textContent=`Cartel generado · ${e.minute||0}’ · ${e.playerName||"Gol"}${favoriteScorer?" · foto del jugador":" · sin foto rival"}`;
     try{await save();}catch(err){console.warn("RS LIVE: no se pudo guardar el cartel",err);}
-    if(automatic)toast("⚽ Cartel del partido actualizado");
+    if(automatic) toast(favoriteScorer?"⚽ Cartel de gol generado con la foto del jugador":"⚽ Cartel de gol generado");
     return data;
   }
 
   function rsGoalPosterDownload(){
-    const m=activeMatch();
-    const data=m?.matchPosterData || [...(m?.events||[])].reverse().find(x=>x?.goalPosterData)?.goalPosterData;
-    if(!data){toast("Todavía no hay cartel generado");return;}
+    const m=activeMatch();const events=Array.isArray(m?.events)?m.events:[];const e=[...events].reverse().find(x=>x?.type==="goal"&&x.goalPosterData);
+    if(!e){toast("Genera primero el cartel de un gol");return;}
     const home=gpTeam(m,"home"),away=gpTeam(m,"away");
     const safe=s=>String(s||"equipo").replace(/[^a-z0-9áéíóúüñ_-]+/gi,"_");
-    const a=document.createElement("a");a.href=data;a.download=`RS_LIVE_PARTIDO_${safe(home.name)}_${safe(away.name)}.jpg`;document.body.appendChild(a);a.click();a.remove();
+    const a=document.createElement("a");a.href=e.goalPosterData;a.download=`RS_LIVE_GOL_${safe(home.name)}_${e.minute||0}min_${safe(e.playerName||"gol")}_${safe(away.name)}.jpg`;document.body.appendChild(a);a.click();a.remove();
   }
 
   function rsGoalPosterBuildAdmin(){
     const panel=document.getElementById("adminPanel");if(!panel||document.getElementById("rsGoalPosterCard"))return;
     const card=document.createElement("div");card.className="card adminCard rsV51ImageCard";card.id="rsGoalPosterCard";
-    card.innerHTML=`<h2>⚽ Cartel del partido</h2><p style="color:var(--muted);font-size:11px;margin:-7px 0 12px">Estilo gráfico deportivo: todos los minutos y goleadores, escudos reales, resultado actualizado y clasificación con 4 equipos incluyendo siempre al Ramón Sicart.</p><div class="rsV51ImageActions"><button class="btn green" id="rsGoalPosterGenerateBtn">⚽ Generar cartel del partido</button><button class="btn dark" id="rsGoalPosterDownloadBtn">💾 Guardar cartel</button></div><div id="rsGoalPosterStatus" class="rsV51ImageStatus">No hay cartel generado.</div><img id="rsGoalPosterPreview" class="rsV51ImagePreview" alt="Cartel del partido" style="display:none">`;
+    card.innerHTML=`<h2>⚽ Cartel de gol</h2><p style="color:var(--muted);font-size:11px;margin:-7px 0 12px">Se genera desde el mismo evento del directo: escudos reales, minuto, marcador y foto del goleador solo cuando pertenece al equipo favorito.</p><div class="rsV51ImageActions"><button class="btn green" id="rsGoalPosterGenerateBtn">⚽ Generar último gol</button><button class="btn dark" id="rsGoalPosterDownloadBtn">💾 Guardar cartel</button></div><div id="rsGoalPosterStatus" class="rsV51ImageStatus">No hay cartel generado.</div><img id="rsGoalPosterPreview" class="rsV51ImagePreview" alt="Cartel de gol" style="display:none">`;
     panel.appendChild(card);
-    document.getElementById("rsGoalPosterGenerateBtn").onclick=async()=>{const m=activeMatch();if(!m){toast("No hay partido activo");return;}const e=[...(m.events||[])].reverse().find(x=>x?.type==="goal")||null;await rsGoalPosterGenerate(m,e,false);};
+    document.getElementById("rsGoalPosterGenerateBtn").onclick=async()=>{const m=activeMatch();const e=[...(m?.events||[])].reverse().find(x=>x?.type==="goal");if(!m||!e){toast("No hay goles en el partido activo");return;}await rsGoalPosterGenerate(m,e,false);};
     document.getElementById("rsGoalPosterDownloadBtn").onclick=rsGoalPosterDownload;
   }
 
   function rsGoalPosterRefresh(){
     rsGoalPosterBuildAdmin();
-    const m=activeMatch(),img=document.getElementById("rsGoalPosterPreview"),status=document.getElementById("rsGoalPosterStatus");if(!img||!status)return;
-    const data=m?.matchPosterData || [...(m?.events||[])].reverse().find(x=>x?.goalPosterData)?.goalPosterData;
-    if(data){img.src=data;img.style.display="block";status.textContent="Cartel guardado · partido activo";}
-    else{img.style.display="none";status.textContent="No hay cartel generado.";}
+    const m=activeMatch();const e=[...(m?.events||[])].reverse().find(x=>x?.type==="goal"&&x.goalPosterData);
+    const img=document.getElementById("rsGoalPosterPreview"),status=document.getElementById("rsGoalPosterStatus");if(!img||!status)return;
+    if(e){img.src=e.goalPosterData;img.style.display="block";status.textContent=`Cartel guardado · ${e.minute||0}’ · ${e.playerName||"Gol"}`;}else{img.style.display="none";status.textContent="No hay cartel generado.";}
   }
 
   window.rsGoalPosterGenerate=rsGoalPosterGenerate;
@@ -5512,8 +5352,7 @@ document.addEventListener("click",function(e){
 
 <style id="rs-admin-tabs-v1">
 /* ===== ADMINISTRADOR · PANEL POR PESTAÑAS ===== */
-#adminPanel.rsAdminTabbed{display:none}
-#adminPanel.adminLocked{display:none!important}
+#adminPanel.rsAdminTabbed{display:block!important}
 .rsAdminTabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px;padding:6px;background:rgba(7,17,31,.72);border:1px solid var(--line);border-radius:16px;position:sticky;top:82px;z-index:20;backdrop-filter:blur(12px)}
 .rsAdminTab{appearance:none;border:1px solid transparent;background:transparent;color:#aebdd0;border-radius:11px;padding:11px 14px;font-size:12px;font-weight:900;display:inline-flex;align-items:center;gap:7px;transition:.18s ease}
 .rsAdminTab:hover{background:#122238;color:#fff;border-color:#29415f}
