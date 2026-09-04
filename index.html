@@ -1538,5 +1538,128 @@ setInterval(()=>{
 window.persistFirebase=function(){writeState()};
 })();
 </script>
+
+<style id="RS_LIVE_V34_FIX_STYLE">
+#adminTeamsList .rs-team-logo{width:54px;height:54px;object-fit:contain;border-radius:10px}
+</style>
+<script id="RS_LIVE_V34_FIXES">
+(function(){
+'use strict';
+
+const TEAM_KEY='rsLiveTeams';
+
+function teamsLocal(){
+  try{
+    const x=JSON.parse(localStorage.getItem(TEAM_KEY)||'[]');
+    return Array.isArray(x)?x:[];
+  }catch(e){return []}
+}
+function teamById(id){
+  return teamsLocal().find(t=>String(t.id)===String(id));
+}
+function redrawTeams(){
+  try{if(typeof renderTeams==='function')renderTeams()}catch(e){}
+  try{if(window.rsRenderTeams)window.rsRenderTeams()}catch(e){}
+  try{if(window.rsRefreshTeamSelectors)window.rsRefreshTeamSelectors()}catch(e){}
+}
+
+/* Firebase team sync: teams are explicitly stored in their own collection
+   and also mirrored into the local UI immediately after a remote update. */
+function syncTeamsToFirebase(){
+  try{
+    if(window.RSLiveFirebase && window.RSLiveFirebase.teamsRef){
+      window.RSLiveFirebase.teamsRef.set(teamsLocal()).catch(function(e){
+        console.error('RS LIVE Firebase equipos:',e);
+      });
+    }
+  }catch(e){}
+}
+function syncTeamsFromFirebase(){
+  try{
+    if(window.RSLiveFirebase && window.RSLiveFirebase.teamsRef){
+      window.RSLiveFirebase.teamsRef.once('value').then(function(s){
+        var v=s.val();
+        if(Array.isArray(v)){
+          localStorage.setItem(TEAM_KEY,JSON.stringify(v));
+          redrawTeams();
+        }else{
+          syncTeamsToFirebase();
+        }
+      }).catch(function(e){console.error('RS LIVE lectura equipos:',e)});
+    }
+  }catch(e){}
+}
+
+/* Watch local team saves as well. */
+window.addEventListener('rsLiveChanged',function(){
+  setTimeout(function(){
+    syncTeamsToFirebase();
+    redrawTeams();
+  },20);
+});
+
+/* Repair "Abrir partido en directo": do not route through the protected
+   navigation button. Open the page directly from the admin dashboard. */
+function openDirect(){
+  var page=document.getElementById('directo');
+  if(!page)return;
+  document.querySelectorAll('.page').forEach(function(p){p.classList.add('hidden')});
+  page.classList.remove('hidden');
+
+  document.querySelectorAll('.nav button').forEach(function(b){
+    b.classList.toggle('active',b.getAttribute('data-page')==='directo');
+  });
+
+  var title=document.getElementById('title');
+  var nav=document.querySelector('.nav button[data-page="directo"]');
+  if(title && nav){
+    var sp=nav.querySelector('span');
+    title.textContent=sp ? sp.textContent : 'Partido en directo';
+  }
+
+  try{if(typeof restore==='function')restore()}catch(e){}
+  try{if(typeof renderAllLive==='function')renderAllLive()}catch(e){}
+  try{if(window.rsStableRenderLive)window.rsStableRenderLive()}catch(e){}
+  return false;
+}
+
+function bindDirectButton(){
+  document.querySelectorAll('#adminPanel button').forEach(function(b){
+    if((b.textContent||'').toLowerCase().indexOf('abrir partido en directo')!==-1){
+      b.onclick=function(e){
+        if(e)e.preventDefault();
+        openDirect();
+        return false;
+      };
+    }
+  });
+}
+
+/* Also make the team editor's existing save function immediately publish
+   the new team, including the selected image data. */
+function bindTeamSave(){
+  var btn=document.getElementById('adminAddTeam');
+  if(!btn || btn.dataset.v34)return;
+  btn.dataset.v34='1';
+  btn.addEventListener('click',function(){
+    setTimeout(function(){
+      syncTeamsToFirebase();
+      redrawTeams();
+    },100);
+  },true);
+}
+
+/* Firebase can initialize after the page scripts, so retry a few times. */
+function init(){
+  bindDirectButton();
+  bindTeamSave();
+  syncTeamsFromFirebase();
+  redrawTeams();
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(init,200)});
+else setTimeout(init,200);
+window.addEventListener('load',function(){setTimeout(init,500);setTimeout(bindDirectButton,1200)});
+})();
+</script>
 </body></html>
 
