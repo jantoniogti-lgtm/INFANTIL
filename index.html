@@ -1043,7 +1043,7 @@ function elapsedNow(){
  var m=active();if(!m)return Number(state.seconds)||0;
  var s=Number(m.seconds)||Number(state.seconds)||0;
  if(m.running&&m.startedAt){
-   s += Math.max(0,Math.floor((Date.now()-Number(m.startedAt))/1000));
+   s += Math.max(0,Math.floor(((Date.now()+(window.RS_FIREBASE_SERVER_OFFSET||0))-Number(m.startedAt))/1000));
  }
  return Math.min(4800,s)
 }
@@ -1158,8 +1158,8 @@ function startClock(){
  if(m.running){pauseClock();return}
  var now=Date.now();
  m.running=true;state.running=true;
- m.startedAt=now;
- state.startedAt=now;
+ m.startedAt=now+(window.RS_FIREBASE_SERVER_OFFSET||0);
+ state.startedAt=m.startedAt;
  m.status='En directo';
  persistSafe();startSingleTicker();renderAllLive();notify('▶️ Partido iniciado')
 }
@@ -1394,7 +1394,164 @@ setInterval(function(){
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 
-\n<script id="RS_LIVE_FIREBASE_V30">\n(function(){\n'use strict';\nconst firebaseConfig={\n  apiKey:"AIzaSyA2WgBQxFSPWTQMk3NTWBFPc8K5XyCOcDw",\n  authDomain:"club-manager-9a242.firebaseapp.com",\n  databaseURL:"https://club-manager-9a242-default-rtdb.europe-west1.firebasedatabase.app",\n  projectId:"club-manager-9a242",\n  storageBucket:"club-manager-9a242.firebasestorage.app",\n  messagingSenderId:"931689419367",\n  appId:"1:931689419367:web:b638b313cf639ee8dd3ac2",\n  measurementId:"G-92X2B8ESXS"\n};\nwindow.Firebase=window.Firebase||{db:null,rtdb:null,storage:null,playersRef:null,appRef:null,teamsRef:null,ready:false};\ntry{\n  if(!window.firebase) throw new Error('Firebase SDK no cargado.');\n  if(!firebase.apps || !firebase.apps.length) firebase.initializeApp(firebaseConfig);\n  Firebase.db=firebase.firestore();\n  Firebase.rtdb=firebase.database();\n  Firebase.playersRef=Firebase.rtdb.ref('clubManagerV8/players');\n  Firebase.teamsRef=Firebase.rtdb.ref('clubManagerV8/teams');\n  Firebase.appRef=Firebase.rtdb.ref('clubManagerV8/rsLiveState');\n  Firebase.storage=firebase.storage();\n  Firebase.ready=true;\n  console.log('RS LIVE · Firebase conectado');\n}catch(e){console.error('RS LIVE · Firebase no pudo inicializarse:',e);}\n\nwindow.RSClubStorage=window.RSClubStorage||{};\nRSClubStorage.uploadPlayerPhoto=async function(playerId,dataUrl){\n  if(!dataUrl)return '';\n  if(!Firebase.storage)throw new Error('Firebase Storage no está inicializado.');\n  if(!String(dataUrl).startsWith('data:image/'))throw new Error('La imagen no es válida.');\n  const response=await fetch(dataUrl),blob=await response.blob();\n  if(!blob||!blob.size)throw new Error('La imagen está vacía.');\n  const ref=Firebase.storage.ref().child(`players/${playerId}/profile.jpg`);\n  const upload=await ref.put(blob,{contentType:blob.type||'image/jpeg',cacheControl:'public,max-age=31536000'});\n  if(!upload||!upload.ref)throw new Error('Firebase Storage no confirmó la subida.');\n  return await upload.ref.getDownloadURL();\n};\n\nlet applyingRemote=false;\nwindow.RSLiveFirebase={\n  async save(){\n    if(!Firebase.ready||applyingRemote)return;\n    try{\n      const clean=JSON.parse(JSON.stringify(window.state||{}));\n      await Firebase.appRef.set({state:clean,updatedAt:firebase.database.ServerValue.TIMESTAMP});\n    }catch(e){console.error('Firebase save:',e);}\n  },\n  async saveTeams(){\n    if(!Firebase.ready)return;\n    try{\n      const teams=JSON.parse(localStorage.getItem('rsLiveTeams')||'[]');\n      await Firebase.teamsRef.set(teams);\n    }catch(e){console.error('Firebase teams save:',e);}\n  },\n  start(){\n    if(!Firebase.ready)return;\n    Firebase.appRef.on('value',snap=>{\n      const payload=snap.val();\n      if(!payload||!payload.state)return;\n      const incoming=payload.state;\n      if(typeof window.state!=='object'||!window.state)return;\n      applyingRemote=true;\n      try{\n        window.state=incoming;\n        if(window.state.matches && !window.state.activeMatchId) window.state.activeMatchId=window.state.matches[0]?.id||null;\n        localStorage.setItem(KEY,JSON.stringify(window.state));\n        if(typeof render==='function')render();\n        if(typeof window.rsStableRenderLive==='function')window.rsStableRenderLive();\n        if(typeof window.rsRenderHomeLive==='function')window.rsRenderHomeLive();\n      }catch(e){console.error('Firebase remote state:',e)}\n      finally{applyingRemote=false}\n    });\n    Firebase.teamsRef.on('value',snap=>{\n      const teams=snap.val();\n      if(!Array.isArray(teams))return;\n      localStorage.setItem('rsLiveTeams',JSON.stringify(teams));window.dispatchEvent(new Event('rsLiveTeamsChanged'));\n      try{if(typeof renderTeams==='function')renderTeams()}catch(e){}\n      try{if(typeof renderAllLive==='function')renderAllLive()}catch(e){}\n    });\n  }\n};\nwindow.addEventListener('rsLiveChanged',()=>RSLiveFirebase.save());\nwindow.addEventListener('rsLiveTeamsChanged',()=>RSLiveFirebase.saveTeams());\nif(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>RSLiveFirebase.start(),300));\nelse setTimeout(()=>RSLiveFirebase.start(),300);\n})();\n</script>\n
+\n<script id="RS_LIVE_FIREBASE_V31_REALTIME">
+(function(){
+'use strict';
+const firebaseConfig={
+ apiKey:"AIzaSyA2WgBQxFSPWTQMk3NTWBFPc8K5XyCOcDw",
+ authDomain:"club-manager-9a242.firebaseapp.com",
+ databaseURL:"https://club-manager-9a242-default-rtdb.europe-west1.firebasedatabase.app",
+ projectId:"club-manager-9a242",
+ storageBucket:"club-manager-9a242.firebasestorage.app",
+ messagingSenderId:"931689419367",
+ appId:"1:931689419367:web:b638b313cf639ee8dd3ac2",
+ measurementId:"G-92X2B8ESXS"
+};
+window.Firebase=window.Firebase||{};
+let ready=false, applying=false, firstState=true, firstTeams=true, saveTimer=null;
+try{
+ if(!window.firebase) throw new Error('Firebase SDK no cargado');
+ if(!firebase.apps||!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+ Firebase.db=firebase.firestore(); Firebase.rtdb=firebase.database(); Firebase.storage=firebase.storage();
+ Firebase.playersRef=Firebase.rtdb.ref('clubManagerV8/players');
+ Firebase.teamsRef=Firebase.rtdb.ref('clubManagerV8/teams');
+ Firebase.appRef=Firebase.rtdb.ref('clubManagerV8/rsLiveState');
+ ready=true;
+ console.log('RS LIVE V31 · Firebase Realtime conectado');
+}catch(e){console.error('RS LIVE V31 · Firebase:',e)}
+
+window.RS_FIREBASE_SERVER_OFFSET=0;
+if(ready){
+ Firebase.rtdb.ref('.info/serverTimeOffset').on('value',function(s){window.RS_FIREBASE_SERVER_OFFSET=Number(s.val())||0});
+}
+
+function safeState(){try{return JSON.parse(JSON.stringify(window.state||{}))}catch(e){return null}}
+function saveStateRemote(){
+ if(!ready||applying)return;
+ const s=safeState(); if(!s)return;
+ clearTimeout(saveTimer);
+ saveTimer=setTimeout(function(){
+   Firebase.appRef.set({state:s,updatedAt:firebase.database.ServerValue.TIMESTAMP,source:'rs-live'}).catch(e=>console.error('RS LIVE Firebase estado:',e));
+ },20);
+}
+function saveTeamsRemote(){
+ if(!ready||applying)return;
+ let a=[];try{a=JSON.parse(localStorage.getItem('rsLiveTeams')||'[]')}catch(e){}
+ if(!Array.isArray(a))a=[];
+ Firebase.teamsRef.set(a).catch(e=>console.error('RS LIVE Firebase equipos:',e));
+}
+
+/* Local edits are written to RTDB. The existing UI can continue using localStorage. */
+window.addEventListener('rsLiveChanged',function(){saveStateRemote();saveTeamsRemote()});
+window.addEventListener('rsLiveTeamsChanged',function(){saveTeamsRemote()});
+
+function applyState(s){
+ if(!s||typeof s!=='object')return;
+ applying=true;
+ try{
+   window.state=s;
+   state.players=Array.isArray(state.players)?state.players:[];
+   state.matches=Array.isArray(state.matches)?state.matches:[];
+   state.matches.forEach(function(m){m.events=Array.isArray(m.events)?m.events:[];m.homeScore=Number(m.homeScore)||0;m.awayScore=Number(m.awayScore)||0;m.seconds=Number(m.seconds)||0;m.half=Number(m.half)||1;m.lineup=Array.isArray(m.lineup)?m.lineup:[];m.bench=Array.isArray(m.bench)?m.bench:[]});
+   if(!state.activeMatchId&&state.matches[0])state.activeMatchId=state.matches[0].id;
+   localStorage.setItem(KEY,JSON.stringify(state));
+   try{if(typeof syncFromMatch==='function')syncFromMatch()}catch(e){}
+   try{if(typeof window.rsStableRenderLive==='function')window.rsStableRenderLive()}catch(e){}
+   try{if(typeof window.rsRenderHomeLive==='function')window.rsRenderHomeLive()}catch(e){}
+   try{if(typeof render==='function')render()}catch(e){}
+   try{if(typeof renderMatches==='function')renderMatches()}catch(e){}
+ }catch(e){console.error('RS LIVE Firebase apply:',e)}
+ finally{applying=false}
+}
+function applyTeams(a){
+ if(!Array.isArray(a))return;
+ applying=true;
+ try{
+  localStorage.setItem('rsLiveTeams',JSON.stringify(a));
+  window.dispatchEvent(new Event('rsLiveTeamsChangedRemote'));
+  try{if(typeof renderTeams==='function')renderTeams()}catch(e){}
+  try{if(typeof window.rsRefreshTeamSelectors==='function')window.rsRefreshTeamSelectors()}catch(e){}
+  try{if(typeof renderAllLive==='function')renderAllLive()}catch(e){}
+ }finally{applying=false}
+}
+
+if(ready){
+ Firebase.appRef.on('value',function(snap){
+   const p=snap.val();
+   if(!p||!p.state){
+     if(firstState)saveStateRemote();
+     firstState=false;return;
+   }
+   firstState=false;
+   applyState(p.state);
+ });
+ Firebase.teamsRef.on('value',function(snap){
+   const a=snap.val();
+   if(Array.isArray(a)){firstTeams=false;applyTeams(a)}
+   else if(firstTeams){firstTeams=false;saveTeamsRemote()}
+ });
+}
+
+/* Team escudos: store images in Firebase Storage and save only the public URL in RTDB. */
+async function uploadTeamBadge(teamId,dataUrl){
+ if(!dataUrl)return '';
+ if(!ready||!Firebase.storage)return dataUrl;
+ if(!String(dataUrl).startsWith('data:image/'))return dataUrl;
+ const blob=await (await fetch(dataUrl)).blob();
+ const ref=Firebase.storage.ref().child('teams/'+teamId+'/badge');
+ const up=await ref.put(blob,{contentType:blob.type||'image/png',cacheControl:'public,max-age=31536000'});
+ return await up.ref.getDownloadURL();
+}
+async function createTeamFromForm(e){
+ if(!window.RSAdmin)return;
+ e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+ const nameEl=document.getElementById('adminTeamName'),groundEl=document.getElementById('adminTeamGround'),file=document.getElementById('adminTeamBadge'),preview=document.getElementById('adminTeamPreview');
+ const name=nameEl&&nameEl.value.trim(); if(!name){alert('Escribe el nombre del equipo.');return}
+ const btn=document.getElementById('adminAddTeam'); if(btn){btn.disabled=true;btn.textContent='Guardando…'}
+ try{
+  const a=JSON.parse(localStorage.getItem('rsLiveTeams')||'[]');
+  const id='team_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+  const dataUrl=preview&&preview.dataset.src?preview.dataset.src:'';
+  const badge=await uploadTeamBadge(id,dataUrl);
+  a.push({id:id,name:name,ground:groundEl?groundEl.value.trim():'',badge:badge});
+  localStorage.setItem('rsLiveTeams',JSON.stringify(a));
+  await Firebase.teamsRef.set(a);
+  window.dispatchEvent(new Event('rsLiveTeamsChangedRemote'));
+  if(nameEl)nameEl.value='';if(groundEl)groundEl.value='';if(file)file.value='';if(preview){preview.src='';preview.style.display='none';delete preview.dataset.src}
+  try{if(typeof renderTeams==='function')renderTeams()}catch(x){}
+  try{if(typeof window.rsRefreshTeamSelectors==='function')window.rsRefreshTeamSelectors()}catch(x){}
+  if(typeof toast==='function')toast('Equipo guardado correctamente');else alert('Equipo guardado correctamente');
+ }catch(err){console.error(err);alert('No se pudo guardar el equipo. Revisa la conexión con Firebase.')}finally{if(btn){btn.disabled=false;btn.textContent='Crear equipo'}}
+}
+document.addEventListener('click',function(e){
+ const b=e.target.closest('#adminAddTeam');if(!b)return;createTeamFromForm(e);
+},true);
+
+/* If old team records contain base64 images, migrate them to Storage once. */
+async function migrateTeamImages(){
+ if(!ready)return;
+ let a=[];try{a=JSON.parse(localStorage.getItem('rsLiveTeams')||'[]')}catch(e){}
+ if(!Array.isArray(a))return;
+ let changed=false;
+ for(const t of a){
+  if(t&&t.badge&&String(t.badge).startsWith('data:image/')){
+   try{t.badge=await uploadTeamBadge(t.id,t.badge);changed=true}catch(e){console.error('Migración escudo:',e)}
+  }
+ }
+ if(changed){localStorage.setItem('rsLiveTeams',JSON.stringify(a));await Firebase.teamsRef.set(a)}
+}
+setTimeout(migrateTeamImages,1000);
+
+/* Keep the public clock based on the shared server timestamp. */
+setInterval(function(){
+ try{
+  if(typeof window.rsStableRenderLive==='function')window.rsStableRenderLive();
+  if(typeof window.rsRenderHomeLive==='function')window.rsRenderHomeLive();
+ }catch(e){}
+},1000);
+})();
+</script>
+\n
 <script id="RS_LIVE_V26_NAV_FIX">
 (function(){
   function showPage(page){
@@ -1453,6 +1610,16 @@ setInterval(function(){
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
   else init();
+})();
+</script>
+
+<script id="RS_LIVE_V31_FINAL_STATUS_BRIDGE">
+(function(){
+  window.addEventListener('rsLiveChanged',function(){
+    setTimeout(function(){
+      try{if(typeof window.rsRenderHomeLive==='function')window.rsRenderHomeLive()}catch(e){}
+    },0);
+  });
 })();
 </script>
 </body></html>
