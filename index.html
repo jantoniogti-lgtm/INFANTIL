@@ -1994,5 +1994,191 @@ else setTimeout(init,400);
 window.addEventListener('load',function(){setTimeout(init,700)});
 })();
 </script>
+
+<script id="RS_LIVE_V37_HOME_LOGOS_LOCAL_GOAL">
+(function(){
+'use strict';
+
+function v37db(){
+  try{
+    if(window.db && typeof window.db.ref==='function') return window.db;
+    if(window.firebase && typeof firebase.database==='function') return firebase.database();
+  }catch(e){}
+  return null;
+}
+function v37teams(){
+  try{
+    var a=JSON.parse(localStorage.getItem('rsLiveTeams')||'[]');
+    return Array.isArray(a)?a:[];
+  }catch(e){return []}
+}
+function v37tid(t){return t && (t.id||t.uid||t.teamId)}
+function v37logo(t){return t && (t.badge||t.logo||t.escudo||t.crest||t.image||'')}
+function v37match(){
+  try{
+    var a=Array.isArray(state.matches)?state.matches:[];
+    return a.find(function(m){return String(m.id)===String(state.activeMatchId)})||a[0]||null;
+  }catch(e){return null}
+}
+function v37team(id,name){
+  var a=v37teams();
+  return a.find(function(t){return String(v37tid(t))===String(id)}) ||
+         a.find(function(t){return String(t.name||'').trim().toLowerCase()===String(name||'').trim().toLowerCase()}) || null;
+}
+
+/* Always resolve BOTH crests from the actual team IDs/names.
+   The home screen previously depended on image elements that were not
+   populated after Firebase restored the match on a second device. */
+function v37paintHomeCrests(){
+  var m=v37match(); if(!m)return;
+  var h=v37team(m.homeTeamId,m.home), a=v37team(m.awayTeamId,m.away);
+  var hi=v37logo(h), ai=v37logo(a);
+
+  var hImg=document.getElementById('homeLiveHomeLogo');
+  var aImg=document.getElementById('homeLiveAwayLogo');
+  var hf=document.getElementById('homeLiveHomeFallback');
+  var af=document.getElementById('homeLiveAwayFallback');
+
+  function paint(img,fb,src,name){
+    if(!img)return;
+    if(src){
+      img.setAttribute('src',src);
+      img.style.display='block';
+      if(fb)fb.style.display='none';
+      img.onerror=function(){
+        img.style.display='none';
+        if(fb){fb.style.display='grid';fb.textContent=String(name||'').slice(0,2).toUpperCase()}
+      };
+    }else{
+      img.style.display='none';
+      if(fb){fb.style.display='grid';fb.textContent=String(name||'').slice(0,2).toUpperCase()}
+    }
+  }
+  paint(hImg,hf,hi,m.home);
+  paint(aImg,af,ai,m.away);
+}
+
+/* Firebase -> local teams. Also keep the exact object shape used by the UI. */
+function v37watchTeams(){
+  var d=v37db(); if(!d)return;
+  d.ref('rsLive/teams').on('value',function(s){
+    var v=s.val(), list=[];
+    if(v && typeof v==='object'){
+      Object.keys(v).forEach(function(k){
+        if(v[k]){
+          var t=Object.assign({},v[k]);
+          if(!t.id)t.id=k;
+          list.push(t);
+        }
+      });
+    }
+    if(list.length || v===null){
+      localStorage.setItem('rsLiveTeams',JSON.stringify(list));
+      setTimeout(v37paintHomeCrests,0);
+      try{window.dispatchEvent(new Event('rsTeamsUpdated'))}catch(e){}
+      try{if(typeof renderTeams==='function')renderTeams()}catch(e){}
+    }
+  });
+}
+
+/* Publish local team changes, including the image data URL when that is what
+   the existing team editor has stored. */
+function v37pushTeams(){
+  var d=v37db(); if(!d)return;
+  var list=v37teams(), obj={};
+  list.forEach(function(t){
+    var id=v37tid(t);
+    if(id)obj[String(id)]=Object.assign({},t,{badge:v37logo(t)});
+  });
+  d.ref('rsLive/teams').set(obj).catch(function(e){console.error('RS LIVE equipos',e)});
+}
+
+/* Robust local-goal path. It does not special-case Ramón Sicart: the selected
+   home team is the home team, whatever its name is. */
+window.RS_V37_ADD_GOAL_HOME=function(playerId,minute,note){
+  var m=v37match(); if(!m)return false;
+  var s=state;
+  s.homeScore=Number(s.homeScore)||0;
+  s.awayScore=Number(s.awayScore)||0;
+  s.homeScore++;
+  var team=v37team(m.homeTeamId,m.home);
+  var p=(Array.isArray(s.players)?s.players:[]).find(function(x){return String(x.id)===String(playerId)});
+  var min=Math.max(0,Number(minute)||0);
+  var ev={
+    id:'e_'+Date.now()+'_'+Math.random().toString(36).slice(2),
+    icon:'⚽',side:'home',team:m.home,teamId:m.homeTeamId||'',
+    teamBadge:v37logo(team),player:p?p.name:'',playerId:p?p.id:'',
+    number:p?p.number:'',minute:min,time:min+"'",note:note||''
+  };
+  s.events=Array.isArray(s.events)?s.events:[];
+  s.events.push(ev);
+  m.homeScore=s.homeScore;
+  m.awayScore=s.awayScore;
+  m.events=s.events;
+  try{localStorage.setItem(KEY,JSON.stringify(s))}catch(e){}
+  var d=v37db();
+  if(d)d.ref('rsLive/state').set(JSON.parse(JSON.stringify(s))).catch(function(e){console.error(e)});
+  try{if(typeof renderAllLive==='function')renderAllLive()}catch(e){}
+  setTimeout(v37paintHomeCrests,0);
+  return true;
+};
+
+/* Intercept only the local-goal button, before older handlers, and open the
+   same player/minute dialog used by the live screen. */
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-live-action="goal-home"]');
+  if(!b)return;
+  e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+
+  var m=v37match(), s=state;
+  var modal=document.getElementById('liveModal');
+  var body=document.getElementById('liveModalBody');
+  var save=document.getElementById('liveModalSave');
+  var title=document.getElementById('liveModalTitle');
+  if(!modal||!body||!save||!title)return;
+
+  var players=Array.isArray(s.players)?s.players:[];
+  var opts=players.map(function(p){
+    return '<option value="'+String(p.id).replace(/"/g,'&quot;')+'">#'+String(p.number||'—')+' '+String(p.name||'').replace(/</g,'&lt;')+'</option>';
+  }).join('');
+
+  title.textContent='⚽ Gol '+(m.home||'Equipo local');
+  body.innerHTML='<div class="form">'+
+    '<div class="field"><label>Minuto</label><input id="v37GoalMinute" type="number" min="0" value="'+
+      Math.floor((Number(m.seconds)||0)/60)+'"></div>'+
+    '<div class="field"><label>Jugador</label><select id="v37GoalPlayer"><option value="">Gol sin jugador</option>'+
+      opts+'</select></div>'+
+    '<div class="field full"><label>Observación</label><input id="v37GoalNote"></div></div>';
+  modal.classList.add('open');
+
+  save.onclick=function(ev){
+    ev.preventDefault();ev.stopPropagation();
+    var ok=window.RS_V37_ADD_GOAL_HOME(
+      document.getElementById('v37GoalPlayer').value,
+      document.getElementById('v37GoalMinute').value,
+      document.getElementById('v37GoalNote').value
+    );
+    if(ok){
+      modal.classList.remove('open');
+      save.onclick=null;
+      try{if(typeof toast==='function')toast('⚽ Gol guardado')}catch(x){}
+    }
+  };
+},true);
+
+function v37init(){
+  v37watchTeams();
+  v37paintHomeCrests();
+  setTimeout(v37pushTeams,500);
+  setTimeout(v37paintHomeCrests,800);
+  setTimeout(v37paintHomeCrests,1800);
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(v37init,300)});
+else setTimeout(v37init,300);
+window.addEventListener('load',function(){setTimeout(v37paintHomeCrests,700)});
+window.addEventListener('rsTeamsUpdated',v37paintHomeCrests);
+window.addEventListener('rsLiveChanged',function(){setTimeout(v37paintHomeCrests,50)});
+})();
+</script>
 </body></html>
 
