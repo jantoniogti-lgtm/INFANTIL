@@ -1689,16 +1689,24 @@ function publishTeams(){
   a.forEach(function(t){
     if(teamId(t)) obj[String(teamId(t))]=Object.assign({},t,{badge:teamLogo(t)});
   });
-  db.ref('rsLive/teams').set(obj).catch(function(e){console.error('Firebase equipos',e)});
+  db.ref('clubManagerV8/teams').set(obj).catch(function(e){console.error('Firebase equipos',e)});
 }
 function pullTeams(){
   var db=getDB(); if(!db)return;
-  db.ref('rsLive/teams').on('value',function(s){
+  db.ref('clubManagerV8/teams').on('value',function(s){
     var v=s.val(), a=[];
-    if(v && typeof v==='object'){
-      Object.keys(v).forEach(function(k){if(v[k])a.push(v[k])});
+    if(Array.isArray(v)){
+      a=v.filter(Boolean);
+    }else if(v && typeof v==='object'){
+      Object.keys(v).forEach(function(k){
+        if(v[k]){
+          var t=Object.assign({},v[k]);
+          if(!t.id)t.id=k;
+          a.push(t);
+        }
+      });
     }
-    if(a.length || teams().length===0){
+    if(a.length){
       saveTeamsLocal(a);
       try{window.dispatchEvent(new Event('rsLiveChanged'))}catch(e){}
       try{if(typeof renderTeams==='function')renderTeams()}catch(e){}
@@ -1756,14 +1764,6 @@ window.RS_registerGoal = function(side, data){
   }catch(e){console.error(e);return false}
 };
 
-/* Fix the existing local-goal handler: it must never assume the Ramón Sicart
-   team is the home team and it must write the event before repainting. */
-document.addEventListener('click',function(e){
-  var b=e.target.closest('[data-live-action="goal-home"]');
-  if(!b)return;
-  e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
-},true);
-
 function init(){
   pullTeams();
   watchTeamStorage();
@@ -1808,11 +1808,11 @@ function pushTeams(){
   var d=DB(); if(!d)return;
   var list=getTeams(), obj={};
   list.forEach(function(t){if(id(t))obj[String(id(t))]=t});
-  d.ref('rsLive/teams').set(obj).catch(function(e){console.error(e)});
+  d.ref('clubManagerV8/teams').set(obj).catch(function(e){console.error(e)});
 }
 function pullTeams(){
   var d=DB(); if(!d)return;
-  d.ref('rsLive/teams').on('value',function(s){
+  d.ref('clubManagerV8/teams').on('value',function(s){
     var v=s.val(), list=[];
     if(v&&typeof v==='object')Object.keys(v).forEach(function(k){if(v[k])list.push(v[k])});
     if(list.length || getTeams().length===0){
@@ -2061,7 +2061,7 @@ function v37paintHomeCrests(){
 /* Firebase -> local teams. Also keep the exact object shape used by the UI. */
 function v37watchTeams(){
   var d=v37db(); if(!d)return;
-  d.ref('rsLive/teams').on('value',function(s){
+  d.ref('clubManagerV8/teams').on('value',function(s){
     var v=s.val(), list=[];
     if(v && typeof v==='object'){
       Object.keys(v).forEach(function(k){
@@ -2090,7 +2090,7 @@ function v37pushTeams(){
     var id=v37tid(t);
     if(id)obj[String(id)]=Object.assign({},t,{badge:v37logo(t)});
   });
-  d.ref('rsLive/teams').set(obj).catch(function(e){console.error('RS LIVE equipos',e)});
+  d.ref('clubManagerV8/teams').set(obj).catch(function(e){console.error('RS LIVE equipos',e)});
 }
 
 /* Robust local-goal path. It does not special-case Ramón Sicart: the selected
@@ -2115,6 +2115,7 @@ window.RS_V37_ADD_GOAL_HOME=function(playerId,minute,note){
   m.homeScore=s.homeScore;
   m.awayScore=s.awayScore;
   m.events=s.events;
+  m.status=m.running?'En directo':(m.status==='Finalizado'?'Finalizado':'En directo');
   try{localStorage.setItem(KEY,JSON.stringify(s))}catch(e){}
   var d=v37db();
   if(d)d.ref('rsLive/state').set(JSON.parse(JSON.stringify(s))).catch(function(e){console.error(e)});
