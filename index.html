@@ -1661,5 +1661,118 @@ else setTimeout(init,200);
 window.addEventListener('load',function(){setTimeout(init,500);setTimeout(bindDirectButton,1200)});
 })();
 </script>
+
+<script id="RS_LIVE_V35_TEAMS_GOALS_FIX">
+(function(){
+'use strict';
+
+function getDB(){
+  try{
+    if(window.db && typeof window.db.ref==='function') return window.db;
+    if(window.firebase && firebase.database) return firebase.database();
+  }catch(e){}
+  return null;
+}
+function teams(){
+  try{
+    var a=JSON.parse(localStorage.getItem('rsLiveTeams')||'[]');
+    return Array.isArray(a)?a:[];
+  }catch(e){return []}
+}
+function saveTeamsLocal(a){localStorage.setItem('rsLiveTeams',JSON.stringify(a));}
+function teamId(t){return t && (t.id||t.uid||t.teamId)}
+function teamLogo(t){return t && (t.badge||t.logo||t.escudo||t.crest||t.image||t.photo||'')}
+
+function publishTeams(){
+  var db=getDB(); if(!db)return;
+  var a=teams(), obj={};
+  a.forEach(function(t){
+    if(teamId(t)) obj[String(teamId(t))]=Object.assign({},t,{badge:teamLogo(t)});
+  });
+  db.ref('rsLive/teams').set(obj).catch(function(e){console.error('Firebase equipos',e)});
+}
+function pullTeams(){
+  var db=getDB(); if(!db)return;
+  db.ref('rsLive/teams').on('value',function(s){
+    var v=s.val(), a=[];
+    if(v && typeof v==='object'){
+      Object.keys(v).forEach(function(k){if(v[k])a.push(v[k])});
+    }
+    if(a.length || teams().length===0){
+      saveTeamsLocal(a);
+      try{window.dispatchEvent(new Event('rsLiveChanged'))}catch(e){}
+      try{if(typeof renderTeams==='function')renderTeams()}catch(e){}
+      try{if(typeof renderAdmin==='function')renderAdmin()}catch(e){}
+    }
+  });
+}
+
+function forceLogoStorageForTeam(t){
+  var logo=teamLogo(t), db=getDB();
+  if(!logo || !db)return Promise.resolve();
+  // Keep the image data/URL inside the team record so every device can read it.
+  t.badge=logo;
+  t.logo=logo;
+  t.escudo=logo;
+  return Promise.resolve();
+}
+
+/* Capture team creation/editing saves without replacing the existing UI. */
+function watchTeamStorage(){
+  var last='';
+  setInterval(function(){
+    var now=JSON.stringify(teams());
+    if(now!==last){
+      last=now;
+      publishTeams();
+    }
+  },500);
+}
+
+/* Robust event helper: local and away are determined from the match's
+   team IDs, never from a hard-coded Ramón Sicart name. */
+window.RS_registerGoal = function(side, data){
+  try{
+    var m=(typeof active==='function')?active():null;
+    if(!m)return false;
+    var local=side==='home';
+    var player=data&&data.playerId ? (Array.isArray(state.players)?state.players.find(function(p){return String(p.id)===String(data.playerId)}):null) : null;
+    var tid=local?m.homeTeamId:m.awayTeamId;
+    var tn=local?m.home:m.away;
+    var tm=teams().find(function(t){return String(teamId(t))===String(tid)})||teams().find(function(t){return String(t.name||'')===String(tn||'')});
+    var logo=teamLogo(tm);
+    if(local)state.homeScore=(Number(state.homeScore)||0)+1;
+    else state.awayScore=(Number(state.awayScore)||0)+1;
+    state.events=Array.isArray(state.events)?state.events:[];
+    state.events.push(Object.assign({},data||{},{
+      id:'e_'+Date.now()+'_'+Math.random().toString(36).slice(2),
+      icon:'⚽', side:local?'home':'away', team:tn, teamId:tid||'',
+      teamBadge:logo, player:player?player.name:(data&&data.player)||''
+    }));
+    if(typeof saveActive==='function')saveActive();
+    localStorage.setItem(typeof KEY!=='undefined'?KEY:'rsLiveState',JSON.stringify(state));
+    if(typeof renderAllLive==='function')renderAllLive();
+    return true;
+  }catch(e){console.error(e);return false}
+};
+
+/* Fix the existing local-goal handler: it must never assume the Ramón Sicart
+   team is the home team and it must write the event before repainting. */
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-live-action="goal-home"]');
+  if(!b)return;
+  e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+},true);
+
+function init(){
+  pullTeams();
+  watchTeamStorage();
+  setTimeout(publishTeams,800);
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(init,300)});
+else setTimeout(init,300);
+window.addEventListener('load',function(){setTimeout(init,700)});
+})();
+</script>
 </body></html>
 
