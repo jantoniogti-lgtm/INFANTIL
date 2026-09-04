@@ -1622,5 +1622,202 @@ setInterval(function(){
   });
 })();
 </script>
+
+<script id="RS_LIVE_V32_FIREBASE_AUTHORITATIVE">
+(function(){
+'use strict';
+var fb=null, ref=null, playersRef=null, teamsRef=null, applying=false, clockOffset=0;
+try{
+  if(window.firebase){
+    if(!firebase.apps || !firebase.apps.length) firebase.initializeApp({
+      apiKey:"AIzaSyA2WgBQxFSPWTQMk3NTWBFPc8K5XyCOcDw",
+      authDomain:"club-manager-9a242.firebaseapp.com",
+      databaseURL:"https://club-manager-9a242-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId:"club-manager-9a242",
+      storageBucket:"club-manager-9a242.firebasestorage.app",
+      messagingSenderId:"931689419367",
+      appId:"1:931689419367:web:b638b313cf639ee8dd3ac2",
+      measurementId:"G-92X2B8ESXS"
+    });
+    fb=firebase.database();
+    ref=fb.ref('clubManagerV8/rsLiveState');
+    playersRef=fb.ref('clubManagerV8/players');
+    teamsRef=fb.ref('clubManagerV8/teams');
+    fb.ref('.info/serverTimeOffset').on('value',function(s){clockOffset=Number(s.val())||0});
+    window.RSLiveFirebase={db:fb,stateRef:ref,playersRef:playersRef,teamsRef:teamsRef};
+  }
+}catch(e){console.error('RS LIVE Firebase V32:',e)}
+
+function serverNow(){return Date.now()+clockOffset}
+function clone(x){try{return JSON.parse(JSON.stringify(x))}catch(e){return null}}
+function normalize(s){
+  if(!s||typeof s!=='object')return null;
+  s.players=Array.isArray(s.players)?s.players:[];
+  s.matches=Array.isArray(s.matches)?s.matches:[];
+  s.matches.forEach(function(m){
+    m.events=Array.isArray(m.events)?m.events:[];
+    m.homeScore=Number(m.homeScore)||0;m.awayScore=Number(m.awayScore)||0;
+    m.seconds=Number(m.seconds)||0;m.half=Number(m.half)||1;
+    m.lineup=Array.isArray(m.lineup)?m.lineup:[];m.bench=Array.isArray(m.bench)?m.bench:[];
+    m.running=m.running===true;m.startedAt=m.startedAt||null;m.status=m.status||'Pendiente';
+  });
+  if(!s.activeMatchId&&s.matches[0])s.activeMatchId=s.matches[0].id;
+  return s;
+}
+function writeCloud(){
+ if(!ref||applying)return;
+ var s=clone(window.state);
+ if(!s)return;
+ ref.set({state:s,updatedAt:firebase.database.ServerValue.TIMESTAMP,source:'RS-LIVE-V32'})
+   .catch(function(e){console.error('Firebase estado:',e)});
+ if(playersRef)playersRef.set(s.players||[]).catch(function(e){console.error('Firebase jugadores:',e)});
+}
+function applyCloud(s){
+ s=normalize(clone(s));if(!s)return;
+ applying=true;
+ try{
+   /* The original app uses the global state binding. Replace it as well as window.state. */
+   try{state=s}catch(e){}
+   window.state=s;
+   localStorage.setItem(KEY,JSON.stringify(s));
+   try{syncFromMatch()}catch(e){}
+   try{render()}catch(e){}
+   try{renderMatches()}catch(e){}
+   try{renderPlayers()}catch(e){}
+   try{renderLiveSquad()}catch(e){}
+   try{if(window.rsStableRenderLive)window.rsStableRenderLive()}catch(e){}
+   try{if(window.rsRenderHomeLive)window.rsRenderHomeLive()}catch(e){}
+ }catch(e){console.error('Firebase apply:',e)}
+ finally{applying=false}
+}
+if(ref){
+ ref.on('value',function(snap){
+   var p=snap.val();
+   if(p&&p.state)applyCloud(p.state);
+   else writeCloud();
+ });
+}
+
+/* Every existing persist() operation is also sent to Firebase. */
+var originalPersist=window.persist;
+window.persist=function(){
+  if(typeof originalPersist==='function')originalPersist();
+  if(!applying){window.dispatchEvent(new Event('rsLiveChanged'));writeCloud();}
+};
+
+/* Shared clock: use Firebase server offset, and only the fixed base + elapsed time. */
+window.RSLiveServerNow=serverNow;
+window.RSLiveClockOffset=function(){return clockOffset};
+
+window.toggleTimer=function(){
+  if(!window.RSAdmin){toast('Acceso de administrador necesario');return}
+  var m=activeMatch();if(!m)return;
+  if(m.status==='Finalizado'){toast('El partido ya ha finalizado');return}
+  if(state.running){
+    var base=Number(m.seconds)||Number(state.seconds)||0;
+    var started=Number(m.startedAt)||serverNow();
+    state.seconds=Math.min(4800,base+Math.max(0,Math.floor((serverNow()-started)/1000)));
+    m.seconds=state.seconds;m.running=false;m.startedAt=null;state.running=false;state.startedAt=null;
+    persist();render();toast('⏸️ Reloj detenido');return;
+  }
+  if(Number(m.half)===2 && Number(m.seconds)===2400){state.seconds=2400;m.seconds=2400}
+  m.running=true;state.running=true;m.status='En directo';m.startedAt=serverNow();state.startedAt=m.startedAt;
+  persist();render();toast(Number(m.half)===2?'▶️ Segunda parte iniciada':'▶️ Partido iniciado');
+};
+
+setInterval(function(){
+ try{
+   var m=activeMatch();if(!m)return;
+   if(m.running&&m.startedAt){
+     var s=Math.min(4800,(Number(m.seconds)||0)+Math.max(0,Math.floor((serverNow()-Number(m.startedAt))/1000)));
+     state.seconds=s;
+     if(s>=4800){
+       m.seconds=4800;m.running=false;m.startedAt=null;state.seconds=4800;state.running=false;m.status='En directo';
+       persist();
+     }
+   }
+   if(window.rsStableRenderLive)window.rsStableRenderLive();
+   if(window.rsRenderHomeLive)window.rsRenderHomeLive();
+   render();
+ }catch(e){}
+},1000);
+
+window.finishCurrentMatch=function(){
+ if(!window.RSAdmin){toast('Acceso de administrador necesario');return}
+ var m=activeMatch();if(!m)return;
+ if(!confirm('¿Finalizar el partido? El reloj se detendrá y quedará marcado como finalizado.'))return;
+ m.running=false;m.startedAt=null;m.seconds=4800;m.half=2;m.status='Finalizado';m.finishedAt=new Date().toISOString();
+ state.running=false;state.startedAt=null;state.seconds=4800;state.half=2;
+ persist();
+ try{document.querySelectorAll('#timerBtn,#timerBtn2').forEach(function(b){b.textContent='🏁 Partido finalizado'})}catch(e){}
+ toast('🏁 Partido finalizado · 80:00');
+};
+
+window.resetMatch=function(){
+ if(!window.RSAdmin){toast('Acceso de administrador necesario');return}
+ var m=activeMatch();if(!m)return;
+ if(!confirm('¿Reiniciar el partido? Se borrarán TODOS los eventos y el marcador volverá a 0-0.'))return;
+ m.homeScore=0;m.awayScore=0;m.events=[];m.seconds=0;m.half=1;m.running=false;m.startedAt=null;m.status='Pendiente';m.finishedAt=null;
+ state.homeScore=0;state.awayScore=0;state.events=[];state.seconds=0;state.half=1;state.running=false;state.startedAt=null;
+ persist();render();
+ toast('🔄 Partido reiniciado · todos los eventos borrados');
+};
+
+/* Team creation reads the selected file directly and stores the badge in RTDB. */
+async function saveTeamV32(){
+ if(!window.RSAdmin)return;
+ var n=document.getElementById('adminTeamName'),g=document.getElementById('adminTeamGround'),f=document.getElementById('adminTeamBadge');
+ var name=n&&n.value.trim();if(!name){toast('Escribe el nombre del equipo.');return}
+ var file=f&&f.files&&f.files[0],badge='';
+ try{
+   if(file){
+     if(file.size>6*1024*1024){toast('El escudo debe pesar menos de 6 MB');return}
+     badge=await new Promise(function(resolve,reject){var r=new FileReader();r.onload=function(){resolve(r.result)};r.onerror=reject;r.readAsDataURL(file)});
+     badge=await new Promise(function(resolve){var im=new Image();im.onload=function(){
+       var c=document.createElement('canvas'),max=320,scale=Math.min(1,max/Math.max(im.width,im.height));
+       c.width=Math.max(1,Math.round(im.width*scale));c.height=Math.max(1,Math.round(im.height*scale));
+       c.getContext('2d').drawImage(im,0,0,c.width,c.height);resolve(c.toDataURL('image/jpeg',0.86))
+     };im.onerror=function(){resolve(badge)};im.src=badge});
+   }
+   var arr=[];try{arr=JSON.parse(localStorage.getItem('rsLiveTeams')||'[]')}catch(e){}
+   if(!Array.isArray(arr))arr=[];
+   var id='team_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+   arr.push({id:id,name:name,ground:g?g.value.trim():'',badge:badge});
+   localStorage.setItem('rsLiveTeams',JSON.stringify(arr));
+   if(teamsRef)await teamsRef.set(arr);
+   window.dispatchEvent(new Event('rsLiveTeamsChanged'));
+   try{if(window.rsRenderTeams)window.rsRenderTeams()}catch(e){}
+   n.value='';if(g)g.value='';if(f)f.value='';
+   var pr=document.getElementById('adminTeamPreview');if(pr){pr.src='';pr.style.display='none';delete pr.dataset.src}
+   toast('🏟️ Equipo guardado correctamente');
+ }catch(e){console.error('Guardar equipo:',e);toast('No se pudo guardar el equipo en Firebase')}
+}
+var teamButton=document.getElementById('adminAddTeam');
+if(teamButton)teamButton.onclick=function(e){e.preventDefault();e.stopPropagation();saveTeamV32()};
+
+if(teamsRef){
+ teamsRef.on('value',function(snap){
+   var a=snap.val();if(!Array.isArray(a))return;
+   localStorage.setItem('rsLiveTeams',JSON.stringify(a));
+   try{if(window.rsRenderTeams)window.rsRenderTeams()}catch(e){}
+   try{if(window.renderTeams)window.renderTeams()}catch(e){}
+   try{if(window.rsRefreshTeamSelectors)window.rsRefreshTeamSelectors()}catch(e){}
+   try{if(window.rsRenderHomeLive)window.rsRenderHomeLive()}catch(e){}
+   try{if(window.rsStableRenderLive)window.rsStableRenderLive()}catch(e){}
+ });
+}
+if(playersRef){
+ playersRef.on('value',function(snap){
+   var a=snap.val();if(!Array.isArray(a))return;
+   applying=true;
+   try{
+     state.players=a;window.state=state;localStorage.setItem(KEY,JSON.stringify(state));
+     renderPlayers();if(window.renderAdminSquad)window.renderAdminSquad();renderLiveSquad();
+   }catch(e){}
+   finally{applying=false}
+ });
+}
+})();
+</script>
 </body></html>
 
