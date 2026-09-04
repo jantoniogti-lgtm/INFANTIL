@@ -1774,5 +1774,225 @@ else setTimeout(init,300);
 window.addEventListener('load',function(){setTimeout(init,700)});
 })();
 </script>
+
+<script id="RS_LIVE_V36_CORE_FIX">
+(function(){
+'use strict';
+
+function DB(){
+  try{
+    if(window.db && typeof window.db.ref==='function') return window.db;
+    if(window.firebase && typeof firebase.database==='function') return firebase.database();
+  }catch(e){}
+  return null;
+}
+function key(){ try{return KEY}catch(e){return 'rsLiveState'} }
+function getState(){ try{return state}catch(e){return null} }
+function getTeams(){
+  try{
+    var x=JSON.parse(localStorage.getItem('rsLiveTeams')||'[]');
+    return Array.isArray(x)?x:[];
+  }catch(e){return []}
+}
+function logo(t){return t&&(t.badge||t.logo||t.escudo||t.crest||t.image||'')}
+function id(t){return t&&(t.id||t.uid||t.teamId)}
+function currentMatch(){
+  var s=getState(); if(!s)return null;
+  var a=Array.isArray(s.matches)?s.matches:[];
+  return a.find(function(m){return String(m.id)===String(s.activeMatchId)})||a[0]||null;
+}
+function notify2(x){try{if(typeof toast==='function'){toast(x);return}}catch(e){}}
+
+/* -------- EQUIPOS: one canonical Firebase location + listener -------- */
+function pushTeams(){
+  var d=DB(); if(!d)return;
+  var list=getTeams(), obj={};
+  list.forEach(function(t){if(id(t))obj[String(id(t))]=t});
+  d.ref('rsLive/teams').set(obj).catch(function(e){console.error(e)});
+}
+function pullTeams(){
+  var d=DB(); if(!d)return;
+  d.ref('rsLive/teams').on('value',function(s){
+    var v=s.val(), list=[];
+    if(v&&typeof v==='object')Object.keys(v).forEach(function(k){if(v[k])list.push(v[k])});
+    if(list.length || getTeams().length===0){
+      localStorage.setItem('rsLiveTeams',JSON.stringify(list));
+      try{if(typeof renderTeams==='function')renderTeams()}catch(e){}
+      try{if(typeof renderAdmin==='function')renderAdmin()}catch(e){}
+      try{window.dispatchEvent(new Event('rsTeamsUpdated'))}catch(e){}
+    }
+  });
+}
+
+/* -------- EVENT STORAGE: always sync the actual state -------- */
+function syncState(){
+  var d=DB(),s=getState();if(!d||!s)return;
+  d.ref('rsLive/state').set(JSON.parse(JSON.stringify(s))).catch(function(e){console.error('Firebase state',e)});
+}
+function syncTeamsAfterChange(){
+  clearTimeout(window.__rsTeamSync);
+  window.__rsTeamSync=setTimeout(pushTeams,100);
+}
+
+/* -------- CLOCK: one absolute server/local timestamp, no accumulation -------- */
+function clockSeconds(m){
+  var base=Number(m.seconds)||0;
+  if(!m.running)return base;
+  var started=Number(m.startedAt)||0;
+  return Math.min(4800,base+(started?Math.max(0,Math.floor((Date.now()-started)/1000)):0));
+}
+function repaint(){
+  try{if(typeof renderAllLive==='function')renderAllLive()}catch(e){}
+  try{if(typeof renderHomeLive==='function')renderHomeLive()}catch(e){}
+  try{if(typeof window.rsStableRenderLive==='function')window.rsStableRenderLive()}catch(e){}
+}
+function stopTicker(){if(window.__rsV36Timer){clearInterval(window.__rsV36Timer);window.__rsV36Timer=null}}
+function startTicker(){
+  stopTicker();
+  window.__rsV36Timer=setInterval(function(){
+    var m=currentMatch();if(!m||!m.running){stopTicker();repaint();return}
+    var s=clockSeconds(m);
+    if(s>=4800){
+      m.seconds=4800;m.running=false;m.startedAt=null;m.half=2;m.status='Finalizado';
+      var st=getState();if(st){st.seconds=4800;st.running=false;st.startedAt=null;st.half=2;st.status='Finalizado'}
+      try{localStorage.setItem(key(),JSON.stringify(st))}catch(e){}
+      syncState();stopTicker();
+    }
+    repaint();
+  },1000);
+}
+window.RS_V36_START=function(){
+  var m=currentMatch(),s=getState();if(!m||!s)return;
+  if(m.status==='Finalizado'){notify2('El partido está finalizado. Reinícialo para comenzar de nuevo.');return}
+  if(m.running){return}
+  m.running=true;m.status='En directo';m.startedAt=Date.now();
+  s.running=true;s.status='En directo';s.startedAt=m.startedAt;s.seconds=Number(m.seconds)||0;
+  localStorage.setItem(key(),JSON.stringify(s));syncState();startTicker();repaint();
+};
+window.RS_V36_FINISH=function(){
+  var m=currentMatch(),s=getState();if(!m||!s)return;
+  m.seconds=4800;m.running=false;m.startedAt=null;m.half=2;m.status='Finalizado';
+  s.seconds=4800;s.running=false;s.startedAt=null;s.half=2;s.status='Finalizado';
+  localStorage.setItem(key(),JSON.stringify(s));syncState();stopTicker();repaint();
+  notify2('🏁 Partido finalizado · 80:00');
+};
+
+/* -------- GOALS: local AND visitor use the same reliable function -------- */
+function addGoal(side, playerId, minute, note){
+  var m=currentMatch(),s=getState();if(!m||!s)return false;
+  var local=side==='home', teams=getTeams();
+  var teamId=local?m.homeTeamId:m.awayTeamId;
+  var teamName=local?m.home:m.away;
+  var t=teams.find(function(x){return String(id(x))===String(teamId)})||
+        teams.find(function(x){return String(x.name||'')===String(teamName||'')});
+  var p=Array.isArray(s.players)?s.players.find(function(x){return String(x.id)===String(playerId)}):null;
+  if(local)s.homeScore=(Number(s.homeScore)||0)+1;else s.awayScore=(Number(s.awayScore)||0)+1;
+  m.homeScore=s.homeScore;m.awayScore=s.awayScore;
+  s.events=Array.isArray(s.events)?s.events:[];
+  s.events.push({
+    id:'e_'+Date.now()+'_'+Math.random().toString(36).slice(2),
+    icon:'⚽',side:local?'home':'away',team:teamName,teamId:teamId||'',
+    teamBadge:logo(t),player:p?p.name:'',playerId:p?p.id:'',
+    number:p?p.number:'',minute:Number(minute)||Math.floor(clockSeconds(m)/60),
+    time:(Number(minute)||Math.floor(clockSeconds(m)/60))+"'",
+    note:note||''
+  });
+  m.events=s.events;
+  localStorage.setItem(key(),JSON.stringify(s));syncState();repaint();
+  return true;
+}
+
+/* -------- CARDS: select TEAM first, then players of that team -------- */
+window.RS_V36_CARD_MODAL=function(icon,label){
+  var m=currentMatch(),s=getState();if(!m||!s)return;
+  var modal=document.getElementById('liveModal'),body=document.getElementById('liveModalBody'),save=document.getElementById('liveModalSave');
+  if(!modal||!body||!save){notify2('No se puede abrir el editor de eventos');return}
+  var teamOpts='<option value="">Seleccionar equipo</option>'+
+    '<option value="home">'+String(m.home||'Equipo local').replace(/</g,'&lt;')+'</option>'+
+    '<option value="away">'+String(m.away||'Equipo visitante').replace(/</g,'&lt;')+'</option>';
+  body.innerHTML='<div class="form">'+
+    '<div class="field"><label>Equipo</label><select id="v36CardSide">'+teamOpts+'</select></div>'+
+    '<div class="field"><label>Jugador</label><select id="v36CardPlayer"><option value="">Selecciona primero el equipo</option></select></div>'+
+    '<div class="field"><label>Minuto</label><input id="v36CardMinute" type="number" min="0" value="'+Math.floor(clockSeconds(m)/60)+'"></div>'+
+    '<div class="field full"><label>Observación</label><input id="v36CardNote" placeholder="Comentario opcional"></div></div>';
+  document.getElementById('liveModalTitle').textContent=icon+' '+label;
+  modal.classList.add('open');
+
+  document.getElementById('v36CardSide').onchange=function(){
+    var side=this.value,tid=side==='home'?m.homeTeamId:m.awayTeamId;
+    var players=Array.isArray(s.players)?s.players:[];
+    var html='<option value="">Seleccionar jugador</option>';
+    players.forEach(function(p){
+      /* teamId/team/team_id are all accepted so existing squads remain usable */
+      var pt=p.teamId||p.team_id||p.team;
+      var tn=side==='home'?m.home:m.away;
+      if(pt && String(pt)!==String(tid) && String(pt)!==String(tn))return;
+      html+='<option value="'+String(p.id).replace(/"/g,'&quot;')+'">#'+String(p.number||'—')+' '+String(p.name||'').replace(/</g,'&lt;')+'</option>';
+    });
+    document.getElementById('v36CardPlayer').innerHTML=html;
+  };
+  save.onclick=function(ev){
+    ev.preventDefault();ev.stopPropagation();
+    var side=document.getElementById('v36CardSide').value;
+    if(!side){notify2('Selecciona el equipo');return}
+    var pid=document.getElementById('v36CardPlayer').value;
+    var min=Number(document.getElementById('v36CardMinute').value)||Math.floor(clockSeconds(m)/60);
+    var p=(Array.isArray(s.players)?s.players:[]).find(function(x){return String(x.id)===String(pid)});
+    var tid=side==='home'?m.homeTeamId:m.awayTeamId,tn=side==='home'?m.home:m.away;
+    var t=getTeams().find(function(x){return String(id(x))===String(tid)})||
+          getTeams().find(function(x){return String(x.name||'')===String(tn||'')});
+    s.events=Array.isArray(s.events)?s.events:[];
+    s.events.push({id:'e_'+Date.now()+'_'+Math.random().toString(36).slice(2),
+      icon:icon,side:side,team:tn,teamId:tid||'',teamBadge:logo(t),
+      player:p?p.name:'',playerId:p?p.id:'',number:p?p.number:'',
+      minute:min,time:min+"'",note:document.getElementById('v36CardNote').value||''});
+    m.events=s.events;
+    localStorage.setItem(key(),JSON.stringify(s));syncState();repaint();
+    modal.classList.remove('open');save.onclick=null;
+    notify2('Evento guardado');
+  };
+};
+window.RS_V36_ADD_GOAL=addGoal;
+
+/* Replace the live button actions with capture handlers. */
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-live-action]');
+  if(!b)return;
+  var a=b.getAttribute('data-live-action');
+  if(a==='timer'){
+    e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+    var m=currentMatch();
+    if(m&&m.running){ /* pause without a second handler */
+      var s=getState(),sec=clockSeconds(m);m.seconds=sec;m.running=false;m.startedAt=null;
+      s.seconds=sec;s.running=false;s.startedAt=null;localStorage.setItem(key(),JSON.stringify(s));syncState();stopTicker();repaint();
+    }else window.RS_V36_START();
+  }else if(a==='finish'){
+    e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();window.RS_V36_FINISH();
+  }else if(a==='yellow'||a==='red'){
+    e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+    window.RS_V36_CARD_MODAL(a==='yellow'?'🟨':'🟥',a==='yellow'?'Tarjeta amarilla':'Tarjeta roja');
+  }else if(a==='goal-home'||a==='goal-away'){
+    /* Do not allow legacy goal handlers to run. Open the reliable goal modal. */
+    e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+    var side=a==='goal-home'?'home':'away',m=currentMatch(),s=getState();
+    var players=Array.isArray(s.players)?s.players:[];
+    var opts=players.map(function(p){return '<option value="'+String(p.id).replace(/"/g,'&quot;')+'">#'+String(p.number||'—')+' '+String(p.name||'').replace(/</g,'&lt;')+'</option>'}).join('');
+    var modal=document.getElementById('liveModal'),body=document.getElementById('liveModalBody'),save=document.getElementById('liveModalSave');
+    if(!modal||!body||!save)return;
+    document.getElementById('liveModalTitle').textContent='⚽ Gol '+(side==='home'?m.home:m.away);
+    body.innerHTML='<div class="form"><div class="field"><label>Minuto</label><input id="v36GoalMinute" type="number" min="0" value="'+Math.floor(clockSeconds(m)/60)+'"></div>'+
+      '<div class="field"><label>Jugador</label><select id="v36GoalPlayer"><option value="">Gol sin jugador</option>'+opts+'</select></div>'+
+      '<div class="field full"><label>Observación</label><input id="v36GoalNote"></div></div>';
+    modal.classList.add('open');
+    save.onclick=function(ev){ev.preventDefault();ev.stopPropagation();addGoal(side,document.getElementById('v36GoalPlayer').value,document.getElementById('v36GoalMinute').value,document.getElementById('v36GoalNote').value);modal.classList.remove('open');save.onclick=null;notify2('⚽ Gol guardado')};
+  }
+},true);
+
+function init(){pullTeams();startTicker()}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(init,400)});
+else setTimeout(init,400);
+window.addEventListener('load',function(){setTimeout(init,700)});
+})();
+</script>
 </body></html>
 
