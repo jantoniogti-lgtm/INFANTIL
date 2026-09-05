@@ -1536,6 +1536,17 @@ button{cursor:pointer}
 }
 </style>
 
+
+<style id="rs-share-v1">
+.rsShareBox{width:min(760px,100%)}
+.rsSharePreview{background:#07111f;border:1px solid #243b56;border-radius:16px;padding:10px;text-align:center;min-height:180px;display:flex;align-items:center;justify-content:center}
+.rsSharePreview img{display:block;max-width:100%;max-height:58vh;border-radius:10px;box-shadow:0 12px 35px #0008}
+.rsShareActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.rsShareActions .btn{flex:1;min-width:150px}
+.rsShareText{margin-top:12px;width:100%;min-height:110px;resize:vertical;background:#091728;color:#fff;border:1px solid #29405d;border-radius:11px;padding:11px;font:12px/1.45 Arial,sans-serif}
+.rsShareTools{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.rsShareTools .btn{flex:1;min-width:190px}
+@media(max-width:560px){.rsShareActions,.rsShareTools{display:grid;grid-template-columns:1fr}.rsShareActions .btn,.rsShareTools .btn{width:100%}}
+</style>
 </head>
 <body>
 <div class="app">
@@ -1668,6 +1679,10 @@ button{cursor:pointer}
         </div>
         <div id="substitutionQuick" style="display:none;margin-top:12px"></div>
         <div id="adminEvents" class="eventTimeline"></div>
+        <div class="rsShareTools">
+          <button class="btn dark" id="rsFinalBtn">🏁 Imagen resultado final</button>
+          <button class="btn dark" id="rsXIButton">👕 Imagen once inicial</button>
+        </div>
       </div>
 
       <div class="card adminCard">
@@ -1753,6 +1768,17 @@ button{cursor:pointer}
 </div></div>
 
 <div id="toast" class="toast"></div>
+<div id="rsShareModal" class="modal"><div class="modalBox rsShareBox">
+  <div class="modalHead"><h2 id="rsShareTitle">📲 Compartir</h2><button class="close" onclick="closeRSShare()">×</button></div>
+  <div id="rsSharePreview" class="rsSharePreview"></div>
+  <div class="rsShareActions">
+    <button class="btn green" id="rsWhatsappBtn">📱 WhatsApp</button>
+    <button class="btn dark" id="rsCopyBtn">📋 Copiar texto</button>
+    <button class="btn dark" id="rsImageBtn">🖼 Guardar imagen</button>
+  </div>
+  <textarea id="rsShareText" class="rsShareText" readonly></textarea>
+</div></div>
+
 
 <!-- Firebase: misma base de conexión del HTML facilitado -->
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
@@ -3862,6 +3888,85 @@ document.addEventListener("click",function(e){
 })();
 </script>
 
+
+<script id="rs-share-v1-js">
+(function(){
+  const escHtml = window.esc || (v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])));
+  let rsShareData={text:'',dataUrl:'',filename:'rs-live.png'};
+  function rsActive(){return typeof activeMatch==='function'?activeMatch():null}
+  function rsTeam(id){return typeof team==='function'?team(id):((App.teams||[]).find(t=>String(t.id)===String(id))||{name:'Equipo',logo:''})}
+  function rsEvents(m){return (m&&Array.isArray(m.events)?m.events:(m&&String(m.id)===String(App.activeMatch)?(Live.events||[]):[])).slice().sort((a,b)=>Number(a.minute||0)-Number(b.minute||0))}
+  function rsScore(m){return m?`${Number(m.homeScore||Live.homeScore||0)} - ${Number(m.awayScore||Live.awayScore||0)}`:'0 - 0'}
+  function rsEventIcon(e){return e.type==='goal'?'⚽':e.type==='yellow'?'🟨':e.type==='red'?'🟥':'🔄'}
+  function rsEventLabel(e,m){
+    const hn=rsTeam(m.home).name, an=rsTeam(m.away).name, side=e.team==='home'?hn:an;
+    if(e.type==='change') return `${rsEventIcon(e)} CAMBIO · ${side} · ${e.playerInName||e.playerName||'Jugador'}${e.playerOutName?' por '+e.playerOutName:''}`;
+    return `${rsEventIcon(e)} ${e.type==='goal'?'GOL':e.type==='yellow'?'AMARILLA':'ROJA'} · ${side} · ${e.playerName||'Jugador'}`;
+  }
+  function rsEventText(e,m){
+    const score=e.type==='goal'&&e.score?` · Marcador ${e.score}`:'';
+    return `${rsEventIcon(e)} ${e.type==='goal'?'GOL':e.type==='yellow'?'AMARILLA':e.type==='red'?'ROJA':'CAMBIO'} · ${e.minute||0}' · ${e.team==='home'?rsTeam(m.home).name:rsTeam(m.away).name} · ${e.playerName||e.playerInName||'Jugador'}${e.playerOutName?' por '+e.playerOutName:''}${score}`;
+  }
+  function rsMatchText(m,final){
+    const h=rsTeam(m.home),a=rsTeam(m.away), lines=[final?'🏁 FINAL DEL PARTIDO':'⚽ EVENTO EN DIRECTO',`${h.name} ${rsScore(m)} ${a.name}`];
+    rsEvents(m).forEach(e=>lines.push(rsEventText(e,m)));
+    lines.push('📲 RS LIVE · Ramón Sicart');
+    return lines.join('\n');
+  }
+  function rsLoadImage(src){return new Promise(resolve=>{if(!src)return resolve(null);const im=new Image();im.crossOrigin='anonymous';im.onload=()=>resolve(im);im.onerror=()=>resolve(null);im.src=src})}
+  function rsRoundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
+  function rsFit(c,text,x,y,maxW,size,weight='800'){
+    c.font=`${weight} ${size}px Arial`;let t=String(text||'');if(c.measureText(t).width<=maxW){c.fillText(t,x,y);return}while(t.length>1&&c.measureText(t+'…').width>maxW)t=t.slice(0,-1);c.fillText(t+'…',x,y)
+  }
+  async function rsBuildMatchImage(m,mode,event){
+    const W=1080,H=1350,cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d');
+    const g=c.createLinearGradient(0,0,W,H);g.addColorStop(0,'#06101d');g.addColorStop(.58,'#0b1d31');g.addColorStop(1,'#101b2b');c.fillStyle=g;c.fillRect(0,0,W,H);
+    c.fillStyle='#ffd400';c.fillRect(0,0,W,12);
+    c.textAlign='center';c.fillStyle='#ffffff';c.font='900 38px Arial';c.fillText('RS LIVE',W/2,72);c.fillStyle='#8fa3b8';c.font='700 20px Arial';c.fillText('RAMÓN SICART',W/2,104);
+    const h=rsTeam(m.home),a=rsTeam(m.away);const his=await rsLoadImage(h.logo||h.crest),ais=await rsLoadImage(a.logo||a.crest);
+    function crest(im,x){if(im){const r=120,ratio=Math.min(r/im.width,r/im.height);c.drawImage(im,x-im.width*ratio/2,165-im.height*ratio/2,im.width*ratio,im.height*ratio)}else{c.fillStyle='#172a3e';c.beginPath();c.arc(x,165,58,0,Math.PI*2);c.fill();c.fillStyle='#ffd400';c.font='900 28px Arial';c.fillText('RS',x,175)}}
+    crest(his,285);crest(ais,795);c.fillStyle='#fff';c.font='900 27px Arial';rsFit(c,h.name,285,255,320,27);rsFit(c,a.name,795,255,320,27);
+    c.fillStyle='#ffd400';c.font='1000 100px Arial';c.fillText(rsScore(m),W/2,230);c.fillStyle='#8fa3b8';c.font='800 18px Arial';c.fillText(mode==='final'?'RESULTADO FINAL':'EVENTO EN DIRECTO',W/2,292);
+    let y=340;c.textAlign='left';c.fillStyle='#fff';c.font='900 24px Arial';c.fillText(mode==='final'?'EVENTOS DEL PARTIDO':'NUEVO EVENTO',70,y);y+=38;
+    const evs=mode==='event'&&event?[event]:rsEvents(m);const show=mode==='final'?evs:evs.slice(-1); 
+    if(!show.length){c.fillStyle='#8fa3b8';c.font='700 20px Arial';c.fillText('Sin eventos registrados',70,y+25)}
+    for(const e of show){c.fillStyle='#0b1a2b';rsRoundRect(c,55,y,W-110,72,14);c.fill();c.fillStyle='#ffd400';c.font='1000 25px Arial';c.fillText(`${e.minute||0}'`,78,y+45);c.fillStyle='#fff';c.font='800 23px Arial';rsFit(c,rsEventLabel(e,m),145,y+43,W-210,23);if(e.type==='goal'){c.fillStyle='#ffd400';c.font='900 21px Arial';c.textAlign='right';c.fillText(e.score||rsScore(m),W-80,y+43);c.textAlign='left'}y+=84;if(y>H-150)break}
+    c.fillStyle='#1d3047';c.fillRect(55,H-110,W-110,1);c.textAlign='center';c.fillStyle='#8fa3b8';c.font='700 18px Arial';c.fillText('RS LIVE · Fútbol en directo',W/2,H-68);return cv.toDataURL('image/png');
+  }
+  async function rsBuildXIImage(m){
+    const W=1080,H=1350,cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d');
+    const g=c.createLinearGradient(0,0,W,H);g.addColorStop(0,'#06101d');g.addColorStop(1,'#10283c');c.fillStyle=g;c.fillRect(0,0,W,H);c.fillStyle='#ffd400';c.fillRect(0,0,W,12);
+    const h=rsTeam(m.home),a=rsTeam(m.away);c.textAlign='center';c.fillStyle='#fff';c.font='900 34px Arial';c.fillText('RS LIVE · ONCE INICIAL',W/2,65);c.fillStyle='#8fa3b8';c.font='700 18px Arial';c.fillText(`${h.name} vs ${a.name}`,W/2,95);
+    const ids=(m.lineup&&m.lineup.length?m.lineup:App.lineup?.players||[]).map(Number);const players=ids.map(n=>(App.players||[]).find(p=>Number(p.number)===n)).filter(Boolean);const positions={Portero:[50,88],Defensa:[27,43,73,93],Centrocampista:[25,50,75],Delantero:[35,65,50]};
+    const by={Portero:[],Defensa:[],Centrocampista:[],Delantero:[]};players.forEach(p=>(by[p.position]||by.Defensa).push(p));const order=['Portero','Defensa','Centrocampista','Delantero'];const ys=[1170,920,650,380];
+    // Pitch area
+    const px=100,py=140,pw=880,ph=1030;c.fillStyle='#2b874f';rsRoundRect(c,px,py,pw,ph,28);c.fill();c.strokeStyle='#d7efdc';c.lineWidth=3;c.strokeRect(px+25,py+25,pw-50,ph-50);c.beginPath();c.moveTo(px+25,py+ph/2);c.lineTo(px+pw-25,py+ph/2);c.stroke();c.beginPath();c.arc(W/2,py+ph/2,95,0,Math.PI*2);c.stroke();
+    function drawP(p,x,y){c.fillStyle='#ffd400';c.beginPath();c.arc(x,y,33,0,Math.PI*2);c.fill();c.fillStyle='#111';c.font='900 22px Arial';c.fillText(p.number,x,y+8);c.fillStyle='#fff';c.font='900 18px Arial';rsFit(c,p.name,x,y+58,145,18);}
+    order.forEach((pos,ri)=>{const arr=by[pos],n=arr.length||1;arr.forEach((p,i)=>{const x=px+pw*(n===1?.5:(i+1)/(n+1));const y=py+ph*(ys[ri]/1200);drawP(p,x,y)})});
+    c.fillStyle='#8fa3b8';c.font='700 16px Arial';c.fillText('RS LIVE · Ramón Sicart',W/2,H-35);return cv.toDataURL('image/png');
+  }
+  async function rsOpen(title,text,dataUrl,filename){
+    rsShareData={text,dataUrl,filename};document.getElementById('rsShareTitle').textContent=title;document.getElementById('rsShareText').value=text;document.getElementById('rsSharePreview').innerHTML=`<img src="${dataUrl}" alt="Imagen para compartir">`;document.getElementById('rsShareModal').classList.add('open');
+  }
+  window.closeRSShare=function(){document.getElementById('rsShareModal').classList.remove('open')};
+  function rsDownload(){const a=document.createElement('a');a.href=rsShareData.dataUrl;a.download=rsShareData.filename;a.click()}
+  async function rsShareImage(){
+    try{const blob=await (await fetch(rsShareData.dataUrl)).blob();const file=new File([blob],rsShareData.filename,{type:'image/png'});if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({text:rsShareData.text,files:[file]});return}}catch(e){}
+    rsDownload();
+  }
+  document.getElementById('rsWhatsappBtn').onclick=()=>window.open('https://wa.me/?text='+encodeURIComponent(rsShareData.text),'_blank');
+  document.getElementById('rsCopyBtn').onclick=async()=>{try{await navigator.clipboard.writeText(rsShareData.text);toast('Mensaje copiado para WhatsApp')}catch(e){document.getElementById('rsShareText').select();document.execCommand('copy');toast('Mensaje copiado')}};
+  document.getElementById('rsImageBtn').onclick=rsShareImage;
+  window.rsShareLastEvent=async function(e){const m=rsActive();if(!m||!e)return;const text=rsMatchText(m,false);const img=await rsBuildMatchImage(m,'event',e);await rsOpen('📲 Compartir evento',text,img,'rs-live-evento.png')};
+  window.rsShareFinal=async function(){const m=rsActive();if(!m){toast('Activa un partido');return}if(m.status!=='FINISHED'){toast('Finaliza el partido primero');return}const text=rsMatchText(m,true),img=await rsBuildMatchImage(m,'final');await rsOpen('🏁 Resultado final',text,img,'rs-live-resultado-final.png')};
+  window.rsShareXI=async function(){const m=rsActive();if(!m){toast('Activa un partido');return}const ids=(m.lineup&&m.lineup.length?m.lineup:App.lineup?.players||[]);if(ids.length!==11){toast('Guarda primero el once inicial con 11 jugadores');return}const h=rsTeam(m.home),a=rsTeam(m.away);const players=ids.map(n=>(App.players||[]).find(p=>Number(p.number)===Number(n))).filter(Boolean);const text=['👕 ONCE INICIAL',`${h.name} vs ${a.name}`,...players.map((p,i)=>`${i+1}. #${p.number} ${p.name} · ${p.position||''}`),'📲 RS LIVE · Ramón Sicart'].join('\n');const img=await rsBuildXIImage(m);await rsOpen('👕 Once inicial',text,img,'rs-live-once-inicial.png')};
+  const oldCommit=window.commitEvent;
+  if(oldCommit){window.commitEvent=function(num){const m=rsActive();const before=(m?rsEvents(m):[]).map(e=>e.id);const result=oldCommit(num);setTimeout(()=>{const mm=rsActive();if(!mm)return;const after=rsEvents(mm);const ev=after.find(e=>!before.includes(e.id))||after[after.length-1];if(ev)rsShareLastEvent(ev)},120);return result};}
+  document.getElementById('rsFinalBtn').onclick=rsShareFinal;document.getElementById('rsXIButton').onclick=rsShareXI;
+  const oldFinish=window.finish;
+  if(oldFinish){window.finish=function(){const result=oldFinish();setTimeout(()=>{const m=rsActive();if(m&&m.status==='FINISHED')rsShareFinal()},300);return result};}
+})();
+</script>
 </body>
 </html>
 
