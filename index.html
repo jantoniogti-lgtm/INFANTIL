@@ -2228,7 +2228,7 @@ function nav(){
  document.querySelectorAll("#mainNav button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));document.getElementById(b.dataset.page).classList.add("active");document.querySelectorAll("#mainNav button").forEach(x=>x.classList.remove("active"));b.classList.add("active")})
 }
 document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>closeModal(b.dataset.close));
-document.getElementById("pinBtn").onclick=unlock;document.getElementById("newPlayerBtn").onclick=()=>{editPlayerId=null;document.getElementById("playerModalTitle").textContent="Nuevo jugador";document.querySelectorAll("#playerModal input").forEach(x=>{if(x.type!=="checkbox"&&x.type!=="file")x.value=""});document.getElementById("pCaptain").checked=false;document.getElementById("playerModal").classList.add("open")};
+document.getElementById("pinBtn").onclick=unlock;document.getElementById("newPlayerBtn").onclick=()=>{editPlayerId=null;v26EnsurePlayerStatsFields();document.getElementById("playerModalTitle").textContent="Nuevo jugador";document.querySelectorAll("#playerModal input").forEach(x=>{if(x.type!=="checkbox"&&x.type!=="file")x.value=""});document.getElementById("pCaptain").checked=false;document.getElementById("pPosition").value="Defensa";document.getElementById("pStatus").value="Disponible";document.getElementById("pGoals").value=0;document.getElementById("pYellow").value=0;document.getElementById("pRed").value=0;document.getElementById("pStarts").value=0;document.getElementById("pApps").value=0;document.getElementById("playerModal").classList.add("open")};
 document.getElementById("savePlayerBtn")?.addEventListener("click",savePlayer);
 document.getElementById("addTeamBtn")?.addEventListener("click",addTeam);
 document.getElementById("createMatchBtn")?.addEventListener("click",createMatch);
@@ -3093,7 +3093,7 @@ document.addEventListener("click",function(e){
     box.innerHTML=(App.players||[]).slice().sort((a,b)=>a.number-b.number).map(p=>`<div class="playerCard">${p.photo?`<img class="playerPhoto" src="${esc(p.photo)}">`:`<div class="playerPhoto" style="display:grid;place-items:center;font-size:32px">👤</div>`}<div class="shirtMini">${p.number}</div><div class="playerNumber">${p.number}</div><div class="playerName">${esc(p.name)} ${p.captain?'⭐':''}</div><div class="playerPos">${esc(p.position||'')}</div><div class="v26PlayerStats"><span class="v26Stat">⚽ ${p.goals||0}</span><span class="v26Stat">🟨 ${p.yellow||0}</span><span class="v26Stat">🟥 ${p.red||0}</span><span class="v26Stat">👕 ${p.starts||0} titular</span><span class="v26Stat">🎽 ${p.appearances||0} PJ</span></div></div>`).join('')||'<div class="empty">No hay jugadores.</div>';
   };
 
-  function v26EnsurePlayerStatsFields(){
+  window.v26EnsurePlayerStatsFields=function(){
     const form=document.querySelector('#playerModal .form');if(!form||document.getElementById('v26PlayerStatsFields'))return;
     const wrap=document.createElement('div');wrap.id='v26PlayerStatsFields';wrap.innerHTML=`<div style="font-size:11px;color:var(--yellow);font-weight:900;margin-top:4px">📊 ESTADÍSTICAS / AJUSTES MANUALES</div><div class="v26AdminStats"><div><label>Goles</label><input id="pGoals" type="number" min="0" value="0"></div><div><label>Amarillas</label><input id="pYellow" type="number" min="0" value="0"></div><div><label>Rojas</label><input id="pRed" type="number" min="0" value="0"></div><div><label>Titular</label><input id="pStarts" type="number" min="0" value="0"></div><div><label>Partidos</label><input id="pApps" type="number" min="0" value="0"></div></div><div class="v26EventHint">Los partidos finalizados actualizan automáticamente estas estadísticas. Estos campos sirven para corregir datos históricos.</div>`;form.insertBefore(wrap,form.querySelector('#savePlayerBtn'));
   }
@@ -3206,14 +3206,84 @@ document.addEventListener("click",function(e){
     });return c;
   }
   window.savePlayer=async function(){
-    v26EnsurePlayerStatsFields();const num=Number(document.getElementById('pNumber').value),name=document.getElementById('pName').value.trim();if(!num||!name){toast('Dorsal y nombre son obligatorios');return}
-    let p=App.players.find(x=>x.id===editPlayerId);if(!p){p={id:Date.now(),number:num,name,surname:'',position:'Defensa',captain:false,photo:'',goals:0,yellow:0,red:0,starts:0,appearances:0};App.players.push(p)}
-    const raw=calcRaw()[p.id]||{goals:0,yellow:0,red:0,starts:0,appearances:0};
-    const entered={goals:Number(document.getElementById('pGoals').value||0),yellow:Number(document.getElementById('pYellow').value||0),red:Number(document.getElementById('pRed').value||0),starts:Number(document.getElementById('pStarts').value||0),appearances:Number(document.getElementById('pApps').value||0)};
-    p.number=num;p.name=name;p.surname=document.getElementById('pSurname').value.trim();p.position=document.getElementById('pPosition').value;p.captain=document.getElementById('pCaptain').checked;p.status=document.getElementById('pStatus').value;
-    p.statAdjust={goals:entered.goals-raw.goals,yellow:entered.yellow-raw.yellow,red:entered.red-raw.red,starts:entered.starts-raw.starts,appearances:entered.appearances-raw.appearances};
-    const file=document.getElementById('pPhoto').files[0];if(file){toast('Subiendo foto…');p.photo=await uploadFile(file,'players')}
-    App.players.sort((a,b)=>a.number-b.number);closeModal('playerModal');v26RecalcStats();await save();renderAll();toast('Jugador guardado');
+    try{
+      v26EnsurePlayerStatsFields();
+
+      const numberEl=document.getElementById('pNumber');
+      const nameEl=document.getElementById('pName');
+      const surnameEl=document.getElementById('pSurname');
+      const positionEl=document.getElementById('pPosition');
+      const captainEl=document.getElementById('pCaptain');
+      const statusEl=document.getElementById('pStatus');
+
+      const num=Number(numberEl.value);
+      const name=nameEl.value.trim();
+      if(!num || !name){
+        toast('Dorsal y nombre son obligatorios');
+        return;
+      }
+
+      let p=App.players.find(x=>String(x.id)===String(editPlayerId));
+      if(!p){
+        p={
+          id:Date.now(),
+          number:num,
+          name,
+          surname:'',
+          position:'Defensa',
+          captain:false,
+          photo:'',
+          goals:0,
+          yellow:0,
+          red:0,
+          starts:0,
+          appearances:0
+        };
+        App.players.push(p);
+      }
+
+      const raw=calcRaw()[p.id]||{goals:0,yellow:0,red:0,starts:0,appearances:0};
+      const entered={
+        goals:Number(document.getElementById('pGoals')?.value||0),
+        yellow:Number(document.getElementById('pYellow')?.value||0),
+        red:Number(document.getElementById('pRed')?.value||0),
+        starts:Number(document.getElementById('pStarts')?.value||0),
+        appearances:Number(document.getElementById('pApps')?.value||0)
+      };
+
+      p.number=num;
+      p.name=name;
+      p.surname=surnameEl.value.trim();
+      p.position=positionEl.value;
+      p.captain=captainEl.checked;
+      p.status=statusEl.value;
+      p.statAdjust={
+        goals:entered.goals-raw.goals,
+        yellow:entered.yellow-raw.yellow,
+        red:entered.red-raw.red,
+        starts:entered.starts-raw.starts,
+        appearances:entered.appearances-raw.appearances
+      };
+
+      const file=document.getElementById('pPhoto').files[0];
+      if(file){
+        toast('Subiendo foto…');
+        p.photo=await uploadFile(file,'players');
+      }
+
+      App.players.sort((a,b)=>Number(a.number||0)-Number(b.number||0));
+      v26RecalcStats();
+
+      // Esperar realmente a Firebase antes de cerrar el editor.
+      await save();
+
+      closeModal('playerModal');
+      renderAll();
+      toast('Jugador guardado correctamente');
+    }catch(err){
+      console.error('savePlayer:',err);
+      toast('No se pudo guardar el jugador');
+    }
   };
   const old=document.getElementById('savePlayerBtn');if(old){const fresh=old.cloneNode(true);old.replaceWith(fresh);fresh.addEventListener('click',window.savePlayer)}
 })();
