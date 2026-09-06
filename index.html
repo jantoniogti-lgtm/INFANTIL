@@ -1784,16 +1784,16 @@ button{cursor:pointer}
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-storage-compat.js"></script>
 <script>
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
+  apiKey: "AIzaSyA2WgBQxFSPWTQMk3NTWBFPc8K5XyCOcDw",
   authDomain: "club-manager-9a242.firebaseapp.com",
   databaseURL: "https://club-manager-9a242-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "club-manager-9a242",
-  storageBucket: "club-manager-9a242.appspot.com",
-  messagingSenderId: "TU_MESSAGING_SENDER_ID",
-  appId: "TU_APP_ID"
+  storageBucket: "club-manager-9a242.firebasestorage.app",
+  messagingSenderId: "931689419367",
+  appId: "1:931689419367:web:b638b313cf639ee8dd3ac2"
 };
 
 /* Firebase estable: usa SDK si hay credenciales reales; si el HTML solo conserva
@@ -2198,11 +2198,8 @@ async function uploadFile(file,path){
  return await snap.ref.getDownloadURL();
 }
 async function savePlayer(){
- const num=Number(document.getElementById("pNumber").value),name=document.getElementById("pName").value.trim();if(!num||!name){toast("Dorsal y nombre son obligatorios");return}
- let p=App.players.find(x=>x.id===editPlayerId);if(!p){p={id:Date.now(),number:num,name,surname:"",position:"Defensa",captain:false,photo:"",goals:0,yellow:0,red:0};App.players.push(p)}
- p.number=num;p.name=name;p.surname=document.getElementById("pSurname").value.trim();p.position=document.getElementById("pPosition").value;p.captain=document.getElementById("pCaptain").checked;p.status=document.getElementById("pStatus").value;
- const file=document.getElementById("pPhoto").files[0];if(file){toast("Subiendo foto…");p.photo=await uploadFile(file,"players")}
- App.players.sort((a,b)=>a.number-b.number);closeModal("playerModal");save();renderAll();toast("Jugador guardado")
+  if(typeof window.savePlayer==='function' && window.savePlayer!==savePlayer) return window.savePlayer();
+  toast('El editor todavía se está inicializando');
 }
 function deletePlayer(id){if(!confirm("¿Eliminar jugador?"))return;App.players=App.players.filter(p=>p.id!==id);App.lineup.players=(App.lineup.players||[]).filter(n=>Number(n)!==Number(App.players.find(p=>p.id===id)?.number));save();renderAll()}
 function editTeam(id){
@@ -3233,42 +3230,24 @@ document.addEventListener("click",function(e){
   }
   window.savePlayer=async function(){
     try{
-      v26EnsurePlayerStatsFields();
-
+      if(typeof v26EnsurePlayerStatsFields==='function') v26EnsurePlayerStatsFields();
       const numberEl=document.getElementById('pNumber');
       const nameEl=document.getElementById('pName');
       const surnameEl=document.getElementById('pSurname');
       const positionEl=document.getElementById('pPosition');
       const captainEl=document.getElementById('pCaptain');
       const statusEl=document.getElementById('pStatus');
-
       const num=Number(numberEl.value);
       const name=nameEl.value.trim();
-      if(!num || !name){
-        toast('Dorsal y nombre son obligatorios');
-        return;
-      }
+      if(!num || !name){ toast('Dorsal y nombre son obligatorios'); return; }
 
       let p=App.players.find(x=>String(x.id)===String(editPlayerId));
+      const isNew=!p;
       if(!p){
-        p={
-          id:Date.now(),
-          number:num,
-          name,
-          surname:'',
-          position:'Defensa',
-          captain:false,
-          photo:'',
-          goals:0,
-          yellow:0,
-          red:0,
-          starts:0,
-          appearances:0
-        };
+        p={id:Date.now(),number:num,name,surname:'',position:'Defensa',captain:false,photo:'',goals:0,yellow:0,red:0,starts:0,appearances:0};
         App.players.push(p);
       }
-
-      const raw=calcRaw()[p.id]||{goals:0,yellow:0,red:0,starts:0,appearances:0};
+      const raw=(typeof calcRaw==='function' ? calcRaw()[p.id] : null)||{goals:0,yellow:0,red:0,starts:0,appearances:0};
       const entered={
         goals:Number(document.getElementById('pGoals')?.value||0),
         yellow:Number(document.getElementById('pYellow')?.value||0),
@@ -3276,39 +3255,32 @@ document.addEventListener("click",function(e){
         starts:Number(document.getElementById('pStarts')?.value||0),
         appearances:Number(document.getElementById('pApps')?.value||0)
       };
-
       p.number=num;
       p.name=name;
       p.surname=surnameEl.value.trim();
       p.position=positionEl.value;
-      p.captain=captainEl.checked;
+      p.captain=!!captainEl.checked;
       p.status=statusEl.value;
-      p.statAdjust={
-        goals:entered.goals-raw.goals,
-        yellow:entered.yellow-raw.yellow,
-        red:entered.red-raw.red,
-        starts:entered.starts-raw.starts,
-        appearances:entered.appearances-raw.appearances
-      };
-
+      p.statAdjust={goals:entered.goals-raw.goals,yellow:entered.yellow-raw.yellow,red:entered.red-raw.red,starts:entered.starts-raw.starts,appearances:entered.appearances-raw.appearances};
       const file=document.getElementById('pPhoto').files[0];
-      if(file){
-        toast('Subiendo foto…');
-        p.photo=await uploadFile(file,'players');
-      }
-
+      if(file){ toast('Subiendo foto…'); p.photo=await uploadFile(file,'players'); }
       App.players.sort((a,b)=>Number(a.number||0)-Number(b.number||0));
-      v26RecalcStats();
+      if(typeof v26RecalcStats==='function') v26RecalcStats();
 
-      // Esperar realmente a Firebase antes de cerrar el editor.
+      // Backup local inmediato: los datos no desaparecen aunque Firebase falle.
+      localStorage.setItem('RS_LIVE_PLAYERS_BACKUP',JSON.stringify(App.players));
+      localStorage.setItem('RS_LIVE_APP_BACKUP',JSON.stringify(App));
+
+      // Guardado remoto real y esperado antes de cerrar el editor.
       await save();
-
       closeModal('playerModal');
       renderAll();
-      toast('Jugador guardado correctamente');
+      toast(isNew?'Jugador creado y guardado correctamente':'Cambios guardados correctamente');
     }catch(err){
       console.error('savePlayer:',err);
-      toast('No se pudo guardar el jugador');
+      const msg=String(err?.message||err||'Error desconocido');
+      const short=msg.length>90?msg.slice(0,90)+'…':msg;
+      toast('No se pudo guardar: '+short);
     }
   };
   const old=document.getElementById('savePlayerBtn');if(old){const fresh=old.cloneNode(true);old.replaceWith(fresh);fresh.addEventListener('click',window.savePlayer)}
