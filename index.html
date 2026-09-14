@@ -3283,11 +3283,9 @@ document.addEventListener("click",function(e){
       App.players.sort((a,b)=>Number(a.number||0)-Number(b.number||0));
       if(typeof v26RecalcStats==='function') v26RecalcStats();
 
-      // Backup local inmediato: los datos no desaparecen aunque Firebase falle.
-      localStorage.setItem('RS_LIVE_PLAYERS_BACKUP',JSON.stringify(App.players));
-      localStorage.setItem('RS_LIVE_APP_BACKUP',JSON.stringify(App));
-
       // Guardado remoto real y esperado antes de cerrar el editor.
+      // No usamos localStorage para guardar App completo porque los escudos/fotos
+      // pueden ocupar más espacio del permitido por el navegador.
       await save();
       closeModal('playerModal');
       renderAll();
