@@ -2354,7 +2354,8 @@ function renderAdminXI10(){
     const p=safePlayers.find(x=>Number(x.number)===n);
     if(!p)return;
     const xy=pos[i]||[50,50];
-    pitch.insertAdjacentHTML("beforeend",`<div class="adminPitchPlayerV10" style="left:${xy[0]}%;top:${xy[1]}%">
+    pitch.insertAdjacentHTML("beforeend",`<div class="adminPitchPlayerV10 ${p.photo?"hasPlayerPhotoV51":""}" style="left:${xy[0]}%;top:${xy[1]}%">
+      ${p.photo?`<div class="playerPhotoV51 playerPhotoAdminV51"><img src="${esc(p.photo)}" alt="${esc(p.name)}" onerror="this.closest('.playerPhotoV51')?.remove()"></div>`:""}
       <div class="adminPitchShirtV10"><b>${p.number}</b></div>
       <div class="adminPitchNameV10">${esc(p.name)}</div>
     </div>`);
@@ -2462,7 +2463,10 @@ function renderPublicTeamV11(){
     if(!p)return;
     const xy=pos[i]||[50,50];
     pitch.insertAdjacentHTML("beforeend",`
-      <div class="publicPlayerV11" style="left:${xy[0]}%;top:${xy[1]}%">
+      <div class="publicPlayerV11 ${p.photo?"hasPlayerPhotoV51":""}" style="left:${xy[0]}%;top:${xy[1]}%">
+        ${p.photo
+          ? `<div class="playerPhotoV51"><img src="${esc(p.photo)}" alt="${esc(p.name)}" onerror="this.closest('.playerPhotoV51')?.remove();this.closest('.publicPlayerV11')?.classList.remove('hasPlayerPhotoV51')"></div>`
+          : ``}
         <div class="publicShirtV11"><b>${p.number}</b></div>
         <div class="publicNameV11">${esc(p.name)}</div>
       </div>`);
@@ -3388,7 +3392,8 @@ document.addEventListener("click",function(e){
       <div class="savedHead"><b>👕 ALINEACIÓN INICIAL</b><span>Formación ${esc(snap.formation||"4-3-3")}</span></div>
       <div class="savedPitchV31">${ps.map((p,i)=>{
         const xy=pos[i]||[50,50];
-        return `<div class="savedPlayerV31" style="left:${xy[0]}%;top:${xy[1]}%">
+        return `<div class="savedPlayerV31 ${p.photo?"hasPlayerPhotoV51":""}" style="left:${xy[0]}%;top:${xy[1]}%">
+          ${p.photo?`<div class="playerPhotoV51 playerPhotoSavedV51"><img src="${esc(p.photo)}" alt="${esc(p.name)}" onerror="this.closest('.playerPhotoV51')?.remove()"></div>`:""}
           <div class="savedShirtV31">${esc(p.number)}</div>
           <b>${esc(p.name)}</b><small>${esc(p.position||"")}</small>
         </div>`;
@@ -3668,7 +3673,8 @@ document.addEventListener("click",function(e){
       <div class="savedPitchV31">
         ${starters.map((p,i)=>{
           const xy=pos[i]||[50,50];
-          return `<div class="savedPlayerV31" style="left:${xy[0]}%;top:${xy[1]}%">
+          return `<div class="savedPlayerV31 ${p.photo?"hasPlayerPhotoV51":""}" style="left:${xy[0]}%;top:${xy[1]}%">
+            ${p.photo?`<div class="playerPhotoV51 playerPhotoSavedV51"><img src="${esc(p.photo)}" alt="${esc(p.name)}" onerror="this.closest('.playerPhotoV51')?.remove()"></div>`:""}
             <div class="savedShirtV31">${esc(p.number)}</div>
             <b>${esc(p.name)}</b>
             <small>${esc(p.position||"Jugador")}</small>
@@ -4915,3 +4921,28 @@ document.addEventListener("click",function(e){
   }
 })();
 </script>
+
+<style id="rs-v51-player-photos">
+/* V51 — Foto del jugador en la alineación cuando existe */
+.playerPhotoV51{
+  width:clamp(58px,8vw,78px);
+  height:clamp(58px,8vw,78px);
+  margin:0 auto 4px;
+  border-radius:50%;
+  overflow:hidden;
+  background:#071523;
+  border:3px solid rgba(255,255,255,.95);
+  box-shadow:0 7px 16px rgba(0,0,0,.42);
+  position:relative;
+  z-index:6;
+}
+.playerPhotoV51 img{width:100%;height:100%;object-fit:cover;display:block}
+.publicPlayerV11.hasPlayerPhotoV51 .publicShirtV11{margin-top:1px}
+.savedPlayerV31.hasPlayerPhotoV51 .savedShirtV31{margin-top:1px}
+.playerPhotoSavedV51{width:52px;height:52px;border-width:2px;margin-bottom:3px}
+.playerPhotoAdminV51{width:52px;height:52px;border-width:2px;margin-bottom:3px}
+@media(max-width:600px){
+  .playerPhotoV51{width:48px;height:48px;border-width:2px}
+  .playerPhotoSavedV51,.playerPhotoAdminV51{width:42px;height:42px}
+}
+</style>
