@@ -1696,7 +1696,7 @@ button{cursor:pointer}
         <div class="form">
           <label>Nombre del rival / equipo</label><input id="teamNameInput" placeholder="Ej. CF Vilafranca">
           <label>Escudo</label><input id="teamLogoInput" type="file" accept="image/*">
-          <button class="btn" id="addTeamBtn">Guardar equipo</button>
+          <button class="btn" id="addTeamBtn" type="button">＋ Crear equipo</button>
         </div>
         <div id="adminTeams"></div>
       </div>
@@ -2210,22 +2210,38 @@ function editTeam(id){
  const btn=document.getElementById("addTeamBtn"); if(btn)btn.textContent="💾 Guardar cambios";
  toast(`Editando ${t.name}`);
 }
+async function readTeamLogo(file){
+ if(!file)return"";
+ return await new Promise((resolve,reject)=>{
+  const r=new FileReader();
+  r.onload=()=>{
+   const raw=r.result,img=new Image();
+   img.onload=()=>{try{
+    const max=512,scale=Math.min(1,max/Math.max(img.naturalWidth||img.width,img.naturalHeight||img.height));
+    const w=Math.max(1,Math.round((img.naturalWidth||img.width)*scale)),h=Math.max(1,Math.round((img.naturalHeight||img.height)*scale));
+    const c=document.createElement("canvas");c.width=w;c.height=h;const ctx=c.getContext("2d");ctx.drawImage(img,0,0,w,h);resolve(c.toDataURL("image/png"));
+   }catch(e){resolve(raw)}};
+   img.onerror=()=>resolve(raw);img.src=raw;
+  };r.onerror=reject;r.readAsDataURL(file);
+ });
+}
 async function addTeam(){
  const name=document.getElementById("teamNameInput").value.trim();if(!name){toast("Escribe el nombre");return}
  const file=document.getElementById("teamLogoInput").files[0];
- if(editTeamId!==null){
-   const t=App.teams.find(x=>Number(x.id)===Number(editTeamId));
-   if(!t)return;
-   t.name=name;t.short=(t.short||name.slice(0,3)).toUpperCase();
-   if(file){toast("Subiendo escudo…");t.logo=await uploadFile(file,"teams")}
-   editTeamId=null;
+ try{
+  ignoreRemote=true;const logo=file?await readTeamLogo(file):"";
+  if(editTeamId!==null){
+   const t=App.teams.find(x=>Number(x.id)===Number(editTeamId));if(!t)return;
+   t.name=name;t.short=(t.short||name.slice(0,3)).toUpperCase();if(logo)t.logo=logo;editTeamId=null;
    document.getElementById("teamNameInput").value="";document.getElementById("teamLogoInput").value="";
-   const btn=document.getElementById("addTeamBtn");if(btn)btn.textContent="Guardar equipo";
-   save();renderAll();toast("Equipo actualizado");return;
- }
- const t={id:Date.now(),name,short:name.slice(0,3).toUpperCase(),logo:"",protected:false};
- if(file){toast("Subiendo escudo…");t.logo=await uploadFile(file,"teams")}
- App.teams.push(t);document.getElementById("teamNameInput").value="";document.getElementById("teamLogoInput").value="";save();renderAll();toast("Equipo guardado")
+   const btn=document.getElementById("addTeamBtn");if(btn)btn.textContent="＋ Crear equipo";
+   await save();renderAll();toast("Equipo actualizado");return;
+  }
+  const t={id:Date.now(),name,short:name.slice(0,3).toUpperCase(),logo:logo,protected:false};App.teams.push(t);
+  document.getElementById("teamNameInput").value="";document.getElementById("teamLogoInput").value="";
+  await save();renderAll();toast("Equipo guardado");
+ }catch(err){console.error("Error guardando equipo:",err);toast("No se pudo guardar el equipo");}
+ finally{ignoreRemote=false}
 }
 function deleteTeam(id){if(!confirm("¿Eliminar equipo?"))return;App.teams=App.teams.filter(t=>Number(t.id)!==Number(id));App.matches=App.matches.filter(m=>Number(m.home)!==Number(id)&&Number(m.away)!==Number(id));save();renderAll()}
 function createMatch(){
@@ -4880,5 +4896,14 @@ document.addEventListener("click",function(e){
   }
   window.renderMatches=v40RenderMatches;
   setTimeout(v40RenderMatches,0);
+})();
+</script>
+
+<script id="rs-team-fix-final">
+(function(){
+  const card=document.getElementById("addTeamBtn")?.closest(".adminCard");
+  if(card)card.style.removeProperty("display");
+  const btn=document.getElementById("addTeamBtn");
+  if(btn){btn.textContent=window.editTeamId!==null?"💾 Guardar cambios":"＋ Crear equipo";btn.onclick=window.addTeam;}
 })();
 </script>
