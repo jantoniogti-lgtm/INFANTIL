@@ -5033,3 +5033,78 @@ document.addEventListener("click",function(e){
 })();
 </script>
 
+
+<style id="rs-v53-player-cutout">
+/* V53 — Fotos de jugador como recorte transparente, sin círculo ni camiseta */
+.playerPhotoV51{
+  width:86px!important;
+  height:122px!important;
+  margin:-58px auto 0!important;
+  border:0!important;
+  border-radius:0!important;
+  overflow:visible!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  position:relative!important;
+  z-index:8!important;
+  display:flex!important;
+  align-items:flex-end!important;
+  justify-content:center!important;
+}
+.playerPhotoV51 img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  object-position:center bottom!important;
+  display:block!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.publicPlayerV11.hasPlayerPhotoV51 .publicShirtV11,
+.savedPlayerV31.hasPlayerPhotoV51 .savedShirtV31,
+.adminPitchPlayerV10.hasPlayerPhotoV51 .adminPitchShirtV10,
+.formationPlayer.hasPlayerPhotoV51 .jersey{
+  display:none!important;
+}
+.publicPlayerV11.hasPlayerPhotoV51 .playerPhotoV51{margin:-58px auto 0!important}
+.savedPlayerV31.hasPlayerPhotoV51 .playerPhotoV51{margin:-58px auto 0!important}
+.adminPitchPlayerV10.hasPlayerPhotoV51 .playerPhotoV51{margin:-58px auto 0!important}
+@media(max-width:600px){
+  .playerPhotoV51{width:70px!important;height:100px!important;margin:-48px auto 0!important}
+  .publicPlayerV11.hasPlayerPhotoV51 .playerPhotoV51,
+  .savedPlayerV31.hasPlayerPhotoV51 .playerPhotoV51,
+  .adminPitchPlayerV10.hasPlayerPhotoV51 .playerPhotoV51{margin:-48px auto 0!important}
+}
+</style>
+
+<script id="rs-v53-old-pitch-photo">
+(function(){
+  // El campo antiguo también usa la foto transparente cuando existe.
+  const oldRenderPitch=window.renderPitch;
+  if(typeof oldRenderPitch!=="function")return;
+  window.renderPitch=function(id){
+    const p=document.getElementById(id);
+    if(!p){return oldRenderPitch(id)}
+    try{
+      p.querySelectorAll(".formationPlayer").forEach(x=>x.remove());
+      const selected=(App.lineup?.players||[]).map(Number).slice(0,11);
+      const ps=selected.map(n=>App.players.find(x=>Number(x.number)===n)).filter(Boolean);
+      const pos=positions(App.lineup?.formation||"4-3-3");
+      const cap=document.getElementById("lineupCaption");
+      if(cap)cap.textContent=App.lineup?.formation||"4-3-3";
+      ps.forEach((pl,i)=>{
+        const [x,y]=pos[i]||[50,50];
+        const el=document.createElement("div");
+        el.className="formationPlayer"+(pl.photo?" hasPlayerPhotoV51":"");
+        el.style.left=x+"%";el.style.top=y+"%";
+        el.innerHTML=pl.photo
+          ? `<div class="playerPhotoV51"><img src="${esc(pl.photo)}" alt="${esc(pl.name)}" onerror="this.closest('.playerPhotoV51')?.remove();this.closest('.formationPlayer')?.classList.remove('hasPlayerPhotoV51')"></div><b>${esc(pl.name)}</b><small>${esc(pl.position||"")}</small>`
+          : `<div class="jersey">${pl.number}</div><b>${esc(pl.name)}</b><small>${esc(pl.position||"")}</small>`;
+        p.appendChild(el);
+      });
+    }catch(e){console.error("RS V53 lineup photo",e);oldRenderPitch(id)}
+  };
+})();
+</script>
