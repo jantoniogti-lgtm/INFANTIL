@@ -2201,8 +2201,11 @@ async function fileToDataUrlV27(file,maxSize=640,quality=.82){
     const scale=Math.min(1,maxSize/Math.max(ow,oh));
     const w=Math.max(1,Math.round(ow*scale)),h=Math.max(1,Math.round(oh*scale));
     const c=document.createElement("canvas");c.width=w;c.height=h;
-    const ctx=c.getContext("2d");ctx.drawImage(img,0,0,w,h);
-    resolve(c.toDataURL("image/jpeg",quality));
+    const ctx=c.getContext("2d",{willReadFrequently:true});ctx.clearRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);
+    // Las fotos de jugador preparadas como PNG llevan transparencia.
+    // No las convertimos a JPEG porque el JPEG elimina el canal alfa y crea el fondo negro.
+    const hasAlpha=String(file.type||"").toLowerCase().includes("png") || String(file.type||"").toLowerCase().includes("webp");
+    resolve(hasAlpha?c.toDataURL("image/png"):c.toDataURL("image/jpeg",quality));
    }catch(e){resolve(raw)}};
    img.onerror=()=>resolve(raw);img.src=raw;
   };
@@ -2496,7 +2499,7 @@ function renderPublicTeamV11(){
           ? `<div class="playerPhotoV51"><img src="${esc(p.photo)}" alt="${esc(p.name)}" onerror="this.closest('.playerPhotoV51')?.remove();this.closest('.publicPlayerV11')?.classList.remove('hasPlayerPhotoV51')"></div>`
           : ``}
         <div class="publicShirtV11"><b>${p.number}</b></div>
-        <div class="publicNameV11">${esc(p.name)}</div>
+        <div class="publicNameV11">${esc(p.number)} ${esc(p.name)}</div>
       </div>`);
   });
 
@@ -3423,7 +3426,7 @@ document.addEventListener("click",function(e){
         return `<div class="savedPlayerV31 ${p.photo?"hasPlayerPhotoV51":""}" style="left:${xy[0]}%;top:${xy[1]}%">
           ${p.photo?`<div class="playerPhotoV51 playerPhotoSavedV51"><img src="${esc(p.photo)}" alt="${esc(p.name)}" onerror="this.closest('.playerPhotoV51')?.remove()"></div>`:""}
           <div class="savedShirtV31">${esc(p.number)}</div>
-          <b>${esc(p.name)}</b><small>${esc(p.position||"")}</small>
+          <b>${esc(p.number)} ${esc(p.name)}</b><small>${esc(p.position||"")}</small>
         </div>`;
       }).join("")}</div>
       <div class="savedBenchV31"><strong>🪑 SUPLENTES</strong>
@@ -3713,7 +3716,7 @@ document.addEventListener("click",function(e){
         <strong>🪑 SUPLENTES DEL PARTIDO</strong>
         <div class="savedBenchGridV31">
           ${bench.length
-            ? bench.map(p=>`<div class="savedBenchItemV31"><b>#${esc(p.number)} ${esc(p.name)}</b><small>${esc(p.position||"Jugador")}</small></div>`).join("")
+            ? bench.map(p=>`<div class="savedBenchItemV31"><b>${esc(p.number)} ${esc(p.name)}</b><small>${esc(p.position||"Jugador")}</small></div>`).join("")
             : `<div class="savedBenchItemV31">No hay suplentes guardados para este encuentro.</div>`}
         </div>
       </div>`;
@@ -5076,6 +5079,15 @@ document.addEventListener("click",function(e){
   .publicPlayerV11.hasPlayerPhotoV51 .playerPhotoV51,
   .savedPlayerV31.hasPlayerPhotoV51 .playerPhotoV51,
   .adminPitchPlayerV10.hasPlayerPhotoV51 .playerPhotoV51{margin:-48px auto 0!important}
+}
+</style>
+<style id="rs-v54-player-photo-final">
+/* V54 — PNG transparente y dorsal delante del nombre */
+.playerPhotoV51,.playerPhotoV51 img{background:transparent!important;}
+.publicPlayerV11.hasPlayerPhotoV51 .publicNameV11,
+.savedPlayerV31.hasPlayerPhotoV51 b,
+.formationPlayer.hasPlayerPhotoV51 b{
+  white-space:nowrap;
 }
 </style>
 
