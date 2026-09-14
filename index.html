@@ -4904,6 +4904,16 @@ document.addEventListener("click",function(e){
   const card=document.getElementById("addTeamBtn")?.closest(".adminCard");
   if(card)card.style.removeProperty("display");
   const btn=document.getElementById("addTeamBtn");
-  if(btn){btn.textContent=window.editTeamId!==null?"💾 Guardar cambios":"＋ Crear equipo";btn.onclick=window.addTeam;}
+  if(btn){
+    const editing=(typeof editTeamId!=="undefined" && editTeamId!==null);
+    btn.textContent=editing?"💾 Guardar cambios":"＋ CREAR EQUIPO";
+    btn.style.display="block";
+    btn.style.visibility="visible";
+    btn.onclick=addTeam;
+  }
+  if(card){
+    card.style.display="block";
+    card.style.visibility="visible";
+  }
 })();
 </script>
