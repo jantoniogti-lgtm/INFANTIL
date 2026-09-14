@@ -1755,7 +1755,12 @@ button{cursor:pointer}
   <div class="form">
     <div class="row"><div><label>Dorsal</label><input id="pNumber" type="number"></div><div><label>Posición</label><select id="pPosition"><option>Portero</option><option>Defensa</option><option>Centrocampista</option><option>Delantero</option></select></div></div>
     <div class="row"><div><label>Nombre</label><input id="pName"></div><div><label>Apellidos</label><input id="pSurname"></div></div>
-    <label>Foto</label><input id="pPhoto" type="file" accept="image/*">
+    <label>Foto del jugador</label><input id="pPhoto" type="file" accept="image/*">
+    <div id="pPhotoPreviewBoxV52" style="display:none;margin:4px 0 8px;padding:10px;border:1px solid #29445e;border-radius:14px;background:#081525;text-align:center">
+      <div style="font-size:10px;color:var(--muted);font-weight:900;margin-bottom:7px">FOTO ACTUAL</div>
+      <img id="pPhotoPreviewV52" alt="Foto del jugador" style="width:110px;height:110px;border-radius:50%;object-fit:cover;border:3px solid var(--yellow);background:#12243a;display:block;margin:0 auto">
+      <div id="pPhotoPreviewStatusV52" style="font-size:10px;color:var(--muted);margin-top:6px"></div>
+    </div>
     <div class="row"><label style="display:flex;align-items:center;gap:8px"><input id="pCaptain" type="checkbox"> Capitán</label><select id="pStatus"><option>Disponible</option><option>Convocado</option><option>Lesionado</option><option>Sancionado</option><option>Descanso</option></select></div>
     <button class="btn" id="savePlayerBtn">Guardar jugador</button>
   </div>
@@ -2206,14 +2211,14 @@ async function fileToDataUrlV27(file,maxSize=640,quality=.82){
 }
 async function uploadFile(file,path){
  if(!file)return"";
- // Intentamos Storage primero. Si Storage falla por permisos/configuración,
- // guardamos una versión comprimida dentro de los datos del jugador para que
- // la foto no se pierda y pueda sincronizarse con Firebase Realtime Database.
+ // Intentamos Storage, pero nunca dejamos bloqueado el formulario si Storage tarda/falla.
  if(storage){
   try{
    const ref=storage.ref().child(path+"/"+Date.now()+"_"+file.name.replace(/[^\w.-]/g,"_"));
-   const snap=await ref.put(file);
-   return await snap.ref.getDownloadURL();
+   const timeout=new Promise((_,reject)=>setTimeout(()=>reject(new Error("Storage timeout")),8000));
+   const snap=await Promise.race([ref.put(file),timeout]);
+   const urlTimeout=new Promise((_,reject)=>setTimeout(()=>reject(new Error("URL timeout")),5000));
+   return await Promise.race([snap.ref.getDownloadURL(),urlTimeout]);
   }catch(err){
    console.warn("Storage no disponible para la imagen; usando copia local sincronizable",err);
   }
@@ -4969,3 +4974,62 @@ document.addEventListener("click",function(e){
   .playerPhotoSavedV51,.playerPhotoAdminV51{width:42px;height:42px}
 }
 </style>
+
+<script id="rs-v52-player-photo-editor">
+(function(){
+  function setPhotoPreview(src, status){
+    const box=document.getElementById('pPhotoPreviewBoxV52');
+    const img=document.getElementById('pPhotoPreviewV52');
+    const txt=document.getElementById('pPhotoPreviewStatusV52');
+    if(!box||!img)return;
+    if(src){
+      img.src=src;
+      box.style.display='block';
+      if(txt)txt.textContent=status||'El jugador tiene una foto guardada';
+      img.onerror=function(){box.style.display='none'};
+    }else{
+      img.removeAttribute('src');
+      box.style.display='none';
+      if(txt)txt.textContent='';
+    }
+  }
+
+  async function previewSelectedFile(){
+    const file=document.getElementById('pPhoto')?.files?.[0];
+    if(!file){
+      const p=(App.players||[]).find(x=>String(x.id)===String(editPlayerId));
+      setPhotoPreview(p?.photo||'',p?.photo?'Foto guardada':'');
+      return;
+    }
+    try{
+      const src=await fileToDataUrlV27(file,640,.82);
+      setPhotoPreview(src,'Nueva foto seleccionada · se guardará al pulsar «Guardar jugador»');
+    }catch(e){
+      setPhotoPreview('', '');
+    }
+  }
+
+  const photoInput=document.getElementById('pPhoto');
+  if(photoInput){photoInput.addEventListener('change',previewSelectedFile);}
+
+  const originalOpenPlayer=window.openPlayer;
+  window.openPlayer=function(id){
+    if(typeof originalOpenPlayer==='function')originalOpenPlayer(id);
+    const p=(App.players||[]).find(x=>String(x.id)===String(id));
+    setTimeout(()=>setPhotoPreview(p?.photo||'',p?.photo?'Foto guardada correctamente':'Sin foto guardada'),0);
+  };
+
+  const newBtn=document.getElementById('newPlayerBtn');
+  if(newBtn){newBtn.addEventListener('click',()=>{
+    setTimeout(()=>setPhotoPreview('', ''),0);
+  });}
+
+  // Si el modal ya estaba abierto al cargar la página, muestra su estado actual.
+  setTimeout(()=>{
+    const p=(App.players||[]).find(x=>String(x.id)===String(editPlayerId));
+    if(document.getElementById('playerModal')?.classList.contains('open'))
+      setPhotoPreview(p?.photo||'',p?.photo?'Foto guardada correctamente':'Sin foto guardada');
+  },100);
+})();
+</script>
+
