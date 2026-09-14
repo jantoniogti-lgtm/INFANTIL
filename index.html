@@ -2183,19 +2183,42 @@ function openPlayer(id){
  document.getElementById("playerModalTitle").textContent="Editar jugador";document.getElementById("pNumber").value=p.number;document.getElementById("pName").value=p.name;document.getElementById("pSurname").value=p.surname||"";document.getElementById("pPosition").value=p.position;document.getElementById("pCaptain").checked=!!p.captain;document.getElementById("pStatus").value=p.status||"Disponible";document.getElementById("playerModal").classList.add("open")
 }
 function editPlayer(id){openPlayer(id)}
+async function fileToDataUrlV27(file,maxSize=640,quality=.82){
+ if(!file)return"";
+ return await new Promise((resolve,reject)=>{
+  const r=new FileReader();
+  r.onload=()=>{
+   const raw=r.result;
+   if(!String(file.type||"").startsWith("image/")){resolve(raw);return}
+   const img=new Image();
+   img.onload=()=>{try{
+    const ow=img.naturalWidth||img.width||1,oh=img.naturalHeight||img.height||1;
+    const scale=Math.min(1,maxSize/Math.max(ow,oh));
+    const w=Math.max(1,Math.round(ow*scale)),h=Math.max(1,Math.round(oh*scale));
+    const c=document.createElement("canvas");c.width=w;c.height=h;
+    const ctx=c.getContext("2d");ctx.drawImage(img,0,0,w,h);
+    resolve(c.toDataURL("image/jpeg",quality));
+   }catch(e){resolve(raw)}};
+   img.onerror=()=>resolve(raw);img.src=raw;
+  };
+  r.onerror=reject;r.readAsDataURL(file);
+ });
+}
 async function uploadFile(file,path){
  if(!file)return"";
- if(!storage){
-   return await new Promise((resolve,reject)=>{
-     const r=new FileReader();
-     r.onload=()=>resolve(r.result);
-     r.onerror=reject;
-     r.readAsDataURL(file);
-   });
+ // Intentamos Storage primero. Si Storage falla por permisos/configuración,
+ // guardamos una versión comprimida dentro de los datos del jugador para que
+ // la foto no se pierda y pueda sincronizarse con Firebase Realtime Database.
+ if(storage){
+  try{
+   const ref=storage.ref().child(path+"/"+Date.now()+"_"+file.name.replace(/[^\w.-]/g,"_"));
+   const snap=await ref.put(file);
+   return await snap.ref.getDownloadURL();
+  }catch(err){
+   console.warn("Storage no disponible para la imagen; usando copia local sincronizable",err);
+  }
  }
- const ref=storage.ref().child(path+"/"+Date.now()+"_"+file.name.replace(/[^\w.-]/g,"_"));
- const snap=await ref.put(file);
- return await snap.ref.getDownloadURL();
+ return await fileToDataUrlV27(file,640,.82);
 }
 async function savePlayer(){
   if(typeof window.savePlayer==='function' && window.savePlayer!==savePlayer) return window.savePlayer();
