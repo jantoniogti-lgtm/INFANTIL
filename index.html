@@ -1547,24 +1547,6 @@ button{cursor:pointer}
 .rsShareTools .btn{flex:1;min-width:190px}
 @media(max-width:560px){.rsShareActions,.rsShareTools{display:grid;grid-template-columns:1fr}.rsShareActions .btn,.rsShareTools .btn{width:100%}}
 </style>
-
-<style id="rs_additive_sections_v3">
-.rsAddSeasonBox{margin-top:18px;padding:18px}
-.rsAddSeasonBox h3{margin:0 0 8px;font-size:18px}
-.rsAddSeasonBox .muted{color:var(--muted);font-size:12px;line-height:1.5}
-.rsAddRows{display:grid;gap:8px;margin-top:12px}
-.rsAddRow{display:grid;grid-template-columns:1fr 1fr auto;gap:8px}
-.rsAddRow select,.rsAddRow input{width:100%;min-width:0;background:#081522;color:#fff;border:1px solid var(--line);border-radius:10px;padding:10px}
-.rsAddHome5{display:grid;gap:12px}
-.rsAddMatch{position:relative}
-.rsAddMatch.rsFeatured{border:2px solid var(--yellow);box-shadow:0 0 0 3px rgba(255,212,0,.08)}
-.rsAddFeatured{position:absolute;top:10px;right:10px;background:var(--yellow);color:#111;padding:5px 9px;border-radius:999px;font-size:10px;font-weight:950;z-index:2}
-.rsAddClassBox{margin-top:18px;padding:18px}
-.rsAddClassPreview{margin-top:12px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#07111f}
-.rsAddClassPreview img{display:block;width:100%;height:auto}
-@media(max-width:700px){.rsAddRow{grid-template-columns:1fr}.rsAddRow button{width:100%}}
-</style>
-
 </head>
 <body>
 <div class="app">
@@ -1578,6 +1560,7 @@ button{cursor:pointer}
   <div class="sideHeadV14"><div class="brand"><div class="brandMark crestBrandMarkV34"><img id="sideRamonCrestV34" alt="Ramón Sicart"></div><div>RS LIVE<small>RAMÓN SICART</small></div></div><button id="closeSideV14">×</button></div>
   <div class="sideNavV14" id="sideNavV14">
     <button class="active" data-page="home">🏠 <span>Inicio</span></button>
+    <button data-page="matches">📅 <span>Partidos</span></button>
     <button data-page="admin">⚙️ <span>Administrador</span></button>
   </div>
 </aside>
@@ -1586,6 +1569,7 @@ button{cursor:pointer}
 <main class="shell">
 <nav class="nav" id="mainNav">
   <button class="active" data-page="home">🏠 Inicio</button>
+  <button data-page="matches">📅 Partidos</button>
   <button data-page="admin">⚙️ Administrador</button>
 </nav>
 
@@ -4091,775 +4075,6 @@ document.addEventListener("click",function(e){
   if(oldFinish){window.finish=function(){const result=oldFinish();setTimeout(()=>{const m=rsActive();if(m&&m.status==='FINISHED')rsShareFinal()},300);return result};}
 })();
 </script>
-
-<script id="rs_additive_sections_v3_js">
-(function(){
-  "use strict";
-
-  function rsEsc(v){
-    if(typeof esc==="function") return esc(String(v??""));
-    return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
-  }
-  function rsDateTime(m){
-    const d=String(m.date||"");
-    const h=String(m.hour||"00:00");
-    const t=Date.parse(d+"T"+h);
-    return Number.isFinite(t)?t:Number.MAX_SAFE_INTEGER;
-  }
-  function rsTeams(){
-    return Array.isArray(App.teams)?App.teams:[];
-  }
-  function rsTeamName(t){
-    return typeof t==="string"?t:(t?.name||t?.nombre||"Equipo");
-  }
-  function rsTeamOptions(selected){
-    return rsTeams().map(t=>{
-      const n=rsTeamName(t);
-      return `<option value="${rsEsc(n)}" ${n===selected?"selected":""}>${rsEsc(n)}</option>`;
-    }).join("");
-  }
-
-  // 1) LOCAL/VISITANTE selectors: additive enhancement, never changes stored data model.
-  function refreshSeasonSelectors(){
-    document.querySelectorAll(".rsAddHomeSelect,.rsAddAwaySelect").forEach(s=>{
-      const old=s.value;
-      s.innerHTML=rsTeamOptions(old);
-      if(old && [...s.options].some(o=>o.value===old)) s.value=old;
-    });
-    ["rsAddEditHome","rsAddEditAway"].forEach(id=>{
-      const s=document.getElementById(id);
-      if(!s)return;
-      const old=s.value;
-      s.innerHTML=rsTeamOptions(old);
-      if(old && [...s.options].some(o=>o.value===old))s.value=old;
-    });
-  }
-
-  function seasonCard(){
-    if(document.getElementById("rsAddSeasonBox"))return;
-    const admin=document.getElementById("admin");
-    if(!admin)return;
-    const box=document.createElement("div");
-    box.id="rsAddSeasonBox";
-    box.className="card rsAddSeasonBox";
-    box.innerHTML=`
-      <h3>📅 Partidos de la temporada</h3>
-      <div class="muted">Los equipos se cargan directamente de los equipos registrados en la aplicación.</div>
-      <div id="rsAddRows" class="rsAddRows"></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-        <button class="btn" id="rsAddNewRow">＋ Añadir partido</button>
-        <button class="btn primary" id="rsAddSaveRows">💾 Guardar partidos</button>
-      </div>`;
-    admin.appendChild(box);
-
-    box.querySelector("#rsAddNewRow").onclick=()=>{
-      const rows=box.querySelector("#rsAddRows");
-      const r=document.createElement("div");
-      r.className="rsAddRow";
-      r.innerHTML=`
-        <select class="rsAddHomeSelect">${rsTeamOptions("")}</select>
-        <select class="rsAddAwaySelect">${rsTeamOptions("")}</select>
-        <button class="btn danger" type="button">✕</button>`;
-      r.querySelector("button").onclick=()=>r.remove();
-      rows.appendChild(r);
-    };
-
-    box.querySelector("#rsAddSaveRows").onclick=async()=>{
-      const rows=[...box.querySelectorAll(".rsAddRow")];
-      let added=0;
-      rows.forEach(r=>{
-        const home=r.querySelector(".rsAddHomeSelect")?.value;
-        const away=r.querySelector(".rsAddAwaySelect")?.value;
-        if(!home||!away||home===away)return;
-        if(Array.isArray(App.matches)){
-          App.matches.push({
-            id:"m_"+Date.now()+"_"+Math.random().toString(36).slice(2,8),
-            home,away,date:new Date().toISOString().slice(0,10),
-            hour:"20:00",competition:"",field:"",status:"SCHEDULED",
-            homeScore:0,awayScore:0,events:[]
-          });
-          added++;
-        }
-      });
-      if(typeof save==="function")await save();
-      if(typeof renderAll==="function")renderAll();
-      toast(added?`${added} partido(s) añadido(s)`:"No se añadió ningún partido");
-    };
-  }
-
-  // 2) HOME: keep exactly 5 chronological matches, highlight the current weekly match.
-  function renderHomeFive(){
-    const host=document.getElementById("homeMatchesV26");
-    if(!host || !Array.isArray(App.matches))return;
-
-    const now=Date.now();
-    const matches=[...App.matches].sort((a,b)=>rsDateTime(a)-rsDateTime(b)).slice(0,5);
-    if(!matches.length)return;
-
-    // Highlight the closest upcoming match. If the closest match has finished,
-    // keep that played match highlighted through the following Thursday.
-    let featured=null;
-    const finished=[...matches].filter(m=>String(m.status).toUpperCase()==="FINISHED")
-      .sort((a,b)=>rsDateTime(b)-rsDateTime(a));
-    if(finished.length){
-      const f=finished[0];
-      const d=new Date(rsDateTime(f));
-      const day=d.getDay(); // Thu=4
-      let delta=(4-day+7)%7;
-      if(delta===0)delta=7;
-      const until=new Date(d);
-      until.setDate(d.getDate()+delta);
-      until.setHours(23,59,59,999);
-      if(now<=until.getTime())featured=f;
-    }
-    if(!featured) featured=matches.find(m=>rsDateTime(m)>=now)||matches[0];
-
-    host.innerHTML=matches.map(m=>{
-      const is=m.id===featured.id;
-      const date=m.date||"";
-      const result=(String(m.status).toUpperCase()==="FINISHED"||m.homeScore!=null&&m.awayScore!=null)
-        ? `${m.homeScore??0} - ${m.awayScore??0}` : "VS";
-      return `<div class="card rsAddMatch ${is?"rsFeatured":""}" style="padding:16px">
-        ${is?'<div class="rsAddFeatured">⭐ PARTIDO DESTACADO</div>':""}
-        <div style="color:var(--muted);font-size:11px;font-weight:800">${rsEsc(date)} · ${rsEsc(m.hour||"")}</div>
-        <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;margin-top:10px">
-          <div style="font-weight:900">${rsEsc(m.home)}</div>
-          <div style="font-size:25px;font-weight:1000">${result}</div>
-          <div style="font-weight:900;text-align:right">${rsEsc(m.away)}</div>
-        </div>
-        <div style="margin-top:7px;color:var(--muted);font-size:11px">${rsEsc(m.competition||"")}</div>
-      </div>`;
-    }).join("");
-  }
-
-  // 3) Classification: MANUAL only. Upload image and adapt to 1600x700.
-  // No OCR, no automatic classification, no changes to existing App data.
-  async function adaptClassification(file){
-    return new Promise((resolve,reject)=>{
-      const fr=new FileReader();
-      fr.onload=()=>{
-        const img=new Image();
-        img.onload=()=>{
-          const c=document.createElement("canvas");
-          c.width=1600;c.height=700;
-          const ctx=c.getContext("2d");
-          ctx.fillStyle="#07111f";ctx.fillRect(0,0,c.width,c.height);
-          const scale=Math.min(c.width/img.naturalWidth,c.height/img.naturalHeight);
-          const w=img.naturalWidth*scale,h=img.naturalHeight*scale;
-          ctx.drawImage(img,(1600-w)/2,(700-h)/2,w,h);
-          resolve(c.toDataURL("image/jpeg",.94));
-        };
-        img.onerror=reject; img.src=fr.result;
-      };
-      fr.onerror=reject; fr.readAsDataURL(file);
-    });
-  }
-
-  function classificationBox(){
-    const admin=document.getElementById("admin");
-    if(!admin || document.getElementById("rsAddClassBox"))return;
-    const box=document.createElement("div");
-    box.id="rsAddClassBox";
-    box.className="card rsAddClassBox";
-    box.innerHTML=`
-      <h3 style="margin:0 0 7px">🏆 Clasificación</h3>
-      <div class="muted">Clasificación manual. Sube la imagen actual y la aplicación la adapta al formato 1600×700 sin tocar los datos de partidos.</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-        <input id="rsAddClassFile" type="file" accept="image/*">
-        <button class="btn primary" id="rsAddClassSave">🖼️ Adaptar y guardar</button>
-        <button class="btn danger" id="rsAddClassDelete">🗑️ Borrar</button>
-      </div>
-      <div id="rsAddClassPreview" class="rsAddClassPreview"></div>`;
-    admin.appendChild(box);
-
-    box.querySelector("#rsAddClassSave").onclick=async()=>{
-      const f=box.querySelector("#rsAddClassFile").files[0];
-      if(!f){toast("Selecciona una imagen");return;}
-      try{
-        App.manualClassificationImage=await adaptClassification(f);
-        if(typeof save==="function")await save();
-        renderClassificationOnly();
-        box.querySelector("#rsAddClassPreview").innerHTML=`<img src="${rsEsc(App.manualClassificationImage)}">`;
-        toast("Clasificación guardada");
-      }catch(e){console.error(e);toast("No se pudo adaptar la imagen");}
-    };
-    box.querySelector("#rsAddClassDelete").onclick=async()=>{
-      delete App.manualClassificationImage;
-      if(typeof save==="function")await save();
-      renderClassificationOnly();
-      box.querySelector("#rsAddClassPreview").innerHTML="";
-      toast("Clasificación eliminada");
-    };
-  }
-
-  function renderClassificationOnly(){
-    ["homeTableV26","classification","table"].forEach(id=>{
-      const el=document.getElementById(id);
-      if(el && App.manualClassificationImage){
-        el.innerHTML=`<div class="rsAddClassPreview"><img src="${rsEsc(App.manualClassificationImage)}"></div>`;
-      }
-    });
-  }
-
-  // Hook only by wrapping existing renderAll; original function is called first and untouched.
-  let originalRenderAll=window.renderAll;
-  let hooked=false;
-  function install(){
-    seasonCard();
-    classificationBox();
-    refreshSeasonSelectors();
-    renderHomeFive();
-    renderClassificationOnly();
-
-    if(!hooked && typeof originalRenderAll==="function"){
-      hooked=true;
-      window.renderAll=function(){
-        const r=originalRenderAll.apply(this,arguments);
-        setTimeout(()=>{
-          seasonCard();
-          classificationBox();
-          refreshSeasonSelectors();
-          renderHomeFive();
-          renderClassificationOnly();
-        },0);
-        return r;
-      };
-    }
-  }
-
-  window.rsAdditiveV3Install=install;
-  setTimeout(install,50);
-  setInterval(install,2500);
-})();
-</script>
-
-<style id="rs-season-matches-v1-css">
-/* ===== RS LIVE V1 — GESTOR DE PARTIDOS DE TEMPORADA ===== */
-.rsSeasonNavV1{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
-.rsSeasonNavV1 button{border:1px solid var(--line);background:#0b192a;color:#cbd6e4;border-radius:11px;padding:9px 12px;font-size:11px;font-weight:1000}
-.rsSeasonNavV1 button.active{background:var(--yellow);color:#111;border-color:var(--yellow)}
-.rsSeasonCardV1{padding:18px}
-.rsSeasonCardV1 h2{font-size:17px;margin-bottom:7px}
-.rsSeasonSubV1{font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.5}
-.rsSeasonToolsV1{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.rsSeasonStatsV1{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
-.rsSeasonStatV1{padding:12px;background:#0b192a;border:1px solid var(--line);border-radius:12px;text-align:center}
-.rsSeasonStatV1 b{display:block;font-size:18px;color:var(--yellow)}
-.rsSeasonStatV1 span{font-size:9px;color:var(--muted);font-weight:900}
-.rsBulkV1{display:grid;gap:8px}
-.rsBulkRowV1{display:grid;grid-template-columns:65px 1fr 1fr 135px 105px 1fr 42px;gap:6px;align-items:center;padding:8px;background:#0b192a;border:1px solid var(--line);border-radius:12px}
-.rsBulkRowV1 input,.rsBulkRowV1 select{width:100%;background:#091727;color:#fff;border:1px solid #29405d;border-radius:9px;padding:8px;font-size:10px;min-width:0}
-.rsBulkRowV1 button{width:34px;height:34px;border:0;border-radius:8px;background:#4b1820;color:#fff;font-weight:1000}
-.rsBulkHeadV1{display:grid;grid-template-columns:65px 1fr 1fr 135px 105px 1fr 42px;gap:6px;padding:0 8px 5px;color:#71869c;font-size:8px;font-weight:1000;text-transform:uppercase}
-.rsSeasonListV1{display:grid;gap:8px;margin-top:12px}
-.rsSeasonItemV1{display:grid;grid-template-columns:55px 1fr auto;gap:10px;align-items:center;padding:12px;background:#0b192a;border:1px solid var(--line);border-radius:12px}
-.rsSeasonJornadaV1{font-size:10px;color:var(--yellow);font-weight:1000;text-align:center}
-.rsSeasonMatchV1{font-size:11px;font-weight:1000}
-.rsSeasonMatchV1 small{display:block;color:var(--muted);font-size:9px;margin-top:4px}
-.rsSeasonActionsV1{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
-.rsSeasonNextV1{border-color:#e4c400!important;box-shadow:0 0 0 1px #e4c40033}
-.rsNextBadgeV1{display:inline-block;margin-left:5px;padding:3px 6px;border-radius:7px;background:var(--yellow);color:#111;font-size:7px;font-weight:1000}
-.rsSeasonModalV1 .modalBox{width:min(1100px,100%)}
-.rsRoundGridV1{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.rsRoundBoxV1{padding:12px;background:#0b192a;border:1px solid var(--line);border-radius:12px}
-.rsRoundBoxV1 h4{font-size:11px;color:var(--yellow);margin-bottom:8px}
-.rsRoundBoxV1 label{display:block;font-size:9px;color:var(--muted);margin:7px 0 4px;font-weight:900}
-.rsRoundBoxV1 input,.rsRoundBoxV1 select{width:100%;background:#091727;color:#fff;border:1px solid #29405d;border-radius:9px;padding:8px;font-size:10px}
-.rsPublicRoundV1{display:inline-flex;margin-left:7px;padding:3px 6px;border-radius:6px;background:#172a3f;color:#9fb0c1;font-size:8px;font-weight:1000}
-.rsPublicMatchMetaV1{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:5px;color:var(--muted);font-size:9px}
-.rsPublicMatchMetaV1 span{padding:3px 6px;border:1px solid var(--line);border-radius:6px}
-.rsPublicDetailV1{margin-top:7px;font-size:9px;color:var(--muted)}
-@media(max-width:850px){
-  .rsSeasonStatsV1{grid-template-columns:repeat(2,1fr)}
-  .rsBulkHeadV1{display:none}
-  .rsBulkRowV1{grid-template-columns:55px 1fr 1fr 1fr 90px 1fr 36px}
-}
-@media(max-width:600px){
-  .rsSeasonCardV1{padding:13px}
-  .rsBulkRowV1{grid-template-columns:1fr 1fr}
-  .rsBulkRowV1>*:first-child{grid-column:1/-1}
-  .rsBulkRowV1>*:last-child{justify-self:end}
-  .rsSeasonItemV1{grid-template-columns:42px 1fr}
-  .rsSeasonActionsV1{grid-column:1/-1;justify-content:stretch}
-  .rsSeasonActionsV1 .btn{flex:1}
-  .rsRoundGridV1{grid-template-columns:1fr}
-}
-</style>
-
-<script id="rs-season-matches-v1-js">
-(function(){
-  "use strict";
-
-  const $ = id => document.getElementById(id);
-  const escV1 = window.esc || (v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])));
-  const teamV1 = id => (App.teams||[]).find(t=>Number(t.id)===Number(id)) || {id:0,name:"Equipo",logo:"",short:"?"};
-
-  function saveV1(){
-    try{
-      const r=window.save?.();
-      return r && typeof r.then==="function" ? r : Promise.resolve(r);
-    }catch(e){return Promise.reject(e)}
-  }
-
-  function dateTextV1(d){
-    if(!d)return "Sin fecha";
-    try{
-      return new Date(d+"T00:00:00").toLocaleDateString("es-ES",{day:"2-digit",month:"2-digit",year:"numeric"});
-    }catch(e){return d}
-  }
-
-  function matchStatusV1(m){
-    const active=String(m.id)===String(App.activeMatch);
-    if(m.status==="FINISHED" || (active && Live.state==="FINISHED")) return "FINALIZADO";
-    if(active && ["FIRST_HALF","SECOND_HALF"].includes(Live.state)) return "DIRECTO";
-    return "PRÓXIMO";
-  }
-
-  function ensureRoundV1(m){
-    if(!m)return "";
-    if(m.jornada!==undefined && m.jornada!==null && String(m.jornada)!=="") return String(m.jornada);
-    return "";
-  }
-
-  // Add Jornada to the existing create-match workflow.
-  const originalCreateMatch = window.createMatch;
-  window.createMatch = function(){
-    const h=Number($("matchHome")?.value), a=Number($("matchAway")?.value);
-    const date=$("matchDateInput")?.value||"";
-    if(!h || !a || h===a){ toast("Local y visitante deben ser diferentes"); return; }
-    if(!date){ toast("Selecciona la fecha"); return; }
-
-    const m={
-      id:Date.now(),
-      home:h, away:a, date,
-      hour:$("matchHourInput")?.value||"",
-      jornada:$("matchRoundInput")?.value ? Number($("matchRoundInput").value) : "",
-      competition:$("matchCompetitionInput")?.value.trim()||"Liga",
-      field:$("matchFieldInput")?.value.trim()||""
-    };
-    App.matches=App.matches||[];
-    App.matches.push(m);
-    App.activeMatch=m.id;
-    Live.state="PREMATCH"; Live.half=1; Live.homeScore=0; Live.awayScore=0;
-    Live.events=[]; Live.pausedSeconds=0; Live.startTimestamp=null; Live.manualMinute=0;
-    saveV1().then(()=>{renderAll();toast("Partido creado y activado como próximo partido");});
-  };
-
-  function openSeasonPanelV1(){
-    const adminPanel=$("adminPanel");
-    if(!adminPanel || adminPanel.style.display==="none"){
-      toast("Entra primero en Administrador");
-      return;
-    }
-    $("rsSeasonManagerV1")?.scrollIntoView({behavior:"smooth",block:"start"});
-  }
-
-  function rowHtmlV1(idx,data={}){
-    const teams=(App.teams||[]).map(t=>`<option value="${t.id}" ${Number(data.home)===Number(t.id)?"selected":""}>${escV1(t.name)}</option>`).join("");
-    const away=(App.teams||[]).map(t=>`<option value="${t.id}" ${Number(data.away)===Number(t.id)?"selected":""}>${escV1(t.name)}</option>`).join("");
-    return `<div class="rsBulkRowV1" data-row="${idx}">
-      <input class="rsJ" type="number" min="1" placeholder="Jornada" value="${escV1(data.jornada??"")}">
-      <select class="rsH">${teams}</select>
-      <select class="rsA">${away}</select>
-      <input class="rsD" type="date" value="${escV1(data.date||"")}">
-      <input class="rsT" type="time" value="${escV1(data.hour||"")}">
-      <input class="rsF" placeholder="Campo" value="${escV1(data.field||"")}">
-      <button type="button" class="rsRemove" title="Eliminar">×</button>
-    </div>`;
-  }
-
-  function addBulkRowV1(data={}){
-    const box=$("rsBulkRowsV1"); if(!box)return;
-    box.insertAdjacentHTML("beforeend",rowHtmlV1(box.children.length,data));
-  }
-
-  function renderSeasonManagerV1(){
-    const box=$("rsSeasonListV1"), stats=$("rsSeasonStatsV1");
-    if(!box || !stats)return;
-    const rows=[...(App.matches||[])].sort((a,b)=>{
-      const ja=Number(a.jornada||9999), jb=Number(b.jornada||9999);
-      return ja-jb || String(a.date||"").localeCompare(String(b.date||"")) || String(a.hour||"").localeCompare(String(b.hour||""));
-    });
-    const finished=rows.filter(m=>m.status==="FINISHED").length;
-    const next=rows.find(m=>String(m.id)===String(App.activeMatch));
-    stats.innerHTML=`
-      <div class="rsSeasonStatV1"><b>${rows.length}</b><span>PARTIDOS</span></div>
-      <div class="rsSeasonStatV1"><b>${finished}</b><span>FINALIZADOS</span></div>
-      <div class="rsSeasonStatV1"><b>${rows.length-finished}</b><span>PENDIENTES</span></div>
-      <div class="rsSeasonStatV1"><b>${next?`J${escV1(ensureRoundV1(next)||"—")}`:"—"}</b><span>PRÓXIMO ACTIVO</span></div>`;
-    box.innerHTML=rows.length?rows.map(m=>{
-      const h=teamV1(m.home),a=teamV1(m.away), active=String(m.id)===String(App.activeMatch);
-      const st=matchStatusV1(m);
-      const score=m.status==="FINISHED"?`${Number(m.homeScore||0)} - ${Number(m.awayScore||0)}`:"—";
-      return `<div class="rsSeasonItemV1 ${active?"rsSeasonNextV1":""}">
-        <div class="rsSeasonJornadaV1">${ensureRoundV1(m)?`J${escV1(ensureRoundV1(m))}`:"—"}</div>
-        <div class="rsSeasonMatchV1">
-          ${h.logo?`<img src="${escV1(h.logo)}" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;margin-right:5px">`:""}${escV1(h.name)} <span style="color:var(--yellow)">vs</span> ${a.logo?`<img src="${escV1(a.logo)}" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;margin:0 5px">`:""}${escV1(a.name)}
-          ${active?'<span class="rsNextBadgeV1">PRÓXIMO / ACTIVO</span>':""}
-          <small>${dateTextV1(m.date)} · ${escV1(m.hour||"")} · ${escV1(m.competition||"Liga")} · ${escV1(m.field||"")} · ${st} · ${score}</small>
-        </div>
-        <div class="rsSeasonActionsV1">
-          ${m.status!=="FINISHED"?`<button class="btn small ${active?"green":"dark"}" type="button" onclick="rsSetNextV1(${m.id})">${active?"✓ Próximo":"⭐ Activar próximo"}</button>`:""}
-          <button class="btn small dark" type="button" onclick="rsEditMatchV1(${m.id})">✏️ Editar</button>
-          <button class="btn small red" type="button" onclick="rsDeleteMatchV1(${m.id})">🗑</button>
-        </div>
-      </div>`;
-    }).join(""):'<div class="empty">Todavía no hay partidos de temporada.</div>';
-  }
-
-  function collectBulkV1(){
-    return [...document.querySelectorAll("#rsBulkRowsV1 .rsBulkRowV1")].map(r=>({
-      jornada:r.querySelector(".rsJ")?.value||"",
-      home:Number(r.querySelector(".rsH")?.value),
-      away:Number(r.querySelector(".rsA")?.value),
-      date:r.querySelector(".rsD")?.value||"",
-      hour:r.querySelector(".rsT")?.value||"",
-      field:r.querySelector(".rsF")?.value.trim()||""
-    }));
-  }
-
-  async function saveBulkV1(){
-    const rows=collectBulkV1();
-    if(!rows.length){toast("Añade al menos un partido");return;}
-    const invalid=rows.findIndex(r=>!r.home||!r.away||r.home===r.away||!r.date);
-    if(invalid>=0){toast(`Revisa el partido ${invalid+1}: equipos y fecha son obligatorios`);return;}
-    const comp=$("rsBulkCompetitionV1")?.value.trim()||"Liga";
-    let added=0;
-    rows.forEach((r,i)=>{
-      App.matches.push({
-        id:Date.now()+i+Math.floor(Math.random()*1000),
-        home:r.home,away:r.away,date:r.date,hour:r.hour,
-        jornada:r.jornada?Number(r.jornada):"",
-        competition:comp,field:r.field,status:"SCHEDULED",
-        homeScore:0,awayScore:0,events:[]
-      });
-      added++;
-    });
-    await saveV1(); renderAll(); renderSeasonManagerV1();
-    toast(`${added} partidos añadidos a la temporada`);
-    $("rsBulkRowsV1").innerHTML="";
-    addBulkRowV1();
-  }
-
-  function rsSetNextV1(id){
-    const m=(App.matches||[]).find(x=>String(x.id)===String(id));
-    if(!m)return;
-    if(m.status==="FINISHED"){toast("Un partido finalizado no puede ser el próximo");return;}
-    App.activeMatch=m.id;
-    Live.state="PREMATCH"; Live.half=1; Live.homeScore=0; Live.awayScore=0;
-    Live.events=Array.isArray(m.events)?JSON.parse(JSON.stringify(m.events)):[];
-    Live.pausedSeconds=0; Live.startTimestamp=null; Live.manualMinute=0;
-    saveV1().then(()=>{renderAll();renderSeasonManagerV1();toast(`Próximo partido: ${teamV1(m.home).name} vs ${teamV1(m.away).name}`);});
-  }
-
-  function rsDeleteMatchV1(id){
-    const m=(App.matches||[]).find(x=>String(x.id)===String(id));
-    if(!m)return;
-    if(!confirm(`¿Eliminar ${teamV1(m.home).name} vs ${teamV1(m.away).name}?`))return;
-    App.matches=App.matches.filter(x=>String(x.id)!==String(id));
-    if(String(App.activeMatch)===String(id)){
-      const candidate=[...App.matches].filter(x=>x.status!=="FINISHED").sort((a,b)=>(String(a.date||"")+String(a.hour||"")).localeCompare(String(b.date||"")+String(b.hour||"")))[0];
-      App.activeMatch=candidate?.id??null;
-      Live.state="PREMATCH";Live.homeScore=0;Live.awayScore=0;Live.events=[];
-    }
-    saveV1().then(()=>{renderAll();renderSeasonManagerV1();toast("Partido eliminado");});
-  }
-
-  function rsEditMatchV1(id){
-    const m=(App.matches||[]).find(x=>String(x.id)===String(id)); if(!m)return;
-    let modal=$("rsEditSeasonModalV1");
-    if(!modal){
-      modal=document.createElement("div");modal.id="rsEditSeasonModalV1";modal.className="modal rsSeasonModalV1";
-      modal.innerHTML=`<div class="modalBox">
-        <div class="modalHead"><h2>✏️ Editar partido</h2><button class="close" type="button" id="rsEditSeasonCloseV1">×</button></div>
-        <div class="form">
-          <label>Jornada</label><input id="rsEditJornadaV1" type="number" min="1">
-          <label>Equipo local</label><select id="rsEditHomeV1"></select>
-          <label>Equipo visitante</label><select id="rsEditAwayV1"></select>
-          <div class="row"><div><label>Fecha</label><input id="rsEditDateV1" type="date"></div><div><label>Hora</label><input id="rsEditHourV1" type="time"></div></div>
-          <label>Competición</label><input id="rsEditCompV1">
-          <label>Campo</label><input id="rsEditFieldV1">
-          <button class="btn green" type="button" id="rsEditSaveV1">💾 Guardar cambios</button>
-        </div></div>`;
-      document.body.appendChild(modal);
-      $("rsEditSeasonCloseV1").onclick=()=>modal.classList.remove("open");
-      $("rsEditSaveV1").onclick=async()=>{
-        const nh=Number($("rsEditHomeV1").value),na=Number($("rsEditAwayV1").value);
-        if(!nh||!na||nh===na){toast("Local y visitante deben ser diferentes");return;}
-        m.jornada=$("rsEditJornadaV1").value?Number($("rsEditJornadaV1").value):"";
-        m.home=nh;m.away=na;m.date=$("rsEditDateV1").value;m.hour=$("rsEditHourV1").value;
-        m.competition=$("rsEditCompV1").value.trim()||"Liga";m.field=$("rsEditFieldV1").value.trim();
-        await saveV1();modal.classList.remove("open");renderAll();renderSeasonManagerV1();toast("Partido actualizado");
-      };
-    }
-    const opts=(App.teams||[]).map(t=>`<option value="${t.id}">${escV1(t.name)}</option>`).join("");
-    $("rsEditHomeV1").innerHTML=opts;$("rsEditAwayV1").innerHTML=opts;
-    $("rsEditJornadaV1").value=ensureRoundV1(m);$("rsEditHomeV1").value=m.home;$("rsEditAwayV1").value=m.away;
-    $("rsEditDateV1").value=m.date||"";$("rsEditHourV1").value=m.hour||"";
-    $("rsEditCompV1").value=m.competition||"Liga";$("rsEditFieldV1").value=m.field||"";
-    modal.classList.add("open");
-  }
-
-  // Optional automatic calendar generator: all teams, single or double round robin.
-  function openGeneratorV1(){
-    let modal=$("rsGeneratorModalV1");
-    if(!modal){
-      modal=document.createElement("div");modal.id="rsGeneratorModalV1";modal.className="modal rsSeasonModalV1";
-      modal.innerHTML=`<div class="modalBox">
-        <div class="modalHead"><h2>⚡ Generar calendario de temporada</h2><button class="close" type="button" id="rsGenCloseV1">×</button></div>
-        <p class="rsSeasonSubV1">Genera automáticamente los cruces entre los equipos registrados. Puedes elegir una vuelta o ida y vuelta. Si ya tienes partidos creados, se añadirán al calendario.</p>
-        <div class="rsRoundGridV1">
-          <div class="rsRoundBoxV1"><label>Formato</label><select id="rsGenFormatV1"><option value="single">Una vuelta</option><option value="double">Ida y vuelta</option></select>
-            <label>Primera jornada</label><input id="rsGenStartRoundV1" type="number" min="1" value="1">
-            <label>Primera fecha</label><input id="rsGenStartDateV1" type="date">
-          </div>
-          <div class="rsRoundBoxV1"><label>Hora por defecto</label><input id="rsGenHourV1" type="time" value="18:00">
-            <label>Competición</label><input id="rsGenCompV1" value="Liga">
-            <label>Campo</label><input id="rsGenFieldV1" placeholder="Municipal">
-          </div>
-        </div>
-        <div class="toolbar" style="margin-top:14px"><button class="btn green" id="rsGenDoV1">⚡ Crear calendario</button></div>
-      </div>`;
-      document.body.appendChild(modal);
-      $("rsGenCloseV1").onclick=()=>modal.classList.remove("open");
-      $("rsGenDoV1").onclick=generateCalendarV1;
-    }
-    if(!$("rsGenStartDateV1").value){
-      const d=new Date(); d.setDate(d.getDate()+7);
-      $("rsGenStartDateV1").value=d.toISOString().slice(0,10);
-    }
-    modal.classList.add("open");
-  }
-
-  function generateCalendarV1(){
-    const teams=(App.teams||[]).filter(t=>t && t.id!=null);
-    if(teams.length<2){toast("Necesitas al menos 2 equipos");return;}
-    const double=$("rsGenFormatV1").value==="double";
-    let list=teams.map(t=>t.id);
-    if(list.length%2)list.push(null);
-    const rounds=[], n=list.length, half=n/2;
-    for(let r=0;r<n-1;r++){
-      const games=[];
-      for(let i=0;i<half;i++){
-        const x=list[i], y=list[n-1-i];
-        if(x!=null&&y!=null) games.push({home:x,away:y});
-      }
-      rounds.push(games);
-      list=[list[0],list[n-1],...list.slice(1,n-1)];
-    }
-    if(double){
-      const second=rounds.map(g=>g.map(x=>({home:x.away,away:x.home})));
-      rounds.push(...second);
-    }
-    const startRound=Number($("rsGenStartRoundV1").value||1);
-    const startDate=$("rsGenStartDateV1").value;
-    const hour=$("rsGenHourV1").value||"18:00";
-    const comp=$("rsGenCompV1").value.trim()||"Liga";
-    const field=$("rsGenFieldV1").value.trim();
-    if(!startDate){toast("Selecciona la primera fecha");return;}
-    const base=new Date(startDate+"T00:00:00");
-    let idBase=Date.now();
-    rounds.forEach((games,r)=>{
-      const d=new Date(base);d.setDate(base.getDate()+r*7);
-      games.forEach((g,i)=>{
-        App.matches.push({
-          id:idBase++,
-          home:g.home,away:g.away,
-          date:d.toISOString().slice(0,10),hour,
-          jornada:startRound+r,competition:comp,field,
-          status:"SCHEDULED",homeScore:0,awayScore:0,events:[]
-        });
-      });
-    });
-    saveV1().then(()=>{ $("rsGeneratorModalV1").classList.remove("open");renderAll();renderSeasonManagerV1();toast(`${App.matches.length?rounds.flat().length:""} cruces generados correctamente`);});
-  }
-
-  function injectAdminSeasonCardV1(){
-    const panel=$("adminPanel"); if(!panel || $("rsSeasonManagerV1"))return;
-    const anchor=$("adminMatches")?.closest(".adminCard");
-    if(!anchor)return;
-    const card=document.createElement("div");
-    card.className="card rsSeasonCardV1";
-    card.id="rsSeasonManagerV1";
-    card.innerHTML=`
-      <div class="sectionTitle" style="margin:0 0 4px"><h2>📅 Partidos de la temporada</h2><p>Calendario completo</p></div>
-      <div class="rsSeasonSubV1">Aquí puedes cargar toda la temporada, indicar la <b>jornada</b>, editar partidos, eliminar partidos y elegir cuál es el <b>próximo partido</b> que aparecerá como activo en la aplicación.</div>
-      <div class="rsSeasonToolsV1">
-        <button class="btn dark" type="button" id="rsAddBulkV1">＋ Añadir partido</button>
-        <button class="btn dark" type="button" id="rsGenCalendarV1">⚡ Generar calendario completo</button>
-        <button class="btn green" type="button" id="rsSaveBulkV1">💾 Guardar todos</button>
-      </div>
-      <div class="rsSeasonStatsV1" id="rsSeasonStatsV1"></div>
-      <div class="rsBulkV1">
-        <div class="rsBulkHeadV1"><span>Jornada</span><span>Local</span><span>Visitante</span><span>Fecha</span><span>Hora</span><span>Campo</span><span></span></div>
-        <div id="rsBulkRowsV1"></div>
-      </div>
-      <label style="display:block;font-size:9px;color:var(--muted);font-weight:900;margin-top:12px">COMPETICIÓN PARA LOS PARTIDOS QUE SE AÑADAN EN BLOQUE</label>
-      <input id="rsBulkCompetitionV1" value="Liga" style="width:100%;margin-top:5px;background:#091727;color:#fff;border:1px solid #29405d;border-radius:9px;padding:9px">
-      <div class="sectionTitle" style="margin:20px 0 8px"><h2 style="font-size:14px">Calendario creado</h2><p>Ordenado por jornada y fecha</p></div>
-      <div id="rsSeasonListV1" class="rsSeasonListV1"></div>`;
-    anchor.parentNode.insertBefore(card,anchor);
-    $("rsAddBulkV1").onclick=()=>addBulkRowV1();
-    $("rsSaveBulkV1").onclick=saveBulkV1;
-    $("rsGenCalendarV1").onclick=openGeneratorV1;
-    $("rsBulkRowsV1").addEventListener("click",e=>{
-      const b=e.target.closest(".rsRemove"); if(!b)return;
-      b.closest(".rsBulkRowV1")?.remove();
-    });
-    addBulkRowV1();
-    renderSeasonManagerV1();
-  }
-
-  // Public list: all season matches, with Jornada, date, time, crests, score/status and details.
-  const originalV40 = window.v40RenderMatches;
-  function publicSeasonRenderV1(){
-    const box=$("matchList"); if(!box)return;
-    const rows=[...(App.matches||[])].sort((a,b)=>{
-      const ja=Number(a.jornada||9999),jb=Number(b.jornada||9999);
-      return ja-jb || (String(a.date||"")+String(a.hour||"")).localeCompare(String(b.date||"")+String(b.hour||""));
-    });
-    box.innerHTML=rows.length?rows.map(m=>{
-      const h=teamV1(m.home),a=teamV1(m.away);
-      const active=String(m.id)===String(App.activeMatch);
-      const fin=m.status==="FINISHED" || (active && Live.state==="FINISHED");
-      const live=active && ["FIRST_HALF","SECOND_HALF"].includes(Live.state);
-      let hs=Number(m.homeScore||0),as=Number(m.awayScore||0);
-      if(fin&&active&&Live.state==="FINISHED"){hs=Number(Live.homeScore||hs);as=Number(Live.awayScore||as)}
-      if(live){hs=Number(Live.homeScore||0);as=Number(Live.awayScore||0)}
-      const status=live?"🔴 DIRECTO":fin?"FINAL":"PRÓXIMO";
-      const score=fin||live?`${hs} - ${as}`:"—";
-      const details=`<button class="btn small dark" type="button" onclick="rsShowSeasonDetailsV1(${m.id})">👁 Detalles</button>`;
-      return `<div class="matchRow matchRowV23">
-        <div class="matchDate">${dateTextV1(m.date)}<br>${escV1(m.hour||"")}</div>
-        <div class="matchTeams" style="text-align:center">
-          <div style="display:flex;justify-content:center;align-items:center;gap:9px">
-            ${h.logo?`<img src="${escV1(h.logo)}" style="width:42px;height:42px;object-fit:contain">`:`<span style="font-size:25px">⚽</span>`}
-            <b>${escV1(h.name)}</b><span>VS</span><b>${escV1(a.name)}</b>
-            ${a.logo?`<img src="${escV1(a.logo)}" style="width:42px;height:42px;object-fit:contain">`:`<span style="font-size:25px">⚽</span>`}
-          </div>
-          <small style="color:var(--muted)">${ensureRoundV1(m)?`Jornada ${escV1(ensureRoundV1(m))} · `:""}${escV1(m.competition||"Liga")}</small>
-          <div class="rsPublicMatchMetaV1"><span>${escV1(m.field||"Campo pendiente")}</span><span>${status}</span></div>
-        </div>
-        <div class="matchResultV23"><strong>${escV1(score)}</strong>${details}</div>
-      </div>`;
-    }).join(""):'<div class="empty">No hay partidos creados.</div>';
-  }
-  window.rsSeasonPublicRenderV1=publicSeasonRenderV1;
-
-  // Details: works for upcoming/live/finished. Finished matches use the existing
-  // event + generated chronicle engine; upcoming matches get a neutral preview.
-  window.rsShowSeasonDetailsV1=function(id){
-    const m=(App.matches||[]).find(x=>String(x.id)===String(id)); if(!m)return;
-    const active=String(m.id)===String(App.activeMatch);
-    const finished=m.status==="FINISHED" || (active&&Live.state==="FINISHED");
-    if(finished && typeof window.v25ShowDetails==="function"){
-      window.v25ShowDetails(id);
-      return;
-    }
-    const h=teamV1(m.home),a=teamV1(m.away);
-    $("completedTitleV20").textContent=`${h.name} vs ${a.name}`;
-    $("completedScoreV20").innerHTML=`
-      ${h.logo?`<img src="${escV1(h.logo)}" alt="">`:""}<span>${escV1(h.name)}</span>
-      <strong>${active&&["FIRST_HALF","SECOND_HALF"].includes(Live.state)?`${Number(Live.homeScore||0)} - ${Number(Live.awayScore||0)}`:"—"}</strong>
-      <span>${escV1(a.name)}</span>${a.logo?`<img src="${escV1(a.logo)}" alt="">`:""}`;
-    $("detailGoalsV20").innerHTML='<div class="detailEmptyV20">Todavía no hay goles registrados.</div>';
-    $("detailCardsV20").innerHTML='<div class="detailEmptyV20">Todavía no hay tarjetas registradas.</div>';
-    $("detailChangesV20").innerHTML='<div class="detailEmptyV20">Todavía no hay cambios registrados.</div>';
-    $("chronicleV20").innerHTML=`<div class="v25-chronicle">Partido programado: <b>${escV1(h.name)}</b> vs <b>${escV1(a.name)}</b>, correspondiente a la <b>jornada ${escV1(ensureRoundV1(m)||"pendiente")}</b>. Fecha: <b>${dateTextV1(m.date)}</b> a las <b>${escV1(m.hour||"hora pendiente")}</b>. La crónica se generará automáticamente cuando se registren las acciones y finalice el partido.</div>`;
-    $("completedDetailsV20").style.display="block";
-    $("completedDetailsV20").scrollIntoView({behavior:"smooth",block:"start"});
-  };
-
-  // Keep existing public detail close behavior.
-  $("closeDetailsV20")?.addEventListener("click",()=>{$("completedDetailsV20").style.display="none";$("matches")?.classList.remove("rsV48DetailsOpen")});
-
-  // Patch existing match list renderer so all public matches use the season view.
-  const oldRenderMatchesGlobal=window.renderMatches;
-  window.renderMatches=function(){
-    try{ publicSeasonRenderV1(); }catch(e){ console.error("RS season public render",e); }
-    try{ renderSeasonManagerV1(); }catch(e){}
-    // Do not call the old renderer: its output would overwrite the new season list.
-  };
-
-  // Patch active match display to retain the new "next match" concept.
-  const oldSetActive=window.setActive;
-  window.rsSetNextV1=rsSetNextV1;
-  window.rsDeleteMatchV1=rsDeleteMatchV1;
-  window.rsEditMatchV1=rsEditMatchV1;
-
-  // Add jornada to the legacy admin edit modal if it is used elsewhere.
-  const oldOpenEdit=window.rsV48OpenEdit;
-  if(oldOpenEdit) window.rsV48OpenEdit=oldOpenEdit;
-
-  // Inject after the admin panel is unlocked and also on normal renders.
-  const oldRenderAll=window.renderAll;
-  window.renderAll=function(){
-    if(typeof oldRenderAll==="function")oldRenderAll.apply(this,arguments);
-    setTimeout(()=>{injectAdminSeasonCardV1();renderSeasonManagerV1();},0);
-  };
-
-  // Add a clear internal "Partidos" entry inside administrator.
-  function injectAdminNavV1(){
-    const panel=$("adminPanel"); if(!panel || $("rsAdminPartidosAnchorV1"))return;
-    const title=panel.querySelector(".sectionTitle");
-    if(!title)return;
-    const nav=document.createElement("div");
-    nav.id="rsAdminPartidosAnchorV1";
-    nav.className="rsSeasonNavV1";
-    nav.innerHTML=`<button class="active" type="button">📅 Partidos</button><button type="button" id="rsGoCreateMatchV1">＋ Crear partido</button>`;
-    title.insertAdjacentElement("afterend",nav);
-    $("rsGoCreateMatchV1").onclick=()=>document.getElementById("createMatchBtn")?.scrollIntoView({behavior:"smooth",block:"center"});
-  }
-
-  // Ensure the public menu has Partidos even if a future version removed it.
-  function ensurePublicMenuV1(){
-    ["sideNavV14","mainNav"].forEach(id=>{
-      const nav=$(id); if(!nav || nav.querySelector('[data-page="matches"]'))return;
-      const b=document.createElement("button");
-      b.dataset.page="matches";
-      b.innerHTML=id==="sideNavV14"?"📅 <span>Partidos</span>":"📅 Partidos";
-      nav.insertBefore(b,nav.lastElementChild);
-      b.onclick=()=>navigateV1("matches",b);
-    });
-  }
-
-  function navigateV1(page,button){
-    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-    const target=$(page); if(target)target.classList.add("active");
-    document.querySelectorAll("#mainNav button").forEach(x=>x.classList.remove("active"));
-    document.querySelectorAll("#sideNavV14 button").forEach(x=>x.classList.remove("active"));
-    document.querySelectorAll(`[data-page="${page}"]`).forEach(x=>x.classList.add("active"));
-    button?.classList.add("active");
-    $("sideMenuV14")?.classList.remove("open"); $("sideOverlayV14")?.classList.remove("open");
-    if(page==="matches")publicSeasonRenderV1();
-    if(page==="admin"){injectAdminNavV1();injectAdminSeasonCardV1();renderSeasonManagerV1();}
-  }
-
-  // Rebind both desktop and side menu, because the original nav only knew its old buttons.
-  function bindMenusV1(){
-    document.querySelectorAll("#mainNav button[data-page],#sideNavV14 button[data-page]").forEach(b=>{
-      b.onclick=()=>navigateV1(b.dataset.page,b);
-    });
-  }
-
-  // Existing create button may still have its old click handler; replace it.
-  const createBtn=$("createMatchBtn");
-  if(createBtn){
-    createBtn.onclick=window.createMatch;
-  }
-
-  function bootV1(){
-    ensurePublicMenuV1();
-    bindMenusV1();
-    injectAdminNavV1();
-    injectAdminSeasonCardV1();
-    renderSeasonManagerV1();
-    publicSeasonRenderV1();
-  }
-  setTimeout(bootV1,80);
-  setTimeout(bootV1,500);
-})();
-</script>
 </body>
 </html>
 
@@ -5908,3 +5123,533 @@ document.addEventListener("click",function(e){
   };
 })();
 </script>
+
+
+<style id="rs-season-matches-v1-css">
+/* ===== RS LIVE V1 — GESTOR DE PARTIDOS DE TEMPORADA ===== */
+.rsSeasonNavV1{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.rsSeasonNavV1 button{border:1px solid var(--line);background:#0b192a;color:#cbd6e4;border-radius:11px;padding:9px 12px;font-size:11px;font-weight:1000}
+.rsSeasonNavV1 button.active{background:var(--yellow);color:#111;border-color:var(--yellow)}
+.rsSeasonCardV1{padding:18px}
+.rsSeasonCardV1 h2{font-size:17px;margin-bottom:7px}
+.rsSeasonSubV1{font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.5}
+.rsSeasonToolsV1{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.rsSeasonStatsV1{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.rsSeasonStatV1{padding:12px;background:#0b192a;border:1px solid var(--line);border-radius:12px;text-align:center}
+.rsSeasonStatV1 b{display:block;font-size:18px;color:var(--yellow)}
+.rsSeasonStatV1 span{font-size:9px;color:var(--muted);font-weight:900}
+.rsBulkV1{display:grid;gap:8px}
+.rsBulkRowV1{display:grid;grid-template-columns:65px 1fr 1fr 135px 105px 1fr 42px;gap:6px;align-items:center;padding:8px;background:#0b192a;border:1px solid var(--line);border-radius:12px}
+.rsBulkRowV1 input,.rsBulkRowV1 select{width:100%;background:#091727;color:#fff;border:1px solid #29405d;border-radius:9px;padding:8px;font-size:10px;min-width:0}
+.rsBulkRowV1 button{width:34px;height:34px;border:0;border-radius:8px;background:#4b1820;color:#fff;font-weight:1000}
+.rsBulkHeadV1{display:grid;grid-template-columns:65px 1fr 1fr 135px 105px 1fr 42px;gap:6px;padding:0 8px 5px;color:#71869c;font-size:8px;font-weight:1000;text-transform:uppercase}
+.rsSeasonListV1{display:grid;gap:8px;margin-top:12px}
+.rsSeasonItemV1{display:grid;grid-template-columns:55px 1fr auto;gap:10px;align-items:center;padding:12px;background:#0b192a;border:1px solid var(--line);border-radius:12px}
+.rsSeasonJornadaV1{font-size:10px;color:var(--yellow);font-weight:1000;text-align:center}
+.rsSeasonMatchV1{font-size:11px;font-weight:1000}
+.rsSeasonMatchV1 small{display:block;color:var(--muted);font-size:9px;margin-top:4px}
+.rsSeasonActionsV1{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.rsSeasonNextV1{border-color:#e4c400!important;box-shadow:0 0 0 1px #e4c40033}
+.rsNextBadgeV1{display:inline-block;margin-left:5px;padding:3px 6px;border-radius:7px;background:var(--yellow);color:#111;font-size:7px;font-weight:1000}
+.rsSeasonModalV1 .modalBox{width:min(1100px,100%)}
+.rsRoundGridV1{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.rsRoundBoxV1{padding:12px;background:#0b192a;border:1px solid var(--line);border-radius:12px}
+.rsRoundBoxV1 h4{font-size:11px;color:var(--yellow);margin-bottom:8px}
+.rsRoundBoxV1 label{display:block;font-size:9px;color:var(--muted);margin:7px 0 4px;font-weight:900}
+.rsRoundBoxV1 input,.rsRoundBoxV1 select{width:100%;background:#091727;color:#fff;border:1px solid #29405d;border-radius:9px;padding:8px;font-size:10px}
+.rsPublicRoundV1{display:inline-flex;margin-left:7px;padding:3px 6px;border-radius:6px;background:#172a3f;color:#9fb0c1;font-size:8px;font-weight:1000}
+.rsPublicMatchMetaV1{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:5px;color:var(--muted);font-size:9px}
+.rsPublicMatchMetaV1 span{padding:3px 6px;border:1px solid var(--line);border-radius:6px}
+.rsPublicDetailV1{margin-top:7px;font-size:9px;color:var(--muted)}
+@media(max-width:850px){
+  .rsSeasonStatsV1{grid-template-columns:repeat(2,1fr)}
+  .rsBulkHeadV1{display:none}
+  .rsBulkRowV1{grid-template-columns:55px 1fr 1fr 1fr 90px 1fr 36px}
+}
+@media(max-width:600px){
+  .rsSeasonCardV1{padding:13px}
+  .rsBulkRowV1{grid-template-columns:1fr 1fr}
+  .rsBulkRowV1>*:first-child{grid-column:1/-1}
+  .rsBulkRowV1>*:last-child{justify-self:end}
+  .rsSeasonItemV1{grid-template-columns:42px 1fr}
+  .rsSeasonActionsV1{grid-column:1/-1;justify-content:stretch}
+  .rsSeasonActionsV1 .btn{flex:1}
+  .rsRoundGridV1{grid-template-columns:1fr}
+}
+</style>
+
+<script id="rs-season-matches-v1-js">
+(function(){
+  "use strict";
+
+  const $ = id => document.getElementById(id);
+  const escV1 = window.esc || (v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])));
+  const teamV1 = id => (App.teams||[]).find(t=>Number(t.id)===Number(id)) || {id:0,name:"Equipo",logo:"",short:"?"};
+
+  function saveV1(){
+    try{
+      const r=window.save?.();
+      return r && typeof r.then==="function" ? r : Promise.resolve(r);
+    }catch(e){return Promise.reject(e)}
+  }
+
+  function dateTextV1(d){
+    if(!d)return "Sin fecha";
+    try{
+      return new Date(d+"T00:00:00").toLocaleDateString("es-ES",{day:"2-digit",month:"2-digit",year:"numeric"});
+    }catch(e){return d}
+  }
+
+  function matchStatusV1(m){
+    const active=String(m.id)===String(App.activeMatch);
+    if(m.status==="FINISHED" || (active && Live.state==="FINISHED")) return "FINALIZADO";
+    if(active && ["FIRST_HALF","SECOND_HALF"].includes(Live.state)) return "DIRECTO";
+    return "PRÓXIMO";
+  }
+
+  function ensureRoundV1(m){
+    if(!m)return "";
+    if(m.jornada!==undefined && m.jornada!==null && String(m.jornada)!=="") return String(m.jornada);
+    return "";
+  }
+
+  // Add Jornada to the existing create-match workflow.
+  const originalCreateMatch = window.createMatch;
+  window.createMatch = function(){
+    const h=Number($("matchHome")?.value), a=Number($("matchAway")?.value);
+    const date=$("matchDateInput")?.value||"";
+    if(!h || !a || h===a){ toast("Local y visitante deben ser diferentes"); return; }
+    if(!date){ toast("Selecciona la fecha"); return; }
+
+    const m={
+      id:Date.now(),
+      home:h, away:a, date,
+      hour:$("matchHourInput")?.value||"",
+      jornada:$("matchRoundInput")?.value ? Number($("matchRoundInput").value) : "",
+      competition:$("matchCompetitionInput")?.value.trim()||"Liga",
+      field:$("matchFieldInput")?.value.trim()||""
+    };
+    App.matches=App.matches||[];
+    App.matches.push(m);
+    App.activeMatch=m.id;
+    Live.state="PREMATCH"; Live.half=1; Live.homeScore=0; Live.awayScore=0;
+    Live.events=[]; Live.pausedSeconds=0; Live.startTimestamp=null; Live.manualMinute=0;
+    saveV1().then(()=>{renderAll();toast("Partido creado y activado como próximo partido");});
+  };
+
+  function openSeasonPanelV1(){
+    const adminPanel=$("adminPanel");
+    if(!adminPanel || adminPanel.style.display==="none"){
+      toast("Entra primero en Administrador");
+      return;
+    }
+    $("rsSeasonManagerV1")?.scrollIntoView({behavior:"smooth",block:"start"});
+  }
+
+  function rowHtmlV1(idx,data={}){
+    const teams=(App.teams||[]).map(t=>`<option value="${t.id}" ${Number(data.home)===Number(t.id)?"selected":""}>${escV1(t.name)}</option>`).join("");
+    const away=(App.teams||[]).map(t=>`<option value="${t.id}" ${Number(data.away)===Number(t.id)?"selected":""}>${escV1(t.name)}</option>`).join("");
+    return `<div class="rsBulkRowV1" data-row="${idx}">
+      <input class="rsJ" type="number" min="1" placeholder="Jornada" value="${escV1(data.jornada??"")}">
+      <select class="rsH">${teams}</select>
+      <select class="rsA">${away}</select>
+      <input class="rsD" type="date" value="${escV1(data.date||"")}">
+      <input class="rsT" type="time" value="${escV1(data.hour||"")}">
+      <input class="rsF" placeholder="Campo" value="${escV1(data.field||"")}">
+      <button type="button" class="rsRemove" title="Eliminar">×</button>
+    </div>`;
+  }
+
+  function addBulkRowV1(data={}){
+    const box=$("rsBulkRowsV1"); if(!box)return;
+    box.insertAdjacentHTML("beforeend",rowHtmlV1(box.children.length,data));
+  }
+
+  function renderSeasonManagerV1(){
+    const box=$("rsSeasonListV1"), stats=$("rsSeasonStatsV1");
+    if(!box || !stats)return;
+    const rows=[...(App.matches||[])].sort((a,b)=>{
+      const ja=Number(a.jornada||9999), jb=Number(b.jornada||9999);
+      return ja-jb || String(a.date||"").localeCompare(String(b.date||"")) || String(a.hour||"").localeCompare(String(b.hour||""));
+    });
+    const finished=rows.filter(m=>m.status==="FINISHED").length;
+    const next=rows.find(m=>String(m.id)===String(App.activeMatch));
+    stats.innerHTML=`
+      <div class="rsSeasonStatV1"><b>${rows.length}</b><span>PARTIDOS</span></div>
+      <div class="rsSeasonStatV1"><b>${finished}</b><span>FINALIZADOS</span></div>
+      <div class="rsSeasonStatV1"><b>${rows.length-finished}</b><span>PENDIENTES</span></div>
+      <div class="rsSeasonStatV1"><b>${next?`J${escV1(ensureRoundV1(next)||"—")}`:"—"}</b><span>PRÓXIMO ACTIVO</span></div>`;
+    box.innerHTML=rows.length?rows.map(m=>{
+      const h=teamV1(m.home),a=teamV1(m.away), active=String(m.id)===String(App.activeMatch);
+      const st=matchStatusV1(m);
+      const score=m.status==="FINISHED"?`${Number(m.homeScore||0)} - ${Number(m.awayScore||0)}`:"—";
+      return `<div class="rsSeasonItemV1 ${active?"rsSeasonNextV1":""}">
+        <div class="rsSeasonJornadaV1">${ensureRoundV1(m)?`J${escV1(ensureRoundV1(m))}`:"—"}</div>
+        <div class="rsSeasonMatchV1">
+          ${h.logo?`<img src="${escV1(h.logo)}" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;margin-right:5px">`:""}${escV1(h.name)} <span style="color:var(--yellow)">vs</span> ${a.logo?`<img src="${escV1(a.logo)}" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;margin:0 5px">`:""}${escV1(a.name)}
+          ${active?'<span class="rsNextBadgeV1">PRÓXIMO / ACTIVO</span>':""}
+          <small>${dateTextV1(m.date)} · ${escV1(m.hour||"")} · ${escV1(m.competition||"Liga")} · ${escV1(m.field||"")} · ${st} · ${score}</small>
+        </div>
+        <div class="rsSeasonActionsV1">
+          ${m.status!=="FINISHED"?`<button class="btn small ${active?"green":"dark"}" type="button" onclick="rsSetNextV1(${m.id})">${active?"✓ Próximo":"⭐ Activar próximo"}</button>`:""}
+          <button class="btn small dark" type="button" onclick="rsEditMatchV1(${m.id})">✏️ Editar</button>
+          <button class="btn small red" type="button" onclick="rsDeleteMatchV1(${m.id})">🗑</button>
+        </div>
+      </div>`;
+    }).join(""):'<div class="empty">Todavía no hay partidos de temporada.</div>';
+  }
+
+  function collectBulkV1(){
+    return [...document.querySelectorAll("#rsBulkRowsV1 .rsBulkRowV1")].map(r=>({
+      jornada:r.querySelector(".rsJ")?.value||"",
+      home:Number(r.querySelector(".rsH")?.value),
+      away:Number(r.querySelector(".rsA")?.value),
+      date:r.querySelector(".rsD")?.value||"",
+      hour:r.querySelector(".rsT")?.value||"",
+      field:r.querySelector(".rsF")?.value.trim()||""
+    }));
+  }
+
+  async function saveBulkV1(){
+    const rows=collectBulkV1();
+    if(!rows.length){toast("Añade al menos un partido");return;}
+    const invalid=rows.findIndex(r=>!r.home||!r.away||r.home===r.away||!r.date);
+    if(invalid>=0){toast(`Revisa el partido ${invalid+1}: equipos y fecha son obligatorios`);return;}
+    const comp=$("rsBulkCompetitionV1")?.value.trim()||"Liga";
+    let added=0;
+    rows.forEach((r,i)=>{
+      App.matches.push({
+        id:Date.now()+i+Math.floor(Math.random()*1000),
+        home:r.home,away:r.away,date:r.date,hour:r.hour,
+        jornada:r.jornada?Number(r.jornada):"",
+        competition:comp,field:r.field,status:"SCHEDULED",
+        homeScore:0,awayScore:0,events:[]
+      });
+      added++;
+    });
+    await saveV1(); renderAll(); renderSeasonManagerV1();
+    toast(`${added} partidos añadidos a la temporada`);
+    $("rsBulkRowsV1").innerHTML="";
+    addBulkRowV1();
+  }
+
+  function rsSetNextV1(id){
+    const m=(App.matches||[]).find(x=>String(x.id)===String(id));
+    if(!m)return;
+    if(m.status==="FINISHED"){toast("Un partido finalizado no puede ser el próximo");return;}
+    App.activeMatch=m.id;
+    Live.state="PREMATCH"; Live.half=1; Live.homeScore=0; Live.awayScore=0;
+    Live.events=Array.isArray(m.events)?JSON.parse(JSON.stringify(m.events)):[];
+    Live.pausedSeconds=0; Live.startTimestamp=null; Live.manualMinute=0;
+    saveV1().then(()=>{renderAll();renderSeasonManagerV1();toast(`Próximo partido: ${teamV1(m.home).name} vs ${teamV1(m.away).name}`);});
+  }
+
+  function rsDeleteMatchV1(id){
+    const m=(App.matches||[]).find(x=>String(x.id)===String(id));
+    if(!m)return;
+    if(!confirm(`¿Eliminar ${teamV1(m.home).name} vs ${teamV1(m.away).name}?`))return;
+    App.matches=App.matches.filter(x=>String(x.id)!==String(id));
+    if(String(App.activeMatch)===String(id)){
+      const candidate=[...App.matches].filter(x=>x.status!=="FINISHED").sort((a,b)=>(String(a.date||"")+String(a.hour||"")).localeCompare(String(b.date||"")+String(b.hour||"")))[0];
+      App.activeMatch=candidate?.id??null;
+      Live.state="PREMATCH";Live.homeScore=0;Live.awayScore=0;Live.events=[];
+    }
+    saveV1().then(()=>{renderAll();renderSeasonManagerV1();toast("Partido eliminado");});
+  }
+
+  function rsEditMatchV1(id){
+    const m=(App.matches||[]).find(x=>String(x.id)===String(id)); if(!m)return;
+    let modal=$("rsEditSeasonModalV1");
+    if(!modal){
+      modal=document.createElement("div");modal.id="rsEditSeasonModalV1";modal.className="modal rsSeasonModalV1";
+      modal.innerHTML=`<div class="modalBox">
+        <div class="modalHead"><h2>✏️ Editar partido</h2><button class="close" type="button" id="rsEditSeasonCloseV1">×</button></div>
+        <div class="form">
+          <label>Jornada</label><input id="rsEditJornadaV1" type="number" min="1">
+          <label>Equipo local</label><select id="rsEditHomeV1"></select>
+          <label>Equipo visitante</label><select id="rsEditAwayV1"></select>
+          <div class="row"><div><label>Fecha</label><input id="rsEditDateV1" type="date"></div><div><label>Hora</label><input id="rsEditHourV1" type="time"></div></div>
+          <label>Competición</label><input id="rsEditCompV1">
+          <label>Campo</label><input id="rsEditFieldV1">
+          <button class="btn green" type="button" id="rsEditSaveV1">💾 Guardar cambios</button>
+        </div></div>`;
+      document.body.appendChild(modal);
+      $("rsEditSeasonCloseV1").onclick=()=>modal.classList.remove("open");
+      $("rsEditSaveV1").onclick=async()=>{
+        const nh=Number($("rsEditHomeV1").value),na=Number($("rsEditAwayV1").value);
+        if(!nh||!na||nh===na){toast("Local y visitante deben ser diferentes");return;}
+        m.jornada=$("rsEditJornadaV1").value?Number($("rsEditJornadaV1").value):"";
+        m.home=nh;m.away=na;m.date=$("rsEditDateV1").value;m.hour=$("rsEditHourV1").value;
+        m.competition=$("rsEditCompV1").value.trim()||"Liga";m.field=$("rsEditFieldV1").value.trim();
+        await saveV1();modal.classList.remove("open");renderAll();renderSeasonManagerV1();toast("Partido actualizado");
+      };
+    }
+    const opts=(App.teams||[]).map(t=>`<option value="${t.id}">${escV1(t.name)}</option>`).join("");
+    $("rsEditHomeV1").innerHTML=opts;$("rsEditAwayV1").innerHTML=opts;
+    $("rsEditJornadaV1").value=ensureRoundV1(m);$("rsEditHomeV1").value=m.home;$("rsEditAwayV1").value=m.away;
+    $("rsEditDateV1").value=m.date||"";$("rsEditHourV1").value=m.hour||"";
+    $("rsEditCompV1").value=m.competition||"Liga";$("rsEditFieldV1").value=m.field||"";
+    modal.classList.add("open");
+  }
+
+  // Optional automatic calendar generator: all teams, single or double round robin.
+  function openGeneratorV1(){
+    let modal=$("rsGeneratorModalV1");
+    if(!modal){
+      modal=document.createElement("div");modal.id="rsGeneratorModalV1";modal.className="modal rsSeasonModalV1";
+      modal.innerHTML=`<div class="modalBox">
+        <div class="modalHead"><h2>⚡ Generar calendario de temporada</h2><button class="close" type="button" id="rsGenCloseV1">×</button></div>
+        <p class="rsSeasonSubV1">Genera automáticamente los cruces entre los equipos registrados. Puedes elegir una vuelta o ida y vuelta. Si ya tienes partidos creados, se añadirán al calendario.</p>
+        <div class="rsRoundGridV1">
+          <div class="rsRoundBoxV1"><label>Formato</label><select id="rsGenFormatV1"><option value="single">Una vuelta</option><option value="double">Ida y vuelta</option></select>
+            <label>Primera jornada</label><input id="rsGenStartRoundV1" type="number" min="1" value="1">
+            <label>Primera fecha</label><input id="rsGenStartDateV1" type="date">
+          </div>
+          <div class="rsRoundBoxV1"><label>Hora por defecto</label><input id="rsGenHourV1" type="time" value="18:00">
+            <label>Competición</label><input id="rsGenCompV1" value="Liga">
+            <label>Campo</label><input id="rsGenFieldV1" placeholder="Municipal">
+          </div>
+        </div>
+        <div class="toolbar" style="margin-top:14px"><button class="btn green" id="rsGenDoV1">⚡ Crear calendario</button></div>
+      </div>`;
+      document.body.appendChild(modal);
+      $("rsGenCloseV1").onclick=()=>modal.classList.remove("open");
+      $("rsGenDoV1").onclick=generateCalendarV1;
+    }
+    if(!$("rsGenStartDateV1").value){
+      const d=new Date(); d.setDate(d.getDate()+7);
+      $("rsGenStartDateV1").value=d.toISOString().slice(0,10);
+    }
+    modal.classList.add("open");
+  }
+
+  function generateCalendarV1(){
+    const teams=(App.teams||[]).filter(t=>t && t.id!=null);
+    if(teams.length<2){toast("Necesitas al menos 2 equipos");return;}
+    const double=$("rsGenFormatV1").value==="double";
+    let list=teams.map(t=>t.id);
+    if(list.length%2)list.push(null);
+    const rounds=[], n=list.length, half=n/2;
+    for(let r=0;r<n-1;r++){
+      const games=[];
+      for(let i=0;i<half;i++){
+        const x=list[i], y=list[n-1-i];
+        if(x!=null&&y!=null) games.push({home:x,away:y});
+      }
+      rounds.push(games);
+      list=[list[0],list[n-1],...list.slice(1,n-1)];
+    }
+    if(double){
+      const second=rounds.map(g=>g.map(x=>({home:x.away,away:x.home})));
+      rounds.push(...second);
+    }
+    const startRound=Number($("rsGenStartRoundV1").value||1);
+    const startDate=$("rsGenStartDateV1").value;
+    const hour=$("rsGenHourV1").value||"18:00";
+    const comp=$("rsGenCompV1").value.trim()||"Liga";
+    const field=$("rsGenFieldV1").value.trim();
+    if(!startDate){toast("Selecciona la primera fecha");return;}
+    const base=new Date(startDate+"T00:00:00");
+    let idBase=Date.now();
+    rounds.forEach((games,r)=>{
+      const d=new Date(base);d.setDate(base.getDate()+r*7);
+      games.forEach((g,i)=>{
+        App.matches.push({
+          id:idBase++,
+          home:g.home,away:g.away,
+          date:d.toISOString().slice(0,10),hour,
+          jornada:startRound+r,competition:comp,field,
+          status:"SCHEDULED",homeScore:0,awayScore:0,events:[]
+        });
+      });
+    });
+    saveV1().then(()=>{ $("rsGeneratorModalV1").classList.remove("open");renderAll();renderSeasonManagerV1();toast(`${App.matches.length?rounds.flat().length:""} cruces generados correctamente`);});
+  }
+
+  function injectAdminSeasonCardV1(){
+    const panel=$("adminPanel"); if(!panel || $("rsSeasonManagerV1"))return;
+    const anchor=$("adminMatches")?.closest(".adminCard");
+    if(!anchor)return;
+    const card=document.createElement("div");
+    card.className="card rsSeasonCardV1";
+    card.id="rsSeasonManagerV1";
+    card.innerHTML=`
+      <div class="sectionTitle" style="margin:0 0 4px"><h2>📅 Partidos de la temporada</h2><p>Calendario completo</p></div>
+      <div class="rsSeasonSubV1">Aquí puedes cargar toda la temporada, indicar la <b>jornada</b>, editar partidos, eliminar partidos y elegir cuál es el <b>próximo partido</b> que aparecerá como activo en la aplicación.</div>
+      <div class="rsSeasonToolsV1">
+        <button class="btn dark" type="button" id="rsAddBulkV1">＋ Añadir partido</button>
+        <button class="btn dark" type="button" id="rsGenCalendarV1">⚡ Generar calendario completo</button>
+        <button class="btn green" type="button" id="rsSaveBulkV1">💾 Guardar todos</button>
+      </div>
+      <div class="rsSeasonStatsV1" id="rsSeasonStatsV1"></div>
+      <div class="rsBulkV1">
+        <div class="rsBulkHeadV1"><span>Jornada</span><span>Local</span><span>Visitante</span><span>Fecha</span><span>Hora</span><span>Campo</span><span></span></div>
+        <div id="rsBulkRowsV1"></div>
+      </div>
+      <label style="display:block;font-size:9px;color:var(--muted);font-weight:900;margin-top:12px">COMPETICIÓN PARA LOS PARTIDOS QUE SE AÑADAN EN BLOQUE</label>
+      <input id="rsBulkCompetitionV1" value="Liga" style="width:100%;margin-top:5px;background:#091727;color:#fff;border:1px solid #29405d;border-radius:9px;padding:9px">
+      <div class="sectionTitle" style="margin:20px 0 8px"><h2 style="font-size:14px">Calendario creado</h2><p>Ordenado por jornada y fecha</p></div>
+      <div id="rsSeasonListV1" class="rsSeasonListV1"></div>`;
+    anchor.parentNode.insertBefore(card,anchor);
+    $("rsAddBulkV1").onclick=()=>addBulkRowV1();
+    $("rsSaveBulkV1").onclick=saveBulkV1;
+    $("rsGenCalendarV1").onclick=openGeneratorV1;
+    $("rsBulkRowsV1").addEventListener("click",e=>{
+      const b=e.target.closest(".rsRemove"); if(!b)return;
+      b.closest(".rsBulkRowV1")?.remove();
+    });
+    addBulkRowV1();
+    renderSeasonManagerV1();
+  }
+
+  // Public list: all season matches, with Jornada, date, time, crests, score/status and details.
+  const originalV40 = window.v40RenderMatches;
+  function publicSeasonRenderV1(){
+    const box=$("matchList"); if(!box)return;
+    const rows=[...(App.matches||[])].sort((a,b)=>{
+      const ja=Number(a.jornada||9999),jb=Number(b.jornada||9999);
+      return ja-jb || (String(a.date||"")+String(a.hour||"")).localeCompare(String(b.date||"")+String(b.hour||""));
+    });
+    box.innerHTML=rows.length?rows.map(m=>{
+      const h=teamV1(m.home),a=teamV1(m.away);
+      const active=String(m.id)===String(App.activeMatch);
+      const fin=m.status==="FINISHED" || (active && Live.state==="FINISHED");
+      const live=active && ["FIRST_HALF","SECOND_HALF"].includes(Live.state);
+      let hs=Number(m.homeScore||0),as=Number(m.awayScore||0);
+      if(fin&&active&&Live.state==="FINISHED"){hs=Number(Live.homeScore||hs);as=Number(Live.awayScore||as)}
+      if(live){hs=Number(Live.homeScore||0);as=Number(Live.awayScore||0)}
+      const status=live?"🔴 DIRECTO":fin?"FINAL":"PRÓXIMO";
+      const score=fin||live?`${hs} - ${as}`:"—";
+      const details=`<button class="btn small dark" type="button" onclick="rsShowSeasonDetailsV1(${m.id})">👁 Detalles</button>`;
+      return `<div class="matchRow matchRowV23">
+        <div class="matchDate">${dateTextV1(m.date)}<br>${escV1(m.hour||"")}</div>
+        <div class="matchTeams" style="text-align:center">
+          <div style="display:flex;justify-content:center;align-items:center;gap:9px">
+            ${h.logo?`<img src="${escV1(h.logo)}" style="width:42px;height:42px;object-fit:contain">`:`<span style="font-size:25px">⚽</span>`}
+            <b>${escV1(h.name)}</b><span>VS</span><b>${escV1(a.name)}</b>
+            ${a.logo?`<img src="${escV1(a.logo)}" style="width:42px;height:42px;object-fit:contain">`:`<span style="font-size:25px">⚽</span>`}
+          </div>
+          <small style="color:var(--muted)">${ensureRoundV1(m)?`Jornada ${escV1(ensureRoundV1(m))} · `:""}${escV1(m.competition||"Liga")}</small>
+          <div class="rsPublicMatchMetaV1"><span>${escV1(m.field||"Campo pendiente")}</span><span>${status}</span></div>
+        </div>
+        <div class="matchResultV23"><strong>${escV1(score)}</strong>${details}</div>
+      </div>`;
+    }).join(""):'<div class="empty">No hay partidos creados.</div>';
+  }
+  window.rsSeasonPublicRenderV1=publicSeasonRenderV1;
+
+  // Details: works for upcoming/live/finished. Finished matches use the existing
+  // event + generated chronicle engine; upcoming matches get a neutral preview.
+  window.rsShowSeasonDetailsV1=function(id){
+    const m=(App.matches||[]).find(x=>String(x.id)===String(id)); if(!m)return;
+    const active=String(m.id)===String(App.activeMatch);
+    const finished=m.status==="FINISHED" || (active&&Live.state==="FINISHED");
+    if(finished && typeof window.v25ShowDetails==="function"){
+      window.v25ShowDetails(id);
+      return;
+    }
+    const h=teamV1(m.home),a=teamV1(m.away);
+    $("completedTitleV20").textContent=`${h.name} vs ${a.name}`;
+    $("completedScoreV20").innerHTML=`
+      ${h.logo?`<img src="${escV1(h.logo)}" alt="">`:""}<span>${escV1(h.name)}</span>
+      <strong>${active&&["FIRST_HALF","SECOND_HALF"].includes(Live.state)?`${Number(Live.homeScore||0)} - ${Number(Live.awayScore||0)}`:"—"}</strong>
+      <span>${escV1(a.name)}</span>${a.logo?`<img src="${escV1(a.logo)}" alt="">`:""}`;
+    $("detailGoalsV20").innerHTML='<div class="detailEmptyV20">Todavía no hay goles registrados.</div>';
+    $("detailCardsV20").innerHTML='<div class="detailEmptyV20">Todavía no hay tarjetas registradas.</div>';
+    $("detailChangesV20").innerHTML='<div class="detailEmptyV20">Todavía no hay cambios registrados.</div>';
+    $("chronicleV20").innerHTML=`<div class="v25-chronicle">Partido programado: <b>${escV1(h.name)}</b> vs <b>${escV1(a.name)}</b>, correspondiente a la <b>jornada ${escV1(ensureRoundV1(m)||"pendiente")}</b>. Fecha: <b>${dateTextV1(m.date)}</b> a las <b>${escV1(m.hour||"hora pendiente")}</b>. La crónica se generará automáticamente cuando se registren las acciones y finalice el partido.</div>`;
+    $("completedDetailsV20").style.display="block";
+    $("completedDetailsV20").scrollIntoView({behavior:"smooth",block:"start"});
+  };
+
+  // Keep existing public detail close behavior.
+  $("closeDetailsV20")?.addEventListener("click",()=>{$("completedDetailsV20").style.display="none";$("matches")?.classList.remove("rsV48DetailsOpen")});
+
+  // Patch existing match list renderer so all public matches use the season view.
+  const oldRenderMatchesGlobal=window.renderMatches;
+  window.renderMatches=function(){
+    try{ publicSeasonRenderV1(); }catch(e){ console.error("RS season public render",e); }
+    try{ renderSeasonManagerV1(); }catch(e){}
+    // Do not call the old renderer: its output would overwrite the new season list.
+  };
+
+  // Patch active match display to retain the new "next match" concept.
+  const oldSetActive=window.setActive;
+  window.rsSetNextV1=rsSetNextV1;
+  window.rsDeleteMatchV1=rsDeleteMatchV1;
+  window.rsEditMatchV1=rsEditMatchV1;
+
+  // Add jornada to the legacy admin edit modal if it is used elsewhere.
+  const oldOpenEdit=window.rsV48OpenEdit;
+  if(oldOpenEdit) window.rsV48OpenEdit=oldOpenEdit;
+
+  // Inject after the admin panel is unlocked and also on normal renders.
+  const oldRenderAll=window.renderAll;
+  window.renderAll=function(){
+    if(typeof oldRenderAll==="function")oldRenderAll.apply(this,arguments);
+    setTimeout(()=>{injectAdminSeasonCardV1();renderSeasonManagerV1();},0);
+  };
+
+  // Add a clear internal "Partidos" entry inside administrator.
+  function injectAdminNavV1(){
+    const panel=$("adminPanel"); if(!panel || $("rsAdminPartidosAnchorV1"))return;
+    const title=panel.querySelector(".sectionTitle");
+    if(!title)return;
+    const nav=document.createElement("div");
+    nav.id="rsAdminPartidosAnchorV1";
+    nav.className="rsSeasonNavV1";
+    nav.innerHTML=`<button class="active" type="button">📅 Partidos</button><button type="button" id="rsGoCreateMatchV1">＋ Crear partido</button>`;
+    title.insertAdjacentElement("afterend",nav);
+    $("rsGoCreateMatchV1").onclick=()=>document.getElementById("createMatchBtn")?.scrollIntoView({behavior:"smooth",block:"center"});
+  }
+
+  // Ensure the public menu has Partidos even if a future version removed it.
+  function ensurePublicMenuV1(){
+    ["sideNavV14","mainNav"].forEach(id=>{
+      const nav=$(id); if(!nav || nav.querySelector('[data-page="matches"]'))return;
+      const b=document.createElement("button");
+      b.dataset.page="matches";
+      b.innerHTML=id==="sideNavV14"?"📅 <span>Partidos</span>":"📅 Partidos";
+      nav.insertBefore(b,nav.lastElementChild);
+      b.onclick=()=>navigateV1("matches",b);
+    });
+  }
+
+  function navigateV1(page,button){
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    const target=$(page); if(target)target.classList.add("active");
+    document.querySelectorAll("#mainNav button").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll("#sideNavV14 button").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll(`[data-page="${page}"]`).forEach(x=>x.classList.add("active"));
+    button?.classList.add("active");
+    $("sideMenuV14")?.classList.remove("open"); $("sideOverlayV14")?.classList.remove("open");
+    if(page==="matches")publicSeasonRenderV1();
+    if(page==="admin"){injectAdminNavV1();injectAdminSeasonCardV1();renderSeasonManagerV1();}
+  }
+
+  // Rebind both desktop and side menu, because the original nav only knew its old buttons.
+  function bindMenusV1(){
+    document.querySelectorAll("#mainNav button[data-page],#sideNavV14 button[data-page]").forEach(b=>{
+      b.onclick=()=>navigateV1(b.dataset.page,b);
+    });
+  }
+
+  // Existing create button may still have its old click handler; replace it.
+  const createBtn=$("createMatchBtn");
+  if(createBtn){
+    createBtn.onclick=window.createMatch;
+  }
+
+  function bootV1(){
+    ensurePublicMenuV1();
+    bindMenusV1();
+    injectAdminNavV1();
+    injectAdminSeasonCardV1();
+    renderSeasonManagerV1();
+    publicSeasonRenderV1();
+  }
+  setTimeout(bootV1,80);
+  setTimeout(bootV1,500);
+})();
+</script>
+
