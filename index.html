@@ -1547,6 +1547,32 @@ button{cursor:pointer}
 .rsShareTools .btn{flex:1;min-width:190px}
 @media(max-width:560px){.rsShareActions,.rsShareTools{display:grid;grid-template-columns:1fr}.rsShareActions .btn,.rsShareTools .btn{width:100%}}
 </style>
+
+<script>
+window.loadRSOCR = async function(){
+  if(window.Tesseract) return window.Tesseract;
+  if(window.__rsOCRPromise) return window.__rsOCRPromise;
+  window.__rsOCRPromise = new Promise((resolve,reject)=>{
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    s.onload=()=>resolve(window.Tesseract);
+    s.onerror=()=>reject(new Error('No se pudo cargar el motor OCR'));
+    document.head.appendChild(s);
+  });
+  return window.__rsOCRPromise;
+};
+</script>
+
+
+<style>
+.rsV3TableWrap{overflow:auto;border:1px solid var(--line);border-radius:14px}
+.rsV3TableWrap table{width:100%;border-collapse:collapse;min-width:760px}
+.rsV3TableWrap th{font-size:10px;color:var(--yellow);padding:9px;text-align:left;background:#122238}
+.rsV3TableWrap td{padding:5px;border-top:1px solid var(--line)}
+.rsV3TableWrap input{width:100%;min-width:42px;background:#081522;color:#fff;border:1px solid #29405f;border-radius:7px;padding:7px;font-size:12px}
+.rsV3TableWrap td:nth-child(2) input{min-width:180px}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -5650,6 +5676,313 @@ document.addEventListener("click",function(e){
   }
   setTimeout(bootV1,80);
   setTimeout(bootV1,500);
+})();
+</script>
+
+
+
+<style id="rs-season-v2-css">
+.rsV2HomeFeatured{border:2px solid var(--yellow)!important;box-shadow:0 0 0 1px #e4c40033,0 8px 28px #0005}
+.rsV2FeaturedBadge{display:inline-block;background:var(--yellow);color:#111;border-radius:7px;padding:4px 7px;font-size:8px;font-weight:1000;margin-bottom:5px}
+.rsV2ClassificationCard{padding:18px}
+.rsV2ClassificationPreview{margin-top:12px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#081321;min-height:180px;display:flex;align-items:center;justify-content:center}
+.rsV2ClassificationPreview img{width:100%;height:auto;display:block}
+.rsV2UploadRow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.rsV2FormatHint{font-size:9px;color:var(--muted);line-height:1.5;margin-top:7px}
+</style>
+<script id="rs-season-v2-js">
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const esc=window.esc||(v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])));
+const team=id=>(App.teams||[]).find(x=>Number(x.id)===Number(id))||{name:"Equipo",logo:""};
+
+function refreshTeamSelects(){
+  const opts=(App.teams||[]).map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join("");
+  document.querySelectorAll("#rsBulkRowsV1 .rsH,#rsBulkRowsV1 .rsA,#rsEditHomeV1,#rsEditAwayV1").forEach(s=>{
+    const v=s.value;s.innerHTML=opts;if([...s.options].some(o=>o.value===String(v)))s.value=v;
+  });
+}
+window.rsSeasonRowV2=function(i,d={}){
+  const teams=App.teams||[],opts=teams.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join("");
+  return `<div class="rsBulkRowV1" data-row="${i}">
+    <input class="rsJ" type="number" min="1" placeholder="Jornada" value="${esc(d.jornada??"")}">
+    <select class="rsH">${opts}</select><select class="rsA">${opts}</select>
+    <input class="rsD" type="date" value="${esc(d.date||"")}"><input class="rsT" type="time" value="${esc(d.hour||"")}">
+    <input class="rsF" placeholder="Campo" value="${esc(d.field||"")}"><button type="button" class="rsRemove">×</button></div>`;
+};
+window.addBulkRowV1=function(d={}){
+  const b=$("rsBulkRowsV1");if(!b)return;
+  b.insertAdjacentHTML("beforeend",rsSeasonRowV2(b.children.length,d));
+  refreshTeamSelects();
+};
+
+function thursdayAfter(d){
+  const x=new Date((d||new Date().toISOString().slice(0,10))+"T00:00:00"),day=x.getDay();
+  let add=(4-day+7)%7;if(add===0)add=7;x.setDate(x.getDate()+add);return x;
+}
+function featured(){
+  const ms=[...(App.matches||[])].sort((a,b)=>(String(a.date||"")+String(a.hour||"")).localeCompare(String(b.date||"")+String(b.hour||"")));
+  if(!ms.length)return null;
+  const now=new Date(),active=ms.find(m=>String(m.id)===String(App.activeMatch));
+  if(active&&active.status==="FINISHED"&&now<thursdayAfter(active.date))return active;
+  return ms.find(m=>m.status!=="FINISHED"&&m.date&&(new Date(m.date+"T00:00:00")>=new Date(now.toISOString().slice(0,10)+"T00:00:00")))||active||ms.find(m=>m.status!=="FINISHED")||ms[ms.length-1];
+}
+function renderHome5(){
+  const box=$("homeMatchesV26");if(!box)return;
+  const ms=[...(App.matches||[])].sort((a,b)=>(String(a.date||"")+String(a.hour||"")).localeCompare(String(b.date||"")+String(b.hour||""))).slice(0,5);
+  const f=featured();
+  box.innerHTML=ms.length?ms.map(m=>{
+    const h=team(m.home),a=team(m.away),sel=f&&String(m.id)===String(f.id);
+    const fin=m.status==="FINISHED",live=String(m.id)===String(App.activeMatch)&&["FIRST_HALF","SECOND_HALF"].includes(Live.state);
+    const sc=fin?`${m.homeScore??0} - ${m.awayScore??0}`:live?`${Live.homeScore??0} - ${Live.awayScore??0}`:"—";
+    return `<div class="v26MiniRow ${sel?"rsV2HomeFeatured":""}">
+      <div>${sel?'<span class="rsV2FeaturedBadge">⭐ PARTIDO DESTACADO</span>':""}<small>${m.date?new Date(m.date+"T00:00:00").toLocaleDateString("es-ES",{day:"2-digit",month:"2-digit"}):""}<br>${esc(m.hour||"")}</small></div>
+      <div><b>${esc(h.name)} vs ${esc(a.name)}</b><div class="v26StatLine">${live?"🔴 DIRECTO":fin?"FINALIZADO":`Jornada ${esc(m.jornada||"—")}`}</div></div>
+      <div class="v26Score">${sc}</div></div>`;
+  }).join(""):'<div class="empty">No hay partidos.</div>';
+}
+
+
+function rsV3Esc(v){return esc(String(v==null?"":v));}
+
+function rsV3LoadImage(file){
+  return new Promise((resolve,reject)=>{
+    const fr=new FileReader();
+    fr.onload=()=>{
+      const im=new Image();
+      im.onload=()=>resolve(im);
+      im.onerror=()=>reject(new Error("No se pudo leer la imagen"));
+      im.src=fr.result;
+    };
+    fr.onerror=()=>reject(new Error("No se pudo abrir la imagen"));
+    fr.readAsDataURL(file);
+  });
+}
+
+async function imageFit(file){
+  const im=await rsV3LoadImage(file);
+  const c=document.createElement("canvas"), ctx=c.getContext("2d");
+  c.width=1600;c.height=700;
+  ctx.fillStyle="#07111f";ctx.fillRect(0,0,c.width,c.height);
+  const scale=Math.min(c.width/im.naturalWidth,c.height/im.naturalHeight);
+  const w=im.naturalWidth*scale,h=im.naturalHeight*scale;
+  ctx.drawImage(im,(c.width-w)/2,(c.height-h)/2,w,h);
+  return c.toDataURL("image/jpeg",.9);
+}
+
+function rsV3ParseClassification(text){
+  const lines=String(text||"").split(/\r?\n/).map(x=>x.replace(/\s+/g," ").trim()).filter(Boolean);
+  const rows=[];
+  const skip=/^(clasificaci|equip|equipo|pj|pg|pe|pp|gf|gc|dg|pts|puntos|posición|posicion|jornada|grupo|temporada)/i;
+  for(const line of lines){
+    if(skip.test(line)) continue;
+    // OCR normally preserves the leading position number.
+    const m=line.match(/^(\d{1,2})\s+(.+)$/);
+    if(!m) continue;
+    const pos=Number(m[1]);
+    if(pos<1 || pos>30) continue;
+    let rest=m[2].trim();
+    // Extract numeric statistics from the end of the row.
+    const nums=rest.match(/(?:\d+[\s,]*){2,8}$/);
+    if(!nums) continue;
+    const values=(nums[0].match(/\d+/g)||[]).map(Number);
+    const team=rest.slice(0,rest.length-nums[0].length).trim().replace(/\s{2,}/g," ");
+    if(!team || values.length<3) continue;
+    rows.push({
+      pos,
+      team,
+      pj: values.length>=1?values[0]:"",
+      pg: values.length>=2?values[1]:"",
+      pe: values.length>=3?values[2]:"",
+      pp: values.length>=4?values[3]:"",
+      gf: values.length>=5?values[4]:"",
+      gc: values.length>=6?values[5]:"",
+      dg: values.length>=7?values[6]:"",
+      pts: values.length>=8?values[7]:(values.length>=4?values[values.length-1]:"")
+    });
+  }
+  // If OCR missed the position, keep unique team-like lines as fallback.
+  if(rows.length<2){
+    for(const line of lines){
+      const m=line.match(/^(.+?)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s*$/);
+      if(!m) continue;
+      rows.push({pos:rows.length+1,team:m[1],pj:+m[2],pg:+m[3],pe:+m[4],pp:"",gf:"",gc:"",dg:"",pts:+m[5]});
+    }
+  }
+  return rows.sort((a,b)=>a.pos-b.pos).slice(0,30);
+}
+
+function rsV3ClassificationRows(rows){
+  return rows.map((r,i)=>`
+    <tr>
+      <td><input class="rsClsPos" value="${rsV3Esc(r.pos||i+1)}" inputmode="numeric"></td>
+      <td><input class="rsClsTeam" value="${rsV3Esc(r.team)}"></td>
+      <td><input class="rsClsNum" value="${rsV3Esc(r.pj)}" inputmode="numeric"></td>
+      <td><input class="rsClsNum" value="${rsV3Esc(r.pg)}" inputmode="numeric"></td>
+      <td><input class="rsClsNum" value="${rsV3Esc(r.pe)}" inputmode="numeric"></td>
+      <td><input class="rsClsNum" value="${rsV3Esc(r.pp)}" inputmode="numeric"></td>
+      <td><input class="rsClsNum" value="${rsV3Esc(r.gf)}" inputmode="numeric"></td>
+      <td><input class="rsClsNum" value="${rsV3Esc(r.gc)}" inputmode="numeric"></td>
+      <td><input class="rsClsNum" value="${rsV3Esc(r.dg)}" inputmode="numeric"></td>
+      <td><input class="rsClsNum" value="${rsV3Esc(r.pts)}" inputmode="numeric"></td>
+    </tr>`).join("");
+}
+
+function rsV3GetRows(){
+  const body=$("rsClassificationBodyV3");
+  if(!body)return [];
+  return [...body.querySelectorAll("tr")].map(tr=>{
+    const v=[...tr.querySelectorAll("input")].map(x=>x.value.trim());
+    return {pos:v[0],team:v[1],pj:v[2],pg:v[3],pe:v[4],pp:v[5],gf:v[6],gc:v[7],dg:v[8],pts:v[9]};
+  }).filter(r=>r.team);
+}
+
+function rsV3RenderTable(rows){
+  const host=$("rsClassificationTableV3");
+  if(!host)return;
+  host.innerHTML=`
+    <div class="rsV3TableWrap">
+      <table>
+        <thead><tr><th>#</th><th>EQUIPO</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th><th>GF</th><th>GC</th><th>DG</th><th>PTS</th></tr></thead>
+        <tbody id="rsClassificationBodyV3">${rsV3ClassificationRows(rows)}</tbody>
+      </table>
+    </div>`;
+}
+
+async function rsV3BuildClassification(rows){
+  const c=document.createElement("canvas"),ctx=c.getContext("2d");
+  c.width=1600;c.height=700;
+  ctx.fillStyle="#07111f";ctx.fillRect(0,0,1600,700);
+
+  // Header
+  ctx.fillStyle="#ffd400";ctx.fillRect(0,0,1600,10);
+  ctx.fillStyle="#f7f9fc";ctx.font="900 42px Arial";
+  ctx.fillText("CLASIFICACIÓN",70,72);
+  ctx.fillStyle="#91a2b8";ctx.font="700 18px Arial";
+  ctx.fillText("RAMÓN SICART TV",70,103);
+
+  const x=[55,145,720,850,960,1070,1180,1290,1400,1510];
+  const heads=["#","EQUIPO","PJ","PG","PE","PP","GF","GC","DG","PTS"];
+  ctx.fillStyle="#122238";ctx.roundRect(45,130,1510,54,12);ctx.fill();
+  ctx.font="900 16px Arial";ctx.fillStyle="#ffd400";
+  heads.forEach((h,i)=>ctx.fillText(h,x[i],164));
+
+  const rh=48;
+  rows.slice(0,10).forEach((r,i)=>{
+    const y=195+i*rh;
+    ctx.fillStyle=i===0?"rgba(255,212,0,.13)":"rgba(18,34,56,.72)";
+    ctx.roundRect(45,y-28,1510,42,10);ctx.fill();
+    ctx.fillStyle="#f7f9fc";ctx.font="800 17px Arial";
+    const vals=[r.pos||i+1,r.team,r.pj,r.pg,r.pe,r.pp,r.gf,r.gc,r.dg,r.pts];
+    vals.forEach((v,j)=>{
+      let s=String(v??"");
+      if(j===1 && s.length>34)s=s.slice(0,33)+"…";
+      ctx.fillText(s,x[j],y);
+    });
+  });
+
+  if(rows.length===0){
+    ctx.fillStyle="#91a2b8";ctx.font="700 24px Arial";
+    ctx.fillText("Sube una imagen de clasificación para generar la tabla.",70,250);
+  }
+  return c.toDataURL("image/jpeg",.94);
+}
+
+async function classificationAdmin(){
+  const host=$("admin");
+  if(!host)return;
+  if($("rsClassificationCardV3"))return;
+
+  const card=document.createElement("div");
+  card.id="rsClassificationCardV3";
+  card.className="card";
+  card.style.cssText="margin-top:18px;padding:18px";
+  card.innerHTML=`
+    <div style="font-size:18px;font-weight:950;margin-bottom:6px">🏆 Clasificación · OCR</div>
+    <div style="color:var(--muted);font-size:12px;line-height:1.5;margin-bottom:12px">
+      Sube la captura de la clasificación de la FCF. El sistema leerá los equipos y estadísticas,
+      los convertirá al nuevo formato 1600×700 y te dejará corregir cualquier dato que el OCR haya interpretado mal.
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <input id="rsClassificationFileV3" type="file" accept="image/*" style="max-width:100%">
+      <button id="rsClassificationOCRV3" class="btn">🔎 Leer imagen</button>
+      <button id="rsClassificationSaveV3" class="btn primary">💾 Generar y guardar</button>
+      <button id="rsClassificationDeleteV3" class="btn danger">🗑️ Borrar</button>
+    </div>
+    <div id="rsClassificationStatusV3" style="margin-top:10px;color:var(--muted);font-size:12px"></div>
+    <div id="rsClassificationTableV3" style="margin-top:12px"></div>
+    <div id="rsClassificationPreviewV3" style="margin-top:14px"></div>`;
+  host.appendChild(card);
+
+  $("rsClassificationOCRV3").onclick=async()=>{
+    const f=$("rsClassificationFileV3").files[0];
+    if(!f){toast("Selecciona la imagen de clasificación");return}
+    try{
+      $("rsClassificationStatusV3").textContent="Leyendo clasificación… puede tardar unos segundos.";
+      const T=await loadRSOCR();
+      const result=await T.recognize(f,"spa",{logger:m=>{
+        if(m.status==="recognizing text" && m.progress!=null)
+          $("rsClassificationStatusV3").textContent="OCR: "+Math.round(m.progress*100)+"%";
+      }});
+      const rows=rsV3ParseClassification(result.data.text);
+      rsV3RenderTable(rows);
+      $("rsClassificationStatusV3").textContent=rows.length
+        ? `Se han detectado ${rows.length} equipos. Revisa los datos y pulsa «Generar y guardar».`
+        : "No se han detectado filas automáticamente. Prueba con una captura más nítida.";
+      window.__rsV3Rows=rows;
+    }catch(e){
+      console.error(e);
+      $("rsClassificationStatusV3").textContent="Error al leer la imagen: "+e.message;
+      toast("No se pudo ejecutar el OCR");
+    }
+  };
+
+  $("rsClassificationSaveV3").onclick=async()=>{
+    const rows=rsV3GetRows();
+    if(!rows.length){toast("Primero lee la imagen o añade filas");return}
+    $("rsClassificationStatusV3").textContent="Generando nuevo formato…";
+    App.manualClassificationImage=await rsV3BuildClassification(rows);
+    App.manualClassificationRows=rows;
+    await (window.save?.()||Promise.resolve());
+    renderClassification();
+    $("rsClassificationPreviewV3").innerHTML=`<img style="width:100%;max-width:900px;border-radius:14px;border:1px solid var(--line)" src="${esc(App.manualClassificationImage)}">`;
+    $("rsClassificationStatusV3").textContent="Clasificación generada y guardada.";
+    toast("Clasificación actualizada");
+  };
+
+  $("rsClassificationDeleteV3").onclick=async()=>{
+    delete App.manualClassificationImage;
+    delete App.manualClassificationRows;
+    await (window.save?.()||Promise.resolve());
+    renderClassification();
+    $("rsClassificationPreviewV3").innerHTML="";
+    $("rsClassificationStatusV3").textContent="";
+    toast("Clasificación eliminada");
+  };
+
+  if(Array.isArray(App.manualClassificationRows) && App.manualClassificationRows.length){
+    rsV3RenderTable(App.manualClassificationRows);
+    $("rsClassificationPreviewV3").innerHTML=`<img style="width:100%;max-width:900px;border-radius:14px;border:1px solid var(--line)" src="${esc(App.manualClassificationImage||"")}">`;
+  }
+}
+
+function renderClassification(){
+  const ids=["homeTableV26","classification","table"];
+  ids.forEach(id=>{
+    const e=$(id);
+    if(!e)return;
+    if(App.manualClassificationImage){
+      e.innerHTML=`<div class="rsV2ClassificationPreview"><img src="${esc(App.manualClassificationImage)}" style="width:100%;height:auto;display:block"></div>`;
+    }else if(Array.isArray(App.manualClassificationRows) && App.manualClassificationRows.length){
+      e.innerHTML=`<div class="rsV2ClassificationPreview"><img src="${esc(rsV3BuildClassification(App.manualClassificationRows))}" style="width:100%;height:auto;display:block"></div>`;
+    }
+  });
+}
+
+window.renderAll=function(){if(typeof oldAll==="function")oldAll.apply(this,arguments);setTimeout(()=>{refreshTeamSelects();renderHome5();classificationAdmin();renderClassification()},30)};
+setInterval(()=>{renderHome5();classificationAdmin();renderClassification()},1500);
+setTimeout(()=>{refreshTeamSelects();renderHome5();classificationAdmin();renderClassification()},300);
 })();
 </script>
 
