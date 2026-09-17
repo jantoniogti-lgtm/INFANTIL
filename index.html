@@ -1569,7 +1569,23 @@ button{cursor:pointer}
 @media(min-width:900px){
   #rsBottomNavV7{left:50%;right:auto;transform:translateX(-50%);width:520px}
 }
-body{padding-bottom:82px}
+body{padding-bottom:0}
+</style>
+
+
+<style id="rs-squad-fix-v8-css">
+/* La plantilla pública SOLO existe dentro de su ventana */
+body > #rsSquadWindowV6,
+#app > #rsSquadWindowV6,
+.page > #rsSquadWindowV6,
+.rsSquadPublicV6,
+.rsSquadGridV6,
+#squad.page,
+.page[data-page="squad"]{
+  display:none !important;
+}
+/* La barra inferior no se muestra dentro de páginas normales como contenido */
+#rsBottomNavV7{display:flex !important;}
 </style>
 
 </head>
@@ -5202,36 +5218,72 @@ body.rsMatchesWindowOpenV4 .app{
 </div>
 
 
-<script id="rs-bottom-squad-v7-js">
+
+<script id="rs-bottom-squad-v8-js">
 (function(){
-  function openBottom(page){
-    try{
-      if(page === 'squad' && typeof window.rsOpenSquadWindowV6 === 'function'){
-        window.rsOpenSquadWindowV6();
-      }else if(page === 'matches' && typeof window.rsOpenMatchesWindowV5 === 'function'){
-        window.rsOpenMatchesWindowV5();
-      }else if(typeof window.navigateV1 === 'function'){
-        window.navigateV1(page);
-      }else{
-        var el=document.getElementById(page);
-        if(el){
-          document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
-          el.classList.add('active');
-        }
-      }
-    }catch(e){ console.warn('RS bottom nav:',e); }
-    document.querySelectorAll('#rsBottomNavV7 button').forEach(function(b){
-      b.classList.toggle('active', b.getAttribute('data-rs-bottom')===page);
+  function closeOtherWindows(){
+    ['rsMatchesWindowV5','rsSquadWindowV6'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el) el.style.display='none';
     });
   }
+  function setActive(page){
+    document.querySelectorAll('#rsBottomNavV7 button').forEach(function(b){
+      b.classList.toggle('active', b.dataset.rsBottom===page);
+    });
+  }
+  function openPage(page){
+    closeOtherWindows();
+    setActive(page);
+    try{
+      if(page==='squad'){
+        if(typeof window.rsOpenSquadWindowV6==='function'){
+          window.rsOpenSquadWindowV6();
+          return;
+        }
+        var sw=document.getElementById('rsSquadWindowV6');
+        if(sw){ sw.style.display='flex'; return; }
+      }
+      if(page==='matches'){
+        if(typeof window.rsOpenMatchesWindowV5==='function'){
+          window.rsOpenMatchesWindowV5();
+          return;
+        }
+        if(typeof window.openMatchesV5==='function'){
+          window.openMatchesV5();
+          return;
+        }
+      }
+      if(typeof window.navigateV1==='function'){
+        window.navigateV1(page);
+        return;
+      }
+      var target=document.getElementById(page);
+      if(target){
+        document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+        target.classList.add('active');
+      }
+    }catch(err){ console.warn('RS bottom navigation',err); }
+  }
   document.addEventListener('click',function(e){
-    var b=e.target.closest && e.target.closest('#rsBottomNavV7 button[data-rs-bottom]');
+    var b=e.target.closest && e.target.closest('#rsBottomNavV7 [data-rs-bottom]');
     if(!b)return;
     e.preventDefault();
-    openBottom(b.getAttribute('data-rs-bottom'));
-  });
-  window.rsOpenSquadBottomV7=function(){openBottom('squad')};
+    e.stopPropagation();
+    openPage(b.dataset.rsBottom);
+  },true);
+
+  window.rsOpenSquadBottomV8=function(){openPage('squad')};
 })();
+</script>
+
+
+
+<script id="rs-squad-init-v8-js">
+document.addEventListener('DOMContentLoaded',function(){
+  var w=document.getElementById('rsSquadWindowV6');
+  if(w){ w.style.display='none'; }
+});
 </script>
 
 </body>
