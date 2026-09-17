@@ -1548,44 +1548,32 @@ button{cursor:pointer}
 @media(max-width:560px){.rsShareActions,.rsShareTools{display:grid;grid-template-columns:1fr}.rsShareActions .btn,.rsShareTools .btn{width:100%}}
 </style>
 
-<style id="rs-bottom-squad-v7-css">
-#rsBottomNavV7{
-  position:fixed; left:10px; right:10px; bottom:10px; z-index:99980;
-  display:flex; gap:8px; padding:8px;
-  background:rgba(7,17,31,.94); border:1px solid rgba(255,212,0,.28);
-  border-radius:18px; box-shadow:0 12px 35px rgba(0,0,0,.45);
-  backdrop-filter:blur(12px);
+<style id="rs-squad-v11-fix">
+html,body{min-height:100%;overflow-x:hidden!important;overflow-y:auto!important}
+#rsSquadWindowV6{
+  position:fixed!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100dvh!important;
+  z-index:99990!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  -webkit-overflow-scrolling:touch!important;
+  overscroll-behavior:contain!important;
+  display:none!important;
 }
-#rsBottomNavV7 button{
-  flex:1; min-height:48px; border:0; border-radius:13px;
-  background:#0d1a2b; color:#fff; font-weight:800; font-size:12px;
-  cursor:pointer; border:1px solid rgba(255,255,255,.07);
+#rsSquadWindowV6.open{
+  display:block!important;
 }
-#rsBottomNavV7 button.active{
-  background:linear-gradient(135deg,#ffd400,#e21d2f);
-  color:#07111f; border-color:transparent;
+#rsSquadWindowV6 .rsSquadBodyV6{
+  min-height:calc(100dvh - 68px);
 }
-#rsBottomNavV7 .ico{display:block;font-size:18px;line-height:18px;margin-bottom:2px}
-@media(min-width:900px){
-  #rsBottomNavV7{left:50%;right:auto;transform:translateX(-50%);width:520px}
+#rsSquadWindowV6 .rsSquadGridV6{
+  min-height:100px;
 }
-body{padding-bottom:0}
-</style>
-
-
-<style id="rs-squad-fix-v8-css">
-/* La plantilla pública SOLO existe dentro de su ventana */
-body > #rsSquadWindowV6,
-#app > #rsSquadWindowV6,
-.page > #rsSquadWindowV6,
-.rsSquadPublicV6,
-.rsSquadGridV6,
-#squad.page,
-.page[data-page="squad"]{
-  display:none !important;
+#rsSquadWindowV6.open ~ #rsBottomNavV11{
+  display:none!important;
 }
-/* La barra inferior no se muestra dentro de páginas normales como contenido */
-#rsBottomNavV7{display:flex !important;}
 </style>
 
 </head>
@@ -5055,7 +5043,7 @@ body.rsMatchesWindowOpenV4 .app{
     <section class="rsSquadHeroV6">
       <div class="eyebrow">RAMÓN SICART</div>
       <h1>CADETE S15</h1>
-      <p>PLANTILLA OFICIAL · CADETE S15</p>
+      <p>PLANTILLA OFICIAL · TEMPORADA 2026/27</p>
     </section>
     <section id="rsSquadGridV6" class="rsSquadGridV6" aria-live="polite"></section>
   </main>
@@ -5189,6 +5177,10 @@ body.rsMatchesWindowOpenV4 .app{
     });
   }
 
+  /* API pública: los accesos laterales e inferiores llaman a estas funciones reales. */
+  window.rsOpenSquadWindowV6 = openSquadV6;
+  window.rsCloseSquadWindowV6 = closeSquadV6;
+
   function initV6(){
     document.getElementById("rsSquadCloseV6")?.addEventListener("click",closeSquadV6);
     document.getElementById("rsSquadWindowV6")?.addEventListener("click",e=>{
@@ -5208,82 +5200,6 @@ body.rsMatchesWindowOpenV4 .app{
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",initV6);
   else initV6();
 })();
-</script>
-
-
-<div id="rsBottomNavV7" aria-label="Accesos rápidos">
-  <button type="button" data-rs-bottom="home"><span class="ico">⌂</span>INICIO</button>
-  <button type="button" data-rs-bottom="matches"><span class="ico">⚽</span>PARTIDOS</button>
-  <button type="button" data-rs-bottom="squad" class="active"><span class="ico">👥</span>PLANTILLA</button>
-</div>
-
-
-
-<script id="rs-bottom-squad-v8-js">
-(function(){
-  function closeOtherWindows(){
-    ['rsMatchesWindowV5','rsSquadWindowV6'].forEach(function(id){
-      var el=document.getElementById(id);
-      if(el) el.style.display='none';
-    });
-  }
-  function setActive(page){
-    document.querySelectorAll('#rsBottomNavV7 button').forEach(function(b){
-      b.classList.toggle('active', b.dataset.rsBottom===page);
-    });
-  }
-  function openPage(page){
-    closeOtherWindows();
-    setActive(page);
-    try{
-      if(page==='squad'){
-        if(typeof window.rsOpenSquadWindowV6==='function'){
-          window.rsOpenSquadWindowV6();
-          return;
-        }
-        var sw=document.getElementById('rsSquadWindowV6');
-        if(sw){ sw.style.display='flex'; return; }
-      }
-      if(page==='matches'){
-        if(typeof window.rsOpenMatchesWindowV5==='function'){
-          window.rsOpenMatchesWindowV5();
-          return;
-        }
-        if(typeof window.openMatchesV5==='function'){
-          window.openMatchesV5();
-          return;
-        }
-      }
-      if(typeof window.navigateV1==='function'){
-        window.navigateV1(page);
-        return;
-      }
-      var target=document.getElementById(page);
-      if(target){
-        document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
-        target.classList.add('active');
-      }
-    }catch(err){ console.warn('RS bottom navigation',err); }
-  }
-  document.addEventListener('click',function(e){
-    var b=e.target.closest && e.target.closest('#rsBottomNavV7 [data-rs-bottom]');
-    if(!b)return;
-    e.preventDefault();
-    e.stopPropagation();
-    openPage(b.dataset.rsBottom);
-  },true);
-
-  window.rsOpenSquadBottomV8=function(){openPage('squad')};
-})();
-</script>
-
-
-
-<script id="rs-squad-init-v8-js">
-document.addEventListener('DOMContentLoaded',function(){
-  var w=document.getElementById('rsSquadWindowV6');
-  if(w){ w.style.display='none'; }
-});
 </script>
 
 </body>
@@ -7379,3 +7295,113 @@ body:after{
 
 </body>
 </html>
+
+<style id="rs-bottom-nav-v11-css">
+#rsBottomNavV11{
+  position:fixed;
+  left:10px;right:10px;bottom:10px;
+  z-index:99950;
+  display:flex;
+  gap:7px;
+  padding:7px;
+  border-radius:18px;
+  background:rgba(7,17,31,.96);
+  border:1px solid rgba(255,212,0,.28);
+  box-shadow:0 12px 35px rgba(0,0,0,.45);
+  backdrop-filter:blur(12px);
+}
+#rsBottomNavV11 button{
+  flex:1;
+  min-height:48px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:13px;
+  background:#0d1a2b;
+  color:#fff;
+  font-weight:900;
+  font-size:11px;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+#rsBottomNavV11 button:active{transform:scale(.98)}
+#rsBottomNavV11 button.active{
+  background:linear-gradient(135deg,#ffd400,#e21d2f);
+  color:#07111f;
+}
+#rsBottomNavV11 .ico{
+  display:block;
+  font-size:18px;
+  line-height:18px;
+  margin-bottom:2px;
+}
+@media(min-width:900px){
+  #rsBottomNavV11{
+    left:50%;right:auto;
+    width:520px;
+    transform:translateX(-50%);
+  }
+}
+</style>
+
+<nav id="rsBottomNavV11" aria-label="Accesos rápidos">
+  <button type="button" data-rs-bottom-v11="home"><span class="ico">⌂</span>INICIO</button>
+  <button type="button" data-rs-bottom-v11="matches"><span class="ico">⚽</span>PARTIDOS</button>
+  <button type="button" data-rs-bottom-v11="squad"><span class="ico">👥</span>PLANTILLA</button>
+</nav>
+
+<script id="rs-bottom-nav-v11-js">
+(function(){
+  "use strict";
+
+  function setActive(page){
+    document.querySelectorAll("#rsBottomNavV11 button").forEach(function(b){
+      b.classList.toggle("active", b.getAttribute("data-rs-bottom-v11")===page);
+    });
+  }
+
+  function home(){
+    if(window.rsCloseSquadWindowV6) window.rsCloseSquadWindowV6();
+    if(typeof window.closeMatchesV5==="function") window.closeMatchesV5();
+    var b=document.querySelector('#sideNavV14 button[data-page="home"]') ||
+          document.querySelector('#mainNav button[data-page="home"]');
+    if(b) b.click();
+    else if(typeof window.navigateV1==="function") window.navigateV1("home");
+    setActive("home");
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+
+  function matches(){
+    if(window.rsCloseSquadWindowV6) window.rsCloseSquadWindowV6();
+    var b=document.querySelector('#sideNavV14 button[data-page="matches"]') ||
+          document.querySelector('#mainNav button[data-page="matches"]');
+    if(b) b.click();
+    else if(typeof window.rsOpenMatchesWindowV5==="function") window.rsOpenMatchesWindowV5();
+    else if(typeof window.navigateV1==="function") window.navigateV1("matches");
+    setActive("matches");
+  }
+
+  function squad(){
+    if(window.rsOpenSquadWindowV6) window.rsOpenSquadWindowV6();
+    setActive("squad");
+  }
+
+  document.addEventListener("click",function(e){
+    var b=e.target.closest ? e.target.closest("#rsBottomNavV11 button[data-rs-bottom-v11]") : null;
+    if(!b) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var page=b.getAttribute("data-rs-bottom-v11");
+    if(page==="home") home();
+    else if(page==="matches") matches();
+    else if(page==="squad") squad();
+  },true);
+
+  /* Al abrir/cerrar la plantilla desde el lateral, sincroniza el estado visual. */
+  document.addEventListener("click",function(e){
+    var b=e.target.closest ? e.target.closest('button[data-page="squad"]') : null;
+    if(b) setActive("squad");
+  },true);
+
+  setActive("home");
+})();
+</script>
+
