@@ -1576,6 +1576,25 @@ html,body{min-height:100%;overflow-x:hidden!important;overflow-y:auto!important}
 }
 </style>
 
+<style id="rs-squad-v12-css">
+html,body{overflow-x:hidden!important;overflow-y:auto!important}
+#rsSquadWindowV6{
+  position:fixed!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100vh!important;
+  height:100dvh!important;
+  z-index:99990!important;
+  display:none!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  -webkit-overflow-scrolling:touch!important;
+  background:#050606!important;
+}
+#rsSquadWindowV6.open{display:block!important}
+#rsSquadWindowV6 .rsSquadBodyV6{min-height:100%;padding-bottom:90px}
+#rsSquadWindowV6 .rsSquadGridV6{min-height:120px}
+</style>
 </head>
 <body>
 <div class="app">
@@ -5049,156 +5068,370 @@ body.rsMatchesWindowOpenV4 .app{
   </main>
 </div>
 
-<script id="rs-cadete-s15-squad-v6-js">
+<script id="rs-cadete-s15-squad-v12-js">
 (function(){
   "use strict";
 
-  function getPlayersV6(){
-    /* La fuente de datos es siempre App.players, la misma del administrador. */
-    if(window.App && Array.isArray(App.players)) return App.players;
-    if(window.players && Array.isArray(window.players)) return window.players;
+  const WIN_ID="rsSquadWindowV6";
+  const GRID_ID="rsSquadGridV6";
+
+  function getPlayers(){
+    if(window.App && Array.isArray(window.App.players) && window.App.players.length) return window.App.players;
     return [];
   }
 
-  function escV6(v){
+  async function loadPlayersIfNeeded(){
+    let players=getPlayers();
+    if(players.length) return players;
+
+    /* Si Firebase aún no ha terminado de aplicar los datos, los pedimos directamente.
+       Así la plantilla nunca depende del momento exacto en que se pulse el botón. */
+    try{
+      if(typeof firebaseRestUrl==="string"){
+        const r=await fetch(firebaseRestUrl+"?t="+Date.now(),{cache:"no-store"});
+        if(r.ok){
+          const data=await r.json();
+          const raw=data?.app?.players;
+          const remote=Array.isArray(raw) ? raw :
+            (raw && typeof raw==="object" ? Object.values(raw) : []);
+          if(remote.length && window.App){
+            App.players=remote;
+            return remote;
+          }
+        }
+      }
+    }catch(e){ console.warn("RS Plantilla Firebase:",e); }
+
+    return getPlayers();
+  }
+
+  function esc(v){
     return String(v??"").replace(/[&<>"']/g,m=>({
       "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
     }[m]));
   }
 
-  function playerValueV6(p, keys){
+  function val(p,keys){
     for(const k of keys){
       if(p && p[k]!==undefined && p[k]!==null && String(p[k]).trim()!=="") return p[k];
     }
     return "";
   }
 
-  function renderSquadV6(){
-    const grid=document.getElementById("rsSquadGridV6");
-    if(!grid) return;
+  function render(players){
+    const grid=document.getElementById(GRID_ID);
+    if(!grid)return;
 
-    const players=getPlayersV6().filter(Boolean);
     if(!players.length){
       grid.innerHTML='<div class="rsSquadEmptyV6">No hay jugadores registrados todavía.</div>';
       return;
     }
 
-    const sorted=[...players].sort((a,b)=>{
-      const na=parseInt(playerValueV6(a,["number","dorsal","num","numero"]),10);
-      const nb=parseInt(playerValueV6(b,["number","dorsal","num","numero"]),10);
-      if(Number.isFinite(na)&&Number.isFinite(nb)) return na-nb;
-      return String(playerValueV6(a,["name","nombre","fullName"])||"")
-        .localeCompare(String(playerValueV6(b,["name","nombre","fullName"])||""),"es");
+    const sorted=[...players].sort((x,y)=>{
+      const a=Number(val(x,["number","dorsal","num","numero"]));
+      const b=Number(val(y,["number","dorsal","num","numero"]));
+      if(Number.isFinite(a)&&Number.isFinite(b))return a-b;
+      return String(val(x,["name","nombre","fullName"])).localeCompare(
+        String(val(y,["name","nombre","fullName"])),"es");
     });
 
     grid.innerHTML=sorted.map(p=>{
-      const name=playerValueV6(p,["name","nombre","fullName"])||"Jugador";
-      const number=playerValueV6(p,["number","dorsal","num","numero"])||"—";
-      const pos=playerValueV6(p,["position","posicion","pos","role"])||"Jugador";
-      const photo=playerValueV6(p,["photo","foto","image","imagen","photoUrl","imageUrl","avatar"]);
+      const name=val(p,["name","nombre","fullName"])||"Jugador";
+      const number=val(p,["number","dorsal","num","numero"])||"—";
+      const position=val(p,["position","posicion","pos","role"])||"Jugador";
+      const photo=val(p,["photo","foto","image","imagen","photoUrl","imageUrl","avatar"]);
       const captain=!!(p.captain||p.capitan||p.isCaptain);
-      const matches=playerValueV6(p,["matches","partidos","PJ"]);
-      const goals=playerValueV6(p,["goals","goles","G"]);
-      const assists=playerValueV6(p,["assists","asistencias","A"]);
+
+      /* Estas son las estadísticas reales que ya utiliza el administrador. */
+      const goals=val(p,["goals","goles"]);
+      const yellow=val(p,["yellow","amarillas"]);
+      const red=val(p,["red","rojas"]);
+      const starts=val(p,["starts","titulares"]);
+      const apps=val(p,["appearances","partidos","PJ","matches"]);
 
       return `
-        <article class="rsPlayerCardV6">
-          <div class="rsPlayerPhotoV6 ${photo?'':'noPhoto'}">
-            ${photo?`<img src="${escV6(photo)}" alt="${escV6(name)}" loading="lazy">`:''}
-            <span class="rsPlayerNumberV6">${escV6(number)}</span>
-            ${captain?'<span class="rsCaptainV6">CAPITÁN</span>':''}
+      <article class="rsPlayerCardV6">
+        <div class="rsPlayerPhotoV6 ${photo?"":"noPhoto"}">
+          ${photo?`<img src="${esc(photo)}" alt="${esc(name)}" loading="lazy">`:""}
+          <span class="rsPlayerNumberV6">${esc(number)}</span>
+          ${captain?'<span class="rsCaptainV6">CAPITÁN</span>':""}
+        </div>
+        <div class="rsPlayerInfoV6">
+          <div class="rsPlayerNameV6">${esc(name)}</div>
+          <div class="rsPlayerPosV6">${esc(position)}</div>
+          <div class="rsPlayerStatsV6">
+            ${apps!==""?`<div class="rsPlayerStatV6"><b>${esc(apps)}</b><small>Partidos</small></div>`:""}
+            ${goals!==""?`<div class="rsPlayerStatV6"><b>${esc(goals)}</b><small>Goles</small></div>`:""}
+            ${starts!==""?`<div class="rsPlayerStatV6"><b>${esc(starts)}</b><small>Titular</small></div>`:""}
+            ${yellow!==""?`<div class="rsPlayerStatV6"><b>${esc(yellow)}</b><small>Amarillas</small></div>`:""}
+            ${red!==""?`<div class="rsPlayerStatV6"><b>${esc(red)}</b><small>Rojas</small></div>`:""}
           </div>
-          <div class="rsPlayerInfoV6">
-            <div class="rsPlayerNameV6" title="${escV6(name)}">${escV6(name)}</div>
-            <div class="rsPlayerPosV6">${escV6(pos)}</div>
-            <div class="rsPlayerStatsV6">
-              ${matches!==""?`<div class="rsPlayerStatV6"><b>${escV6(matches)}</b><small>Partidos</small></div>`:''}
-              ${goals!==""?`<div class="rsPlayerStatV6"><b>${escV6(goals)}</b><small>Goles</small></div>`:''}
-              ${assists!==""?`<div class="rsPlayerStatV6"><b>${escV6(assists)}</b><small>Asist.</small></div>`:''}
-            </div>
-          </div>
-        </article>`;
+        </div>
+      </article>`;
     }).join("");
   }
 
-  function openSquadV6(){
-    const win=document.getElementById("rsSquadWindowV6");
-    if(!win) return;
-    document.querySelectorAll(".page").forEach(p=>{
-      p.classList.remove("active");
-      p.style.setProperty("display","none","important");
-    });
-    renderSquadV6();
-    win.classList.add("open");
+  async function open(){
+    const win=document.getElementById(WIN_ID);
+    if(!win)return;
+
+    /* La ventana SIEMPRE se mueve al body: nunca puede quedar dentro de Inicio. */
+    if(win.parentElement!==document.body) document.body.appendChild(win);
+
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+
     win.setAttribute("aria-hidden","false");
-    document.body.style.overflow="hidden";
-    document.querySelectorAll("#sideNavV14 button,#mainNav button")
-      .forEach(b=>b.classList.toggle("active",b.dataset.page==="squad"));
+    win.classList.add("open");
+    win.style.setProperty("display","block","important");
     win.scrollTop=0;
+
+    /* Render inmediato y segundo render tras Firebase. */
+    render(getPlayers());
+    const players=await loadPlayersIfNeeded();
+    render(players);
+
+    document.body.style.overflow="hidden";
   }
 
-  function closeSquadV6(){
-    const win=document.getElementById("rsSquadWindowV6");
-    if(!win) return;
+  function close(){
+    const win=document.getElementById(WIN_ID);
+    if(!win)return;
     win.classList.remove("open");
     win.setAttribute("aria-hidden","true");
+    win.style.removeProperty("display");
     document.body.style.overflow="";
-    document.querySelectorAll(".page").forEach(p=>p.style.removeProperty("display"));
+
     document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-    document.getElementById("home")?.classList.add("active");
-    document.querySelectorAll("#sideNavV14 button,#mainNav button")
-      .forEach(b=>b.classList.toggle("active",b.dataset.page==="home"));
+    const home=document.getElementById("home");
+    if(home)home.classList.add("active");
+
+    document.querySelectorAll("#sideNavV14 button,#mainNav button").forEach(b=>{
+      b.classList.toggle("active",b.dataset.page==="home");
+    });
     window.scrollTo(0,0);
   }
 
-  function addSquadButtonsV6(){
-    const side=document.getElementById("sideNavV14");
-    const main=document.getElementById("mainNav");
+  function init(){
+    const win=document.getElementById(WIN_ID);
+    const closeBtn=document.getElementById("rsSquadCloseV6");
 
-    [side,main].forEach(nav=>{
-      if(!nav) return;
-      let btn=nav.querySelector('button[data-page="squad"]');
-      if(!btn){
-        btn=document.createElement("button");
-        btn.type="button";
-        btn.dataset.page="squad";
-        btn.innerHTML="👕 <span>Plantilla</span>";
-        const matches=nav.querySelector('button[data-page="matches"]');
-        if(matches) matches.insertAdjacentElement("afterend",btn);
-        else nav.appendChild(btn);
-      }
+    if(win && win.parentElement!==document.body) document.body.appendChild(win);
+
+    closeBtn?.addEventListener("click",function(e){
+      e.preventDefault(); e.stopPropagation(); close();
+    });
+
+    /* Solo cerrar al pulsar el fondo, nunca al pulsar una tarjeta. */
+    win?.addEventListener("click",function(e){
+      if(e.target===win)close();
+    });
+
+    document.addEventListener("keydown",function(e){
+      if(e.key==="Escape" && win?.classList.contains("open"))close();
+    });
+
+    document.querySelectorAll("#sideNavV14 button,#mainNav button").forEach(btn=>{
+      if(btn.dataset.page!=="squad")return;
       btn.onclick=function(e){
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        openSquadV6();
+        e.preventDefault(); e.stopImmediatePropagation();
+        open();
+        document.getElementById("sideMenuV14")?.classList.remove("open");
+        document.getElementById("sideOverlayV14")?.classList.remove("open");
+      };
+    });
+
+    /* Reengancha por si la navegación crea/reconstruye botones más tarde. */
+    setTimeout(initNav,300);
+    setTimeout(initNav,1000);
+  }
+
+  function initNav(){
+    document.querySelectorAll("#sideNavV14 button,#mainNav button").forEach(btn=>{
+      if(btn.dataset.page!=="squad")return;
+      btn.onclick=function(e){
+        e.preventDefault(); e.stopImmediatePropagation(); open();
         document.getElementById("sideMenuV14")?.classList.remove("open");
         document.getElementById("sideOverlayV14")?.classList.remove("open");
       };
     });
   }
 
-  /* API pública: los accesos laterales e inferiores llaman a estas funciones reales. */
-  window.rsOpenSquadWindowV6 = openSquadV6;
-  window.rsCloseSquadWindowV6 = closeSquadV6;
+  window.rsOpenSquadWindowV6=open;
+  window.rsCloseSquadWindowV6=close;
+  window.rsRenderSquadV12=async function(){render(await loadPlayersIfNeeded())};
 
-  function initV6(){
-    document.getElementById("rsSquadCloseV6")?.addEventListener("click",closeSquadV6);
-    document.getElementById("rsSquadWindowV6")?.addEventListener("click",e=>{
-      if(e.target.id==="rsSquadWindowV6") closeSquadV6();
-    });
-    document.addEventListener("keydown",e=>{
-      if(e.key==="Escape" && document.getElementById("rsSquadWindowV6")?.classList.contains("open")){
-        closeSquadV6();
-      }
-    });
-    addSquadButtonsV6();
-    setTimeout(addSquadButtonsV6,150);
-    setTimeout(addSquadButtonsV6,500);
-    setTimeout(addSquadButtonsV6,1200);
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);
+  else init();
+})();
+</script>
+
+
+<style id="rs-squad-v16-css">
+/* V16: Plantilla aislada de la página principal */
+#rsSquadWindowV6{
+  position:fixed!important; inset:0!important; width:100vw!important;
+  height:100vh!important; height:100dvh!important; z-index:999999!important;
+  display:none!important; overflow-x:hidden!important; overflow-y:auto!important;
+  -webkit-overflow-scrolling:touch!important; background:#050606!important;
+}
+#rsSquadWindowV6.rsV16Open{display:block!important}
+#rsSquadGridV6{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:14px!important;
+}
+@media(max-width:1000px){#rsSquadGridV6{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:700px){#rsSquadGridV6{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}}
+</style>
+
+<script id="rs-squad-v16-js">
+(function(){
+  "use strict";
+
+  /* IMPORTANTE:
+     App está declarado con "const", por lo que window.App NO existe.
+     Las versiones anteriores buscaban window.App y por eso veían 0 jugadores.
+  */
+  function getApp(){
+    try{ return (typeof App!=="undefined") ? App : null; }catch(e){return null;}
   }
 
-  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",initV6);
-  else initV6();
+  function getPlayers(){
+    var a=getApp();
+    if(a && Array.isArray(a.players)) return a.players;
+    return [];
+  }
+
+  function esc(v){
+    return String(v==null?"":v).replace(/[&<>"']/g,function(m){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m];
+    });
+  }
+
+  function render(){
+    var grid=document.getElementById("rsSquadGridV6");
+    if(!grid)return;
+    var list=getPlayers().filter(Boolean).slice();
+
+    if(!list.length){
+      grid.innerHTML='<div class="rsSquadEmptyV6">No hay jugadores registrados todavía.</div>';
+      return;
+    }
+
+    list.sort(function(a,b){return (Number(a.number)||999)-(Number(b.number)||999);});
+
+    grid.innerHTML=list.map(function(p){
+      var photo=p.photo||"";
+      var stats=[
+        ["⚽",p.goals||0,"Goles"],
+        ["🟨",p.yellow||0,"Amarillas"],
+        ["🟥",p.red||0,"Rojas"],
+        ["▶",p.starts||0,"Titular"],
+        ["●",p.appearances||0,"Partidos"]
+      ];
+      return '<article class="rsPlayerCardV6">'+
+        '<div class="rsPlayerPhotoV6 '+(photo?"":"noPhoto")+'">'+
+        (photo?'<img src="'+esc(photo)+'" alt="'+esc(p.name||"Jugador")+'" loading="lazy">':'<span style="font-size:52px;opacity:.5">👤</span>')+
+        '<span class="rsPlayerNumberV6">'+esc(p.number||"—")+'</span>'+
+        (p.captain?'<span class="rsCaptainV6">CAPITÁN</span>':'')+
+        '</div>'+
+        '<div class="rsPlayerInfoV6">'+
+        '<div class="rsPlayerNameV6">'+esc(p.name||"Jugador")+'</div>'+
+        '<div class="rsPlayerPosV6">'+esc(p.position||"Jugador")+'</div>'+
+        '<div class="rsPlayerStatsV6">'+stats.map(function(x){
+          return '<div class="rsPlayerStatV6"><b>'+x[0]+' '+esc(x[1])+'</b><small>'+x[2]+'</small></div>';
+        }).join("")+'</div>'+
+        '</div></article>';
+    }).join("");
+  }
+
+  function close(){
+    var w=document.getElementById("rsSquadWindowV6");
+    if(!w)return;
+    w.classList.remove("rsV16Open");
+    w.setAttribute("aria-hidden","true");
+    w.style.removeProperty("display");
+    document.body.style.overflow="";
+    var home=document.getElementById("home");
+    document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
+    if(home)home.classList.add("active");
+    window.scrollTo(0,0);
+  }
+
+  function open(){
+    var w=document.getElementById("rsSquadWindowV6");
+    if(!w)return;
+
+    /* Sacarla físicamente del contenido de Inicio. */
+    if(w.parentNode!==document.body)document.body.appendChild(w);
+
+    document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
+    render();
+
+    w.classList.add("rsV16Open");
+    w.setAttribute("aria-hidden","false");
+    w.style.setProperty("display","block","important");
+    document.body.style.overflow="hidden";
+    w.scrollTop=0;
+
+    /* Firebase puede terminar de sincronizar después de abrir. */
+    setTimeout(render,100);
+    setTimeout(render,500);
+    setTimeout(render,1500);
+  }
+
+  function ensureNav(){
+    var side=document.getElementById("sideNavV14");
+    if(side && !side.querySelector('button[data-page="squad"]')){
+      var b=document.createElement("button");
+      b.type="button"; b.dataset.page="squad";
+      b.innerHTML='👥 <span>Plantilla</span>';
+      side.appendChild(b);
+    }
+
+    var main=document.getElementById("mainNav");
+    if(main && !main.querySelector('button[data-page="squad"]')){
+      var b2=document.createElement("button");
+      b2.type="button"; b2.dataset.page="squad";
+      b2.textContent="👥 Plantilla";
+      main.appendChild(b2);
+    }
+
+    document.querySelectorAll('#sideNavV14 button[data-page="squad"],#mainNav button[data-page="squad"]').forEach(function(b){
+      if(b.dataset.rsV16Bound==="1")return;
+      b.dataset.rsV16Bound="1";
+      b.onclick=function(e){
+        e.preventDefault();e.stopImmediatePropagation();open();
+        var menu=document.getElementById("sideMenuV14");
+        var ov=document.getElementById("sideOverlayV14");
+        if(menu)menu.classList.remove("open");
+        if(ov)ov.classList.remove("open");
+      };
+    });
+  }
+
+  function init(){
+    var w=document.getElementById("rsSquadWindowV6");
+    if(w && w.parentNode!==document.body)document.body.appendChild(w);
+
+    var c=document.getElementById("rsSquadCloseV6");
+    if(c && c.dataset.rsV16Bound!=="1"){
+      c.dataset.rsV16Bound="1";
+      c.onclick=function(e){e.preventDefault();e.stopImmediatePropagation();close();};
+    }
+
+    ensureNav();
+    setTimeout(ensureNav,100);
+    setTimeout(ensureNav,500);
+    setTimeout(ensureNav,1200);
+  }
+
+  window.rsOpenSquadWindowV6=open;
+  window.rsCloseSquadWindowV6=close;
+  window.rsRenderSquadV16=render;
+
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);
+  else init();
 })();
 </script>
 
@@ -7348,60 +7581,56 @@ body:after{
   <button type="button" data-rs-bottom-v11="squad"><span class="ico">👥</span>PLANTILLA</button>
 </nav>
 
-<script id="rs-bottom-nav-v11-js">
+<script id="rs-bottom-nav-v13-js">
 (function(){
-  "use strict";
-
-  function setActive(page){
+  function active(p){
     document.querySelectorAll("#rsBottomNavV11 button").forEach(function(b){
-      b.classList.toggle("active", b.getAttribute("data-rs-bottom-v11")===page);
+      b.classList.toggle("active",b.getAttribute("data-rs-bottom-v11")===p);
     });
   }
-
-  function home(){
-    if(window.rsCloseSquadWindowV6) window.rsCloseSquadWindowV6();
-    if(typeof window.closeMatchesV5==="function") window.closeMatchesV5();
-    var b=document.querySelector('#sideNavV14 button[data-page="home"]') ||
-          document.querySelector('#mainNav button[data-page="home"]');
-    if(b) b.click();
-    else if(typeof window.navigateV1==="function") window.navigateV1("home");
-    setActive("home");
-    window.scrollTo({top:0,behavior:"smooth"});
-  }
-
-  function matches(){
-    if(window.rsCloseSquadWindowV6) window.rsCloseSquadWindowV6();
-    var b=document.querySelector('#sideNavV14 button[data-page="matches"]') ||
-          document.querySelector('#mainNav button[data-page="matches"]');
-    if(b) b.click();
-    else if(typeof window.rsOpenMatchesWindowV5==="function") window.rsOpenMatchesWindowV5();
-    else if(typeof window.navigateV1==="function") window.navigateV1("matches");
-    setActive("matches");
-  }
-
-  function squad(){
-    if(window.rsOpenSquadWindowV6) window.rsOpenSquadWindowV6();
-    setActive("squad");
-  }
-
   document.addEventListener("click",function(e){
-    var b=e.target.closest ? e.target.closest("#rsBottomNavV11 button[data-rs-bottom-v11]") : null;
-    if(!b) return;
-    e.preventDefault();
-    e.stopPropagation();
-    var page=b.getAttribute("data-rs-bottom-v11");
-    if(page==="home") home();
-    else if(page==="matches") matches();
-    else if(page==="squad") squad();
+    var b=e.target.closest&&e.target.closest("#rsBottomNavV11 button[data-rs-bottom-v11]");
+    if(!b)return;
+    e.preventDefault();e.stopImmediatePropagation();
+    var p=b.getAttribute("data-rs-bottom-v11");active(p);
+    if(p==="squad" && window.rsOpenSquadWindowV6){window.rsOpenSquadWindowV6();return;}
+    var real=document.querySelector('#sideNavV14 button[data-page="'+p+'"]') ||
+             document.querySelector('#mainNav button[data-page="'+p+'"]');
+    if(real) real.click();
   },true);
-
-  /* Al abrir/cerrar la plantilla desde el lateral, sincroniza el estado visual. */
-  document.addEventListener("click",function(e){
-    var b=e.target.closest ? e.target.closest('button[data-page="squad"]') : null;
-    if(b) setActive("squad");
-  },true);
-
-  setActive("home");
+  active("home");
 })();
 </script>
 
+<script id="rs-squad-nav-v14-js">
+(function(){
+  function bind(){
+    document.querySelectorAll('#sideNavV14 button[data-page="squad"],#mainNav button[data-page="squad"]').forEach(function(btn){
+      if(btn.dataset.rsSquadBound==="1")return;
+      btn.dataset.rsSquadBound="1";
+      btn.addEventListener("click",function(e){
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        if(typeof window.rsOpenSquadWindowV6==="function"){
+          window.rsOpenSquadWindowV6();
+        }
+      },true);
+    });
+  }
+  bind();
+  setTimeout(bind,100);
+  setTimeout(bind,500);
+  setTimeout(bind,1200);
+})();
+</script>
+
+<script id="rs-squad-class-v14-js">
+(function(){
+  function sync(){
+    var w=document.getElementById("rsSquadWindowV6");
+    document.body.classList.toggle("rsSquadOpenV14",!!(w&&w.classList.contains("open")));
+  }
+  new MutationObserver(sync).observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:["class","style"]});
+  setInterval(sync,500);
+})();
+</script>
