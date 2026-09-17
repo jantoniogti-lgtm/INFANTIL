@@ -1547,6 +1547,31 @@ button{cursor:pointer}
 .rsShareTools .btn{flex:1;min-width:190px}
 @media(max-width:560px){.rsShareActions,.rsShareTools{display:grid;grid-template-columns:1fr}.rsShareActions .btn,.rsShareTools .btn{width:100%}}
 </style>
+
+<style id="rs-bottom-squad-v7-css">
+#rsBottomNavV7{
+  position:fixed; left:10px; right:10px; bottom:10px; z-index:99980;
+  display:flex; gap:8px; padding:8px;
+  background:rgba(7,17,31,.94); border:1px solid rgba(255,212,0,.28);
+  border-radius:18px; box-shadow:0 12px 35px rgba(0,0,0,.45);
+  backdrop-filter:blur(12px);
+}
+#rsBottomNavV7 button{
+  flex:1; min-height:48px; border:0; border-radius:13px;
+  background:#0d1a2b; color:#fff; font-weight:800; font-size:12px;
+  cursor:pointer; border:1px solid rgba(255,255,255,.07);
+}
+#rsBottomNavV7 button.active{
+  background:linear-gradient(135deg,#ffd400,#e21d2f);
+  color:#07111f; border-color:transparent;
+}
+#rsBottomNavV7 .ico{display:block;font-size:18px;line-height:18px;margin-bottom:2px}
+@media(min-width:900px){
+  #rsBottomNavV7{left:50%;right:auto;transform:translateX(-50%);width:520px}
+}
+body{padding-bottom:82px}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -4075,6 +4100,1140 @@ document.addEventListener("click",function(e){
   if(oldFinish){window.finish=function(){const result=oldFinish();setTimeout(()=>{const m=rsActive();if(m&&m.status==='FINISHED')rsShareFinal()},300);return result};}
 })();
 </script>
+
+<style id="rs-cadete-s15-admin-nav-v2">
+/* =========================================================
+   CADETE S15 V2 — ACCESO ADMINISTRADOR + NAVEGACIÓN PARTIDOS
+   ========================================================= */
+
+/* Modal de acceso al administrador */
+.rsAdminAccessV2{
+  position:fixed;
+  inset:0;
+  z-index:99999;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  background:rgba(0,0,0,.84);
+  backdrop-filter:blur(10px);
+}
+.rsAdminAccessV2.open{display:flex}
+.rsAdminAccessBoxV2{
+  width:min(430px,100%);
+  background:linear-gradient(145deg,#111313,#070808);
+  border:1px solid rgba(246,197,21,.7);
+  border-radius:22px;
+  padding:25px 22px 22px;
+  box-shadow:0 25px 80px rgba(0,0,0,.75),0 0 35px rgba(246,197,21,.10);
+  position:relative;
+  animation:rsAdminInV2 .18s ease-out;
+}
+@keyframes rsAdminInV2{
+  from{opacity:0;transform:translateY(12px) scale(.97)}
+  to{opacity:1;transform:none}
+}
+.rsAdminAccessHeadV2{
+  display:flex;
+  align-items:center;
+  gap:13px;
+  margin-bottom:18px;
+}
+.rsAdminLockV2{
+  width:48px;height:48px;
+  display:grid;place-items:center;
+  border-radius:13px;
+  background:var(--rsGold);
+  color:#111;
+  font-size:23px;
+  box-shadow:0 7px 20px rgba(246,197,21,.18);
+}
+.rsAdminAccessHeadV2 h2{
+  font-size:18px;
+  color:#fff;
+  margin:0;
+}
+.rsAdminAccessHeadV2 small{
+  display:block;
+  margin-top:4px;
+  color:#aaa99f;
+  font-size:10px;
+}
+.rsAdminPinV2{
+  width:100%;
+  height:52px;
+  border:1px solid #44443b;
+  border-radius:12px;
+  background:#050606;
+  color:#fff;
+  text-align:center;
+  font-size:21px;
+  font-weight:1000;
+  letter-spacing:7px;
+  outline:none;
+}
+.rsAdminPinV2:focus{
+  border-color:var(--rsGold);
+  box-shadow:0 0 0 3px rgba(246,197,21,.10);
+}
+.rsAdminActionsV2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+  margin-top:14px;
+}
+.rsAdminActionsV2 button{
+  min-height:46px;
+  border-radius:11px;
+  border:1px solid #3a3a34;
+  font-weight:1000;
+  cursor:pointer;
+}
+.rsAdminAcceptV2{
+  background:var(--rsGold);
+  color:#111;
+  border-color:var(--rsGold)!important;
+}
+.rsAdminCancelV2{
+  background:#151716;
+  color:#fff;
+}
+.rsAdminErrorV2{
+  min-height:16px;
+  margin-top:9px;
+  text-align:center;
+  color:#ff7373;
+  font-size:10px;
+  font-weight:900;
+}
+body.rsAdminModalOpenV2{overflow:hidden}
+
+/* El apartado Partidos debe ser una página propia, no quedar debajo del Admin */
+#matches{
+  position:relative;
+  z-index:2;
+}
+#matches>.sectionTitle:first-of-type{
+  margin-top:4px!important;
+}
+#matches>.card.infoCard{
+  margin-bottom:20px;
+}
+
+/* El botón Partidos del menú lateral siempre queda antes que Administrador */
+.sideNavV14 #rsPublicMatchesBtnV2{
+  order:2;
+}
+.sideNavV14 [data-page="admin"]{
+  order:3;
+}
+</style>
+
+<div id="rsAdminAccessV2" class="rsAdminAccessV2" aria-hidden="true">
+  <div class="rsAdminAccessBoxV2" role="dialog" aria-modal="true" aria-labelledby="rsAdminAccessTitleV2">
+    <div class="rsAdminAccessHeadV2">
+      <div class="rsAdminLockV2">🔐</div>
+      <div>
+        <h2 id="rsAdminAccessTitleV2">Panel administrador</h2>
+        <small>Introduce el código de acceso para continuar</small>
+      </div>
+    </div>
+    <input id="rsAdminPinV2" class="rsAdminPinV2" type="password"
+           inputmode="numeric" autocomplete="current-password"
+           maxlength="12" placeholder="••••" aria-label="Código de administrador">
+    <div id="rsAdminErrorV2" class="rsAdminErrorV2"></div>
+    <div class="rsAdminActionsV2">
+      <button type="button" class="rsAdminCancelV2" id="rsAdminCancelV2">CANCELAR</button>
+      <button type="button" class="rsAdminAcceptV2" id="rsAdminAcceptV2">ACEPTAR</button>
+    </div>
+  </div>
+</div>
+
+<script id="rs-cadete-s15-admin-nav-v2-js">
+(function(){
+  "use strict";
+
+  const $ = id => document.getElementById(id);
+
+  function openAdminAccessV2(){
+    const panel = $("adminPanel");
+    /* Si ya está desbloqueado, entramos directamente. */
+    if(panel && panel.style.display !== "none"){
+      openPageV2("admin");
+      return;
+    }
+
+    const modal = $("rsAdminAccessV2");
+    const pin = $("rsAdminPinV2");
+    const err = $("rsAdminErrorV2");
+    if(!modal) return;
+
+    if(pin) pin.value = "";
+    if(err) err.textContent = "";
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden","false");
+    document.body.classList.add("rsAdminModalOpenV2");
+
+    setTimeout(()=>pin?.focus(),60);
+  }
+
+  function closeAdminAccessV2(){
+    const modal = $("rsAdminAccessV2");
+    if(!modal) return;
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden","true");
+    document.body.classList.remove("rsAdminModalOpenV2");
+  }
+
+  function acceptAdminAccessV2(){
+    const pin = $("rsAdminPinV2");
+    const err = $("rsAdminErrorV2");
+    const value = String(pin?.value || "");
+
+    if(typeof PIN === "undefined" || value !== String(PIN)){
+      if(err) err.textContent = "Código incorrecto";
+      if(pin){
+        pin.focus();
+        pin.select();
+      }
+      return;
+    }
+
+    /* Mantener sincronizado el campo antiguo por compatibilidad. */
+    const legacy = $("pinInput");
+    if(legacy) legacy.value = value;
+
+    /* Usamos la función original para desbloquear el panel. */
+    try{
+      if(typeof unlock === "function") unlock();
+    }catch(e){
+      console.error("RS Admin V2 unlock:",e);
+    }
+
+    setTimeout(()=>{
+      const panel = $("adminPanel");
+      if(panel && panel.style.display !== "none"){
+        closeAdminAccessV2();
+        openPageV2("admin");
+      }else if(err){
+        err.textContent = "No se pudo abrir el administrador";
+      }
+    },30);
+  }
+
+  function openPageV2(page){
+    /* Preferimos la navegación V1 ya integrada con Partidos/Administrador. */
+    if(typeof window.navigateV1 === "function"){
+      try{
+        window.navigateV1(page);
+        window.scrollTo({top:0,behavior:"smooth"});
+        return;
+      }catch(e){}
+    }
+
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    const target=$(page);
+    if(target) target.classList.add("active");
+    document.querySelectorAll("[data-page]").forEach(b=>{
+      b.classList.toggle("active",b.dataset.page===page);
+    });
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+
+  function openMatchesV2(){
+    /* El botón lateral abre SIEMPRE la página Partidos, arriba de todo. */
+    if(typeof window.navigateV1 === "function"){
+      try{
+        window.navigateV1("matches");
+        setTimeout(()=>window.scrollTo({top:0,behavior:"smooth"}),20);
+      }catch(e){
+        openPageV2("matches");
+      }
+    }else{
+      openPageV2("matches");
+    }
+
+    /* Cerramos cualquier detalle de partido abierto. */
+    $("completedDetailsV20")?.style && ($("completedDetailsV20").style.display="none");
+    $("matches")?.classList.remove("rsV48DetailsOpen");
+
+    /* Refrescar el listado público. */
+    try{
+      if(typeof window.rsSeasonPublicRenderV1==="function"){
+        window.rsSeasonPublicRenderV1();
+      }else if(typeof window.renderMatches==="function"){
+        window.renderMatches();
+      }
+    }catch(e){}
+  }
+
+  function bindAdminAndMatchesV2(){
+    const side = $("sideNavV14");
+    const main = $("mainNav");
+
+    /* Partidos lateral: eliminar handlers anteriores y asignar el nuestro. */
+    [side,main].forEach(nav=>{
+      if(!nav) return;
+      nav.querySelectorAll('[data-page="matches"]').forEach(btn=>{
+        btn.id = nav === side ? "rsPublicMatchesBtnV2" : "rsPublicMatchesMainBtnV2";
+        btn.onclick = function(ev){
+          ev.preventDefault();
+          ev.stopPropagation();
+          openMatchesV2();
+        };
+      });
+
+      nav.querySelectorAll('[data-page="admin"]').forEach(btn=>{
+        btn.onclick = function(ev){
+          ev.preventDefault();
+          ev.stopPropagation();
+          openAdminAccessV2();
+        };
+      });
+    });
+
+    /* Si la versión actual hubiera movido/creado Partidos en otro sitio,
+       nos aseguramos de que exista en el lateral y antes de Administrador. */
+    if(side && !side.querySelector('[data-page="matches"]')){
+      const adminBtn = side.querySelector('[data-page="admin"]');
+      const b = document.createElement("button");
+      b.type="button";
+      b.dataset.page="matches";
+      b.id="rsPublicMatchesBtnV2";
+      b.innerHTML="📅 <span>Partidos</span>";
+      b.onclick=openMatchesV2;
+      side.insertBefore(b,adminBtn || null);
+    }
+  }
+
+  function initV2(){
+    const accept=$("rsAdminAcceptV2");
+    const cancel=$("rsAdminCancelV2");
+    const pin=$("rsAdminPinV2");
+    const modal=$("rsAdminAccessV2");
+
+    accept?.addEventListener("click",acceptAdminAccessV2);
+    cancel?.addEventListener("click",closeAdminAccessV2);
+
+    pin?.addEventListener("keydown",e=>{
+      if(e.key==="Enter"){
+        e.preventDefault();
+        acceptAdminAccessV2();
+      }
+      if(e.key==="Escape"){
+        e.preventDefault();
+        closeAdminAccessV2();
+      }
+    });
+
+    modal?.addEventListener("click",e=>{
+      if(e.target===modal) closeAdminAccessV2();
+    });
+
+    bindAdminAndMatchesV2();
+
+    /* La V1 hace dos boots; esperamos y volvemos a fijar nuestros handlers. */
+    setTimeout(bindAdminAndMatchesV2,150);
+    setTimeout(bindAdminAndMatchesV2,600);
+    setTimeout(bindAdminAndMatchesV2,1200);
+  }
+
+  if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded",initV2);
+  }else{
+    initV2();
+  }
+})();
+</script>
+
+
+<style id="rs-cadete-s15-only-matches-v3">
+/* ===== CADETE S15 V3 — PÁGINA PARTIDOS EXCLUSIVA ===== */
+body.rsOnlyMatchesV3 #home,
+body.rsOnlyMatchesV3 #squad,
+body.rsOnlyMatchesV3 #lineup,
+body.rsOnlyMatchesV3 #admin{
+  display:none!important;
+}
+body.rsOnlyMatchesV3 #matches{
+  display:block!important;
+  width:100%!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+body.rsOnlyMatchesV3 #matches>.sectionTitle,
+body.rsOnlyMatchesV3 #matches>.card{
+  display:block;
+}
+</style>
+
+<script id="rs-cadete-s15-only-matches-v3-js">
+(function(){
+  "use strict";
+
+  function setOnlyPageV3(page){
+    document.querySelectorAll(".page").forEach(p=>{
+      p.classList.remove("active");
+      p.style.removeProperty("display");
+    });
+
+    const target=document.getElementById(page);
+    if(target){
+      target.classList.add("active");
+    }
+
+    document.querySelectorAll("#mainNav button,#sideNavV14 button").forEach(b=>{
+      b.classList.toggle("active", b.dataset.page===page);
+    });
+
+    document.body.classList.toggle("rsOnlyMatchesV3", page==="matches");
+
+    if(page==="matches"){
+      document.querySelectorAll(".page:not(#matches)").forEach(p=>{
+        p.classList.remove("active");
+      });
+      if(target) target.style.display="block";
+      try{
+        if(typeof window.rsSeasonPublicRenderV1==="function"){
+          window.rsSeasonPublicRenderV1();
+        }else if(typeof window.renderMatches==="function"){
+          window.renderMatches();
+        }
+      }catch(e){ console.error("Partidos V3:",e); }
+      window.scrollTo(0,0);
+    }
+  }
+
+  function bindMatchesV3(){
+    document.querySelectorAll('#sideNavV14 button[data-page="matches"],#mainNav button[data-page="matches"]')
+      .forEach(btn=>{
+        btn.onclick=function(e){
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          setOnlyPageV3("matches");
+          document.getElementById("sideMenuV14")?.classList.remove("open");
+          document.getElementById("sideOverlayV14")?.classList.remove("open");
+        };
+      });
+  }
+
+  function bindNavigationV3(){
+    /* Partidos: navegación exclusiva */
+    bindMatchesV3();
+
+    /* El resto vuelve a su página normal */
+    document.querySelectorAll('#sideNavV14 button[data-page]:not([data-page="matches"]),#mainNav button[data-page]:not([data-page="matches"])')
+      .forEach(btn=>{
+        if(btn.dataset.page==="admin") return; /* V2 controla el acceso */
+        btn.onclick=function(e){
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          setOnlyPageV3(btn.dataset.page);
+        };
+      });
+  }
+
+  function initV3(){
+    bindNavigationV3();
+    setTimeout(bindNavigationV3,100);
+    setTimeout(bindNavigationV3,400);
+    setTimeout(bindNavigationV3,1000);
+  }
+
+  if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded",initV3);
+  }else{
+    initV3();
+  }
+})();
+</script>
+
+
+<style id="rs-cadete-s15-partidos-window-v4">
+/* =========================================================
+   CADETE S15 V4 — PARTIDOS EN VENTANA INDEPENDIENTE
+   ========================================================= */
+.rsMatchesWindowV4{
+  position:fixed;
+  inset:0;
+  z-index:9000;
+  display:none;
+  background:
+    radial-gradient(circle at 50% -15%,rgba(246,197,21,.12),transparent 38%),
+    #050606;
+  overflow:auto;
+}
+.rsMatchesWindowV4.open{display:block}
+
+.rsMatchesWindowHeadV4{
+  position:sticky;
+  top:0;
+  z-index:20;
+  min-height:64px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px 16px;
+  background:rgba(5,6,6,.96);
+  border-bottom:1px solid rgba(246,197,21,.45);
+  backdrop-filter:blur(12px);
+}
+.rsMatchesWindowTitleV4{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+.rsMatchesWindowIconV4{
+  width:40px;height:40px;
+  display:grid;place-items:center;
+  flex:0 0 40px;
+  border-radius:11px;
+  background:#f6c515;
+  color:#111;
+  font-size:20px;
+}
+.rsMatchesWindowTitleV4 strong{
+  display:block;
+  color:#fff;
+  font-size:15px;
+  font-weight:1000;
+}
+.rsMatchesWindowTitleV4 small{
+  display:block;
+  color:#8f928d;
+  font-size:9px;
+  margin-top:2px;
+}
+.rsMatchesWindowCloseV4{
+  min-width:44px;
+  min-height:44px;
+  border:1px solid #3d3e38;
+  border-radius:11px;
+  background:#141615;
+  color:#fff;
+  font-size:21px;
+  font-weight:900;
+  cursor:pointer;
+}
+.rsMatchesWindowCloseV4:hover{
+  border-color:#f6c515;
+  color:#f6c515;
+}
+.rsMatchesWindowBodyV4{
+  width:min(1400px,100%);
+  margin:auto;
+  padding:14px clamp(10px,3vw,34px) 70px;
+}
+/* #matches vive dentro de esta ventana y deja de ser un bloque debajo */
+.rsMatchesWindowV4 #matches{
+  display:block!important;
+  width:100%!important;
+  margin:0!important;
+  padding:0!important;
+  min-height:0!important;
+}
+.rsMatchesWindowV4 #matches .sectionTitle{
+  margin-top:4px!important;
+}
+body.rsMatchesWindowOpenV4{
+  overflow:hidden!important;
+}
+body.rsMatchesWindowOpenV4>.app,
+body.rsMatchesWindowOpenV4 .app{
+  overflow:hidden;
+}
+@media(max-width:560px){
+  .rsMatchesWindowHeadV4{padding:9px 10px}
+  .rsMatchesWindowTitleV4 strong{font-size:13px}
+  .rsMatchesWindowBodyV4{padding:10px 8px 50px}
+}
+</style>
+
+<script id="rs-cadete-s15-partidos-window-v4-js">
+(function(){
+  "use strict";
+
+  let matchesOriginalParentV4=null;
+  let matchesOriginalNextV4=null;
+  let matchesWindowV4=null;
+
+  function createMatchesWindowV4(){
+    if(document.getElementById("rsMatchesWindowV4")) return;
+
+    const matches=document.getElementById("matches");
+    if(!matches) return;
+
+    matchesOriginalParentV4=matches.parentNode;
+    matchesOriginalNextV4=matches.nextSibling;
+
+    matchesWindowV4=document.createElement("div");
+    matchesWindowV4.id="rsMatchesWindowV4";
+    matchesWindowV4.className="rsMatchesWindowV4";
+    matchesWindowV4.setAttribute("aria-hidden","true");
+
+    const head=document.createElement("div");
+    head.className="rsMatchesWindowHeadV4";
+    head.innerHTML=`
+      <div class="rsMatchesWindowTitleV4">
+        <div class="rsMatchesWindowIconV4">📅</div>
+        <div>
+          <strong>PARTIDOS</strong>
+          <small>CADETE S15 · TEMPORADA</small>
+        </div>
+      </div>
+      <button type="button" class="rsMatchesWindowCloseV4" id="rsMatchesWindowCloseV4" aria-label="Cerrar partidos">✕</button>
+    `;
+
+    const body=document.createElement("div");
+    body.className="rsMatchesWindowBodyV4";
+
+    body.appendChild(matches);
+    matchesWindowV4.appendChild(head);
+    matchesWindowV4.appendChild(body);
+    document.body.appendChild(matchesWindowV4);
+
+    document.getElementById("rsMatchesWindowCloseV4")?.addEventListener("click",closeMatchesV4);
+
+    /* Escape también cierra la ventana */
+    document.addEventListener("keydown",e=>{
+      if(e.key==="Escape" && matchesWindowV4?.classList.contains("open")){
+        closeMatchesV4();
+      }
+    });
+  }
+
+  function openMatchesV4(){
+    createMatchesWindowV4();
+    if(!matchesWindowV4) return;
+
+    /* Apagamos todas las páginas normales. */
+    document.querySelectorAll(".page").forEach(p=>{
+      p.classList.remove("active");
+      p.style.setProperty("display","none","important");
+    });
+
+    matchesWindowV4.classList.add("open");
+    matchesWindowV4.setAttribute("aria-hidden","false");
+    document.body.classList.add("rsMatchesWindowOpenV4");
+
+    document.querySelectorAll("#sideNavV14 button,#mainNav button").forEach(b=>{
+      b.classList.toggle("active",b.dataset.page==="matches");
+    });
+
+    try{
+      if(typeof window.rsSeasonPublicRenderV1==="function"){
+        window.rsSeasonPublicRenderV1();
+      }else if(typeof window.publicSeasonRenderV1==="function"){
+        window.publicSeasonRenderV1();
+      }else if(typeof window.renderMatches==="function"){
+        window.renderMatches();
+      }
+    }catch(e){
+      console.error("RS Partidos V4:",e);
+    }
+
+    matchesWindowV4.scrollTop=0;
+  }
+
+  function closeMatchesV4(){
+    if(!matchesWindowV4) return;
+
+    matchesWindowV4.classList.remove("open");
+    matchesWindowV4.setAttribute("aria-hidden","true");
+    document.body.classList.remove("rsMatchesWindowOpenV4");
+
+    /* Restauramos las páginas para que la aplicación siga funcionando. */
+    document.querySelectorAll(".page").forEach(p=>{
+      p.style.removeProperty("display");
+    });
+
+    const home=document.getElementById("home");
+    if(home){
+      document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+      home.classList.add("active");
+    }
+
+    document.querySelectorAll("#sideNavV14 button,#mainNav button").forEach(b=>{
+      b.classList.toggle("active",b.dataset.page==="home");
+    });
+
+    window.scrollTo(0,0);
+  }
+
+  function bindPartidosButtonV4(){
+    document.querySelectorAll('#sideNavV14 button[data-page="matches"],#mainNav button[data-page="matches"]')
+      .forEach(btn=>{
+        btn.onclick=function(e){
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          openMatchesV4();
+
+          /* Cerrar menú lateral si está abierto */
+          document.getElementById("sideMenuV14")?.classList.remove("open");
+          document.getElementById("sideOverlayV14")?.classList.remove("open");
+        };
+      });
+  }
+
+  function initV4(){
+    createMatchesWindowV4();
+    bindPartidosButtonV4();
+
+    /* Las versiones anteriores vuelven a enlazar navegación al arrancar,
+       por eso fijamos nuestro comportamiento después de sus boots. */
+    setTimeout(bindPartidosButtonV4,100);
+    setTimeout(bindPartidosButtonV4,400);
+    setTimeout(bindPartidosButtonV4,900);
+    setTimeout(bindPartidosButtonV4,1600);
+  }
+
+  if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded",initV4);
+  }else{
+    initV4();
+  }
+})();
+</script>
+
+
+<style id="rs-cadete-s15-partidos-fix-v5">
+/* ===== V5 FIX — FORZAR CONTENIDO DE PARTIDOS DENTRO DE LA VENTANA ===== */
+#rsMatchesWindowV4.open #matches{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  position:relative!important;
+}
+#rsMatchesWindowV4.open #matchList{
+  display:grid!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+#rsMatchesWindowV4.open .matchRow{
+  visibility:visible!important;
+  opacity:1!important;
+}
+</style>
+
+<script id="rs-cadete-s15-partidos-fix-v5-js">
+(function(){
+  "use strict";
+
+  function forcePartidosV5(){
+    const win=document.getElementById("rsMatchesWindowV4");
+    const matches=document.getElementById("matches");
+    const list=document.getElementById("matchList");
+    if(!win||!matches||!list) return false;
+
+    /* Aseguramos que el módulo esté físicamente dentro de la ventana. */
+    const body=win.querySelector(".rsMatchesWindowBodyV4");
+    if(body && matches.parentElement!==body) body.appendChild(matches);
+
+    win.classList.add("open");
+    matches.classList.add("active");
+
+    matches.style.setProperty("display","block","important");
+    matches.style.setProperty("visibility","visible","important");
+    matches.style.setProperty("opacity","1","important");
+    list.style.setProperty("display","grid","important");
+    list.style.setProperty("visibility","visible","important");
+
+    /* Render del listado de temporada, que es el render correcto de Partidos. */
+    try{
+      if(typeof window.rsSeasonPublicRenderV1==="function"){
+        window.rsSeasonPublicRenderV1();
+      }
+    }catch(e){
+      console.error("RS Season render:",e);
+    }
+
+    /* Si el render anterior no ha escrito nada, usamos el render normal como respaldo. */
+    if(!list.innerHTML.trim()){
+      try{
+        if(typeof window.renderMatches==="function") window.renderMatches();
+      }catch(e){
+        console.error("RS normal render:",e);
+      }
+    }
+
+    return true;
+  }
+
+  function rebindPartidosV5(){
+    document.querySelectorAll('#sideNavV14 button[data-page="matches"],#mainNav button[data-page="matches"]')
+      .forEach(btn=>{
+        btn.onclick=function(e){
+          e.preventDefault();
+          e.stopImmediatePropagation();
+
+          const win=document.getElementById("rsMatchesWindowV4");
+          if(!win) return;
+
+          /* Ocultar completamente las páginas de la aplicación. */
+          document.querySelectorAll(".page").forEach(p=>{
+            p.classList.remove("active");
+            p.style.setProperty("display","none","important");
+          });
+
+          document.body.classList.add("rsMatchesWindowOpenV4");
+          document.body.classList.remove("rsOnlyMatchesV3");
+
+          win.classList.add("open");
+          win.setAttribute("aria-hidden","false");
+
+          document.querySelectorAll("#sideNavV14 button,#mainNav button")
+            .forEach(b=>b.classList.toggle("active",b.dataset.page==="matches"));
+
+          setTimeout(forcePartidosV5,0);
+          setTimeout(forcePartidosV5,80);
+          setTimeout(forcePartidosV5,250);
+
+          document.getElementById("sideMenuV14")?.classList.remove("open");
+          document.getElementById("sideOverlayV14")?.classList.remove("open");
+
+          win.scrollTop=0;
+        };
+      });
+  }
+
+  function initV5(){
+    rebindPartidosV5();
+    setTimeout(rebindPartidosV5,100);
+    setTimeout(rebindPartidosV5,400);
+    setTimeout(rebindPartidosV5,900);
+    setTimeout(rebindPartidosV5,1600);
+  }
+
+  if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded",initV5);
+  }else{
+    initV5();
+  }
+})();
+</script>
+
+
+<style id="rs-cadete-s15-squad-v6">
+/* =========================================================
+   CADETE S15 V6 — PLANTILLA PÚBLICA
+   ========================================================= */
+.rsSquadWindowV6{
+  position:fixed;inset:0;z-index:9100;display:none;overflow:auto;
+  background:
+    radial-gradient(circle at 50% -10%,rgba(246,197,21,.14),transparent 35%),
+    radial-gradient(circle at 100% 35%,rgba(190,25,40,.08),transparent 30%),
+    #050606;
+}
+.rsSquadWindowV6.open{display:block}
+.rsSquadHeadV6{
+  position:sticky;top:0;z-index:20;min-height:68px;padding:10px 16px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:rgba(5,6,6,.96);border-bottom:1px solid rgba(246,197,21,.45);
+  backdrop-filter:blur(12px);
+}
+.rsSquadBrandV6{display:flex;align-items:center;gap:11px;min-width:0}
+.rsSquadIconV6{
+  width:42px;height:42px;flex:0 0 42px;border-radius:12px;
+  display:grid;place-items:center;background:#f6c515;color:#111;font-size:21px;
+}
+.rsSquadBrandV6 strong{display:block;font-size:15px;color:#fff;font-weight:1000}
+.rsSquadBrandV6 small{display:block;color:#8e928c;font-size:9px;margin-top:2px}
+.rsSquadCloseV6{
+  width:44px;height:44px;border:1px solid #3c3d37;border-radius:11px;
+  background:#141615;color:#fff;font-size:20px;font-weight:900;cursor:pointer;
+}
+.rsSquadBodyV6{width:min(1250px,100%);margin:auto;padding:16px 12px 70px}
+.rsSquadHeroV6{
+  padding:22px 18px;margin-bottom:16px;border:1px solid #2c302a;
+  border-radius:20px;background:linear-gradient(135deg,#111412,#080a09);
+  text-align:center;
+}
+.rsSquadHeroV6 .eyebrow{font-size:9px;color:#f6c515;font-weight:1000;letter-spacing:2px}
+.rsSquadHeroV6 h1{font-size:clamp(27px,5vw,42px);margin-top:5px;font-weight:1000}
+.rsSquadHeroV6 p{color:#8f9690;font-size:10px;margin-top:6px}
+.rsSquadGridV6{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;
+}
+.rsPlayerCardV6{
+  position:relative;overflow:hidden;min-width:0;border-radius:19px;
+  border:1px solid #30352f;
+  background:linear-gradient(145deg,#171a18,#090b0a 72%);
+  box-shadow:0 12px 30px rgba(0,0,0,.35);
+}
+.rsPlayerCardV6:before{
+  content:"";position:absolute;inset:0 0 auto;height:4px;
+  background:linear-gradient(90deg,#f6c515,#d9283b,#f6c515);
+}
+.rsPlayerPhotoV6{
+  position:relative;height:190px;display:flex;align-items:flex-end;justify-content:center;
+  background:
+    radial-gradient(circle at 50% 20%,rgba(246,197,21,.14),transparent 43%),
+    linear-gradient(180deg,#121614,#090b0a);
+  overflow:hidden;
+}
+.rsPlayerPhotoV6 img{
+  width:100%;height:100%;object-fit:contain;display:block;
+}
+.rsPlayerPhotoV6.noPhoto:after{
+  content:"⚽";font-size:62px;color:#343932;position:absolute;inset:0;
+  display:grid;place-items:center;
+}
+.rsPlayerNumberV6{
+  position:absolute;left:10px;top:10px;z-index:2;
+  min-width:38px;height:38px;padding:0 8px;border-radius:10px;
+  display:grid;place-items:center;background:#f6c515;color:#111;
+  font-size:17px;font-weight:1000;box-shadow:0 5px 14px #0008;
+}
+.rsCaptainV6{
+  position:absolute;right:10px;top:10px;z-index:2;padding:7px 9px;border-radius:9px;
+  background:#c52236;color:#fff;font-size:8px;font-weight:1000;
+}
+.rsPlayerInfoV6{padding:13px 13px 15px}
+.rsPlayerNameV6{
+  font-size:16px;font-weight:1000;color:#fff;text-transform:uppercase;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.rsPlayerPosV6{margin-top:4px;color:#f6c515;font-size:9px;font-weight:1000;letter-spacing:1px;text-transform:uppercase}
+.rsPlayerStatsV6{
+  display:flex;gap:6px;flex-wrap:wrap;margin-top:11px;
+}
+.rsPlayerStatV6{
+  flex:1 1 55px;padding:7px 6px;text-align:center;border-radius:9px;
+  background:#0d100f;border:1px solid #242923;
+}
+.rsPlayerStatV6 b{display:block;color:#fff;font-size:13px}
+.rsPlayerStatV6 small{display:block;color:#707871;font-size:7px;margin-top:2px;text-transform:uppercase}
+.rsSquadEmptyV6{
+  padding:30px;text-align:center;border:1px dashed #363b35;border-radius:16px;
+  color:#8e958f;background:#0b0d0c;
+}
+@media(max-width:1000px){.rsSquadGridV6{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){
+  .rsSquadGridV6{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .rsPlayerPhotoV6{height:160px}
+  .rsPlayerNameV6{font-size:13px}
+  .rsPlayerInfoV6{padding:10px}
+  .rsPlayerStatsV6{gap:4px}
+  .rsPlayerStatV6{padding:6px 4px}
+}
+@media(max-width:420px){
+  .rsSquadGridV6{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  .rsPlayerPhotoV6{height:145px}
+  .rsPlayerNumberV6{left:7px;top:7px;min-width:32px;height:32px;font-size:14px}
+  .rsCaptainV6{right:7px;top:7px;padding:5px 6px;font-size:7px}
+  .rsPlayerNameV6{font-size:11px}
+}
+</style>
+
+<div id="rsSquadWindowV6" class="rsSquadWindowV6" aria-hidden="true">
+  <div class="rsSquadHeadV6">
+    <div class="rsSquadBrandV6">
+      <div class="rsSquadIconV6">👕</div>
+      <div><strong>PLANTILLA</strong><small>RAMÓN SICART · CADETE S15</small></div>
+    </div>
+    <button type="button" class="rsSquadCloseV6" id="rsSquadCloseV6" aria-label="Cerrar plantilla">✕</button>
+  </div>
+  <main class="rsSquadBodyV6">
+    <section class="rsSquadHeroV6">
+      <div class="eyebrow">RAMÓN SICART</div>
+      <h1>CADETE S15</h1>
+      <p>PLANTILLA OFICIAL · CADETE S15</p>
+    </section>
+    <section id="rsSquadGridV6" class="rsSquadGridV6" aria-live="polite"></section>
+  </main>
+</div>
+
+<script id="rs-cadete-s15-squad-v6-js">
+(function(){
+  "use strict";
+
+  function getPlayersV6(){
+    /* La fuente de datos es siempre App.players, la misma del administrador. */
+    if(window.App && Array.isArray(App.players)) return App.players;
+    if(window.players && Array.isArray(window.players)) return window.players;
+    return [];
+  }
+
+  function escV6(v){
+    return String(v??"").replace(/[&<>"']/g,m=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[m]));
+  }
+
+  function playerValueV6(p, keys){
+    for(const k of keys){
+      if(p && p[k]!==undefined && p[k]!==null && String(p[k]).trim()!=="") return p[k];
+    }
+    return "";
+  }
+
+  function renderSquadV6(){
+    const grid=document.getElementById("rsSquadGridV6");
+    if(!grid) return;
+
+    const players=getPlayersV6().filter(Boolean);
+    if(!players.length){
+      grid.innerHTML='<div class="rsSquadEmptyV6">No hay jugadores registrados todavía.</div>';
+      return;
+    }
+
+    const sorted=[...players].sort((a,b)=>{
+      const na=parseInt(playerValueV6(a,["number","dorsal","num","numero"]),10);
+      const nb=parseInt(playerValueV6(b,["number","dorsal","num","numero"]),10);
+      if(Number.isFinite(na)&&Number.isFinite(nb)) return na-nb;
+      return String(playerValueV6(a,["name","nombre","fullName"])||"")
+        .localeCompare(String(playerValueV6(b,["name","nombre","fullName"])||""),"es");
+    });
+
+    grid.innerHTML=sorted.map(p=>{
+      const name=playerValueV6(p,["name","nombre","fullName"])||"Jugador";
+      const number=playerValueV6(p,["number","dorsal","num","numero"])||"—";
+      const pos=playerValueV6(p,["position","posicion","pos","role"])||"Jugador";
+      const photo=playerValueV6(p,["photo","foto","image","imagen","photoUrl","imageUrl","avatar"]);
+      const captain=!!(p.captain||p.capitan||p.isCaptain);
+      const matches=playerValueV6(p,["matches","partidos","PJ"]);
+      const goals=playerValueV6(p,["goals","goles","G"]);
+      const assists=playerValueV6(p,["assists","asistencias","A"]);
+
+      return `
+        <article class="rsPlayerCardV6">
+          <div class="rsPlayerPhotoV6 ${photo?'':'noPhoto'}">
+            ${photo?`<img src="${escV6(photo)}" alt="${escV6(name)}" loading="lazy">`:''}
+            <span class="rsPlayerNumberV6">${escV6(number)}</span>
+            ${captain?'<span class="rsCaptainV6">CAPITÁN</span>':''}
+          </div>
+          <div class="rsPlayerInfoV6">
+            <div class="rsPlayerNameV6" title="${escV6(name)}">${escV6(name)}</div>
+            <div class="rsPlayerPosV6">${escV6(pos)}</div>
+            <div class="rsPlayerStatsV6">
+              ${matches!==""?`<div class="rsPlayerStatV6"><b>${escV6(matches)}</b><small>Partidos</small></div>`:''}
+              ${goals!==""?`<div class="rsPlayerStatV6"><b>${escV6(goals)}</b><small>Goles</small></div>`:''}
+              ${assists!==""?`<div class="rsPlayerStatV6"><b>${escV6(assists)}</b><small>Asist.</small></div>`:''}
+            </div>
+          </div>
+        </article>`;
+    }).join("");
+  }
+
+  function openSquadV6(){
+    const win=document.getElementById("rsSquadWindowV6");
+    if(!win) return;
+    document.querySelectorAll(".page").forEach(p=>{
+      p.classList.remove("active");
+      p.style.setProperty("display","none","important");
+    });
+    renderSquadV6();
+    win.classList.add("open");
+    win.setAttribute("aria-hidden","false");
+    document.body.style.overflow="hidden";
+    document.querySelectorAll("#sideNavV14 button,#mainNav button")
+      .forEach(b=>b.classList.toggle("active",b.dataset.page==="squad"));
+    win.scrollTop=0;
+  }
+
+  function closeSquadV6(){
+    const win=document.getElementById("rsSquadWindowV6");
+    if(!win) return;
+    win.classList.remove("open");
+    win.setAttribute("aria-hidden","true");
+    document.body.style.overflow="";
+    document.querySelectorAll(".page").forEach(p=>p.style.removeProperty("display"));
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    document.getElementById("home")?.classList.add("active");
+    document.querySelectorAll("#sideNavV14 button,#mainNav button")
+      .forEach(b=>b.classList.toggle("active",b.dataset.page==="home"));
+    window.scrollTo(0,0);
+  }
+
+  function addSquadButtonsV6(){
+    const side=document.getElementById("sideNavV14");
+    const main=document.getElementById("mainNav");
+
+    [side,main].forEach(nav=>{
+      if(!nav) return;
+      let btn=nav.querySelector('button[data-page="squad"]');
+      if(!btn){
+        btn=document.createElement("button");
+        btn.type="button";
+        btn.dataset.page="squad";
+        btn.innerHTML="👕 <span>Plantilla</span>";
+        const matches=nav.querySelector('button[data-page="matches"]');
+        if(matches) matches.insertAdjacentElement("afterend",btn);
+        else nav.appendChild(btn);
+      }
+      btn.onclick=function(e){
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        openSquadV6();
+        document.getElementById("sideMenuV14")?.classList.remove("open");
+        document.getElementById("sideOverlayV14")?.classList.remove("open");
+      };
+    });
+  }
+
+  function initV6(){
+    document.getElementById("rsSquadCloseV6")?.addEventListener("click",closeSquadV6);
+    document.getElementById("rsSquadWindowV6")?.addEventListener("click",e=>{
+      if(e.target.id==="rsSquadWindowV6") closeSquadV6();
+    });
+    document.addEventListener("keydown",e=>{
+      if(e.key==="Escape" && document.getElementById("rsSquadWindowV6")?.classList.contains("open")){
+        closeSquadV6();
+      }
+    });
+    addSquadButtonsV6();
+    setTimeout(addSquadButtonsV6,150);
+    setTimeout(addSquadButtonsV6,500);
+    setTimeout(addSquadButtonsV6,1200);
+  }
+
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",initV6);
+  else initV6();
+})();
+</script>
+
+
+<div id="rsBottomNavV7" aria-label="Accesos rápidos">
+  <button type="button" data-rs-bottom="home"><span class="ico">⌂</span>INICIO</button>
+  <button type="button" data-rs-bottom="matches"><span class="ico">⚽</span>PARTIDOS</button>
+  <button type="button" data-rs-bottom="squad" class="active"><span class="ico">👥</span>PLANTILLA</button>
+</div>
+
+
+<script id="rs-bottom-squad-v7-js">
+(function(){
+  function openBottom(page){
+    try{
+      if(page === 'squad' && typeof window.rsOpenSquadWindowV6 === 'function'){
+        window.rsOpenSquadWindowV6();
+      }else if(page === 'matches' && typeof window.rsOpenMatchesWindowV5 === 'function'){
+        window.rsOpenMatchesWindowV5();
+      }else if(typeof window.navigateV1 === 'function'){
+        window.navigateV1(page);
+      }else{
+        var el=document.getElementById(page);
+        if(el){
+          document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+          el.classList.add('active');
+        }
+      }
+    }catch(e){ console.warn('RS bottom nav:',e); }
+    document.querySelectorAll('#rsBottomNavV7 button').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-rs-bottom')===page);
+    });
+  }
+  document.addEventListener('click',function(e){
+    var b=e.target.closest && e.target.closest('#rsBottomNavV7 button[data-rs-bottom]');
+    if(!b)return;
+    e.preventDefault();
+    openBottom(b.getAttribute('data-rs-bottom'));
+  });
+  window.rsOpenSquadBottomV7=function(){openBottom('squad')};
+})();
+</script>
+
 </body>
 </html>
 
@@ -5653,3 +6812,518 @@ document.addEventListener("click",function(e){
 })();
 </script>
 
+
+<style id="rs-cadete-s15-design-v1">
+/* =========================================================
+   RS LIVE — DISEÑO CADETE S15 / REFERENCIA COSTA DAURADA
+   Solo capa visual: conserva IDs, datos y lógica existentes.
+   ========================================================= */
+:root{
+  --rsGold:#f6c515;
+  --rsGold2:#ffdc45;
+  --rsRed:#d92732;
+  --rsBlack:#050606;
+  --rsPanel:#0b0c0c;
+  --rsPanel2:#111313;
+  --rsLine:#3b3b34;
+  --rsText:#f5f5f2;
+  --rsMuted:#aaa99f;
+}
+html,body{
+  background:
+    radial-gradient(circle at 15% 5%,rgba(246,197,21,.16),transparent 23%),
+    radial-gradient(circle at 88% 15%,rgba(217,39,50,.10),transparent 24%),
+    repeating-linear-gradient(135deg,rgba(255,255,255,.018) 0 2px,transparent 2px 17px),
+    linear-gradient(180deg,#050606 0%,#080909 48%,#030303 100%) !important;
+}
+body:before,body:after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;
+}
+body:before{
+  background:
+    radial-gradient(ellipse at 4% 18%,rgba(246,197,21,.13),transparent 18%),
+    radial-gradient(ellipse at 96% 55%,rgba(246,197,21,.10),transparent 20%),
+    repeating-linear-gradient(160deg,transparent 0 34px,rgba(255,190,0,.035) 35px 37px,transparent 38px 74px);
+  mix-blend-mode:screen;
+}
+body:after{
+  background-image:radial-gradient(rgba(255,255,255,.09) .7px,transparent .8px);
+  background-size:5px 5px;opacity:.08;
+}
+
+/* Header */
+.topbar{
+  height:118px !important;
+  padding:10px 24px 8px 82px !important;
+  background:linear-gradient(180deg,rgba(0,0,0,.97),rgba(4,5,5,.88)) !important;
+  border-bottom:1px solid rgba(246,197,21,.32) !important;
+  position:sticky;top:0;z-index:100;
+}
+.topbar .brand{display:none !important}
+.topStatus{
+  position:absolute;right:16px;bottom:7px;font-size:8px !important;opacity:.7;
+}
+.rsCadeteTop{
+  width:100%;display:grid;grid-template-columns:1fr minmax(340px,720px) 1fr;
+  align-items:center;gap:16px;height:100%;
+}
+.rsCadeteLogo{
+  display:flex;align-items:center;gap:10px;justify-content:flex-start;
+}
+.rsCadeteLogo img{
+  width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 4px 8px #000);
+}
+.rsCadeteTitle{text-align:center;line-height:.9;text-transform:uppercase}
+.rsCadeteTitle small{
+  display:block;font-family:Impact,"Arial Narrow",Arial,sans-serif;
+  font-size:16px;letter-spacing:3px;color:#fff;margin-bottom:2px;
+  transform:skew(-7deg);
+}
+.rsCadeteTitle strong{
+  display:block;font-family:Impact,"Arial Narrow",Arial,sans-serif;
+  font-size:clamp(34px,5vw,62px);letter-spacing:1px;
+  color:var(--rsGold);text-shadow:2px 2px 0 #8b6800,4px 4px 0 #000;
+  transform:skew(-7deg);
+}
+.rsCadeteDate{
+  justify-self:end;min-width:138px;padding:10px 15px;border-radius:10px;
+  background:linear-gradient(180deg,#141515,#090a0a);
+  border:1px solid rgba(246,197,21,.5);text-align:center;
+  box-shadow:0 8px 24px #0008;
+}
+.rsCadeteDate .icon{font-size:24px;display:block;line-height:1}
+.rsCadeteDate b{display:block;font-size:16px;margin-top:4px;color:#fff}
+.rsCadeteDate small{font-size:8px;color:var(--rsGold);font-weight:1000;letter-spacing:1px}
+
+/* Menu */
+.mobileMenuBtnV14{
+  display:block !important;left:18px !important;top:20px !important;
+  width:48px !important;height:48px !important;border-radius:10px !important;
+  background:#070707 !important;border:1px solid #4a4a43 !important;
+  font-size:28px !important;box-shadow:0 8px 20px #000 !important;
+}
+.sideMenuV14{background:#080909 !important;border-right:1px solid #4a421d !important}
+.sideNavV14 button{background:#111313 !important;border-color:#383831 !important}
+.sideNavV14 button.active{background:var(--rsGold) !important;color:#111 !important;border-color:var(--rsGold) !important}
+.nav{display:none!important}
+
+/* Main shell */
+.shell{
+  width:min(1500px,100%) !important;padding:0 18px 110px !important;
+}
+#home{display:block}
+.homeHeroV29{display:none !important}
+
+/* Gold information strip */
+.rsCadeteStrip{
+  display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;
+  min-height:54px;margin:0 0 12px;
+  background:linear-gradient(90deg,#e9ad00,#ffd029 50%,#e9ad00);
+  color:#101010;border-radius:0 0 12px 12px;
+  border:1px solid #8c6700;border-top:0;overflow:hidden;
+  box-shadow:0 7px 22px #0008;
+}
+.rsCadeteStrip>div{
+  min-height:54px;display:flex;align-items:center;justify-content:center;
+  gap:10px;font-family:"Arial Narrow",Arial,sans-serif;font-weight:1000;
+  font-size:clamp(13px,2vw,20px);text-transform:uppercase;
+  border-right:1px solid rgba(0,0,0,.35);
+}
+.rsCadeteStrip>div:last-child{border-right:0}
+.rsCadeteStrip .stripIcon{font-size:23px}
+
+/* Match hero */
+.liveHero{
+  background:
+    radial-gradient(circle at 50% 40%,rgba(255,255,255,.025),transparent 35%),
+    linear-gradient(180deg,#111212,#070808) !important;
+  border:1px solid #5d4b13 !important;border-radius:18px !important;
+  box-shadow:0 15px 45px #000 !important;overflow:hidden;
+}
+.heroTop{
+  min-height:43px;padding:10px 18px !important;
+  background:linear-gradient(90deg,rgba(246,197,21,.11),transparent 35%,transparent 65%,rgba(246,197,21,.11));
+  border-bottom:1px solid #302f27 !important;
+}
+.badge{background:#171817 !important;border:1px solid #4a493f !important;color:#e7e6df !important}
+.badge.live{background:#57151a !important;color:#ff7d83 !important;border-color:#b52c35 !important}
+.competition{color:var(--rsGold) !important;text-transform:uppercase;letter-spacing:1.4px}
+
+.scoreArea{
+  grid-template-columns:minmax(0,1fr) minmax(190px,290px) minmax(0,1fr) !important;
+  padding:30px 28px 18px !important;gap:20px !important;
+}
+.teamHeroName{
+  font-family:"Arial Narrow",Arial,sans-serif !important;
+  text-transform:uppercase;font-size:clamp(16px,2.1vw,25px) !important;
+  font-weight:1000 !important;
+}
+.crest{
+  width:125px !important;height:125px !important;
+  filter:drop-shadow(0 10px 15px #000) !important;
+}
+.score{
+  font-family:Impact,"Arial Narrow",Arial,sans-serif !important;
+  font-size:clamp(62px,8vw,105px) !important;letter-spacing:2px !important;
+}
+.clock{
+  color:var(--rsGold) !important;font-family:Impact,"Arial Narrow",Arial,sans-serif !important;
+  font-size:clamp(26px,4vw,42px) !important;letter-spacing:1px;
+}
+.state{
+  border:1px solid #4d4b42 !important;background:#151616 !important;
+  color:#fff !important;border-radius:8px !important;text-transform:uppercase;
+}
+.meta{
+  padding:0 20px 20px !important;color:#c4c3bc !important;
+}
+.meta span{font-weight:900}
+
+/* Events + lineup become the reference two-column block */
+#rsCadeteLowerGrid{
+  display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);
+  gap:10px;margin-top:10px;
+}
+#rsCadeteLowerGrid>.integratedEventsV13,
+#rsCadeteLowerGrid>.publicTeamV11{min-width:0}
+#rsCadeteLowerGrid .integratedEventsV13{
+  display:block !important;position:static !important;margin:0 !important;
+  padding:0 !important;border:1px solid #5d4b13 !important;
+  border-radius:16px;background:linear-gradient(180deg,#111212,#080909);
+  min-height:100%;overflow:hidden;
+}
+#rsCadeteLowerGrid .integratedEventsHeadV13{
+  min-height:54px;margin:0 !important;padding:0 18px;
+  display:flex !important;align-items:center;justify-content:flex-start !important;
+  background:linear-gradient(90deg,rgba(246,197,21,.10),transparent);
+  border-bottom:1px solid #34332c;font-size:15px;
+}
+#rsCadeteLowerGrid .integratedEventsHeadV13 strong{color:var(--rsGold);font-size:clamp(14px,2vw,20px)}
+#rsCadeteLowerGrid .integratedEventsHeadV13 strong:before{content:"☷";margin-right:10px}
+#rsCadeteLowerGrid .integratedEventsHeadV13 .liveDotV13{display:none}
+#rsCadeteLowerGrid #publicLiveHint{margin-left:auto;font-size:9px !important}
+#rsCadeteLowerGrid #publicEvents{
+  padding:10px 14px 16px;min-height:450px;
+}
+#rsCadeteLowerGrid .v26PublicEvent{
+  background:#0d0e0e !important;border-color:#33342f !important;
+  border-radius:0 !important;min-height:48px;
+}
+#rsCadeteLowerGrid .v26PublicEvent+.v26PublicEvent{margin-top:0;border-top:0}
+#rsCadeteLowerGrid .v26PublicEvent .minute{color:#fff !important}
+#rsCadeteLowerGrid .v26PublicEvent .score{font-size:13px !important;color:#fff !important}
+
+/* Lineup panel */
+#rsCadeteLowerGrid .publicTeamV11{
+  margin:0 !important;padding:0 12px 14px !important;
+  background:linear-gradient(180deg,#111212,#080909) !important;
+  border:1px solid #5d4b13 !important;border-radius:16px !important;
+  box-shadow:none !important;
+}
+#rsCadeteLowerGrid .publicTeamV11>.sectionTitle{
+  margin:0 -12px 12px !important;padding:0 18px;min-height:54px;
+  background:linear-gradient(90deg,rgba(246,197,21,.10),transparent);
+  border-bottom:1px solid #34332c;
+}
+#rsCadeteLowerGrid .publicTeamV11>.sectionTitle h2{
+  color:var(--rsGold) !important;font-size:clamp(14px,2vw,20px) !important;
+  text-transform:uppercase;
+}
+#rsCadeteLowerGrid .publicTeamV11>.sectionTitle h2:first-letter{color:var(--rsGold)}
+#rsCadeteLowerGrid .publicTeamV11>.sectionTitle p{
+  color:#fff !important;font-weight:1000;
+}
+#rsCadeteLowerGrid .publicPitchV11{
+  width:100% !important;max-width:680px;height:auto !important;
+  border-radius:0 !important;border:2px solid #dcebd3 !important;
+  box-shadow:0 12px 28px #0009 !important;
+}
+#rsCadeteLowerGrid .benchV11{
+  width:100% !important;margin-top:10px !important;padding:10px !important;
+  background:#0b0c0c !important;border:1px solid #33342f !important;border-radius:10px !important;
+}
+#rsCadeteLowerGrid .benchTitleV11{color:var(--rsGold) !important}
+#rsCadeteLowerGrid .benchPlayerV11{
+  background:#101111 !important;border-color:#33342f !important;
+}
+
+/* Classification */
+.rsCadeteStandings{
+  margin-top:10px;background:linear-gradient(180deg,#111212,#080909);
+  border:1px solid #5d4b13;border-radius:16px;overflow:hidden;
+}
+.rsCadeteStandHead{
+  min-height:55px;padding:0 18px;display:flex;align-items:center;
+  color:var(--rsGold);font-size:clamp(16px,2vw,22px);font-weight:1000;
+  text-transform:uppercase;border-bottom:1px solid #34332c;
+}
+.rsCadeteStandHead:before{content:"🏆";margin-right:10px}
+.rsStandTable{width:100%;border-collapse:collapse;table-layout:fixed}
+.rsStandTable th{
+  padding:8px 6px;color:var(--rsGold);font-size:11px;text-transform:uppercase;
+  border-bottom:1px solid #35352f;text-align:center;
+}
+.rsStandTable th:nth-child(2){text-align:left}
+.rsStandTable td{
+  padding:8px 6px;border-bottom:1px solid #292a26;text-align:center;
+  font-size:13px;font-weight:900;color:#f3f3ef;
+}
+.rsStandTable tr:last-child td{border-bottom:0}
+.rsStandTable td:nth-child(2){text-align:left}
+.rsTeamCell{display:flex;align-items:center;gap:9px;min-width:0}
+.rsTeamCell img{width:32px;height:32px;object-fit:contain;flex:0 0 32px}
+.rsTeamCell b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rsPts{color:var(--rsGold) !important;font-size:16px !important}
+
+/* Hide old home dashboard remnants if present */
+#homeDashboardV26{display:none !important}
+
+/* Bottom reference navigation */
+.rsCadeteBottomNav{
+  position:fixed;left:0;right:0;bottom:0;z-index:900;
+  height:78px;padding:5px max(10px,env(safe-area-inset-left)) max(5px,env(safe-area-inset-bottom));
+  display:grid;grid-template-columns:repeat(5,1fr);
+  background:rgba(5,6,6,.97);border-top:1px solid #4c421d;
+  box-shadow:0 -12px 35px #000c;backdrop-filter:blur(12px);
+}
+.rsCadeteBottomNav button{
+  border:0;border-right:1px solid #3a3934;background:transparent;color:#eee;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  font-family:"Arial Narrow",Arial,sans-serif;font-weight:1000;text-transform:uppercase;
+  font-size:9px;letter-spacing:.2px;
+}
+.rsCadeteBottomNav button:last-child{border-right:0}
+.rsCadeteBottomNav .navIcon{font-size:25px;line-height:1}
+.rsCadeteBottomNav button.active,.rsCadeteBottomNav button:hover{color:var(--rsGold)}
+.rsCadeteBottomNav button.active .navIcon{filter:drop-shadow(0 0 7px rgba(246,197,21,.35))}
+
+/* Details / other pages inherit visual language */
+#matches .sectionTitle h2,#admin .sectionTitle h2,#squad .sectionTitle h2{color:var(--rsGold)}
+#matches .infoCard,#matches .completedDetailsV20,#admin .adminCard,#admin .card,#squad .playerCard{
+  background:linear-gradient(180deg,#111212,#080909) !important;
+  border-color:#3a3932 !important;box-shadow:0 12px 30px #0009 !important;
+}
+#matches .matchRow{border-color:#30312d !important}
+#matches .matchTeams b{color:#fff}
+.btn{background:var(--rsGold) !important;color:#111 !important}
+.btn.dark{background:#1a1b1a !important;color:#fff !important;border:1px solid #45453d !important}
+.btn.red{background:var(--rsRed) !important}
+.btn.green{background:#d7a900 !important;color:#111 !important}
+
+/* Mobile */
+@media(max-width:850px){
+  .topbar{height:94px !important;padding-left:70px !important;padding-right:12px !important}
+  .rsCadeteTop{grid-template-columns:1fr auto;gap:6px}
+  .rsCadeteLogo{display:none}
+  .rsCadeteTitle{text-align:left}
+  .rsCadeteTitle small{font-size:11px;letter-spacing:2px}
+  .rsCadeteTitle strong{font-size:34px}
+  .rsCadeteDate{min-width:105px;padding:7px 8px}
+  .rsCadeteDate .icon{font-size:18px}
+  .rsCadeteDate b{font-size:12px}
+  .rsCadeteDate small{font-size:7px}
+  .scoreArea{grid-template-columns:minmax(0,1fr) 115px minmax(0,1fr) !important;padding:24px 12px 14px !important;gap:7px !important}
+  .crest{width:80px !important;height:80px !important}
+  #rsCadeteLowerGrid{grid-template-columns:1fr}
+  #rsCadeteLowerGrid #publicEvents{min-height:0}
+}
+@media(max-width:560px){
+  .shell{padding-left:7px !important;padding-right:7px !important;padding-bottom:100px !important}
+  .rsCadeteStrip{grid-template-columns:1fr 1fr 1fr;min-height:46px}
+  .rsCadeteStrip>div{min-height:46px;font-size:10px;gap:4px}
+  .rsCadeteStrip .stripIcon{font-size:17px}
+  .scoreArea{grid-template-columns:1fr 82px 1fr !important}
+  .crest{width:60px !important;height:60px !important}
+  .teamHeroName{font-size:11px !important}
+  .score{font-size:45px !important}
+  .clock{font-size:25px !important}
+  .meta{font-size:9px;gap:7px !important}
+  #rsCadeteLowerGrid .publicTeamV11>.sectionTitle,
+  #rsCadeteLowerGrid .integratedEventsHeadV13{padding-left:12px;padding-right:12px}
+  #rsCadeteLowerGrid .publicPitchV11{border-width:2px !important}
+  .rsStandTable th{font-size:8px;padding:7px 2px}
+  .rsStandTable td{font-size:10px;padding:7px 2px}
+  .rsTeamCell img{width:25px;height:25px;flex-basis:25px}
+  .rsTeamCell{gap:5px}
+  .rsPts{font-size:13px !important}
+  .rsCadeteBottomNav{height:72px}
+  .rsCadeteBottomNav .navIcon{font-size:21px}
+  .rsCadeteBottomNav button{font-size:7px}
+}
+
+/* Desktop: match information has stronger tournament-card proportions */
+@media(min-width:851px){
+  .liveHero .heroTop{padding-left:26px !important;padding-right:26px !important}
+  #rsCadeteLowerGrid .publicPitchV11{max-height:720px}
+}
+</style>
+
+
+<script id="rs-cadete-s15-design-v1-js">
+(function(){
+  "use strict";
+  const $=id=>document.getElementById(id);
+  const escLocal=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const teamLocal=id=>(window.App?.teams||[]).find(t=>String(t.id)===String(id))||{name:"Equipo",logo:""};
+
+  function dateLocal(d){
+    if(!d)return "—";
+    const parts=String(d).split("-");
+    if(parts.length===3)return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    return String(d);
+  }
+
+  function buildTop(){
+    const header=document.querySelector(".topbar");
+    if(!header)return;
+    if(!document.getElementById("rsCadeteTop")){
+      header.insertAdjacentHTML("afterbegin",`
+        <div class="rsCadeteTop" id="rsCadeteTop">
+          <div class="rsCadeteLogo">
+            <img id="rsCadeteLogoImg" alt="Ramón Sicart">
+          </div>
+          <div class="rsCadeteTitle">
+            <small>LIGA</small>
+            <strong>CADETE S15</strong>
+          </div>
+          <div class="rsCadeteDate">
+            <span class="icon">📅</span>
+            <b id="rsCadeteDateValue">—</b>
+            <small id="rsCadeteDateLabel">JORNADA —</small>
+          </div>
+        </div>`);
+    }
+    const src=$("headerRamonCrestV29")?.getAttribute("src")||$("sideRamonCrestV34")?.getAttribute("src")||"";
+    if($("rsCadeteLogoImg") && src)$("rsCadeteLogoImg").src=src;
+  }
+
+  function buildStrip(){
+    if(document.getElementById("rsCadeteStrip"))return;
+    const shell=document.querySelector(".shell");
+    const nav=document.getElementById("mainNav");
+    if(!shell)return;
+    const el=document.createElement("div");
+    el.id="rsCadeteStrip";
+    el.className="rsCadeteStrip";
+    el.innerHTML=`
+      <div><span class="stripIcon">⚽</span><span>FÚTBOL 11</span></div>
+      <div><span class="stripIcon">🕒</span><span id="rsStripHour">—</span></div>
+      <div><span class="stripIcon">🏆</span><span id="rsStripRound">JORNADA —</span></div>`;
+    shell.insertBefore(el,nav||shell.firstChild);
+  }
+
+  function buildLower(){
+    const home=$("home"), events=$("publicLiveConsole"), lineup=$("publicTeamV11");
+    if(!home||!events||!lineup)return;
+    if(!document.getElementById("rsCadeteLowerGrid")){
+      const grid=document.createElement("div");
+      grid.id="rsCadeteLowerGrid";
+      events.parentNode.insertBefore(grid,events);
+      grid.appendChild(events);
+      grid.appendChild(lineup);
+    }
+  }
+
+  function buildStandings(){
+    const home=$("home");
+    if(!home||document.getElementById("rsCadeteStandings"))return;
+    const box=document.createElement("section");
+    box.id="rsCadeteStandings";
+    box.className="rsCadeteStandings";
+    box.innerHTML=`
+      <div class="rsCadeteStandHead">Clasificación <span style="margin-left:auto;font-size:9px;color:#aaa99f">ACTUALIZADA CON PARTIDOS FINALIZADOS</span></div>
+      <div style="overflow:auto"><table class="rsStandTable">
+        <thead><tr><th style="width:42px">POS</th><th>EQUIPO</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th><th>GF</th><th>GC</th><th>PTS</th></tr></thead>
+        <tbody id="rsStandBody"></tbody>
+      </table></div>`;
+    home.appendChild(box);
+  }
+
+  function buildBottom(){
+    if(document.getElementById("rsCadeteBottomNav"))return;
+    const nav=document.createElement("nav");
+    nav.id="rsCadeteBottomNav";
+    nav.className="rsCadeteBottomNav";
+    nav.innerHTML=`
+      <button type="button" data-target="match"><span class="navIcon">⚽</span><span>Partido</span></button>
+      <button type="button" data-target="lineup"><span class="navIcon">⚽</span><span>Alineación</span></button>
+      <button type="button" data-target="events"><span class="navIcon">☷</span><span>Eventos</span></button>
+      <button type="button" data-target="stand"><span class="navIcon">🏆</span><span>Clasificación</span></button>
+      <button type="button" data-target="squad"><span class="navIcon">★</span><span>MVP</span></button>`;
+    document.body.appendChild(nav);
+    nav.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+      const target=b.dataset.target;
+      nav.querySelectorAll("button").forEach(x=>x.classList.remove("active"));
+      b.classList.add("active");
+      if(target==="match") $("home")?.scrollIntoView({behavior:"smooth",block:"start"});
+      if(target==="lineup") $("publicTeamV11")?.scrollIntoView({behavior:"smooth",block:"start"});
+      if(target==="events") $("publicLiveConsole")?.scrollIntoView({behavior:"smooth",block:"start"});
+      if(target==="stand") $("rsCadeteStandings")?.scrollIntoView({behavior:"smooth",block:"start"});
+      if(target==="squad"){
+        const old=document.querySelector('[data-page="squad"]');
+        if(typeof window.navigateV1==="function" && old) window.navigateV1("squad",old);
+        else {document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));$("squad")?.classList.add("active");}
+        window.scrollTo({top:0,behavior:"smooth"});
+      }
+    }));
+    nav.querySelector('button[data-target="match"]')?.classList.add("active");
+  }
+
+  function renderStandings(){
+    const body=$("rsStandBody");
+    if(!body)return;
+    const stats={};
+    (window.App?.teams||[]).forEach(t=>stats[t.id]={team:t,played:0,w:0,d:0,l:0,gf:0,ga:0,pts:0});
+    (window.App?.matches||[]).filter(m=>m.status==="FINISHED").forEach(m=>{
+      if(!stats[m.home]||!stats[m.away])return;
+      const h=Number(m.homeScore||0),a=Number(m.awayScore||0);
+      const H=stats[m.home],A=stats[m.away];
+      H.played++;A.played++;H.gf+=h;H.ga+=a;A.gf+=a;A.ga+=h;
+      if(h>a){H.w++;A.l++;H.pts+=3}
+      else if(a>h){A.w++;H.l++;A.pts+=3}
+      else{H.d++;A.d++;H.pts++;A.pts++}
+    });
+    const rows=Object.values(stats).sort((a,b)=>b.pts-a.pts||(b.gf-b.ga)-(a.gf-a.ga)||b.gf-a.gf||a.team.name.localeCompare(b.team.name));
+    body.innerHTML=rows.length?rows.map((r,i)=>`
+      <tr>
+        <td>${i+1}</td>
+        <td><div class="rsTeamCell">${r.team.logo?`<img src="${escLocal(r.team.logo)}" alt="">`:"<span style='width:32px'>⚽</span>"}<b>${escLocal(r.team.name)}</b></div></td>
+        <td>${r.played}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td>
+        <td>${r.gf}</td><td>${r.ga}</td><td class="rsPts">${r.pts}</td>
+      </tr>`).join(""):`<tr><td colspan="9" style="padding:20px;color:#aaa99f">No hay equipos registrados.</td></tr>`;
+  }
+
+  function updateHeader(){
+    const m=typeof window.activeMatch==="function"?window.activeMatch():(window.App?.matches||[]).find(x=>String(x.id)===String(window.App?.activeMatch));
+    const d=m?.date||"";
+    if($("rsCadeteDateValue"))$("rsCadeteDateValue").textContent=dateLocal(d);
+    if($("rsCadeteDateLabel"))$("rsCadeteDateLabel").textContent=`JORNADA ${m?.jornada||"—"}`;
+    if($("rsStripHour"))$("rsStripHour").textContent=m?.hour||"—";
+    if($("rsStripRound"))$("rsStripRound").textContent=`JORNADA ${m?.jornada||"—"}`;
+  }
+
+  function apply(){
+    buildTop();buildStrip();buildLower();buildStandings();buildBottom();
+    updateHeader();renderStandings();
+  }
+
+  /* Keep the existing data/render pipeline intact and repaint only the design extras. */
+  const oldRenderAll=window.renderAll;
+  window.renderAll=function(){
+    if(typeof oldRenderAll==="function")oldRenderAll.apply(this,arguments);
+    setTimeout(apply,0);
+  };
+  const oldRenderHome=window.renderHome;
+  window.renderHome=function(){
+    if(typeof oldRenderHome==="function")oldRenderHome.apply(this,arguments);
+    setTimeout(()=>{buildTop();buildStrip();buildLower();buildStandings();updateHeader();renderStandings();},0);
+  };
+
+  apply();
+  setTimeout(apply,100);
+  setTimeout(apply,700);
+})();
+</script>
+
+</body>
+</html>
