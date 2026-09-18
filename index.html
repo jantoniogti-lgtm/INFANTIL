@@ -4062,20 +4062,45 @@ document.addEventListener("click",function(e){
         c.fillStyle=isKeeper?'#0aa66a':'#ffd400';
         c.beginPath();c.moveTo(x-34,y-48);c.lineTo(x-17,y-61);c.lineTo(x+17,y-61);c.lineTo(x+34,y-48);c.lineTo(x+48,y-30);c.lineTo(x+33,y-18);c.lineTo(x+30,y+52);c.lineTo(x-30,y+52);c.lineTo(x-33,y-18);c.lineTo(x-48,y-30);c.closePath();c.fill();
       }
-      // Número negro, centrado sobre la camiseta.
-      c.fillStyle='#050505';c.fillRect(x-27,y-18,x+27-(x-27),42);
+      c.fillStyle='#050505';c.fillRect(x-27,y-18,54,42);
       c.textAlign='center';c.textBaseline='middle';c.fillStyle='#ffd400';
       c.font='900 30px Arial';c.fillText(String(p.number),x,y+2);
       labelBrush(x,y+sh/2-1,p.name);
     }
 
-    // Ajuste de posiciones para que se parezca a la composición de la referencia.
-    points.forEach((pt,i)=>{
-      const p=players[i]; if(!p)return;
-      let [x,y]=pt;
+    // MISMA PRESENTACIÓN QUE LA PANTALLA PRINCIPAL:
+    // si el jugador tiene foto PNG/transparente, se muestra la FOTO y se oculta
+    // completamente la camiseta; si no hay foto (o no carga), se usa la camiseta.
+    async function drawPlayer(p,x,y,isKeeper){
+      let im=null;
+      const src=p && (p.photo||p.foto||p.image||p.imagen||p.photoUrl||p.imageUrl||p.avatar||'');
+      if(src){
+        try{im=await rsLoadImage(src)}catch(e){im=null}
+      }
+      if(!im){drawShirt(p,x,y,isKeeper);return}
+
+      // Las fotos de jugadores de la app son PNG preparados sin fondo.
+      // No se recortan en círculo y se alinean por la parte inferior, igual que Inicio.
+      const maxW=isKeeper?150:155, maxH=isKeeper?205:205;
+      const scale=Math.min(maxW/im.width,maxH/im.height);
+      const dw=im.width*scale, dh=im.height*scale;
+      const bottom=y+58;
+      c.save();
+      c.globalAlpha=1;
+      c.drawImage(im,x-dw/2,bottom-dh,dw,dh);
+      c.restore();
+
+      // En la pantalla principal, con foto, no se dibuja la camiseta: solo foto + etiqueta.
+      labelBrush(x,bottom-1,p.name);
+    }
+
+    // Se espera a que carguen TODAS las fotos antes de devolver el PNG.
+    for(let i=0;i<players.length && i<11;i++){
+      const p=players[i]; if(!p)continue;
+      let [x,y]=points[i];
       y=Math.max(120,Math.min(1190,y));
-      drawShirt(p,x,y,p.position==='Portero'||i===0);
-    });
+      await drawPlayer(p,x,y,p.position==='Portero'||i===0);
+    }
 
     // Panel de suplentes: jugadores reales que no forman parte del XI.
     const used=new Set(ids.map(Number));
@@ -4115,7 +4140,25 @@ document.addEventListener("click",function(e){
   document.getElementById('rsImageBtn').onclick=rsShareImage;
   window.rsShareLastEvent=async function(e){const m=rsActive();if(!m||!e)return;const text=rsMatchText(m,false);const img=await rsBuildMatchImage(m,'event',e);await rsOpen('📲 Compartir evento',text,img,'rs-live-evento.png')};
   window.rsShareFinal=async function(){const m=rsActive();if(!m){toast('Activa un partido');return}if(m.status!=='FINISHED'){toast('Finaliza el partido primero');return}const text=rsMatchText(m,true),img=await rsBuildMatchImage(m,'final');await rsOpen('🏁 Resultado final',text,img,'rs-live-resultado-final.png')};
-  window.rsShareXI=async function(){const m=rsActive();if(!m){toast('Activa un partido');return}const ids=(m.lineup&&m.lineup.length?m.lineup:App.lineup?.players||[]);if(ids.length!==11){toast('Guarda primero el once inicial con 11 jugadores');return}const h=rsTeam(m.home),a=rsTeam(m.away);const players=ids.map(n=>(App.players||[]).find(p=>Number(p.number)===Number(n))).filter(Boolean);const text=['👕 ONCE INICIAL',`${h.name} vs ${a.name}`,...players.map((p,i)=>`${i+1}. #${p.number} ${p.name} · ${p.position||''}`),'📲 RS LIVE · Ramón Sicart'].join('\n');const img=await rsBuildXIImage(m);await rsOpen('👕 Once inicial',text,img,'rs-live-once-inicial.png')};
+  window.rsShareXI=async function(){
+    const m=rsActive();
+    if(!m){toast('Activa un partido');return}
+    const ids=(m.lineupSnapshot?.players?.length?m.lineupSnapshot.players:(m.lineup?.length?m.lineup:(App.lineup?.players||[]))).map(Number).slice(0,11);
+    if(ids.length!==11){toast('Guarda primero el once inicial con 11 jugadores');return}
+    const used=new Set(ids);
+    const bench=(m.lineupSnapshot?.bench?.length
+      ? m.lineupSnapshot.bench.map(Number).map(n=>(App.players||[]).find(p=>Number(p.number)===n)).filter(Boolean)
+      : (App.players||[]).filter(p=>!used.has(Number(p.number))).sort((x,y)=>Number(x.number)-Number(y.number))
+    ).slice(0,8);
+    const h=rsTeam(m.home),a=rsTeam(m.away);
+    const players=ids.map(n=>(App.players||[]).find(p=>Number(p.number)===n)).filter(Boolean);
+    const lines=['🟡🔴 ONCE INICIAL · RAMÓN SICART','',`⚽ ${String(h.name||'LOCAL').toUpperCase()} vs ${String(a.name||'VISITANTE').toUpperCase()}`,''];
+    players.forEach(p=>lines.push(`${p.number} ${String(p.name||'').toUpperCase()}`));
+    if(bench.length){lines.push('-----------------------','Suplents');bench.forEach(p=>lines.push(`${p.number} ${String(p.name||'').toUpperCase()}`));}
+    const text=lines.join('\n');
+    const img=await rsBuildXIImage(m);
+    await rsOpen('👕 Once inicial',text,img,'rs-live-once-inicial.png');
+  };
   const oldCommit=window.commitEvent;
   if(oldCommit){window.commitEvent=function(num){const m=rsActive();const before=(m?rsEvents(m):[]).map(e=>e.id);const result=oldCommit(num);setTimeout(()=>{const mm=rsActive();if(!mm)return;const after=rsEvents(mm);const ev=after.find(e=>!before.includes(e.id))||after[after.length-1];if(ev)rsShareLastEvent(ev)},120);return result};}
   document.getElementById('rsFinalBtn').onclick=rsShareFinal;document.getElementById('rsXIButton').onclick=rsShareXI;
@@ -7526,6 +7569,90 @@ body:after{
 })();
 </script>
 
+
+<style id="rs-once-share-v17-css">
+#rsShareCanvasV17{position:fixed;left:-10000px;top:-10000px;width:1200px;height:900px}
+</style>
+<script id="rs-once-share-v17-js">
+(function(){
+"use strict";
+function app(){try{return typeof App!=="undefined"?App:null}catch(e){return null}}
+function ps(){var a=app();return a&&Array.isArray(a.players)?a.players:[]}
+function get(p){if(p&&typeof p==="object")return p;var a=ps();return a.find(function(x){return String(x.id)===String(p)})||{}}
+function name(p){return p.name||p.nombre||p.fullName||"Jugador"}
+function num(p){return p.number||p.dorsal||p.numero||"—"}
+function pos(p){return p.position||p.posicion||p.role||"Jugador"}
+function photo(p){return p.photo||p.foto||p.image||p.imagen||p.photoUrl||p.imageUrl||""}
+
+function text(match,lineup){
+ var arr=Array.isArray(lineup)?lineup:[];
+ var starters=arr.slice(0,11);
+ var substitutes=arr.slice(11);
+ var lines=["🟡🔴 ONCE INICIAL · RAMÓN SICART","","⚽ "+(match.home||"Local").toUpperCase()+" vs "+(match.away||"Visitante").toUpperCase(),""];
+ starters.forEach(function(x){
+   var p=get(x.playerId??x.id??x.player??x);
+   lines.push(num(p)+" "+name(p).toUpperCase());
+ });
+ if(substitutes.length){
+   lines.push("-----------------------","Suplents");
+   substitutes.forEach(function(x){
+     var p=get(x.playerId??x.id??x.player??x);
+     lines.push(num(p)+" "+name(p).toUpperCase());
+   });
+ }
+ return lines.join("\n");
+}
+
+async function image(match,lineup){
+ var c=document.createElement("canvas");c.width=1200;c.height=900;
+ var x=c.getContext("2d");x.fillStyle="#07111f";x.fillRect(0,0,1200,900);
+ x.fillStyle="#ffd400";x.fillRect(0,0,1200,8);x.fillStyle="#e21d2f";x.fillRect(0,892,1200,8);
+ x.fillStyle="#fff";x.font="900 42px Arial";x.fillText("ONCE INICIAL",45,60);
+ x.fillStyle="#ffd400";x.font="900 24px Arial";x.fillText((match.home||"LOCAL")+"  VS  "+(match.away||"VISITANTE"),45,100);
+ var arr=(Array.isArray(lineup)?lineup:[]).slice(0,11),cw=260,ch=225,g=20,sx=50,sy=125;
+ for(var i=0;i<arr.length;i++){
+  var p=get(arr[i].playerId??arr[i].id??arr[i].player??arr[i]), col=i%4,row=Math.floor(i/4);
+  if(i>=8){col=i-8+0;row=2;sx=50}
+  var xx=sx+col*(cw+g),yy=sy+row*(ch+g);
+  x.fillStyle="#0d1a2b";x.fillRect(xx,yy,cw,ch);x.strokeStyle="#ffd400";x.lineWidth=2;x.strokeRect(xx,yy,cw,ch);
+  var src=photo(p);
+  if(src)try{var im=await new Promise(function(ok,no){var z=new Image();z.crossOrigin="anonymous";z.onload=function(){ok(z)};z.onerror=no;z.src=src});var sc=Math.max(180/im.width,145/im.height),dw=im.width*sc,dh=im.height*sc;x.save();x.beginPath();x.rect(xx+8,yy+8,cw-16,145);x.clip();x.drawImage(im,xx+(cw-dw)/2,yy+8+(145-dh)/2,dw,dh);x.restore()}catch(e){}
+  x.fillStyle="#ffd400";x.font="900 34px Arial";x.fillText("#"+num(p),xx+12,yy+190);
+  x.fillStyle="#fff";x.font="900 17px Arial";x.fillText(name(p).toUpperCase().slice(0,21),xx+68,yy+187);
+  x.fillStyle="#aeb8c6";x.font="700 13px Arial";x.fillText(pos(p),xx+68,yy+208);
+ }
+ x.fillStyle="#fff";x.font="800 16px Arial";x.fillText("📲 RS LIVE · RAMÓN SICART",45,875);
+ return c.toDataURL("image/png");
+}
+
+window.rsBuildOnceShareTextV17=text;
+window.rsBuildOnceShareImageV17=image;
+
+document.addEventListener("click",async function(e){
+ var b=e.target.closest&&e.target.closest('[data-action="share-lineup"],[data-action="share-xi"],[data-action="generate-lineup"],.shareLineup,.btnShareLineup');
+ if(!b)return;
+ var a=app(),m=a&&a.activeMatch;if(!m)return;
+ var lineup=m.lineup||m.xi||m.initialLineup||[];if(!Array.isArray(lineup)||!lineup.length)return;
+ e.preventDefault();e.stopImmediatePropagation();
+ var msg=text(m,lineup);
+ try{
+  var uri=await image(m,lineup),blob=await (await fetch(uri)).blob(),file=new File([blob],"once-inicial-ramon-sicart.png",{type:"image/png"});
+  if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({title:"Once inicial · Ramón Sicart",text:msg,files:[file]});return}
+ }catch(err){}
+ if(navigator.share){try{await navigator.share({title:"Once inicial · Ramón Sicart",text:msg});return}catch(err){}}
+ try{await navigator.clipboard.writeText(msg);alert("Texto del once copiado. Puedes pegarlo en WhatsApp.")}catch(err){prompt("Copia este texto:",msg)}
+},true);
+})();
+</script>
+
+
+
+
+
+<!-- V21 — ONCE: FOTO REAL SI EXISTE, CAMISETA SOLO SI NO HAY FOTO -->
+<style id="rs-once-v21-css">
+.playerPhotoV51 img{border-radius:0!important;}
+</style>
 </body>
 </html>
 
