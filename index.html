@@ -5478,6 +5478,104 @@ body.rsMatchesWindowOpenV4 .app{
 })();
 </script>
 
+
+<!-- V52 FIX — CARGA DE PARTIDOS DE TEMPORADA DESDE LA LISTA FACILITADA -->
+<script id="rs-v52-season-fixtures-import">
+(function(){
+  'use strict';
+  var FIXTURES = [
+    ['2026-10-04','Escola F. Base Vendrell "A"','Ramón Sicart, A.E. "A"'],
+    ['2026-10-11','Ramón Sicart, A.E. "A"','Fundació P.E.F. La Pobla Mafumet'],
+    ['2026-10-18','Vendrell C.E. "C"','Ramón Sicart, A.E. "A"'],
+    ['2026-10-31','Escola Valls Futbol Club "B"','Ramón Sicart, A.E. "A"'],
+    ['2026-11-08','Ramón Sicart, A.E. "A"','Tancat, U.D. "A"'],
+    ['2026-11-15','Torredembarra, U.D. "B"','Ramón Sicart, A.E. "A"'],
+    ['2026-11-22','Ramón Sicart, A.E. "A"','Vallmoll C.D. "A"'],
+    ['2026-11-28',"Base L'Arboç, C.F. \"A\"",'Ramón Sicart, A.E. "A"'],
+    ['2026-12-12','La Salle Tarragona Assoc. Fut. "B"','Ramón Sicart, A.E. "A"'],
+    ['2026-12-20','Ramón Sicart, A.E. "A"','Col·legi S.Pau Apostol ESPA "C"'],
+    ['2027-01-17','Ramón Sicart, A.E. "A"','Escola F. Base Vendrell "A"'],
+    ['2027-01-23','Fundació P.E.F. La Pobla Mafumet','Ramón Sicart, A.E. "A"'],
+    ['2027-01-31','Ramón Sicart, A.E. "A"','Vendrell C.E. "C"'],
+    ['2027-02-21','Ramón Sicart, A.E. "A"','Escola Valls Futbol Club "B"'],
+    ['2027-02-28','Tancat, U.D. "A"','Ramón Sicart, A.E. "A"'],
+    ['2027-03-07','Ramón Sicart, A.E. "A"','Torredembarra, U.D. "B"'],
+    ['2027-03-13','Vallmoll C.D. "A"','Ramón Sicart, A.E. "A"'],
+    ['2027-03-21','Ramón Sicart, A.E. "A"',"Base L'Arboç, C.F. \"A\""],
+    ['2027-04-04','Ramón Sicart, A.E. "A"','La Salle Tarragona Assoc. Fut. "B"'],
+    ['2027-04-10','Col·legi S.Pau Apostol ESPA "C"','Ramón Sicart, A.E. "A"']
+  ];
+  function norm(s){
+    return String(s||'').toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/[.,'’]/g,'').replace(/\s+/g,' ').trim()
+      .replace(/\b(escola f\.? base vendr(?:e|r)ll)\b/,'escola f base vendrell')
+      .replace(/\b(la pobla mafumet)\b/,'la pobla mafumet');
+  }
+  function aliases(s){
+    var n=norm(s), a=[n];
+    a.push(n.replace(/\b(?:a\.e\.|ae)\b/g,'').replace(/\s+/g,' ').trim());
+    a.push(n.replace(/\b(?:c\.f\.|cf|c\.d\.|cd|u\.d\.|ud)\b/g,'').replace(/\s+/g,' ').trim());
+    return a;
+  }
+  function findTeam(teams,name){
+    var aa=aliases(name);
+    return teams.find(function(t){
+      var ta=aliases(t.name||'');
+      return aa.some(function(x){return ta.indexOf(x)>=0 || x===ta[0] || ta.some(function(y){return y===x;});});
+    });
+  }
+  function nextId(teams){
+    return teams.reduce(function(m,t){return Math.max(m,Number(t.id)||0);},0)+1;
+  }
+  async function run(){
+    try{
+      if(typeof firebaseRestUrl==='undefined') return;
+      var res=await fetch(firebaseRestUrl,{cache:'no-store'});
+      if(!res.ok) throw new Error('Firebase GET '+res.status);
+      var root=await res.json();
+      if(!root || !root.app) return;
+      var app=root.app;
+      app.teams=Array.isArray(app.teams)?app.teams:[];
+      app.matches=Array.isArray(app.matches)?app.matches:[];
+      var created=0, teamsAdded=0;
+      var id=nextId(app.teams);
+      FIXTURES.forEach(function(f,i){
+        var home=findTeam(app.teams,f[1]), away=findTeam(app.teams,f[2]);
+        if(!home){ home={id:id++,name:f[1],short:f[1].replace(/[^A-Za-zÀ-ÿ]/g,'').slice(0,3).toUpperCase(),logo:'',protected:false}; app.teams.push(home); teamsAdded++; }
+        if(!away){ away={id:id++,name:f[2],short:f[2].replace(/[^A-Za-zÀ-ÿ]/g,'').slice(0,3).toUpperCase(),logo:'',protected:false}; app.teams.push(away); teamsAdded++; }
+        var exists=app.matches.some(function(m){
+          return String(m.date||'')===f[0] && Number(m.home)===Number(home.id) && Number(m.away)===Number(away.id);
+        });
+        if(!exists){
+          app.matches.push({
+            id:Date.now()+i+Math.floor(Math.random()*1000),
+            home:Number(home.id),away:Number(away.id),date:f[0],hour:'',
+            competition:'Liga',field:'',status:'SCHEDULED',homeScore:null,awayScore:null,
+            events:[],lineup:[],formation:'4-3-3',jornada:i+1
+          });
+          created++;
+        }
+      });
+      if(created || teamsAdded){
+        root.app=app;
+        var put=await fetch(firebaseRestUrl,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(root)});
+        if(!put.ok) throw new Error('Firebase PUT '+put.status);
+      }
+      /* Actualiza la aplicación abierta sin tocar el resto de sus módulos. */
+      if(typeof App!=='undefined'){
+        App.teams=app.teams; App.matches=app.matches;
+        try{ if(typeof renderAll==='function') renderAll(); }catch(e){}
+        try{ if(typeof renderMatches==='function') renderMatches(); }catch(e){}
+      }
+      console.log('[RS LIVE] Partidos importados:',created,'Equipos añadidos:',teamsAdded);
+    }catch(err){ console.error('[RS LIVE] No se pudieron importar los partidos:',err); }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',function(){setTimeout(run,1800);});
+  else setTimeout(run,1800);
+})();
+</script>
+
 </body>
 </html>
 
@@ -7852,127 +7950,6 @@ document.addEventListener("click",async function(e){
 
 
 
-<!-- V32 — INICIO: ÚNICO APARTADO PARTIDOS -->
-<style id="rs-home-partidos-v32-css">
-#rsHomePartidosV32{width:100%;margin:18px 0 0;border:1px solid rgba(255,210,0,.42);border-radius:18px;overflow:hidden;background:linear-gradient(180deg,#111315,#080a0c);box-shadow:0 10px 28px rgba(0,0,0,.28);color:#fff}
-#rsHomePartidosV32 .v32head{padding:16px 20px;background:linear-gradient(135deg,#101214,#1d1f21);border-bottom:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:space-between;gap:12px}
-#rsHomePartidosV32 h2{margin:0;color:#ffd000;font-size:25px;font-weight:1000}
-#rsHomePartidosV32 .v32sub{margin-top:5px;color:#b8bec5;font-size:12px;font-weight:700}
-#rsHomePartidosV32 .v32badge{background:#ffd000;color:#111;border-radius:999px;padding:8px 13px;font-size:11px;font-weight:1000;white-space:nowrap}
-#rsHomePartidosV32 .v32list{padding:10px 12px 14px}
-#rsHomePartidosV32 .v32match{display:grid;grid-template-columns:92px minmax(0,1fr) 105px 86px;align-items:center;gap:12px;padding:14px 8px;border-bottom:1px solid rgba(255,255,255,.09)}
-#rsHomePartidosV32 .v32match:last-child{border-bottom:0}
-#rsHomePartidosV32 .v32date{text-align:center;color:#aeb6bf;font-size:11px;font-weight:800;line-height:1.35}
-#rsHomePartidosV32 .v32teams{display:grid;grid-template-columns:1fr 38px 1fr;align-items:center;gap:8px}
-#rsHomePartidosV32 .v32team{display:flex;align-items:center;gap:9px;min-width:0;font-size:13px;font-weight:900}
-#rsHomePartidosV32 .v32team.away{justify-content:flex-end;text-align:right}
-#rsHomePartidosV32 .v32team img{width:42px;height:42px;object-fit:contain;flex:none}
-#rsHomePartidosV32 .v32team span{overflow:hidden;text-overflow:ellipsis}
-#rsHomePartidosV32 .v32vs{text-align:center;color:#737b84;font-size:10px;font-weight:1000}
-#rsHomePartidosV32 .v32score{text-align:center;font-size:21px;font-weight:1000;color:#fff;white-space:nowrap}
-#rsHomePartidosV32 .v32score.pending{color:#7e8791;font-size:18px}
-#rsHomePartidosV32 .v32status{justify-self:end;border-radius:999px;padding:7px 9px;background:#25292e;color:#cbd0d5;font-size:9px;font-weight:1000;text-align:center;white-space:nowrap}
-#rsHomePartidosV32 .v32status.upcoming{background:#ffd000;color:#111}
-#rsHomePartidosV32 .v32empty{padding:25px;text-align:center;color:#aeb6bf;font-weight:800}
-@media(max-width:700px){
-#rsHomePartidosV32 .v32head{padding:14px 15px}#rsHomePartidosV32 h2{font-size:21px}#rsHomePartidosV32 .v32badge{font-size:9px;padding:7px 9px}
-#rsHomePartidosV32 .v32match{grid-template-columns:58px minmax(0,1fr) 58px;gap:7px;padding:12px 3px}
-#rsHomePartidosV32 .v32status{grid-column:3;grid-row:1;justify-self:center}#rsHomePartidosV32 .v32score{grid-column:2;grid-row:2;font-size:19px}
-#rsHomePartidosV32 .v32teams{grid-column:2;grid-row:1}#rsHomePartidosV32 .v32date{grid-column:1;grid-row:1/3}
-#rsHomePartidosV32 .v32team{font-size:11px;gap:5px}#rsHomePartidosV32 .v32team img{width:34px;height:34px}
-}
-</style>
-<script id="rs-home-partidos-v32-js">
-(function(){
-'use strict';
-function A(){try{return typeof App!=='undefined'?App:null}catch(e){return null}}
-function norm(s){return String(s||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Z0-9]/g,'')}
-function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
-function team(v){
- if(v&&typeof v==='object')return v;
- var a=A(),ts=a&&Array.isArray(a.teams)?a.teams:[],s=String(v==null?'':v),q=norm(s);
- return ts.find(function(t){return String(t.id)===s})||
-        ts.find(function(t){return norm(t.name)===q})||
-        ts.find(function(t){var n=norm(t.name);return q&&n&&(n.indexOf(q)>=0||q.indexOf(n)>=0)})||
-        {id:v,name:s||'Equipo'};
-}
-function isRamon(v){return /RAMON\s*SICART/.test(norm(team(v).name))}
-function isRamonMatch(m){return !!m&&(isRamon(m.home)||isRamon(m.away))}
-function matchTime(m){
- var d=String(m&&m.date||''),h=String(m&&m.hour||'00:00'),x=Date.parse(d+'T'+h);
- if(isNaN(x))x=Date.parse(d);
- return isNaN(x)?0:x;
-}
-function finished(m){
- var s=norm(m&&m.status||'');
- return s==='FINISHED'||s==='FINALIZADO'||s==='COMPLETED'||!!(m&&m.finishedAt)||
-   (m&&m.homeScore!=null&&m.awayScore!=null&&s!=='SCHEDULED'&&s!=='PENDING');
-}
-function crest(t){return t&&(t.logo||t.crest||t.escudo||t.image||t.logoUrl)||''}
-function dateLabel(m){
- var d=String(m&&m.date||''); if(!d)return '';
- var p=d.split('-'); return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:d;
-}
-
-/* IMPORTANT: always take the first three Ramón Sicart matches by date.
-   A finished match is never removed merely because it has finished.
-   Therefore the visible sequence is exactly:
-   pending/pending/pending ->
-   final/pending/pending ->
-   final/final/pending ->
-   final/final/final
-*/
-function firstThree(){
- var a=A(); if(!a||!Array.isArray(a.matches))return [];
- return a.matches.filter(isRamonMatch).slice().sort(function(x,y){
-   return matchTime(x)-matchTime(y);
- }).slice(0,3);
-}
-function render(){
- var home=document.getElementById('home');if(!home)return;
-
- /* Remove previous "Últimos 3 partidos" block only. */
- document.querySelectorAll('#rsHomeLast3V22').forEach(function(e){e.remove()});
-
- var sec=document.getElementById('rsHomePartidosV32');
- if(!sec){
-   sec=document.createElement('section');sec.id='rsHomePartidosV32';
-   sec.innerHTML='<div class="v32head"><div><h2>⚽ PARTIDOS</h2><div class="v32sub">Partidos de Ramón Sicart</div></div><div class="v32badge">3 PARTIDOS</div></div><div class="v32list"></div>';
-   var clas=document.getElementById('rsClassificationNativeV25')||document.getElementById('rsClassificationV25');
-   if(clas&&clas.parentNode)clas.parentNode.insertBefore(sec,clas.nextSibling);
-   else home.appendChild(sec);
- }
- var list=sec.querySelector('.v32list'),ms=firstThree();if(!list)return;
- if(!ms.length){list.innerHTML='<div class="v32empty">No hay partidos registrados de Ramón Sicart.</div>';return}
-
- list.innerHTML=ms.map(function(m){
-   var h=team(m.home),a=team(m.away),isDone=finished(m);
-   var s=isDone?(Number(m.homeScore||0)+' - '+Number(m.awayScore||0)):'—';
-   var hl=crest(h),al=crest(a);
-   return '<div class="v32match">'+
-    '<div class="v32date">'+esc(dateLabel(m))+'<br>'+esc(m.hour||'')+'</div>'+
-    '<div class="v32teams">'+
-      '<div class="v32team">'+(hl?'<img src="'+esc(hl)+'" alt="">':'')+'<span>'+esc(h.name)+'</span></div>'+
-      '<div class="v32vs">VS</div>'+
-      '<div class="v32team away"><span>'+esc(a.name)+'</span>'+(al?'<img src="'+esc(al)+'" alt="">':'')+'</div>'+
-    '</div>'+
-    '<div class="v32score '+(!isDone?'pending':'')+'">'+s+'</div>'+
-    '<div class="v32status '+(!isDone?'upcoming':'')+'">'+(!isDone?'PRÓXIMO':'FINALIZADO')+'</div>'+
-   '</div>';
- }).join('');
-}
-
-/* Only schedule a few harmless renders. No MutationObserver, no polling loop. */
-function later(){setTimeout(function(){try{render()}catch(e){console.error('RS Partidos V32',e)}},0)}
-var oldAll=window.renderAll;
-if(typeof oldAll==='function')window.renderAll=function(){oldAll.apply(this,arguments);later()};
-var oldHome=window.renderHome;
-if(typeof oldHome==='function')window.renderHome=function(){oldHome.apply(this,arguments);later()};
-later();setTimeout(render,400);setTimeout(render,1200);
-})();
-</script>
-
-
 <style id="rs-remove-old-last3-v33">
 /* V33: eliminar definitivamente el bloque antiguo "Últimos 3 partidos" */
 #rsHomeLast3V22,
@@ -7997,162 +7974,6 @@ later();setTimeout(render,400);setTimeout(render,1200);
   setTimeout(removeOld,100);
   setTimeout(removeOld,500);
   setTimeout(removeOld,1200);
-})();
-</script>
-
-
-<!-- V34 — NAVEGACIÓN INFERIOR ÚNICA Y FIJA -->
-<style id="rs-bottom-nav-v34-css">
-/* Hide every legacy bottom navigation bar; V34 owns the single fixed bar. */
-#rsBottomNavV34{
-  position:fixed!important;
-  left:50%!important;
-  bottom:max(10px, env(safe-area-inset-bottom))!important;
-  transform:translateX(-50%)!important;
-  z-index:2147483000!important;
-  width:min(680px,calc(100vw - 24px))!important;
-  height:64px!important;
-  padding:6px!important;
-  display:grid!important;
-  grid-template-columns:repeat(3,1fr)!important;
-  gap:6px!important;
-  box-sizing:border-box!important;
-  background:rgba(7,15,26,.97)!important;
-  border:1px solid rgba(255,208,0,.45)!important;
-  border-radius:18px!important;
-  box-shadow:0 12px 35px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.04) inset!important;
-  backdrop-filter:blur(12px)!important;
-}
-#rsBottomNavV34 button{
-  appearance:none!important;border:1px solid rgba(255,255,255,.08)!important;
-  border-radius:12px!important;background:#0d1a2b!important;color:#fff!important;
-  font-weight:900!important;font-size:11px!important;line-height:1.05!important;
-  min-width:0!important;min-height:50px!important;padding:5px 4px!important;
-  cursor:pointer!important;display:flex!important;flex-direction:column!important;
-  align-items:center!important;justify-content:center!important;gap:2px!important;
-}
-#rsBottomNavV34 button .v34ico{font-size:19px!important;line-height:18px!important}
-#rsBottomNavV34 button.active{
-  background:linear-gradient(135deg,#ffd000,#ff8a00)!important;
-  color:#111!important;border-color:#ffd000!important;
-}
-#rsBottomNavV34 button:active{transform:scale(.97)}
-/* Prevent the fixed bar from covering page content at the bottom. */
-body{padding-bottom:86px!important}
-.page{padding-bottom:92px!important}
-#rsSquadWindowV6{padding-bottom:95px!important}
-@media(max-width:600px){
-  #rsBottomNavV34{width:calc(100vw - 16px)!important;bottom:max(7px,env(safe-area-inset-bottom))!important;height:62px!important}
-  #rsBottomNavV34 button{font-size:10px!important}
-  #rsBottomNavV34 button .v34ico{font-size:18px!important}
-}
-</style>
-<script id="rs-bottom-nav-v34-js">
-(function(){
-'use strict';
-
-function removeLegacy(){
-  /* Known legacy bars from the previous iterations. */
-  [
-    '#mainNav','#sideNavV14','.bottomNav','.bottom-nav','.bottom-navigation',
-    '.mobileBottomNav','.mobile-bottom-nav','.bottomMenu','.bottom-menu',
-    '#mobileNav','#mobileBottomNav'
-  ].forEach(function(sel){
-    try{document.querySelectorAll(sel).forEach(function(el){
-      if(el.id==='rsBottomNavV34')return;
-      /* Only remove if it is actually a navigation container. */
-      if(el.querySelector('button,[data-page]')) el.remove();
-    })}catch(e){}
-  });
-
-  /* Remove duplicate generated V34 bar if any. */
-  document.querySelectorAll('#rsBottomNavV34').forEach(function(el,i){
-    if(i>0)el.remove();
-  });
-}
-
-function getApp(){
-  try{return typeof App!=='undefined'?App:null}catch(e){return null}
-}
-
-function setPage(page){
-  /* Use the app's existing navigation first, so no functionality is duplicated. */
-  try{
-    if(typeof navigateV1==='function'){ navigateV1(page,null); return; }
-  }catch(e){}
-  try{
-    if(typeof navigate==='function'){ navigate(page); return; }
-  }catch(e){}
-
-  var pages=document.querySelectorAll('.page,[data-page-content]');
-  pages.forEach(function(p){
-    if(p.id===page || p.getAttribute('data-page-content')===page){
-      p.style.display='';
-      p.classList.add('active');
-    }else if(p.classList.contains('page')){
-      p.style.display='none';
-      p.classList.remove('active');
-    }
-  });
-}
-
-function ensure(){
-  removeLegacy();
-
-  var nav=document.getElementById('rsBottomNavV34');
-  if(!nav){
-    nav=document.createElement('nav');
-    nav.id='rsBottomNavV34';
-    nav.setAttribute('aria-label','Navegación principal');
-    nav.innerHTML=
-      '<button type="button" data-v34-page="home"><span class="v34ico">⌂</span><span>INICIO</span></button>'+
-      '<button type="button" data-v34-page="matches"><span class="v34ico">⚽</span><span>PARTIDOS</span></button>'+
-      '<button type="button" data-v34-page="squad"><span class="v34ico">👥</span><span>PLANTILLA</span></button>';
-    document.body.appendChild(nav);
-
-    nav.querySelectorAll('button').forEach(function(b){
-      b.addEventListener('click',function(){
-        var page=b.getAttribute('data-v34-page');
-        setPage(page);
-        setTimeout(function(){updateActive()},60);
-      });
-    });
-  }
-  updateActive();
-}
-
-function currentPage(){
-  var squad=document.getElementById('rsSquadWindowV6');
-  if(squad && (getComputedStyle(squad).display!=='none' || squad.classList.contains('open'))) return 'squad';
-
-  var pages=document.querySelectorAll('.page');
-  for(var i=0;i<pages.length;i++){
-    var p=pages[i],cs=getComputedStyle(p);
-    if(cs.display!=='none' && p.offsetHeight>0){
-      if(p.id==='matches')return 'matches';
-      if(p.id==='home')return 'home';
-    }
-  }
-  var active=document.querySelector('.page.active');
-  if(active&&active.id)return active.id;
-  return 'home';
-}
-
-function updateActive(){
-  var nav=document.getElementById('rsBottomNavV34');if(!nav)return;
-  var p=currentPage();
-  nav.querySelectorAll('button').forEach(function(b){
-    b.classList.toggle('active',b.getAttribute('data-v34-page')===p);
-  });
-}
-
-/* Make Plantilla use the same bottom navigation instead of its own controls. */
-window.rsBottomNavV34={ensure:ensure,update:updateActive,setPage:setPage};
-
-ensure();
-setTimeout(ensure,250);
-setTimeout(ensure,700);
-setTimeout(ensure,1500);
 })();
 </script>
 
@@ -8359,6 +8180,109 @@ document.addEventListener('click',function(e){
 #rsAdminWindowV35 .v35AdminContent>.adminGrid>.adminCard.v35Visible{display:block!important}
 #rsAdminWindowV35 .v35AdminContent .adminGrid>.adminCard.v35AdminSection.v35Visible{display:block!important}
 </style>
+
+
+<!-- V45 FINAL — BARRA INFERIOR FIJA EN TODAS LAS PÁGINAS -->
+<style id="rs-v45-fixed-bottom-nav">
+#rsV45BottomNav{
+  position:fixed!important;left:50%!important;
+  bottom:max(8px,env(safe-area-inset-bottom))!important;
+  transform:translateX(-50%)!important;
+  z-index:2147483647!important;width:min(680px,calc(100vw - 16px))!important;
+  height:68px!important;padding:6px!important;display:grid!important;
+  grid-template-columns:repeat(3,1fr)!important;gap:6px!important;
+  background:rgba(7,15,26,.98)!important;
+  border:1px solid rgba(255,208,0,.5)!important;border-radius:18px!important;
+  box-shadow:0 12px 35px rgba(0,0,0,.6)!important;
+  backdrop-filter:blur(12px)!important;
+}
+#rsV45BottomNav button{
+  border:1px solid rgba(255,255,255,.08)!important;border-radius:12px!important;
+  background:#0d1a2b!important;color:#fff!important;font-weight:900!important;
+  font-size:11px!important;min-width:0!important;min-height:54px!important;
+  padding:4px!important;cursor:pointer!important;display:flex!important;
+  flex-direction:column!important;align-items:center!important;
+  justify-content:center!important;gap:3px!important;
+}
+#rsV45BottomNav button .v45ico{font-size:21px!important;line-height:20px!important}
+#rsV45BottomNav button.active{
+  background:linear-gradient(135deg,#ffd000,#ff8a00)!important;
+  color:#111!important;border-color:#ffd000!important;
+}
+body{padding-bottom:92px!important}.page{padding-bottom:92px!important}
+@media(max-width:600px){
+ #rsV45BottomNav{height:64px!important}
+ #rsV45BottomNav button{min-height:50px!important;font-size:10px!important}
+ #rsV45BottomNav button .v45ico{font-size:19px!important}
+}
+</style>
+<script id="rs-v45-fixed-bottom-nav-js">
+(function(){
+"use strict";
+function closeSide(){
+ document.getElementById("sideMenuV14")?.classList.remove("open");
+ document.getElementById("sideOverlayV14")?.classList.remove("open");
+}
+function showPageFallback(id){
+ document.querySelectorAll(".page").forEach(function(p){
+   var on=p.id===id;p.classList.toggle("active",on);p.style.display=on?"":"none";
+ });
+ window.scrollTo(0,0);
+}
+function goHome(){
+ closeSide();
+ try{if(typeof navigateV1==="function"){navigateV1("home");return;}}catch(e){}
+ showPageFallback("home");
+}
+function goMatches(){
+ closeSide();
+ try{if(typeof window.openMatchesV2==="function"){window.openMatchesV2();return;}}catch(e){}
+ try{if(typeof navigateV1==="function"){navigateV1("matches");return;}}catch(e){}
+ showPageFallback("matches");
+ try{
+   if(typeof window.rsSeasonPublicRenderV1==="function")window.rsSeasonPublicRenderV1();
+   else if(typeof window.renderMatches==="function")window.renderMatches();
+ }catch(e){}
+}
+function goSquad(){
+ closeSide();
+ try{if(typeof window.rsOpenSquadWindowV6==="function"){window.rsOpenSquadWindowV6();return;}}catch(e){}
+ var w=document.getElementById("rsSquadWindowV6");
+ if(w){
+   w.classList.add("open");w.style.display="block";w.setAttribute("aria-hidden","false");
+   document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");p.style.display="none"});
+   window.scrollTo(0,0);
+ }
+}
+function current(){
+ var w=document.getElementById("rsSquadWindowV6");
+ if(w&&(w.classList.contains("open")||getComputedStyle(w).display!=="none"))return "squad";
+ var a=document.querySelector(".page.active");
+ return a&&a.id?a.id:"home";
+}
+function active(){
+ var n=document.getElementById("rsV45BottomNav");if(!n)return;
+ var p=current();
+ n.querySelectorAll("button").forEach(function(b){b.classList.toggle("active",b.dataset.v45Page===p)});
+}
+function build(){
+ document.querySelectorAll("#rsBottomNavV34").forEach(function(n){n.remove()});
+ var old=document.getElementById("rsV45BottomNav");if(old)old.remove();
+ var n=document.createElement("nav");n.id="rsV45BottomNav";
+ n.setAttribute("aria-label","Navegación principal");
+ n.innerHTML=
+ '<button type="button" data-v45-page="home"><span class="v45ico">⌂</span><span>INICIO</span></button>'+
+ '<button type="button" data-v45-page="matches"><span class="v45ico">⚽</span><span>PARTIDOS</span></button>'+
+ '<button type="button" data-v45-page="squad"><span class="v45ico">👥</span><span>PLANTILLA</span></button>';
+ document.body.appendChild(n);
+ n.querySelector('[data-v45-page="home"]').onclick=function(e){e.preventDefault();goHome();setTimeout(active,80)};
+ n.querySelector('[data-v45-page="matches"]').onclick=function(e){e.preventDefault();goMatches();setTimeout(active,80)};
+ n.querySelector('[data-v45-page="squad"]').onclick=function(e){e.preventDefault();goSquad();setTimeout(active,80)};
+ active();
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",build);else build();
+})();
+</script>
 
 </body>
 </html>
@@ -8647,3 +8571,116 @@ render();setTimeout(render,300);setTimeout(render,1000);setTimeout(render,2000);
 })();
 </script>
 
+
+
+<!-- V52 — SOLO NAVEGACIÓN INFERIOR. NO MODIFICA NINGÚN MÓDULO/DATO -->
+<style id="rs-v52-bottom-nav-css">
+#rsV52BottomNav{
+ position:fixed!important;left:50%!important;bottom:max(8px,env(safe-area-inset-bottom))!important;
+ transform:translateX(-50%)!important;z-index:2147483647!important;
+ width:min(680px,calc(100vw - 16px))!important;height:68px!important;padding:6px!important;
+ display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:6px!important;
+ background:rgba(7,15,26,.98)!important;border:1px solid rgba(255,208,0,.5)!important;
+ border-radius:18px!important;box-shadow:0 12px 35px rgba(0,0,0,.6)!important;
+ backdrop-filter:blur(12px)!important;
+}
+#rsV52BottomNav button{
+ border:1px solid rgba(255,255,255,.08)!important;border-radius:12px!important;
+ background:#0d1a2b!important;color:#fff!important;font-weight:900!important;font-size:11px!important;
+ min-width:0!important;min-height:54px!important;padding:4px!important;cursor:pointer!important;
+ display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:3px!important;
+ -webkit-tap-highlight-color:transparent!important;
+}
+#rsV52BottomNav button.active{background:linear-gradient(135deg,#ffd000,#ff8a00)!important;color:#111!important;border-color:#ffd000!important}
+#rsV52BottomNav .v52ico{font-size:21px!important;line-height:20px!important}
+body{padding-bottom:92px!important}
+.page{padding-bottom:92px!important}
+@media(max-width:600px){#rsV52BottomNav{height:64px!important}#rsV52BottomNav button{min-height:50px!important;font-size:10px!important}#rsV52BottomNav .v52ico{font-size:19px!important}}
+/* The V52 bar is the only bottom navigation visible. */
+#rsV45BottomNav,#rsBottomNavV11,#rsBottomNavV34{display:none!important}
+</style>
+<script id="rs-v52-bottom-nav-js">
+(function(){
+ 'use strict';
+ var ID='rsV52BottomNav';
+ function closeSide(){
+   var a=document.getElementById('sideMenuV14');if(a)a.classList.remove('open');
+   var b=document.getElementById('sideOverlayV14');if(b)b.classList.remove('open');
+ }
+ function closeSquad(){
+   try{if(typeof window.rsCloseSquadWindowV6==='function')window.rsCloseSquadWindowV6();}catch(e){}
+   var w=document.getElementById('rsSquadWindowV6');
+   if(w){w.classList.remove('open');w.setAttribute('aria-hidden','true');w.style.removeProperty('display');}
+   document.body.style.overflow='';
+ }
+ function restoreMatches(){
+   var m=document.getElementById('matches');
+   var shell=document.querySelector('main.shell');
+   if(!m||!shell)return;
+   var win=m.closest('#rsMatchesWindowV4');
+   if(win){
+     var squad=document.getElementById('squad');
+     if(squad && squad.parentElement===shell) shell.insertBefore(m,squad);
+     else shell.appendChild(m);
+   }
+   document.body.classList.remove('rsMatchesWindowOpenV4','rsOnlyMatchesV3');
+   var mw=document.getElementById('rsMatchesWindowV4');
+   if(mw){mw.classList.remove('open');mw.setAttribute('aria-hidden','true');}
+ }
+ function showPage(id){
+   closeSide();
+   closeSquad();
+   restoreMatches();
+   document.querySelectorAll('.page').forEach(function(p){
+     var yes=p.id===id;
+     p.classList.toggle('active',yes);
+     p.style.removeProperty('display');
+   });
+   document.body.classList.remove('rsMatchesWindowOpenV4','rsOnlyMatchesV3');
+   var target=document.getElementById(id);
+   if(target)target.style.display='';
+   window.scrollTo(0,0);
+   if(id==='matches'){
+     function paint(){
+       try{if(typeof window.rsSeasonPublicRenderV1==='function')window.rsSeasonPublicRenderV1();
+       else if(typeof window.renderMatches==='function')window.renderMatches();}catch(e){}
+     }
+     paint();setTimeout(paint,150);setTimeout(paint,600);setTimeout(paint,1200);
+   }
+   if(id==='home'){
+     try{if(typeof window.renderAll==='function')window.renderAll();}catch(e){}
+     try{if(typeof window.renderHome==='function')window.renderHome();}catch(e){}
+   }
+   if(id==='squad'){
+     /* Plantilla uses the ORIGINAL V45 window and therefore keeps its cards intact. */
+     try{if(typeof window.rsOpenSquadWindowV6==='function')window.rsOpenSquadWindowV6();}
+     catch(e){
+       var w=document.getElementById('rsSquadWindowV6');
+       if(w){w.classList.add('open');w.style.setProperty('display','block','important');}
+     }
+   }
+   setTimeout(active,30);
+ }
+ function active(){
+   var n=document.getElementById(ID);if(!n)return;
+   var w=document.getElementById('rsSquadWindowV6');
+   var p=(w&&w.classList.contains('open'))?'squad':((document.querySelector('.page.active')||{}).id||'home');
+   n.querySelectorAll('button').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-v52-page')===p)});
+ }
+ function build(){
+   /* Remove only the old bottom navigation bars, never application panels. */
+   document.querySelectorAll('#rsV45BottomNav,#rsBottomNavV11,#rsBottomNavV34').forEach(function(n){n.remove();});
+   var old=document.getElementById(ID);if(old)old.remove();
+   var n=document.createElement('nav');n.id=ID;n.setAttribute('aria-label','Navegación principal');
+   n.innerHTML='<button type="button" data-v52-page="home"><span class="v52ico">⌂</span><span>INICIO</span></button>'+
+               '<button type="button" data-v52-page="matches"><span class="v52ico">⚽</span><span>PARTIDOS</span></button>'+
+               '<button type="button" data-v52-page="squad"><span class="v52ico">👥</span><span>PLANTILLA</span></button>';
+   document.body.appendChild(n);
+   n.querySelectorAll('button').forEach(function(b){
+     b.onclick=function(e){e.preventDefault();e.stopPropagation();showPage(b.getAttribute('data-v52-page'));};
+   });
+   active();
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',build);else build();
+})();
+</script>
