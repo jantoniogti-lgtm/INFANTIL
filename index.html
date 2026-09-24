@@ -5479,103 +5479,69 @@ body.rsMatchesWindowOpenV4 .app{
 </script>
 
 
-<!-- V52 FIX — CARGA DE PARTIDOS DE TEMPORADA DESDE LA LISTA FACILITADA -->
-<script id="rs-v52-season-fixtures-import">
+<style id="rs-v62-hide-admin-css">
+#sideNavV14 button[data-page="admin"],#mainNav button[data-page="admin"]{display:none!important}
+</style>
+<script id="rs-v62-hide-admin-js">
+(function(){function hide(){document.querySelectorAll('#sideNavV14 button[data-page="admin"],#mainNav button[data-page="admin"]').forEach(function(b){b.remove()})}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',hide);else hide();
+setTimeout(hide,150);setTimeout(hide,600);setTimeout(hide,1200);})();
+</script>
+
+<style id="rs-v62-fcf-css">
+#rsV62FederacioBtn{display:flex!important;align-items:center!important;gap:10px!important;text-decoration:none!important;}
+#rsV62FederacioBtn img{width:52px;height:auto;max-height:30px;object-fit:contain;background:#fff;border-radius:4px;display:block;flex:0 0 auto;}
+#rsV62FederacioBtn span{font-weight:900;color:inherit;}
+</style>
+<script id="rs-v62-fcf-js">
 (function(){
-  'use strict';
-  var FIXTURES = [
-    ['2026-10-04','Escola F. Base Vendrell "A"','Ramón Sicart, A.E. "A"'],
-    ['2026-10-11','Ramón Sicart, A.E. "A"','Fundació P.E.F. La Pobla Mafumet'],
-    ['2026-10-18','Vendrell C.E. "C"','Ramón Sicart, A.E. "A"'],
-    ['2026-10-31','Escola Valls Futbol Club "B"','Ramón Sicart, A.E. "A"'],
-    ['2026-11-08','Ramón Sicart, A.E. "A"','Tancat, U.D. "A"'],
-    ['2026-11-15','Torredembarra, U.D. "B"','Ramón Sicart, A.E. "A"'],
-    ['2026-11-22','Ramón Sicart, A.E. "A"','Vallmoll C.D. "A"'],
-    ['2026-11-28',"Base L'Arboç, C.F. \"A\"",'Ramón Sicart, A.E. "A"'],
-    ['2026-12-12','La Salle Tarragona Assoc. Fut. "B"','Ramón Sicart, A.E. "A"'],
-    ['2026-12-20','Ramón Sicart, A.E. "A"','Col·legi S.Pau Apostol ESPA "C"'],
-    ['2027-01-17','Ramón Sicart, A.E. "A"','Escola F. Base Vendrell "A"'],
-    ['2027-01-23','Fundació P.E.F. La Pobla Mafumet','Ramón Sicart, A.E. "A"'],
-    ['2027-01-31','Ramón Sicart, A.E. "A"','Vendrell C.E. "C"'],
-    ['2027-02-21','Ramón Sicart, A.E. "A"','Escola Valls Futbol Club "B"'],
-    ['2027-02-28','Tancat, U.D. "A"','Ramón Sicart, A.E. "A"'],
-    ['2027-03-07','Ramón Sicart, A.E. "A"','Torredembarra, U.D. "B"'],
-    ['2027-03-13','Vallmoll C.D. "A"','Ramón Sicart, A.E. "A"'],
-    ['2027-03-21','Ramón Sicart, A.E. "A"',"Base L'Arboç, C.F. \"A\""],
-    ['2027-04-04','Ramón Sicart, A.E. "A"','La Salle Tarragona Assoc. Fut. "B"'],
-    ['2027-04-10','Col·legi S.Pau Apostol ESPA "C"','Ramón Sicart, A.E. "A"']
-  ];
-  function norm(s){
-    return String(s||'').toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-      .replace(/[.,'’]/g,'').replace(/\s+/g,' ').trim()
-      .replace(/\b(escola f\.? base vendr(?:e|r)ll)\b/,'escola f base vendrell')
-      .replace(/\b(la pobla mafumet)\b/,'la pobla mafumet');
+  const IMG='data:image/png;base64,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';
+  const URL='https://www.fcf.cat/ca/competicio?temporadaId=22&disciplinaId=19308233&competicioId=58780268&grupId=59997087';
+  function add(){
+    const nav=document.getElementById('sideNavV14');
+    if(!nav || document.getElementById('rsV62FederacioBtn')) return;
+    const a=document.createElement('a');
+    a.id='rsV62FederacioBtn';
+    a.href=URL; a.target='_blank'; a.rel='noopener noreferrer';
+    a.innerHTML='<img src="'+IMG+'" alt="Federació Catalana de Futbol"><span>P. FEDERACIÓ</span>';
+    nav.appendChild(a);
   }
-  function aliases(s){
-    var n=norm(s), a=[n];
-    a.push(n.replace(/\b(?:a\.e\.|ae)\b/g,'').replace(/\s+/g,' ').trim());
-    a.push(n.replace(/\b(?:c\.f\.|cf|c\.d\.|cd|u\.d\.|ud)\b/g,'').replace(/\s+/g,' ').trim());
-    return a;
-  }
-  function findTeam(teams,name){
-    var aa=aliases(name);
-    return teams.find(function(t){
-      var ta=aliases(t.name||'');
-      return aa.some(function(x){return ta.indexOf(x)>=0 || x===ta[0] || ta.some(function(y){return y===x;});});
-    });
-  }
-  function nextId(teams){
-    return teams.reduce(function(m,t){return Math.max(m,Number(t.id)||0);},0)+1;
-  }
-  async function run(){
-    try{
-      if(typeof firebaseRestUrl==='undefined') return;
-      var res=await fetch(firebaseRestUrl,{cache:'no-store'});
-      if(!res.ok) throw new Error('Firebase GET '+res.status);
-      var root=await res.json();
-      if(!root || !root.app) return;
-      var app=root.app;
-      app.teams=Array.isArray(app.teams)?app.teams:[];
-      app.matches=Array.isArray(app.matches)?app.matches:[];
-      var created=0, teamsAdded=0;
-      var id=nextId(app.teams);
-      FIXTURES.forEach(function(f,i){
-        var home=findTeam(app.teams,f[1]), away=findTeam(app.teams,f[2]);
-        if(!home){ home={id:id++,name:f[1],short:f[1].replace(/[^A-Za-zÀ-ÿ]/g,'').slice(0,3).toUpperCase(),logo:'',protected:false}; app.teams.push(home); teamsAdded++; }
-        if(!away){ away={id:id++,name:f[2],short:f[2].replace(/[^A-Za-zÀ-ÿ]/g,'').slice(0,3).toUpperCase(),logo:'',protected:false}; app.teams.push(away); teamsAdded++; }
-        var exists=app.matches.some(function(m){
-          return String(m.date||'')===f[0] && Number(m.home)===Number(home.id) && Number(m.away)===Number(away.id);
-        });
-        if(!exists){
-          app.matches.push({
-            id:Date.now()+i+Math.floor(Math.random()*1000),
-            home:Number(home.id),away:Number(away.id),date:f[0],hour:'',
-            competition:'Liga',field:'',status:'SCHEDULED',homeScore:null,awayScore:null,
-            events:[],lineup:[],formation:'4-3-3',jornada:i+1
-          });
-          created++;
-        }
-      });
-      if(created || teamsAdded){
-        root.app=app;
-        var put=await fetch(firebaseRestUrl,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(root)});
-        if(!put.ok) throw new Error('Firebase PUT '+put.status);
-      }
-      /* Actualiza la aplicación abierta sin tocar el resto de sus módulos. */
-      if(typeof App!=='undefined'){
-        App.teams=app.teams; App.matches=app.matches;
-        try{ if(typeof renderAll==='function') renderAll(); }catch(e){}
-        try{ if(typeof renderMatches==='function') renderMatches(); }catch(e){}
-      }
-      console.log('[RS LIVE] Partidos importados:',created,'Equipos añadidos:',teamsAdded);
-    }catch(err){ console.error('[RS LIVE] No se pudieron importar los partidos:',err); }
-  }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',function(){setTimeout(run,1800);});
-  else setTimeout(run,1800);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',add);else add();
+  setTimeout(add,200);setTimeout(add,800);
 })();
 </script>
 
+<style id="rs-v62-home-close-css">
+#rsMatchesWindowV4.rs-v62-closed,#rsSquadWindowV6.rs-v62-closed{{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important}}
+</style>
+<script id="rs-v62-home-close-js">
+(function(){{
+ function closeOverlays(){{
+   const mw=document.getElementById('rsMatchesWindowV4');
+   if(mw){{mw.classList.remove('open');mw.classList.add('rs-v62-closed');mw.setAttribute('aria-hidden','true');mw.style.setProperty('display','none','important');mw.style.setProperty('visibility','hidden','important');mw.style.setProperty('pointer-events','none','important');}}
+   const sw=document.getElementById('rsSquadWindowV6');
+   if(sw){{sw.classList.remove('open');sw.classList.add('rs-v62-closed');sw.setAttribute('aria-hidden','true');sw.style.setProperty('display','none','important');sw.style.setProperty('visibility','hidden','important');sw.style.setProperty('pointer-events','none','important');}}
+   document.body.classList.remove('rsMatchesWindowOpenV4','rsOnlyMatchesV3','rsAdminModalOpenV2');
+   document.body.style.removeProperty('overflow');document.body.style.removeProperty('position');
+   document.documentElement.style.removeProperty('overflow');
+ }}
+ function goHome(e){{
+   if(e){{e.preventDefault();e.stopImmediatePropagation();}}
+   closeOverlays();
+   document.querySelectorAll('.page').forEach(function(p){{const yes=p.id==='home';p.classList.toggle('active',yes);p.style.setProperty('display',yes?'block':'none','important')}});
+   const home=document.getElementById('home');if(home){{home.classList.add('active');home.style.setProperty('display','block','important')}}
+   document.querySelectorAll('#sideNavV14 button,#mainNav button').forEach(function(b){{b.classList.toggle('active',b.dataset.page==='home')}});
+   try{{if(typeof window.renderAll==='function')window.renderAll()}}catch(x){{}}
+   try{{if(typeof window.renderHome==='function')window.renderHome()}}catch(x){{}}
+   window.scrollTo(0,0);
+   return false;
+ }}
+ function bind(){{document.querySelectorAll('#sideNavV14 button[data-page="home"],#mainNav button[data-page="home"]').forEach(function(b){{b.onclick=goHome}})}}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind);else bind();
+ setTimeout(bind,150);setTimeout(bind,500);setTimeout(bind,1200);
+ window.rsGoHomeV62=goHome;
+}})();
+</script>
 </body>
 </html>
 
@@ -8284,6 +8250,70 @@ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",
 })();
 </script>
 
+
+<style id="rs-v62-hide-admin-css">
+#sideNavV14 button[data-page="admin"],#mainNav button[data-page="admin"]{display:none!important}
+</style>
+<script id="rs-v62-hide-admin-js">
+(function(){function hide(){document.querySelectorAll('#sideNavV14 button[data-page="admin"],#mainNav button[data-page="admin"]').forEach(function(b){b.remove()})}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',hide);else hide();
+setTimeout(hide,150);setTimeout(hide,600);setTimeout(hide,1200);})();
+</script>
+
+<style id="rs-v62-fcf-css">
+#rsV62FederacioBtn{display:flex!important;align-items:center!important;gap:10px!important;text-decoration:none!important;}
+#rsV62FederacioBtn img{width:52px;height:auto;max-height:30px;object-fit:contain;background:#fff;border-radius:4px;display:block;flex:0 0 auto;}
+#rsV62FederacioBtn span{font-weight:900;color:inherit;}
+</style>
+<script id="rs-v62-fcf-js">
+(function(){
+  const IMG='data:image/png;base64,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';
+  const URL='https://www.fcf.cat/ca/competicio?temporadaId=22&disciplinaId=19308233&competicioId=58780268&grupId=59997087';
+  function add(){
+    const nav=document.getElementById('sideNavV14');
+    if(!nav || document.getElementById('rsV62FederacioBtn')) return;
+    const a=document.createElement('a');
+    a.id='rsV62FederacioBtn';
+    a.href=URL; a.target='_blank'; a.rel='noopener noreferrer';
+    a.innerHTML='<img src="'+IMG+'" alt="Federació Catalana de Futbol"><span>P. FEDERACIÓ</span>';
+    nav.appendChild(a);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',add);else add();
+  setTimeout(add,200);setTimeout(add,800);
+})();
+</script>
+
+<style id="rs-v62-home-close-css">
+#rsMatchesWindowV4.rs-v62-closed,#rsSquadWindowV6.rs-v62-closed{{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important}}
+</style>
+<script id="rs-v62-home-close-js">
+(function(){{
+ function closeOverlays(){{
+   const mw=document.getElementById('rsMatchesWindowV4');
+   if(mw){{mw.classList.remove('open');mw.classList.add('rs-v62-closed');mw.setAttribute('aria-hidden','true');mw.style.setProperty('display','none','important');mw.style.setProperty('visibility','hidden','important');mw.style.setProperty('pointer-events','none','important');}}
+   const sw=document.getElementById('rsSquadWindowV6');
+   if(sw){{sw.classList.remove('open');sw.classList.add('rs-v62-closed');sw.setAttribute('aria-hidden','true');sw.style.setProperty('display','none','important');sw.style.setProperty('visibility','hidden','important');sw.style.setProperty('pointer-events','none','important');}}
+   document.body.classList.remove('rsMatchesWindowOpenV4','rsOnlyMatchesV3','rsAdminModalOpenV2');
+   document.body.style.removeProperty('overflow');document.body.style.removeProperty('position');
+   document.documentElement.style.removeProperty('overflow');
+ }}
+ function goHome(e){{
+   if(e){{e.preventDefault();e.stopImmediatePropagation();}}
+   closeOverlays();
+   document.querySelectorAll('.page').forEach(function(p){{const yes=p.id==='home';p.classList.toggle('active',yes);p.style.setProperty('display',yes?'block':'none','important')}});
+   const home=document.getElementById('home');if(home){{home.classList.add('active');home.style.setProperty('display','block','important')}}
+   document.querySelectorAll('#sideNavV14 button,#mainNav button').forEach(function(b){{b.classList.toggle('active',b.dataset.page==='home')}});
+   try{{if(typeof window.renderAll==='function')window.renderAll()}}catch(x){{}}
+   try{{if(typeof window.renderHome==='function')window.renderHome()}}catch(x){{}}
+   window.scrollTo(0,0);
+   return false;
+ }}
+ function bind(){{document.querySelectorAll('#sideNavV14 button[data-page="home"],#mainNav button[data-page="home"]').forEach(function(b){{b.onclick=goHome}})}}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind);else bind();
+ setTimeout(bind,150);setTimeout(bind,500);setTimeout(bind,1200);
+ window.rsGoHomeV62=goHome;
+}})();
+</script>
 </body>
 </html>
 
@@ -8572,115 +8602,404 @@ render();setTimeout(render,300);setTimeout(render,1000);setTimeout(render,2000);
 </script>
 
 
+<!-- V63 — MENU HAMBURGUESA SIEMPRE VISIBLE + SIN BARRAS INFERIORES + FCF ULTIMO -->
+<style id="rs-v63-navigation-css">
+/* El menú hamburguesa debe quedar por encima de las ventanas Partidos/Plantilla */
+#mobileMenuBtnV14{
+  position:fixed!important;
+  z-index:2147483646!important;
+  display:block!important;
+}
+#sideOverlayV14{
+  z-index:2147483644!important;
+}
+#sideMenuV14{
+  z-index:2147483645!important;
+}
 
-<!-- V52 — SOLO NAVEGACIÓN INFERIOR. NO MODIFICA NINGÚN MÓDULO/DATO -->
-<style id="rs-v52-bottom-nav-css">
-#rsV52BottomNav{
- position:fixed!important;left:50%!important;bottom:max(8px,env(safe-area-inset-bottom))!important;
- transform:translateX(-50%)!important;z-index:2147483647!important;
- width:min(680px,calc(100vw - 16px))!important;height:68px!important;padding:6px!important;
- display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:6px!important;
- background:rgba(7,15,26,.98)!important;border:1px solid rgba(255,208,0,.5)!important;
- border-radius:18px!important;box-shadow:0 12px 35px rgba(0,0,0,.6)!important;
- backdrop-filter:blur(12px)!important;
+/* Eliminar todas las barras inferiores antiguas */
+#rsV45BottomNav,
+#rsBottomNavV11,
+#rsCadeteBottomNav,
+#rsBottomNavV34,
+.rsCadeteBottomNav{
+  display:none!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
 }
-#rsV52BottomNav button{
- border:1px solid rgba(255,255,255,.08)!important;border-radius:12px!important;
- background:#0d1a2b!important;color:#fff!important;font-weight:900!important;font-size:11px!important;
- min-width:0!important;min-height:54px!important;padding:4px!important;cursor:pointer!important;
- display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:3px!important;
- -webkit-tap-highlight-color:transparent!important;
+
+/* El acceso a Federación debe verse como un botón normal del menú */
+#sideNavV14 #rsV62FederacioBtn{
+  width:100%!important;
+  min-height:50px!important;
+  box-sizing:border-box!important;
+  margin:6px 0 0!important;
+  padding:10px 12px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:10px!important;
+  border:1px solid #383831!important;
+  border-radius:15px!important;
+  background:#111313!important;
+  color:#c8ced8!important;
+  font-family:inherit!important;
+  font-size:15px!important;
+  font-weight:900!important;
+  line-height:1!important;
+  text-decoration:none!important;
+  box-sizing:border-box!important;
 }
-#rsV52BottomNav button.active{background:linear-gradient(135deg,#ffd000,#ff8a00)!important;color:#111!important;border-color:#ffd000!important}
-#rsV52BottomNav .v52ico{font-size:21px!important;line-height:20px!important}
-body{padding-bottom:92px!important}
-.page{padding-bottom:92px!important}
-@media(max-width:600px){#rsV52BottomNav{height:64px!important}#rsV52BottomNav button{min-height:50px!important;font-size:10px!important}#rsV52BottomNav .v52ico{font-size:19px!important}}
-/* The V52 bar is the only bottom navigation visible. */
-#rsV45BottomNav,#rsBottomNavV11,#rsBottomNavV34{display:none!important}
+#sideNavV14 #rsV62FederacioBtn:hover{
+  background:#171919!important;
+  color:#fff!important;
+}
+#sideNavV14 #rsV62FederacioBtn img{
+  width:34px!important;
+  height:22px!important;
+  max-width:34px!important;
+  max-height:22px!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  background:#fff!important;
+  border-radius:3px!important;
+  flex:0 0 34px!important;
+  display:block!important;
+}
+#sideNavV14 #rsV62FederacioBtn span{
+  color:inherit!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+}
+
+/* El espacio inferior que pertenecía a las barras ya no es necesario */
+body{padding-bottom:0!important}
+.page{padding-bottom:20px!important}
 </style>
-<script id="rs-v52-bottom-nav-js">
+
+<script id="rs-v63-navigation-js">
 (function(){
- 'use strict';
- var ID='rsV52BottomNav';
- function closeSide(){
-   var a=document.getElementById('sideMenuV14');if(a)a.classList.remove('open');
-   var b=document.getElementById('sideOverlayV14');if(b)b.classList.remove('open');
- }
- function closeSquad(){
-   try{if(typeof window.rsCloseSquadWindowV6==='function')window.rsCloseSquadWindowV6();}catch(e){}
-   var w=document.getElementById('rsSquadWindowV6');
-   if(w){w.classList.remove('open');w.setAttribute('aria-hidden','true');w.style.removeProperty('display');}
-   document.body.style.overflow='';
- }
- function restoreMatches(){
-   var m=document.getElementById('matches');
-   var shell=document.querySelector('main.shell');
-   if(!m||!shell)return;
-   var win=m.closest('#rsMatchesWindowV4');
-   if(win){
-     var squad=document.getElementById('squad');
-     if(squad && squad.parentElement===shell) shell.insertBefore(m,squad);
-     else shell.appendChild(m);
-   }
-   document.body.classList.remove('rsMatchesWindowOpenV4','rsOnlyMatchesV3');
-   var mw=document.getElementById('rsMatchesWindowV4');
-   if(mw){mw.classList.remove('open');mw.setAttribute('aria-hidden','true');}
- }
- function showPage(id){
-   closeSide();
-   closeSquad();
-   restoreMatches();
-   document.querySelectorAll('.page').forEach(function(p){
-     var yes=p.id===id;
-     p.classList.toggle('active',yes);
-     p.style.removeProperty('display');
-   });
-   document.body.classList.remove('rsMatchesWindowOpenV4','rsOnlyMatchesV3');
-   var target=document.getElementById(id);
-   if(target)target.style.display='';
-   window.scrollTo(0,0);
-   if(id==='matches'){
-     function paint(){
-       try{if(typeof window.rsSeasonPublicRenderV1==='function')window.rsSeasonPublicRenderV1();
-       else if(typeof window.renderMatches==='function')window.renderMatches();}catch(e){}
-     }
-     paint();setTimeout(paint,150);setTimeout(paint,600);setTimeout(paint,1200);
-   }
-   if(id==='home'){
-     try{if(typeof window.renderAll==='function')window.renderAll();}catch(e){}
-     try{if(typeof window.renderHome==='function')window.renderHome();}catch(e){}
-   }
-   if(id==='squad'){
-     /* Plantilla uses the ORIGINAL V45 window and therefore keeps its cards intact. */
-     try{if(typeof window.rsOpenSquadWindowV6==='function')window.rsOpenSquadWindowV6();}
-     catch(e){
-       var w=document.getElementById('rsSquadWindowV6');
-       if(w){w.classList.add('open');w.style.setProperty('display','block','important');}
-     }
-   }
-   setTimeout(active,30);
- }
- function active(){
-   var n=document.getElementById(ID);if(!n)return;
-   var w=document.getElementById('rsSquadWindowV6');
-   var p=(w&&w.classList.contains('open'))?'squad':((document.querySelector('.page.active')||{}).id||'home');
-   n.querySelectorAll('button').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-v52-page')===p)});
- }
- function build(){
-   /* Remove only the old bottom navigation bars, never application panels. */
-   document.querySelectorAll('#rsV45BottomNav,#rsBottomNavV11,#rsBottomNavV34').forEach(function(n){n.remove();});
-   var old=document.getElementById(ID);if(old)old.remove();
-   var n=document.createElement('nav');n.id=ID;n.setAttribute('aria-label','Navegación principal');
-   n.innerHTML='<button type="button" data-v52-page="home"><span class="v52ico">⌂</span><span>INICIO</span></button>'+
-               '<button type="button" data-v52-page="matches"><span class="v52ico">⚽</span><span>PARTIDOS</span></button>'+
-               '<button type="button" data-v52-page="squad"><span class="v52ico">👥</span><span>PLANTILLA</span></button>';
-   document.body.appendChild(n);
-   n.querySelectorAll('button').forEach(function(b){
-     b.onclick=function(e){e.preventDefault();e.stopPropagation();showPage(b.getAttribute('data-v52-page'));};
-   });
-   active();
- }
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',build);else build();
+  "use strict";
+
+  function removeBottomBars(){
+    document.querySelectorAll('#rsV45BottomNav,#rsBottomNavV11,#rsCadeteBottomNav,#rsBottomNavV34,.rsCadeteBottomNav')
+      .forEach(function(el){ el.remove(); });
+  }
+
+  function keepHamburgerAboveWindows(){
+    var btn=document.getElementById('mobileMenuBtnV14');
+    var menu=document.getElementById('sideMenuV14');
+    var overlay=document.getElementById('sideOverlayV14');
+    if(btn){
+      btn.style.setProperty('position','fixed','important');
+      btn.style.setProperty('z-index','2147483646','important');
+      btn.style.setProperty('display','block','important');
+    }
+    if(menu) menu.style.setProperty('z-index','2147483645','important');
+    if(overlay) overlay.style.setProperty('z-index','2147483644','important');
+  }
+
+  function moveFederacioLast(){
+    var nav=document.getElementById('sideNavV14');
+    if(!nav) return;
+
+    var f=document.getElementById('rsV62FederacioBtn');
+    if(!f) return;
+
+    /* Siempre al final, después de Inicio/Plantilla/Partidos. */
+    nav.appendChild(f);
+
+    /* Eliminar duplicados si algún parche anterior lo creó. */
+    nav.querySelectorAll('#rsV62FederacioBtn').forEach(function(el,i){
+      if(i>0) el.remove();
+    });
+  }
+
+  function fixFederacio(){
+    var nav=document.getElementById('sideNavV14');
+    if(!nav) return;
+    var f=document.getElementById('rsV62FederacioBtn');
+    if(!f) return;
+
+    f.className='rsV63Federacio';
+    f.setAttribute('aria-label','P. FEDERACIÓ');
+    moveFederacioLast();
+  }
+
+  function cleanAndFix(){
+    removeBottomBars();
+    keepHamburgerAboveWindows();
+    fixFederacio();
+  }
+
+  /* No cerramos el menú hamburguesa al entrar en Partidos/Plantilla.
+     Solo se cierra cuando el usuario pulsa una opción del menú. */
+  document.addEventListener('click',function(e){
+    var btn=e.target.closest && e.target.closest('#mobileMenuBtnV14');
+    if(btn){
+      setTimeout(keepHamburgerAboveWindows,0);
+      return;
+    }
+  },true);
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',cleanAndFix);
+  }else{
+    cleanAndFix();
+  }
+
+  setTimeout(cleanAndFix,100);
+  setTimeout(cleanAndFix,400);
+  setTimeout(cleanAndFix,900);
+  setTimeout(cleanAndFix,1600);
+  setTimeout(cleanAndFix,3000);
+
+  window.rsV63NavigationFix=cleanAndFix;
+})();
+</script>
+
+<!-- V64 — PARTIDOS: CARGA DIRECTA DESDE FIREBASE SIN TOCAR DATOS -->
+<style id="rs-v64-partidos-firebase-css">
+#rsMatchesWindowV4.open #matchList{
+  display:grid!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+#rsMatchesWindowV4.open .rs-v64-loading{
+  display:block!important;
+  padding:28px 12px!important;
+  text-align:center!important;
+  color:#c8ced8!important;
+  font-weight:800!important;
+}
+</style>
+<script id="rs-v64-partidos-firebase-js">
+(function(){
+  "use strict";
+
+  function asList(v){
+    if(Array.isArray(v)) return v;
+    if(v && typeof v === "object") return Object.values(v);
+    return [];
+  }
+
+  async function loadMatchesFromFirebase(){
+    try{
+      if(typeof firebaseRestUrl !== "string") return false;
+      const r=await fetch(firebaseRestUrl+"?t="+Date.now(),{cache:"no-store"});
+      if(!r.ok) return false;
+      const data=await r.json();
+      const remote=asList(data && data.app && data.app.matches);
+      if(remote.length){
+        App.matches=remote;
+        if(data.app && data.app.activeMatch!==undefined && data.app.activeMatch!==null){
+          App.activeMatch=data.app.activeMatch;
+        }
+        return true;
+      }
+    }catch(e){
+      console.warn("RS Partidos Firebase:",e);
+    }
+    return false;
+  }
+
+  function renderMatchesNow(){
+    const win=document.getElementById("rsMatchesWindowV4");
+    const list=document.getElementById("matchList");
+    if(!win || !list) return;
+
+    win.classList.add("open");
+    win.classList.remove("rs-v62-closed");
+    win.style.setProperty("display","block","important");
+    win.style.setProperty("visibility","visible","important");
+    win.style.setProperty("opacity","1","important");
+    win.style.setProperty("pointer-events","auto","important");
+
+    const matches=document.getElementById("matches");
+    if(matches){
+      matches.style.setProperty("display","block","important");
+      matches.style.setProperty("visibility","visible","important");
+      matches.style.setProperty("opacity","1","important");
+    }
+    list.style.setProperty("display","grid","important");
+    list.style.setProperty("visibility","visible","important");
+    list.style.setProperty("opacity","1","important");
+
+    try{
+      if(typeof window.rsSeasonPublicRenderV1 === "function"){
+        window.rsSeasonPublicRenderV1();
+      }else if(typeof window.publicSeasonRenderV1 === "function"){
+        window.publicSeasonRenderV1();
+      }else if(typeof window.renderMatches === "function"){
+        window.renderMatches();
+      }
+    }catch(e){ console.error("RS V64 render partidos:",e); }
+  }
+
+  async function openMatchesV64(e){
+    if(e){e.preventDefault();e.stopImmediatePropagation();}
+
+    const win=document.getElementById("rsMatchesWindowV4");
+    const list=document.getElementById("matchList");
+    if(!win || !list) return false;
+
+    document.querySelectorAll(".page").forEach(p=>{
+      p.classList.remove("active");
+      p.style.setProperty("display","none","important");
+    });
+
+    win.classList.add("open");
+    win.classList.remove("rs-v62-closed");
+    win.setAttribute("aria-hidden","false");
+    document.body.classList.add("rsMatchesWindowOpenV4");
+
+    document.querySelectorAll("#sideNavV14 button,#mainNav button").forEach(b=>{
+      b.classList.toggle("active",b.dataset.page==="matches");
+    });
+
+    /* Primero pintamos lo que ya haya en App. */
+    renderMatchesNow();
+
+    /* Si Firebase todavía no ha llegado, lo recuperamos directamente. */
+    if(!Array.isArray(App.matches) || !App.matches.length){
+      list.innerHTML='<div class="rs-v64-loading">Cargando partidos…</div>';
+      const ok=await loadMatchesFromFirebase();
+      if(ok) renderMatchesNow();
+    }
+
+    /* Reintento por si el listener realtime termina justo después. */
+    setTimeout(renderMatchesNow,250);
+    setTimeout(renderMatchesNow,700);
+    setTimeout(renderMatchesNow,1400);
+
+    /* Cerramos solo el panel lateral, nunca el botón hamburguesa. */
+    document.getElementById("sideMenuV14")?.classList.remove("open");
+    document.getElementById("sideOverlayV14")?.classList.remove("open");
+    win.scrollTop=0;
+    return false;
+  }
+
+  function bind(){
+    document.querySelectorAll('#sideNavV14 button[data-page="matches"],#mainNav button[data-page="matches"]').forEach(btn=>{
+      btn.onclick=openMatchesV64;
+    });
+  }
+
+  function boot(){
+    bind();
+    setTimeout(bind,100);
+    setTimeout(bind,400);
+    setTimeout(bind,900);
+    setTimeout(bind,1600);
+  }
+
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",boot);
+  else boot();
+})();
+</script>
+
+<!-- V65 — PLANTILLA: REAPERTURA FIABLE DESPUES DE VOLVER A INICIO -->
+<style id="rs-v65-plantilla-css">
+#rsSquadWindowV6.rs-v62-closed{display:none!important}
+#rsSquadWindowV6.rsV16Open{display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important}
+</style>
+<script id="rs-v65-plantilla-js">
+(function(){
+  "use strict";
+  function openPlantilla(e){
+    if(e){ e.preventDefault(); e.stopImmediatePropagation(); }
+    var w=document.getElementById("rsSquadWindowV6");
+    if(!w) return false;
+
+    // Limpiar estados que deja la vuelta a Inicio.
+    w.classList.remove("rs-v62-closed");
+    w.classList.remove("open");
+    w.classList.add("rsV16Open");
+    w.setAttribute("aria-hidden","false");
+    w.style.setProperty("display","block","important");
+    w.style.setProperty("visibility","visible","important");
+    w.style.setProperty("opacity","1","important");
+    w.style.setProperty("pointer-events","auto","important");
+
+    document.querySelectorAll(".page").forEach(function(p){
+      p.classList.remove("active");
+      p.style.setProperty("display","none","important");
+    });
+
+    var menu=document.getElementById("sideMenuV14");
+    var ov=document.getElementById("sideOverlayV14");
+    if(menu) menu.classList.remove("open");
+    if(ov) ov.classList.remove("open");
+
+    document.body.classList.remove("rsMatchesWindowOpenV4","rsOnlyMatchesV3","rsAdminModalOpenV2");
+    document.querySelectorAll("#sideNavV14 button,#mainNav button").forEach(function(b){
+      b.classList.toggle("active",b.dataset.page==="squad");
+    });
+
+    try{
+      if(typeof window.rsRenderSquadV16==="function") window.rsRenderSquadV16();
+      else if(typeof window.rsRenderSquadWindowV6==="function") window.rsRenderSquadWindowV6();
+      else if(typeof window.rsRenderSquadV12==="function") window.rsRenderSquadV12();
+    }catch(err){ console.warn("RS V65 Plantilla:",err); }
+
+    w.scrollTop=0;
+    window.scrollTo(0,0);
+    return false;
+  }
+
+  // Captura antes que los manejadores antiguos para que funcione siempre.
+  document.addEventListener("click",function(e){
+    var b=e.target.closest && e.target.closest('#sideNavV14 button[data-page="squad"],#mainNav button[data-page="squad"]');
+    if(!b) return;
+    openPlantilla(e);
+  },true);
+
+  window.rsOpenPlantillaV65=openPlantilla;
+})();
+</script>
+\n<style id="rs-v66-navigation-fix-css">
+#rsMatchesWindowV4.rs-v62-closed,#rsSquadWindowV6.rs-v62-closed{display:none!important}
+</style>
+<script id="rs-v66-navigation-fix-js">
+(function(){
+  "use strict";
+  function unlock(){
+    [document.getElementById("rsMatchesWindowV4"),document.getElementById("rsSquadWindowV6")].forEach(function(w){
+      if(!w)return;
+      w.classList.remove("rs-v62-closed");
+      w.style.removeProperty("visibility");
+      w.style.removeProperty("pointer-events");
+    });
+  }
+  function closeSide(){
+    document.getElementById("sideMenuV14")?.classList.remove("open");
+    document.getElementById("sideOverlayV14")?.classList.remove("open");
+  }
+  function bind(){
+    document.querySelectorAll('#sideNavV14 button[data-page="squad"],#mainNav button[data-page="squad"]').forEach(function(b){
+      if(b.dataset.rsV66Bound==="1")return;
+      var original=b.onclick;
+      b.dataset.rsV66Bound="1";
+      b.onclick=function(e){
+        if(e){e.preventDefault();e.stopImmediatePropagation();}
+        unlock(); closeSide();
+        try{if(typeof original==="function") original.call(b,e);}catch(x){try{window.rsOpenSquadWindowV6?.()}catch(y){}}
+        return false;
+      };
+    });
+    document.querySelectorAll('#sideNavV14 button[data-page="matches"],#mainNav button[data-page="matches"]').forEach(function(b){
+      if(b.dataset.rsV66Bound==="1")return;
+      var original=b.onclick;
+      b.dataset.rsV66Bound="1";
+      b.onclick=function(e){
+        if(e){e.preventDefault();e.stopImmediatePropagation();}
+        unlock(); closeSide();
+        try{if(typeof original==="function") original.call(b,e);}catch(x){}
+        return false;
+      };
+    });
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",bind);else bind();
+  setTimeout(bind,1800);setTimeout(bind,2600);
 })();
 </script>
