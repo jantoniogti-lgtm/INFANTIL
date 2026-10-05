@@ -9005,359 +9005,312 @@ body{padding-bottom:0!important}
 </script>
 
 
-<!-- =========================================================
-     RS LIVE · CLASIFICACIÓN EDITABLE EN ADMINISTRADOR
-     Aplicado exclusivamente sobre el HTML recibido.
-     No modifica jugadores, escudos, partidos ni alineaciones.
-========================================================= -->
-<style id="rs-admin-classification-editor-css">
-  #rsAdminClassificationEditor{
-    grid-column:1/-1;
-    margin-top:2px;
-  }
-  #rsAdminClassificationEditor .rsAceHead{
-    display:flex;align-items:center;justify-content:space-between;
-    gap:12px;flex-wrap:wrap;margin-bottom:14px;
-  }
-  #rsAdminClassificationEditor .rsAceHead h2{
-    margin:0;font-size:17px;
-  }
-  #rsAdminClassificationEditor .rsAceHead p{
-    margin:4px 0 0;color:var(--muted);font-size:11px;
-  }
-  #rsAdminClassificationEditor .rsAceActions{
-    display:flex;gap:7px;flex-wrap:wrap;
-  }
-  #rsAdminClassificationEditor .rsAceTableWrap{
-    overflow-x:auto;border:1px solid var(--line);border-radius:14px;
-  }
-  #rsAdminClassificationEditor table{
-    width:100%;min-width:900px;border-collapse:collapse;
-  }
-  #rsAdminClassificationEditor th{
-    background:#091728;color:var(--yellow);font-size:10px;
-    text-transform:uppercase;padding:10px 7px;border-bottom:1px solid var(--line);
-    white-space:nowrap;
-  }
-  #rsAdminClassificationEditor td{
-    padding:7px;border-bottom:1px solid rgba(32,51,77,.7);
-    background:#0b192a;text-align:center;
-  }
-  #rsAdminClassificationEditor tr:last-child td{border-bottom:0}
-  #rsAdminClassificationEditor .rsAceTeam{
-    min-width:240px;text-align:left;font-weight:900;
-    display:flex;align-items:center;gap:9px;
-  }
-  #rsAdminClassificationEditor .rsAceTeam img{
-    width:34px;height:34px;object-fit:contain;flex:0 0 34px;
-  }
-  #rsAdminClassificationEditor .rsAceFallback{
-    width:34px;height:34px;display:grid;place-items:center;
-    flex:0 0 34px;border:1px solid var(--line);border-radius:8px;
-  }
-  #rsAdminClassificationEditor input{
-    width:64px;max-width:100%;background:#091728;color:#fff;
-    border:1px solid #29405d;border-radius:8px;padding:8px 5px;
-    text-align:center;font-weight:900;
-  }
-  #rsAdminClassificationEditor input:focus{
-    outline:none;border-color:var(--yellow);
-    box-shadow:0 0 0 2px rgba(255,212,0,.12);
-  }
-  #rsAdminClassificationEditor .rsAcePts{
-    color:var(--yellow);font-size:15px;font-weight:1000;
-  }
-  #rsAdminClassificationEditor .rsAceDG{
-    font-weight:1000;
-  }
-  #rsAdminClassificationEditor .rsAcePos{
-    width:34px;height:28px;display:inline-grid;place-items:center;
-    border-radius:8px;background:#17283e;color:var(--yellow);font-weight:1000;
-  }
-  #rsAdminClassificationEditor .rsAceHint{
-    margin-top:10px;color:var(--muted);font-size:10px;line-height:1.5;
-  }
+<style id="rs-class-admin-fix-css">
+#rsClassAdminFix{
+  grid-column:1/-1;
+  margin-top:2px;
+}
+#rsClassAdminFix .rsCAFHead{
+  display:flex;justify-content:space-between;align-items:center;
+  gap:12px;flex-wrap:wrap;margin-bottom:14px;
+}
+#rsClassAdminFix h2{margin:0;font-size:17px}
+#rsClassAdminFix .rsCAFSub{margin-top:4px;color:var(--muted);font-size:11px}
+#rsClassAdminFix .rsCAFBtns{display:flex;gap:8px;flex-wrap:wrap}
+#rsClassAdminFix .rsCAFWrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px}
+#rsClassAdminFix table{width:100%;min-width:920px;border-collapse:collapse}
+#rsClassAdminFix th{
+  padding:10px 7px;background:#091728;color:var(--yellow);
+  font-size:10px;white-space:nowrap;border-bottom:1px solid var(--line)
+}
+#rsClassAdminFix td{
+  padding:7px;border-bottom:1px solid rgba(32,51,77,.7);
+  background:#0b192a;text-align:center
+}
+#rsClassAdminFix tr:last-child td{border-bottom:0}
+#rsClassAdminFix .rsCAFTeam{
+  display:flex;align-items:center;gap:9px;min-width:240px;text-align:left;font-weight:900
+}
+#rsClassAdminFix .rsCAFTeam img{
+  width:36px;height:36px;object-fit:contain;flex:0 0 36px
+}
+#rsClassAdminFix .rsCAFNoLogo{
+  width:36px;height:36px;display:grid;place-items:center;
+  flex:0 0 36px;border:1px solid var(--line);border-radius:8px
+}
+#rsClassAdminFix input{
+  width:64px;background:#091728;color:#fff;border:1px solid #29405d;
+  border-radius:8px;padding:8px 5px;text-align:center;font-weight:900
+}
+#rsClassAdminFix input:focus{
+  outline:none;border-color:var(--yellow);
+  box-shadow:0 0 0 2px rgba(255,212,0,.12)
+}
+#rsClassAdminFix .rsCAFPos{
+  width:32px;height:28px;display:inline-grid;place-items:center;
+  background:#17283e;color:var(--yellow);border-radius:8px;font-weight:1000
+}
+#rsClassAdminFix .rsCAFStat{font-size:15px;font-weight:1000}
+#rsClassAdminFix .rsCAFPts{color:var(--yellow)}
+#rsClassAdminFix .rsCAFHint{
+  margin-top:10px;color:var(--muted);font-size:10px;line-height:1.5
+}
 </style>
 
-<script id="rs-admin-classification-editor-js">
+<script id="rs-class-admin-fix-js">
 (function(){
   "use strict";
 
-  const ACE_KEY = "rsAdminClassification";
+  var KEY="adminClassification";
+  var lastRenderedTeams="";
 
-  function escAce(v){
-    return String(v ?? "").replace(/[&<>"']/g,m=>({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-    }[m]));
+  function getApp(){
+    try{
+      return (typeof App!=="undefined") ? App : null;
+    }catch(e){ return null; }
   }
 
-  function teams(){
-    return Array.isArray(window.App?.teams) ? window.App.teams.slice() : [];
+  function getTeams(){
+    var a=getApp();
+    return a && Array.isArray(a.teams) ? a.teams.slice() : [];
   }
 
-  function keyForTeam(id){
-    return String(id);
+  function escC(v){
+    return String(v==null?"":v).replace(/[&<>"']/g,function(m){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m];
+    });
   }
 
-  function num(v){
-    const n = Number(v);
-    return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 0;
+  function n(v){
+    var x=Number(v);
+    return Number.isFinite(x) && x>=0 ? Math.floor(x) : 0;
   }
 
-  function blankRow(team){
+  function data(){
+    var a=getApp();
+    if(!a) return {};
+    a[KEY]=a[KEY]||{};
+    return a[KEY];
+  }
+
+  function row(team){
+    var d=data()[String(team.id)]||{};
     return {
-      teamId: team.id,
-      played:0, wins:0, draws:0, losses:0,
-      gf:0, ga:0
+      teamId:team.id,
+      pj:n(d.pj),pg:n(d.pg),pe:n(d.pe),pp:n(d.pp),
+      gf:n(d.gf),gc:n(d.gc)
     };
   }
 
-  function storedRows(){
-    const src = window.App?.[ACE_KEY];
-    if(!src || typeof src !== "object") return {};
-    return src;
-  }
+  function pts(r){return r.pg*3+r.pe}
+  function dg(r){return r.gf-r.gc}
 
-  function rowFor(team){
-    const stored = storedRows()[keyForTeam(team.id)];
-    if(stored){
-      return {
-        teamId:team.id,
-        played:num(stored.played),
-        wins:num(stored.wins),
-        draws:num(stored.draws),
-        losses:num(stored.losses),
-        gf:num(stored.gf),
-        ga:num(stored.ga)
-      };
-    }
-    return blankRow(team);
-  }
-
-  function points(r){
-    return r.wins*3 + r.draws;
-  }
-
-  function dg(r){
-    return r.gf-r.ga;
-  }
-
-  function sortedRows(){
-    return teams().map(rowFor).sort((a,b)=>{
-      const A=teams().find(t=>String(t.id)===String(a.teamId))||{};
-      const B=teams().find(t=>String(t.id)===String(b.teamId))||{};
-      return points(b)-points(a)
-        || dg(b)-dg(a)
-        || b.gf-a.gf
-        || b.wins-a.wins
-        || String(A.name||"").localeCompare(String(B.name||""),"es");
+  function sorted(){
+    return getTeams().map(function(t){
+      return {team:t,row:row(t)};
+    }).sort(function(a,b){
+      var A=a.row,B=b.row;
+      return pts(B)-pts(A) ||
+             dg(B)-dg(A) ||
+             B.gf-A.gf ||
+             B.pg-A.pg ||
+             String(a.team.name||"").localeCompare(String(b.team.name||""),"es");
     });
   }
 
-  function crest(team){
-    return team && (team.logo||team.crest||team.escudo||team.image||team.photo||team.logoUrl) || "";
-  }
+  function saveToAppFromDOM(){
+    var a=getApp();
+    if(!a)return;
 
-  function saveClassification(showToast=true){
-    if(!window.App) return;
-
-    const rows = {};
-    document.querySelectorAll("#rsAdminClassificationEditor tbody tr[data-team-id]").forEach(tr=>{
-      const id=tr.dataset.teamId;
-      const get=(name)=>tr.querySelector(`[data-field="${name}"]`);
-      const r={
-        teamId:id,
-        played:num(get("played")?.value),
-        wins:num(get("wins")?.value),
-        draws:num(get("draws")?.value),
-        losses:num(get("losses")?.value),
-        gf:num(get("gf")?.value),
-        ga:num(get("ga")?.value)
+    var result={};
+    document.querySelectorAll("#rsClassAdminFix tbody tr[data-team-id]").forEach(function(tr){
+      var f=function(k){
+        var el=tr.querySelector('[data-field="'+k+'"]');
+        return n(el ? el.value : 0);
       };
-      rows[keyForTeam(id)]=r;
+      var id=String(tr.getAttribute("data-team-id"));
+      result[id]={
+        teamId:tr.getAttribute("data-team-id"),
+        pj:f("pj"),pg:f("pg"),pe:f("pe"),pp:f("pp"),
+        gf:f("gf"),gc:f("gc")
+      };
     });
-
-    window.App[ACE_KEY]=rows;
-
-    // Usa el guardado existente del HTML. No crea otra rama Firebase.
-    const p = (typeof window.save==="function") ? window.save() : null;
-    if(p && typeof p.catch==="function"){
-      p.then(()=>{
-        if(showToast && typeof window.toast==="function")
-          window.toast("Clasificación guardada en Firebase");
-      }).catch(err=>{
-        console.error("Clasificación:",err);
-        if(showToast && typeof window.toast==="function")
-          window.toast("No se pudo guardar la clasificación");
-      });
-    }else if(showToast && typeof window.toast==="function"){
-      window.toast("Clasificación guardada");
-    }
-
-    render();
+    a[KEY]=result;
   }
 
-  function calculateFromLeagueMatches(){
-    const calc={};
-    teams().forEach(t=>calc[keyForTeam(t.id)]=blankRow(t));
-
-    (window.App?.matches||[])
-      .filter(m=>{
-        const status=String(m.status||"").toUpperCase();
-        const competition=String(m.competition||"").trim().toLowerCase();
-        // SOLO partidos finalizados y de LIGA. Amistosos no cuentan.
-        return status==="FINISHED" && competition==="liga";
-      })
-      .forEach(m=>{
-        const H=calc[keyForTeam(m.home)], A=calc[keyForTeam(m.away)];
-        if(!H || !A) return;
-
-        const hs=num(m.homeScore), as=num(m.awayScore);
-        H.played++; A.played++;
-        H.gf+=hs; H.ga+=as;
-        A.gf+=as; A.ga+=hs;
-
-        if(hs>as){ H.wins++; A.losses++; }
-        else if(as>hs){ A.wins++; H.losses++; }
-        else { H.draws++; A.draws++; }
-      });
-
-    window.App[ACE_KEY]=calc;
-    render();
-
-    const p=(typeof window.save==="function") ? window.save() : null;
-    if(p && typeof p.catch==="function"){
-      p.then(()=>typeof window.toast==="function" && window.toast("Clasificación calculada y guardada"))
-       .catch(e=>console.error("Clasificación liga:",e));
-    }else if(typeof window.toast==="function"){
-      window.toast("Clasificación calculada");
+  function saveFirebase(){
+    saveToAppFromDOM();
+    try{
+      if(typeof save==="function"){
+        var p=save();
+        if(p && typeof p.then==="function"){
+          p.then(function(){
+            if(typeof toast==="function")toast("✅ Clasificación guardada");
+          }).catch(function(e){
+            console.error("Clasificación Firebase:",e);
+            if(typeof toast==="function")toast("❌ Error guardando clasificación");
+          });
+        }else if(typeof toast==="function"){
+          toast("✅ Clasificación guardada");
+        }
+      }else if(typeof toast==="function"){
+        toast("Clasificación guardada");
+      }
+    }catch(e){
+      console.error(e);
+      if(typeof toast==="function")toast("❌ Error guardando clasificación");
     }
+  }
+
+  function updateInputValues(){
+    var a=getApp();
+    if(!a)return;
+    document.querySelectorAll("#rsClassAdminFix tbody tr[data-team-id]").forEach(function(tr){
+      var r=(a[KEY]||{})[String(tr.getAttribute("data-team-id"))];
+      if(!r)return;
+      ["pj","pg","pe","pp","gf","gc"].forEach(function(k){
+        var el=tr.querySelector('[data-field="'+k+'"]');
+        if(el && document.activeElement!==el)el.value=n(r[k]);
+      });
+    });
   }
 
   function render(){
-    const panel=document.getElementById("adminPanel");
-    if(!panel) return;
+    var panel=document.getElementById("adminPanel");
+    if(!panel)return;
 
-    let card=document.getElementById("rsAdminClassificationEditor");
+    var grid=panel.querySelector(".adminGrid");
+    if(!grid)return;
+
+    var teams=getTeams();
+    if(!teams.length){
+      var old=document.getElementById("rsClassAdminFix");
+      if(old)old.remove();
+      return;
+    }
+
+    var card=document.getElementById("rsClassAdminFix");
     if(!card){
-      const grid=panel.querySelector(".adminGrid");
-      if(!grid) return;
       card=document.createElement("div");
-      card.id="rsAdminClassificationEditor";
+      card.id="rsClassAdminFix";
       card.className="card adminCard";
       grid.appendChild(card);
     }
 
-    const rows=sortedRows();
+    var rows=sorted();
+    var signature=teams.map(function(t){return t.id+":"+t.name+":"+t.logo}).join("|");
 
-    card.innerHTML=`
-      <div class="rsAceHead">
-        <div>
-          <h2>🏆 Clasificación</h2>
-          <p>Edita los datos de cada equipo. La tabla se ordena automáticamente por puntos, diferencia de goles, goles a favor y victorias.</p>
-        </div>
-        <div class="rsAceActions">
-          <button type="button" class="btn dark" id="rsAceCalculate">🔄 Calcular desde Liga</button>
-          <button type="button" class="btn" id="rsAceSave">💾 Guardar clasificación</button>
-        </div>
-      </div>
+    /* No reconstruir mientras el usuario está escribiendo. */
+    if(lastRenderedTeams===signature && card.querySelector("tbody tr")) {
+      updateInputValues();
+      return;
+    }
+    lastRenderedTeams=signature;
 
-      <div class="rsAceTableWrap">
-        <table>
-          <thead>
-            <tr>
-              <th>P</th><th>EQUIPO</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th>
-              <th>GF</th><th>GC</th><th>DG</th><th>PTS</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows.length ? rows.map((r,i)=>{
-              const t=teams().find(x=>String(x.id)===String(r.teamId))||{};
-              const logo=crest(t);
-              return `<tr data-team-id="${escAce(r.teamId)}">
-                <td><span class="rsAcePos">${i+1}</span></td>
-                <td><div class="rsAceTeam">
-                  ${logo ? `<img src="${escAce(logo)}" alt="">` : `<span class="rsAceFallback">⚽</span>`}
-                  <span>${escAce(t.name||"Equipo")}</span>
-                </div></td>
-                <td><input data-field="played" type="number" min="0" value="${r.played}"></td>
-                <td><input data-field="wins" type="number" min="0" value="${r.wins}"></td>
-                <td><input data-field="draws" type="number" min="0" value="${r.draws}"></td>
-                <td><input data-field="losses" type="number" min="0" value="${r.losses}"></td>
-                <td><input data-field="gf" type="number" min="0" value="${r.gf}"></td>
-                <td><input data-field="ga" type="number" min="0" value="${r.ga}"></td>
-                <td class="rsAceDG">${dg(r)}</td>
-                <td class="rsAcePts">${points(r)}</td>
-              </tr>`;
-            }).join("") : `<tr><td colspan="10" style="padding:20px;color:var(--muted)">No hay equipos registrados.</td></tr>`}
-          </tbody>
-        </table>
-      </div>
-      <div class="rsAceHint">
-        Los cambios se pueden introducir directamente en la tabla. Al cambiar un dato, la clasificación se reordena automáticamente.
-        <b>“Calcular desde Liga”</b> usa únicamente partidos FINALIZADOS cuya competición sea exactamente “Liga”; los amistosos no cuentan.
-      </div>
-    `;
+    card.innerHTML=
+      '<div class="rsCAFHead">'+
+        '<div><h2>🏆 Clasificación</h2>'+
+        '<div class="rsCAFSub">Edita los datos. La tabla se ordena automáticamente por puntos, diferencia de goles, goles a favor y victorias.</div></div>'+
+        '<div class="rsCAFBtns">'+
+          '<button type="button" class="btn dark" id="rsCAFCalc">🔄 Calcular desde Liga</button>'+
+          '<button type="button" class="btn" id="rsCAFSave">💾 Guardar clasificación</button>'+
+        '</div>'+
+      '</div>'+
+      '<div class="rsCAFWrap"><table>'+
+        '<thead><tr><th>P</th><th>EQUIPO</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th><th>GF</th><th>GC</th><th>DG</th><th>PTS</th></tr></thead>'+
+        '<tbody>'+
+          rows.map(function(x,i){
+            var t=x.team,r=x.row;
+            var logo=t.logo||"";
+            return '<tr data-team-id="'+escC(t.id)+'">'+
+              '<td><span class="rsCAFPos">'+(i+1)+'</span></td>'+
+              '<td><div class="rsCAFTeam">'+
+                (logo ? '<img src="'+escC(logo)+'" alt="">' : '<span class="rsCAFNoLogo">⚽</span>')+
+                '<span>'+escC(t.name||"Equipo")+'</span>'+
+              '</div></td>'+
+              '<td><input type="number" min="0" data-field="pj" value="'+r.pj+'"></td>'+
+              '<td><input type="number" min="0" data-field="pg" value="'+r.pg+'"></td>'+
+              '<td><input type="number" min="0" data-field="pe" value="'+r.pe+'"></td>'+
+              '<td><input type="number" min="0" data-field="pp" value="'+r.pp+'"></td>'+
+              '<td><input type="number" min="0" data-field="gf" value="'+r.gf+'"></td>'+
+              '<td><input type="number" min="0" data-field="gc" value="'+r.gc+'"></td>'+
+              '<td class="rsCAFStat">'+dg(r)+'</td>'+
+              '<td class="rsCAFStat rsCAFPts">'+pts(r)+'</td>'+
+            '</tr>';
+          }).join("")+
+        '</tbody></table></div>'+
+      '<div class="rsCAFHint">Los campos son editables directamente. Pulsa <b>Guardar clasificación</b> para guardar los datos en Firebase.</div>';
 
-    const recalcLive=()=>{
-      const data={};
-      card.querySelectorAll("tbody tr[data-team-id]").forEach(tr=>{
-        const get=n=>tr.querySelector(`[data-field="${n}"]`);
-        const r={
-          teamId:tr.dataset.teamId,
-          played:num(get("played")?.value),
-          wins:num(get("wins")?.value),
-          draws:num(get("draws")?.value),
-          losses:num(get("losses")?.value),
-          gf:num(get("gf")?.value),
-          ga:num(get("ga")?.value)
-        };
-        data[keyForTeam(r.teamId)]=r;
-      });
-      window.App[ACE_KEY]=data;
-      render();
-    };
+    card.querySelector("#rsCAFSave").onclick=saveFirebase;
 
-    card.querySelectorAll("input[data-field]").forEach(input=>{
-      input.addEventListener("input",()=>{
-        // Conserva inmediatamente el valor en memoria y vuelve a ordenar.
-        // El guardado en Firebase se hace con el botón Guardar.
-        recalcLive();
+    /* Al terminar de editar un campo: guardar en memoria y reordenar. */
+    card.querySelectorAll("input[data-field]").forEach(function(input){
+      input.addEventListener("change",function(){
+        saveToAppFromDOM();
+
+        /* Actualiza DG/PTS y reordena sin interrumpir la escritura. */
+        setTimeout(function(){
+          lastRenderedTeams="";
+          render();
+        },0);
       });
     });
 
-    card.querySelector("#rsAceSave")?.addEventListener("click",()=>saveClassification(true));
-    card.querySelector("#rsAceCalculate")?.addEventListener("click",calculateFromLeagueMatches);
+    card.querySelectorAll("input[data-field]").forEach(function(input){
+      input.addEventListener("input",function(){
+        var tr=input.closest("tr");
+        if(!tr)return;
+        var r={
+          pg:n(tr.querySelector('[data-field="pg"]')?.value),
+          pe:n(tr.querySelector('[data-field="pe"]')?.value),
+          gf:n(tr.querySelector('[data-field="gf"]')?.value),
+          gc:n(tr.querySelector('[data-field="gc"]')?.value)
+        };
+        var dgEl=tr.querySelector(".rsCAFStat");
+        var statCells=tr.querySelectorAll(".rsCAFStat");
+        if(statCells[0])statCells[0].textContent=r.gf-r.gc;
+        if(statCells[1])statCells[1].textContent=r.pg*3+r.pe;
+      });
+    });
+
+    card.querySelector("#rsCAFCalc").onclick=calculateFromLeague;
   }
 
-  // Carga la clasificación guardada junto al App existente.
-  const originalApplyData=window.applyData;
-  if(typeof originalApplyData==="function" && !originalApplyData.__rsAceWrapped){
-    const wrapped=function(data){
-      if(data && data.app && data.app[ACE_KEY]){
-        window.App[ACE_KEY]=data.app[ACE_KEY];
-      }
-      const result=originalApplyData.apply(this,arguments);
-      setTimeout(render,50);
-      return result;
-    };
-    wrapped.__rsAceWrapped=true;
-    window.applyData=wrapped;
+  function calculateFromLeague(){
+    var a=getApp();
+    if(!a)return;
+
+    var calc={};
+    getTeams().forEach(function(t){
+      calc[String(t.id)]={teamId:t.id,pj:0,pg:0,pe:0,pp:0,gf:0,gc:0};
+    });
+
+    (a.matches||[]).forEach(function(m){
+      var competition=String(m.competition||"").trim().toLowerCase();
+      var finished=String(m.status||"").toUpperCase()==="FINISHED";
+      if(!finished || competition!=="liga")return;
+
+      var h=calc[String(m.home)],v=calc[String(m.away)];
+      if(!h||!v)return;
+
+      var hs=n(m.homeScore),vs=n(m.awayScore);
+      h.pj++;v.pj++;h.gf+=hs;h.gc+=vs;v.gf+=vs;v.gc+=hs;
+      if(hs>vs){h.pg++;v.pp++}
+      else if(vs>hs){v.pg++;h.pp++}
+      else{h.pe++;v.pe++}
+    });
+
+    a[KEY]=calc;
+    lastRenderedTeams="";
+    render();
+    saveFirebase();
   }
 
-  // Recalcula la tabla cuando cambian equipos o al abrir administrador.
-  const originalRenderAll=window.renderAll;
-  if(typeof originalRenderAll==="function" && !originalRenderAll.__rsAceWrapped){
-    const wrappedRenderAll=function(){
-      const result=originalRenderAll.apply(this,arguments);
-      setTimeout(render,30);
-      return result;
-    };
-    wrappedRenderAll.__rsAceWrapped=true;
-    window.renderAll=wrappedRenderAll;
-  }
-
-  // El panel puede ser reconstruido por versiones anteriores; se vuelve a insertar.
+  /*
+   * Si Firebase devuelve una clasificación guardada, conservarla.
+   * No creamos ninguna rama Firebase nueva: usamos el save() original,
+   * que guarda {app: App, liveMatch: Live}.
+   */
   function boot(){
     render();
     setTimeout(render,300);
@@ -9365,12 +9318,18 @@ body{padding-bottom:0!important}
     setTimeout(render,2000);
   }
 
-  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",boot);
+  /* Si cambian equipos desde el administrador, vuelve a construir la tabla. */
+  setInterval(function(){
+    try{
+      var sig=getTeams().map(function(t){return t.id+":"+t.name+":"+t.logo}).join("|");
+      if(sig!==lastRenderedTeams)render();
+    }catch(e){}
+  },1000);
+
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);
   else boot();
 
-  window.rsRenderAdminClassification=render;
-  window.rsSaveAdminClassification=saveClassification;
-  window.rsCalculateAdminClassification=calculateFromLeagueMatches;
+  window.rsClassificationAdmin={render:render,save:saveFirebase,calculate:calculateFromLeague};
 })();
 </script>
 
