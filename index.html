@@ -9003,3 +9003,374 @@ body{padding-bottom:0!important}
   setTimeout(bind,1800);setTimeout(bind,2600);
 })();
 </script>
+
+
+<!-- =========================================================
+     RS LIVE · CLASIFICACIÓN EDITABLE EN ADMINISTRADOR
+     Aplicado exclusivamente sobre el HTML recibido.
+     No modifica jugadores, escudos, partidos ni alineaciones.
+========================================================= -->
+<style id="rs-admin-classification-editor-css">
+  #rsAdminClassificationEditor{
+    grid-column:1/-1;
+    margin-top:2px;
+  }
+  #rsAdminClassificationEditor .rsAceHead{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:12px;flex-wrap:wrap;margin-bottom:14px;
+  }
+  #rsAdminClassificationEditor .rsAceHead h2{
+    margin:0;font-size:17px;
+  }
+  #rsAdminClassificationEditor .rsAceHead p{
+    margin:4px 0 0;color:var(--muted);font-size:11px;
+  }
+  #rsAdminClassificationEditor .rsAceActions{
+    display:flex;gap:7px;flex-wrap:wrap;
+  }
+  #rsAdminClassificationEditor .rsAceTableWrap{
+    overflow-x:auto;border:1px solid var(--line);border-radius:14px;
+  }
+  #rsAdminClassificationEditor table{
+    width:100%;min-width:900px;border-collapse:collapse;
+  }
+  #rsAdminClassificationEditor th{
+    background:#091728;color:var(--yellow);font-size:10px;
+    text-transform:uppercase;padding:10px 7px;border-bottom:1px solid var(--line);
+    white-space:nowrap;
+  }
+  #rsAdminClassificationEditor td{
+    padding:7px;border-bottom:1px solid rgba(32,51,77,.7);
+    background:#0b192a;text-align:center;
+  }
+  #rsAdminClassificationEditor tr:last-child td{border-bottom:0}
+  #rsAdminClassificationEditor .rsAceTeam{
+    min-width:240px;text-align:left;font-weight:900;
+    display:flex;align-items:center;gap:9px;
+  }
+  #rsAdminClassificationEditor .rsAceTeam img{
+    width:34px;height:34px;object-fit:contain;flex:0 0 34px;
+  }
+  #rsAdminClassificationEditor .rsAceFallback{
+    width:34px;height:34px;display:grid;place-items:center;
+    flex:0 0 34px;border:1px solid var(--line);border-radius:8px;
+  }
+  #rsAdminClassificationEditor input{
+    width:64px;max-width:100%;background:#091728;color:#fff;
+    border:1px solid #29405d;border-radius:8px;padding:8px 5px;
+    text-align:center;font-weight:900;
+  }
+  #rsAdminClassificationEditor input:focus{
+    outline:none;border-color:var(--yellow);
+    box-shadow:0 0 0 2px rgba(255,212,0,.12);
+  }
+  #rsAdminClassificationEditor .rsAcePts{
+    color:var(--yellow);font-size:15px;font-weight:1000;
+  }
+  #rsAdminClassificationEditor .rsAceDG{
+    font-weight:1000;
+  }
+  #rsAdminClassificationEditor .rsAcePos{
+    width:34px;height:28px;display:inline-grid;place-items:center;
+    border-radius:8px;background:#17283e;color:var(--yellow);font-weight:1000;
+  }
+  #rsAdminClassificationEditor .rsAceHint{
+    margin-top:10px;color:var(--muted);font-size:10px;line-height:1.5;
+  }
+</style>
+
+<script id="rs-admin-classification-editor-js">
+(function(){
+  "use strict";
+
+  const ACE_KEY = "rsAdminClassification";
+
+  function escAce(v){
+    return String(v ?? "").replace(/[&<>"']/g,m=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[m]));
+  }
+
+  function teams(){
+    return Array.isArray(window.App?.teams) ? window.App.teams.slice() : [];
+  }
+
+  function keyForTeam(id){
+    return String(id);
+  }
+
+  function num(v){
+    const n = Number(v);
+    return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 0;
+  }
+
+  function blankRow(team){
+    return {
+      teamId: team.id,
+      played:0, wins:0, draws:0, losses:0,
+      gf:0, ga:0
+    };
+  }
+
+  function storedRows(){
+    const src = window.App?.[ACE_KEY];
+    if(!src || typeof src !== "object") return {};
+    return src;
+  }
+
+  function rowFor(team){
+    const stored = storedRows()[keyForTeam(team.id)];
+    if(stored){
+      return {
+        teamId:team.id,
+        played:num(stored.played),
+        wins:num(stored.wins),
+        draws:num(stored.draws),
+        losses:num(stored.losses),
+        gf:num(stored.gf),
+        ga:num(stored.ga)
+      };
+    }
+    return blankRow(team);
+  }
+
+  function points(r){
+    return r.wins*3 + r.draws;
+  }
+
+  function dg(r){
+    return r.gf-r.ga;
+  }
+
+  function sortedRows(){
+    return teams().map(rowFor).sort((a,b)=>{
+      const A=teams().find(t=>String(t.id)===String(a.teamId))||{};
+      const B=teams().find(t=>String(t.id)===String(b.teamId))||{};
+      return points(b)-points(a)
+        || dg(b)-dg(a)
+        || b.gf-a.gf
+        || b.wins-a.wins
+        || String(A.name||"").localeCompare(String(B.name||""),"es");
+    });
+  }
+
+  function crest(team){
+    return team && (team.logo||team.crest||team.escudo||team.image||team.photo||team.logoUrl) || "";
+  }
+
+  function saveClassification(showToast=true){
+    if(!window.App) return;
+
+    const rows = {};
+    document.querySelectorAll("#rsAdminClassificationEditor tbody tr[data-team-id]").forEach(tr=>{
+      const id=tr.dataset.teamId;
+      const get=(name)=>tr.querySelector(`[data-field="${name}"]`);
+      const r={
+        teamId:id,
+        played:num(get("played")?.value),
+        wins:num(get("wins")?.value),
+        draws:num(get("draws")?.value),
+        losses:num(get("losses")?.value),
+        gf:num(get("gf")?.value),
+        ga:num(get("ga")?.value)
+      };
+      rows[keyForTeam(id)]=r;
+    });
+
+    window.App[ACE_KEY]=rows;
+
+    // Usa el guardado existente del HTML. No crea otra rama Firebase.
+    const p = (typeof window.save==="function") ? window.save() : null;
+    if(p && typeof p.catch==="function"){
+      p.then(()=>{
+        if(showToast && typeof window.toast==="function")
+          window.toast("Clasificación guardada en Firebase");
+      }).catch(err=>{
+        console.error("Clasificación:",err);
+        if(showToast && typeof window.toast==="function")
+          window.toast("No se pudo guardar la clasificación");
+      });
+    }else if(showToast && typeof window.toast==="function"){
+      window.toast("Clasificación guardada");
+    }
+
+    render();
+  }
+
+  function calculateFromLeagueMatches(){
+    const calc={};
+    teams().forEach(t=>calc[keyForTeam(t.id)]=blankRow(t));
+
+    (window.App?.matches||[])
+      .filter(m=>{
+        const status=String(m.status||"").toUpperCase();
+        const competition=String(m.competition||"").trim().toLowerCase();
+        // SOLO partidos finalizados y de LIGA. Amistosos no cuentan.
+        return status==="FINISHED" && competition==="liga";
+      })
+      .forEach(m=>{
+        const H=calc[keyForTeam(m.home)], A=calc[keyForTeam(m.away)];
+        if(!H || !A) return;
+
+        const hs=num(m.homeScore), as=num(m.awayScore);
+        H.played++; A.played++;
+        H.gf+=hs; H.ga+=as;
+        A.gf+=as; A.ga+=hs;
+
+        if(hs>as){ H.wins++; A.losses++; }
+        else if(as>hs){ A.wins++; H.losses++; }
+        else { H.draws++; A.draws++; }
+      });
+
+    window.App[ACE_KEY]=calc;
+    render();
+
+    const p=(typeof window.save==="function") ? window.save() : null;
+    if(p && typeof p.catch==="function"){
+      p.then(()=>typeof window.toast==="function" && window.toast("Clasificación calculada y guardada"))
+       .catch(e=>console.error("Clasificación liga:",e));
+    }else if(typeof window.toast==="function"){
+      window.toast("Clasificación calculada");
+    }
+  }
+
+  function render(){
+    const panel=document.getElementById("adminPanel");
+    if(!panel) return;
+
+    let card=document.getElementById("rsAdminClassificationEditor");
+    if(!card){
+      const grid=panel.querySelector(".adminGrid");
+      if(!grid) return;
+      card=document.createElement("div");
+      card.id="rsAdminClassificationEditor";
+      card.className="card adminCard";
+      grid.appendChild(card);
+    }
+
+    const rows=sortedRows();
+
+    card.innerHTML=`
+      <div class="rsAceHead">
+        <div>
+          <h2>🏆 Clasificación</h2>
+          <p>Edita los datos de cada equipo. La tabla se ordena automáticamente por puntos, diferencia de goles, goles a favor y victorias.</p>
+        </div>
+        <div class="rsAceActions">
+          <button type="button" class="btn dark" id="rsAceCalculate">🔄 Calcular desde Liga</button>
+          <button type="button" class="btn" id="rsAceSave">💾 Guardar clasificación</button>
+        </div>
+      </div>
+
+      <div class="rsAceTableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th>P</th><th>EQUIPO</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th>
+              <th>GF</th><th>GC</th><th>DG</th><th>PTS</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.length ? rows.map((r,i)=>{
+              const t=teams().find(x=>String(x.id)===String(r.teamId))||{};
+              const logo=crest(t);
+              return `<tr data-team-id="${escAce(r.teamId)}">
+                <td><span class="rsAcePos">${i+1}</span></td>
+                <td><div class="rsAceTeam">
+                  ${logo ? `<img src="${escAce(logo)}" alt="">` : `<span class="rsAceFallback">⚽</span>`}
+                  <span>${escAce(t.name||"Equipo")}</span>
+                </div></td>
+                <td><input data-field="played" type="number" min="0" value="${r.played}"></td>
+                <td><input data-field="wins" type="number" min="0" value="${r.wins}"></td>
+                <td><input data-field="draws" type="number" min="0" value="${r.draws}"></td>
+                <td><input data-field="losses" type="number" min="0" value="${r.losses}"></td>
+                <td><input data-field="gf" type="number" min="0" value="${r.gf}"></td>
+                <td><input data-field="ga" type="number" min="0" value="${r.ga}"></td>
+                <td class="rsAceDG">${dg(r)}</td>
+                <td class="rsAcePts">${points(r)}</td>
+              </tr>`;
+            }).join("") : `<tr><td colspan="10" style="padding:20px;color:var(--muted)">No hay equipos registrados.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+      <div class="rsAceHint">
+        Los cambios se pueden introducir directamente en la tabla. Al cambiar un dato, la clasificación se reordena automáticamente.
+        <b>“Calcular desde Liga”</b> usa únicamente partidos FINALIZADOS cuya competición sea exactamente “Liga”; los amistosos no cuentan.
+      </div>
+    `;
+
+    const recalcLive=()=>{
+      const data={};
+      card.querySelectorAll("tbody tr[data-team-id]").forEach(tr=>{
+        const get=n=>tr.querySelector(`[data-field="${n}"]`);
+        const r={
+          teamId:tr.dataset.teamId,
+          played:num(get("played")?.value),
+          wins:num(get("wins")?.value),
+          draws:num(get("draws")?.value),
+          losses:num(get("losses")?.value),
+          gf:num(get("gf")?.value),
+          ga:num(get("ga")?.value)
+        };
+        data[keyForTeam(r.teamId)]=r;
+      });
+      window.App[ACE_KEY]=data;
+      render();
+    };
+
+    card.querySelectorAll("input[data-field]").forEach(input=>{
+      input.addEventListener("input",()=>{
+        // Conserva inmediatamente el valor en memoria y vuelve a ordenar.
+        // El guardado en Firebase se hace con el botón Guardar.
+        recalcLive();
+      });
+    });
+
+    card.querySelector("#rsAceSave")?.addEventListener("click",()=>saveClassification(true));
+    card.querySelector("#rsAceCalculate")?.addEventListener("click",calculateFromLeagueMatches);
+  }
+
+  // Carga la clasificación guardada junto al App existente.
+  const originalApplyData=window.applyData;
+  if(typeof originalApplyData==="function" && !originalApplyData.__rsAceWrapped){
+    const wrapped=function(data){
+      if(data && data.app && data.app[ACE_KEY]){
+        window.App[ACE_KEY]=data.app[ACE_KEY];
+      }
+      const result=originalApplyData.apply(this,arguments);
+      setTimeout(render,50);
+      return result;
+    };
+    wrapped.__rsAceWrapped=true;
+    window.applyData=wrapped;
+  }
+
+  // Recalcula la tabla cuando cambian equipos o al abrir administrador.
+  const originalRenderAll=window.renderAll;
+  if(typeof originalRenderAll==="function" && !originalRenderAll.__rsAceWrapped){
+    const wrappedRenderAll=function(){
+      const result=originalRenderAll.apply(this,arguments);
+      setTimeout(render,30);
+      return result;
+    };
+    wrappedRenderAll.__rsAceWrapped=true;
+    window.renderAll=wrappedRenderAll;
+  }
+
+  // El panel puede ser reconstruido por versiones anteriores; se vuelve a insertar.
+  function boot(){
+    render();
+    setTimeout(render,300);
+    setTimeout(render,1000);
+    setTimeout(render,2000);
+  }
+
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",boot);
+  else boot();
+
+  window.rsRenderAdminClassification=render;
+  window.rsSaveAdminClassification=saveClassification;
+  window.rsCalculateAdminClassification=calculateFromLeagueMatches;
+})();
+</script>
+
