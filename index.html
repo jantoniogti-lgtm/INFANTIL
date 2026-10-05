@@ -1610,6 +1610,7 @@ html,body{overflow-x:hidden!important;overflow-y:auto!important}
     <button class="active" data-page="home">🏠 <span>Inicio</span></button>
     <button data-page="matches">📅 <span>Partidos</span></button>
     <button data-page="admin">⚙️ <span>Administrador</span></button>
+    <button id="rsMatchModeBtnV1" type="button">🎮 <span>Modo partido</span></button>
   </div>
 </aside>
 
@@ -5541,6 +5542,151 @@ setTimeout(hide,150);setTimeout(hide,600);setTimeout(hide,1200);})();
  setTimeout(bind,150);setTimeout(bind,500);setTimeout(bind,1200);
  window.rsGoHomeV62=goHome;
 }})();
+</script>
+
+<!-- V1 · MODO PARTIDO RÁPIDO -->
+<div id="rsMatchOverlayV1" class="rsMatchOverlayV1" aria-hidden="true">
+  <div class="rsMatchPanelV1">
+    <div class="rsMatchHeadV1">
+      <div><h2>🎮 Modo partido</h2><small>Control rápido · sin entrar en todo el administrador</small></div>
+      <button class="rsMatchCloseV1" id="rsMatchCloseV1">×</button>
+    </div>
+    <div class="rsMatchScoreV1">
+      <div class="teams"><div class="teamName" id="rsMMHomeV1">Ramón Sicart</div><div class="score" id="rsMMScoreV1">0 - 0</div><div class="teamName" id="rsMMAwayV1">Rival</div></div>
+      <div class="minute" id="rsMMMinuteV1">0'</div>
+    </div>
+    <div class="rsMatchActionsV1">
+      <button class="rsMatchActionV1 goal" id="rsMMGoalRSV1">⚽<br>GOL RAMÓN SICART</button>
+      <button class="rsMatchActionV1 rival" id="rsMMGoalRivalV1">⚽<br>GOL RIVAL</button>
+      <button class="rsMatchActionV1 card" id="rsMMYellowV1">🟨<br>AMARILLA</button>
+      <button class="rsMatchActionV1 card" id="rsMMRedV1">🟥<br>ROJA</button>
+      <button class="rsMatchActionV1 change" id="rsMMChangeV1">🔄<br>CAMBIO</button>
+      <button class="rsMatchActionV1" id="rsMMStartV1">▶<br>INICIAR / PAUSAR</button>
+    </div>
+    <div class="rsMatchSubV1" id="rsMMSubV1" style="display:none"></div>
+    <div class="rsMatchToolsV1">
+      <button class="rsMatchToolV1" id="rsMMMinusV1">− 1'</button>
+      <button class="rsMatchToolV1" id="rsMMFinalV1">🏁 FINAL</button>
+      <button class="rsMatchToolV1" id="rsMMPlusV1">+ 1'</button>
+    </div>
+    <div class="rsMatchEventsV1"><h3>ÚLTIMOS EVENTOS</h3><div id="rsMMEventsV1"></div></div>
+  </div>
+</div>
+<div id="rsMatchPinV1" class="rsMatchPinV1">
+  <div class="rsMatchPinBoxV1">
+    <h2>🔐 Modo partido</h2>
+    <p>Introduce el PIN una sola vez. Durante esta sesión podrás entrar directamente al modo partido.</p>
+    <input id="rsMMPinV1" type="password" inputmode="numeric" maxlength="8" placeholder="PIN">
+    <button id="rsMMPinOkV1">ENTRAR AL MODO PARTIDO</button>
+  </div>
+</div>
+
+<script id="rs-match-mode-v1-js">
+(function(){
+"use strict";
+const KEY="rs_match_mode_authorized_v1";
+const $=id=>document.getElementById(id);
+const overlay=$("rsMatchOverlayV1"),pin=$("rsMatchPinV1"),sub=$("rsMMSubV1");
+function sideOfRS(m){return Number(m?.home)===1?"home":Number(m?.away)===1?"away":"home"}
+function minute(){try{return typeof displayMinute==="function"?Number(displayMinute()||0):Number(Live?.manualMinute||0)}catch(e){return 0}}
+function render(){
+ const m=typeof activeMatch==="function"?activeMatch():null;
+ if(!m){$("rsMMHomeV1").textContent="Sin partido";$("rsMMAwayV1").textContent="";$("rsMMScoreV1").textContent="—";$("rsMMMinuteV1").textContent="";$("rsMMEventsV1").innerHTML="<div style='color:#8da0b5;font-size:11px'>No hay partido activo.</div>";return}
+ $("rsMMHomeV1").textContent=team(m.home)?.name||"Local";
+ $("rsMMAwayV1").textContent=team(m.away)?.name||"Visitante";
+ $("rsMMScoreV1").textContent=`${Number(Live.homeScore||0)} - ${Number(Live.awayScore||0)}`;
+ $("rsMMMinuteV1").textContent=`${minute()}'`;
+ const ev=(Live.events||[]).slice().sort((a,b)=>Number(b.minute||0)-Number(a.minute||0)).slice(0,8);
+ $("rsMMEventsV1").innerHTML=ev.length?ev.map(e=>`<div class="rsMatchEventV1"><span class="min">${Number(e.minute||0)}'</span><span class="ico">${e.type==="goal"?"⚽":e.type==="yellow"?"🟨":e.type==="red"?"🟥":"🔄"}</span><span>${esc(e.playerName||e.playerInName||"Evento")}${e.type==="change"&&e.playerOutName?` <small>por ${esc(e.playerOutName)}</small>`:""}</span><b style="margin-left:auto">${esc(e.score||"")}</b></div>`).join(""):"<div style='color:#8da0b5;font-size:11px'>Todavía no hay eventos.</div>";
+}
+function open(){
+ if(sessionStorage.getItem(KEY)==="1"){overlay.classList.add("open");overlay.setAttribute("aria-hidden","false");render();return}
+ pin.classList.add("open");$("rsMMPinV1").focus();
+}
+function close(){overlay.classList.remove("open");overlay.setAttribute("aria-hidden","true");sub.style.display="none"}
+function commitQuick(type,rs){
+ const m=typeof activeMatch==="function"?activeMatch():null;if(!m){toast("No hay partido activo");return}
+ const rsSide=sideOfRS(m), teamSide=rs?rsSide:(rs===false?(rsSide==="home"?"away":"home"):rsSide);
+ const players=(App.players||[]).filter(p=>Array.isArray(Live.lineup)&&Live.lineup.map(Number).includes(Number(p.number)));
+ const all=App.players||[];
+ let title=type==="goal"?"⚽ GOL":type==="yellow"?"🟨 AMARILLA":"🟥 ROJA";
+ sub.innerHTML=`<h3>${title} · ¿Jugador?</h3><div class="rsMatchPlayersV1">
+   ${(rs?players:all).map(p=>`<button class="rsMatchPlayerV1" data-rs-mm-player="${Number(p.number)}"><b>#${Number(p.number)}</b> ${esc(p.name)}<small>${esc(p.position||"")}</small></button>`).join("")}
+ </div><button class="rsMatchToolV1" style="margin-top:9px;width:100%" id="rsMMNoPlayerV1">Continuar sin jugador</button>`;
+ sub.style.display="block";
+ sub.querySelectorAll("[data-rs-mm-player]").forEach(b=>b.addEventListener("click",()=>commit(type,rs,Number(b.dataset.rsMmPlayer))));
+ $("rsMMNoPlayerV1").addEventListener("click",()=>commit(type,rs,null));
+ sub.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+function commit(type,rs,num){
+ const m=typeof activeMatch==="function"?activeMatch():null;if(!m)return;
+ const rsSide=sideOfRS(m), evSide=rs?rsSide:(rsSide==="home"?"away":"home");
+ let p= num!=null ? (App.players||[]).find(x=>Number(x.number)===num) : null;
+ const ev={id:Date.now(),type,team:evSide,minute:minute(),playerNumber:num,playerName:p?.name||(rs?"Ramón Sicart":"Jugador rival")};
+ if(type==="goal"){
+   if(evSide==="home")Live.homeScore=(Number(Live.homeScore)||0)+1;else Live.awayScore=(Number(Live.awayScore)||0)+1;
+   ev.score=`${Live.homeScore}-${Live.awayScore}`;
+   if(rs&&p)p.goals=(Number(p.goals)||0)+1;
+ }
+ if(type==="yellow"||type==="red"){
+   if(rs&&p){const k=type==="yellow"?"yellow":"red";p[k]=(Number(p[k])||0)+1}
+ }
+ Live.events=Array.isArray(Live.events)?Live.events:[];Live.events.push(ev);
+ sub.style.display="none";
+ try{save()}catch(e){console.error(e)}
+ try{renderAll()}catch(e){}
+ render();toast("Evento publicado ✓");
+}
+function change(){
+ const m=typeof activeMatch==="function"?activeMatch():null;if(!m){toast("No hay partido activo");return}
+ const players=App.players||[];
+ sub.innerHTML=`<h3>🔄 CAMBIO · toca primero el que SALE y después el que ENTRA</h3><div id="rsMMChangeListV1"></div>`;
+ const box=$("rsMMChangeListV1");
+ let out=null;
+ function paint(){
+   box.innerHTML=`<div style="font-size:10px;color:#8da0b5;margin-bottom:5px">SALE</div><div class="rsMatchPlayersV1">${players.map(p=>`<button class="rsMatchPlayerV1" data-out="${Number(p.number)}">#${Number(p.number)} ${esc(p.name)}</button>`).join("")}</div><div style="height:10px"></div><div style="font-size:10px;color:#8da0b5;margin-bottom:5px">ENTRA</div><div class="rsMatchPlayersV1">${players.map(p=>`<button class="rsMatchPlayerV1" data-in="${Number(p.number)}">#${Number(p.number)} ${esc(p.name)}</button>`).join("")}</div>`;
+   box.querySelectorAll("[data-out]").forEach(b=>b.onclick=()=>{out=Number(b.dataset.out);box.querySelectorAll("[data-out]").forEach(x=>x.style.borderColor=Number(x.dataset.out)===out?"#ffd400":"#29435d")});
+   box.querySelectorAll("[data-in]").forEach(b=>b.onclick=()=>{const inn=Number(b.dataset.in);if(out==null){toast("Selecciona primero quién sale");return}commitChange(out,inn)});
+ }
+ function commitChange(out,inn){
+   const m=typeof activeMatch==="function"?activeMatch():null,rsSide=sideOfRS(m);
+   const po=players.find(p=>Number(p.number)===out),pi=players.find(p=>Number(p.number)===inn);
+   Live.events=Array.isArray(Live.events)?Live.events:[];
+   Live.events.push({id:Date.now(),type:"change",team:rsSide,minute:minute(),playerNumber:inn,playerInNumber:inn,playerOutNumber:out,playerInName:pi?.name||String(inn),playerOutName:po?.name||String(out),playerName:`${pi?.name||inn} por ${po?.name||out}`});
+   sub.style.display="none";try{save()}catch(e){}try{renderAll()}catch(e){}render();toast("Cambio publicado ✓");
+ }
+ paint();sub.style.display="block";sub.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+$("rsMatchModeBtnV1")?.addEventListener("click",open);
+$("rsMatchCloseV1")?.addEventListener("click",close);
+$("rsMMGoalRSV1")?.addEventListener("click",()=>commitQuick("goal",true));
+$("rsMMGoalRivalV1")?.addEventListener("click",()=>commitQuick("goal",false));
+$("rsMMYellowV1")?.addEventListener("click",()=>commitQuick("yellow",true));
+$("rsMMRedV1")?.addEventListener("click",()=>commitQuick("red",true));
+$("rsMMChangeV1")?.addEventListener("click",change);
+$("rsMMStartV1")?.addEventListener("click",()=>{
+ try{
+   if(Live.state==="FIRST_HALF"||Live.state==="SECOND_HALF"){ if(typeof pauseLive==="function")pauseLive(); else Live.state="HALFTIME"; }
+   else if(Live.state==="HALFTIME"){if(typeof startSecondHalf==="function")startSecondHalf();else Live.state="SECOND_HALF"}
+   else {if(typeof startLive==="function")startLive();else Live.state="FIRST_HALF"}
+   try{save()}catch(e){} render();renderAll()
+ }catch(e){console.error(e)}
+});
+$("rsMMMinusV1")?.addEventListener("click",()=>{Live.manualMinute=Math.max(0,Number(Live.manualMinute||minute())-1);try{save()}catch(e){}render();});
+$("rsMMPlusV1")?.addEventListener("click",()=>{Live.manualMinute=Math.min(80,Number(Live.manualMinute||minute())+1);try{save()}catch(e){}render();});
+$("rsMMFinalV1")?.addEventListener("click",()=>{if(confirm("¿Finalizar el partido?")){try{if(typeof finish==="function")finish();else if(typeof finishMatch==="function")finishMatch();}catch(e){}render();}});
+$("rsMMPinOkV1")?.addEventListener("click",()=>{
+ const val=$("rsMMPinV1").value;
+ if(typeof PIN!=="undefined"&&val===PIN){sessionStorage.setItem(KEY,"1");pin.classList.remove("open");overlay.classList.add("open");$("rsMMPinV1").value="";render();return}
+ toast("PIN incorrecto");
+});
+$("rsMMPinV1")?.addEventListener("keydown",e=>{if(e.key==="Enter")$("rsMMPinOkV1").click()});
+/* Si el administrador ya se desbloqueó, autoriza también este modo durante la sesión. */
+const oldUnlock=window.unlock;
+if(typeof oldUnlock==="function"){
+ window.unlock=function(){const r=oldUnlock.apply(this,arguments);try{if($("adminPanel")?.style.display!=="none")sessionStorage.setItem(KEY,"1")}catch(e){}return r}
+}
+})();
 </script>
 </body>
 </html>
