@@ -9653,3 +9653,87 @@ body{padding-bottom:0!important}
 })();
 </script>
 
+
+
+<!-- V4 · ALINEACIÓN: VACÍAR DE FORMA PERSISTENTE -->
+<script id="rs-lineup-clear-persist-v4">
+(function(){
+  "use strict";
+
+  function clearLineupPersistente(){
+    try{
+      /* 1. Vaciar la fuente principal */
+      if(typeof App!=="undefined"){
+        App.lineup = App.lineup || {formation:"4-3-3",players:[]};
+        App.lineup.players = [];
+        if(!App.lineup.formation) App.lineup.formation="4-3-3";
+
+        /* Si hay un partido actual no finalizado, vaciamos también
+           su alineación para que no vuelva a aparecer al recargar. */
+        if(typeof activeMatch==="function"){
+          const m=activeMatch();
+          if(m && String(m.status||"").toUpperCase()!=="FINISHED"){
+            m.lineup=[];
+            delete m.lineupSnapshot;
+            m.formation=App.lineup.formation;
+          }
+        }
+      }
+
+      /* 2. Vaciar la consola de directo */
+      if(typeof Live!=="undefined"){
+        Live.lineup=[];
+        Live.formation=(typeof App!=="undefined" && App.lineup?.formation) || "4-3-3";
+      }
+
+      /* 3. Borrar la copia local que estaba actuando como fallback */
+      localStorage.removeItem("rs_lineup");
+      localStorage.setItem("rs_lineup",JSON.stringify({
+        formation:(typeof App!=="undefined" && App.lineup?.formation)||"4-3-3",
+        players:[]
+      }));
+
+      /* 4. MUY IMPORTANTE: guardar el estado vacío en Firebase */
+      if(typeof save==="function"){
+        const result=save();
+        if(result && typeof result.then==="function"){
+          result.then(function(){
+            try{
+              if(typeof toast==="function")
+                toast("🧹 Once vaciado y guardado en Firebase");
+            }catch(e){}
+          }).catch(function(err){
+            console.error("Error guardando XI vacío:",err);
+            try{if(typeof toast==="function")toast("❌ No se pudo guardar el XI vacío")}catch(e){}
+          });
+        }
+      }
+
+      /* 5. Refrescar las dos vistas */
+      try{if(typeof renderAdminXI10==="function")renderAdminXI10()}catch(e){}
+      try{if(typeof renderPublicTeamV11==="function")renderPublicTeamV11()}catch(e){}
+      try{if(typeof renderAll==="function")renderAll()}catch(e){}
+    }catch(err){
+      console.error("Vaciar XI:",err);
+    }
+  }
+
+  function install(){
+    const b=document.getElementById("clearXI10");
+    if(!b || b.dataset.rsClearPersistV4)return;
+    b.dataset.rsClearPersistV4="1";
+    b.addEventListener("click",clearLineupPersistente);
+  }
+
+  /* El botón ya existe en el HTML; esperamos a que el DOM lo tenga. */
+  install();
+  const timer=setInterval(function(){
+    install();
+    const b=document.getElementById("clearXI10");
+    if(b && b.dataset.rsClearPersistV4)clearInterval(timer);
+  },100);
+
+  window.rsClearLineupPersistenteV4=clearLineupPersistente;
+})();
+</script>
+
