@@ -5544,6 +5544,99 @@ setTimeout(hide,150);setTimeout(hide,600);setTimeout(hide,1200);})();
 }})();
 </script>
 
+<style id="rs-match-mode-v1-css-fix">
+/* MODO PARTIDO — aislamiento visual */
+#rsMatchOverlayV1.rsMatchOverlayV1{
+  position:fixed!important;
+  inset:0!important;
+  z-index:2147483000!important;
+  display:none!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:100vw!important;
+  height:100vh!important;
+  margin:0!important;
+  padding:18px!important;
+  box-sizing:border-box!important;
+  background:rgba(0,0,0,.82)!important;
+  backdrop-filter:blur(7px)!important;
+  overflow:auto!important;
+}
+#rsMatchOverlayV1.rsMatchOverlayV1.open{display:flex!important;}
+#rsMatchOverlayV1 .rsMatchPanelV1{
+  position:relative!important;
+  width:min(920px,100%)!important;
+  max-height:calc(100vh - 36px)!important;
+  overflow:auto!important;
+  box-sizing:border-box!important;
+  margin:0 auto!important;
+  padding:22px!important;
+  border:1px solid rgba(255,190,0,.35)!important;
+  border-radius:22px!important;
+  background:linear-gradient(145deg,#11151b,#07090c)!important;
+  color:#fff!important;
+  box-shadow:0 25px 80px rgba(0,0,0,.65)!important;
+  font-family:Arial,Helvetica,sans-serif!important;
+}
+#rsMatchOverlayV1 .rsMatchHeadV1{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:16px!important;margin-bottom:18px!important;}
+#rsMatchOverlayV1 .rsMatchHeadV1 h2{margin:0!important;font-size:26px!important;font-weight:900!important;color:#fff!important;}
+#rsMatchOverlayV1 .rsMatchHeadV1 small{display:block!important;margin-top:4px!important;color:#9aa7b7!important;font-size:13px!important;}
+#rsMatchOverlayV1 .rsMatchCloseV1{width:44px!important;height:44px!important;border:0!important;border-radius:12px!important;background:#202630!important;color:#fff!important;font-size:30px!important;cursor:pointer!important;}
+#rsMatchOverlayV1 .rsMatchScoreV1{padding:20px!important;border-radius:18px!important;background:#0c1015!important;border:1px solid #242b35!important;text-align:center!important;margin-bottom:16px!important;}
+#rsMatchOverlayV1 .rsMatchScoreV1 .teams{display:grid!important;grid-template-columns:1fr auto 1fr!important;align-items:center!important;gap:18px!important;}
+#rsMatchOverlayV1 .teamName{font-size:18px!important;font-weight:900!important;line-height:1.2!important;}
+#rsMatchOverlayV1 .score{font-size:52px!important;font-weight:1000!important;line-height:1!important;white-space:nowrap!important;}
+#rsMatchOverlayV1 .minute{margin-top:12px!important;font-size:18px!important;font-weight:900!important;color:#ffc400!important;}
+#rsMatchOverlayV1 .rsMatchActionsV1{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:10px!important;margin:14px 0!important;}
+#rsMatchOverlayV1 .rsMatchActionV1,#rsMatchOverlayV1 .rsMatchToolV1,#rsMatchOverlayV1 .rsMatchPlayerV1,#rsMatchPinV1 button{font-family:inherit!important;cursor:pointer!important;border:1px solid #303946!important;border-radius:12px!important;background:#151b23!important;color:#fff!important;font-weight:900!important;min-height:58px!important;padding:10px!important;box-sizing:border-box!important;}
+#rsMatchOverlayV1 .rsMatchActionV1:hover,#rsMatchOverlayV1 .rsMatchToolV1:hover,#rsMatchOverlayV1 .rsMatchPlayerV1:hover,#rsMatchPinV1 button:hover{filter:brightness(1.18)!important;}
+#rsMatchOverlayV1 .rsMatchActionV1.goal{background:#176b35!important;border-color:#269a4e!important;}
+#rsMatchOverlayV1 .rsMatchActionV1.rival{background:#76252d!important;border-color:#a43b45!important;}
+#rsMatchOverlayV1 .rsMatchActionV1.card{background:#303846!important;}
+#rsMatchOverlayV1 .rsMatchActionV1.change{background:#604c14!important;border-color:#96791d!important;}
+#rsMatchOverlayV1 .rsMatchToolsV1{display:grid!important;grid-template-columns:1fr 1fr 1fr!important;gap:10px!important;margin-top:10px!important;}
+#rsMatchOverlayV1 .rsMatchSubV1{margin:14px 0!important;padding:16px!important;border-radius:16px!important;background:#0a0e13!important;border:1px solid #252e3a!important;}
+#rsMatchOverlayV1 .rsMatchSubV1 h3{margin:0 0 12px!important;font-size:17px!important;}
+#rsMatchOverlayV1 .rsMatchPlayersV1{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(180px,1fr))!important;gap:8px!important;}
+#rsMatchOverlayV1 .rsMatchPlayerV1{min-height:54px!important;text-align:left!important;display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;gap:2px!important;}
+#rsMatchOverlayV1 .rsMatchPlayerV1 small{color:#98a4b4!important;font-size:11px!important;}
+#rsMatchOverlayV1 .rsMatchEventsV1{margin-top:18px!important;}
+#rsMatchOverlayV1 .rsMatchEventsV1 h3{margin:0 0 10px!important;font-size:14px!important;color:#ffc400!important;}
+#rsMatchOverlayV1 .rsMatchEventV1{display:flex!important;align-items:center!important;gap:10px!important;min-height:42px!important;padding:8px 10px!important;margin-bottom:6px!important;border-radius:10px!important;background:#10151c!important;border:1px solid #202833!important;box-sizing:border-box!important;}
+#rsMatchOverlayV1 .rsMatchEventV1 .min{width:42px!important;font-weight:900!important;color:#ffc400!important;}
+#rsMatchOverlayV1 .rsMatchEventV1 .ico{width:25px!important;}
+#rsMatchOverlayV1 .rsMatchEventV1 b{margin-left:auto!important;white-space:nowrap!important;}
+#rsMatchPinV1.rsMatchPinV1{
+  position:fixed!important;
+  inset:0!important;
+  z-index:2147483100!important;
+  display:none!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:100vw!important;
+  height:100vh!important;
+  margin:0!important;
+  padding:18px!important;
+  box-sizing:border-box!important;
+  background:rgba(0,0,0,.88)!important;
+  backdrop-filter:blur(7px)!important;
+}
+#rsMatchPinV1.rsMatchPinV1.open{display:flex!important;}
+#rsMatchPinV1 .rsMatchPinBoxV1{width:min(420px,100%)!important;box-sizing:border-box!important;padding:26px!important;border-radius:20px!important;background:#11151b!important;border:1px solid rgba(255,196,0,.35)!important;box-shadow:0 25px 70px rgba(0,0,0,.65)!important;color:#fff!important;text-align:center!important;font-family:Arial,Helvetica,sans-serif!important;}
+#rsMatchPinV1 h2{margin:0 0 10px!important;font-size:24px!important;}
+#rsMatchPinV1 p{margin:0 0 18px!important;color:#aab4c0!important;font-size:13px!important;line-height:1.5!important;}
+#rsMatchPinV1 input{display:block!important;width:100%!important;height:52px!important;box-sizing:border-box!important;margin:0 0 10px!important;padding:0 14px!important;border:1px solid #37414e!important;border-radius:10px!important;background:#070a0e!important;color:#fff!important;font-size:20px!important;text-align:center!important;letter-spacing:4px!important;}
+#rsMatchPinV1 button{width:100%!important;background:#ffc400!important;color:#090b0f!important;border-color:#ffc400!important;}
+@media(max-width:700px){
+  #rsMatchOverlayV1.rsMatchOverlayV1{padding:8px!important;align-items:flex-start!important;}
+  #rsMatchOverlayV1 .rsMatchPanelV1{max-height:calc(100vh - 16px)!important;padding:14px!important;border-radius:16px!important;}
+  #rsMatchOverlayV1 .rsMatchScoreV1 .teams{grid-template-columns:1fr!important;gap:7px!important;}
+  #rsMatchOverlayV1 .score{font-size:42px!important;}
+  #rsMatchOverlayV1 .rsMatchActionsV1{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  #rsMatchOverlayV1 .rsMatchToolsV1{grid-template-columns:1fr 1fr 1fr!important;}
+}
+</style>
+
 <!-- V1 · MODO PARTIDO RÁPIDO -->
 <div id="rsMatchOverlayV1" class="rsMatchOverlayV1" aria-hidden="true">
   <div class="rsMatchPanelV1">
@@ -5597,7 +5690,7 @@ function render(){
  $("rsMMScoreV1").textContent=`${Number(Live.homeScore||0)} - ${Number(Live.awayScore||0)}`;
  $("rsMMMinuteV1").textContent=`${minute()}'`;
  const ev=(Live.events||[]).slice().sort((a,b)=>Number(b.minute||0)-Number(a.minute||0)).slice(0,8);
- $("rsMMEventsV1").innerHTML=ev.length?ev.map(e=>`<div class="rsMatchEventV1"><span class="min">${Number(e.minute||0)}'</span><span class="ico">${e.type==="goal"?"⚽":e.type==="yellow"?"🟨":e.type==="red"?"🟥":"🔄"}</span><span>${esc(e.playerName||e.playerInName||"Evento")}${e.type==="change"&&e.playerOutName?` <small>por ${esc(e.playerOutName)}</small>`:""}</span><b style="margin-left:auto">${esc(e.score||"")}</b></div>`).join(""):"<div style='color:#8da0b5;font-size:11px'>Todavía no hay eventos.</div>";
+ $("rsMMEventsV1").innerHTML=ev.length?ev.map(e=>`<div class="rsMatchEventV1"><span class="min">${Number(e.minute||0)}'</span><span class="ico">${e.type==="goal"?"⚽":e.type==="yellow"?"🟨":e.type==="red"?"🟥":"🔄"}</span><span>${esc(e.playerName||e.playerInName||"Evento")}${(!e.team || e.team!==sideOfRS(typeof activeMatch==="function"?activeMatch():null)) && e.rivalNumber!=null ? ` <small>#${esc(e.rivalNumber)}</small>` : ""}${e.type==="change"&&e.playerOutName?` <small>por ${esc(e.playerOutName)}</small>`:""}</span><b style="margin-left:auto">${esc(e.score||"")}</b></div>`).join(""):"<div style='color:#8da0b5;font-size:11px'>Todavía no hay eventos.</div>";
 }
 function open(){
  if(sessionStorage.getItem(KEY)==="1"){overlay.classList.add("open");overlay.setAttribute("aria-hidden","false");render();return}
@@ -5605,24 +5698,65 @@ function open(){
 }
 function close(){overlay.classList.remove("open");overlay.setAttribute("aria-hidden","true");sub.style.display="none"}
 function commitQuick(type,rs){
- const m=typeof activeMatch==="function"?activeMatch():null;if(!m){toast("No hay partido activo");return}
- const rsSide=sideOfRS(m), teamSide=rs?rsSide:(rs===false?(rsSide==="home"?"away":"home"):rsSide);
- const players=(App.players||[]).filter(p=>Array.isArray(Live.lineup)&&Live.lineup.map(Number).includes(Number(p.number)));
- const all=App.players||[];
+ const m=typeof activeMatch==="function"?activeMatch():null;
+ if(!m){toast("No hay partido activo");return}
+ const rsSide=sideOfRS(m);
+ const evSide=rs?rsSide:(rsSide==="home"?"away":"home");
+ const allPlayers=Array.isArray(App.players)?App.players:[];
+ /* Ramón Sicart: usar SIEMPRE la plantilla del equipo. Si existe una alineación
+    activa la mostramos primero, pero nunca dejamos la lista vacía por no tener
+    Live.lineup configurado. */
+ const lineupNums=Array.isArray(Live.lineup)?Live.lineup.map(Number).filter(Number.isFinite):[];
+ const lineupPlayers=lineupNums.length
+   ? lineupNums.map(n=>allPlayers.find(p=>Number(p.number)===n)).filter(Boolean)
+   : [];
+ const players=rs ? (lineupPlayers.length?lineupPlayers:allPlayers) : [];
  let title=type==="goal"?"⚽ GOL":type==="yellow"?"🟨 AMARILLA":"🟥 ROJA";
- sub.innerHTML=`<h3>${title} · ¿Jugador?</h3><div class="rsMatchPlayersV1">
-   ${(rs?players:all).map(p=>`<button class="rsMatchPlayerV1" data-rs-mm-player="${Number(p.number)}"><b>#${Number(p.number)}</b> ${esc(p.name)}<small>${esc(p.position||"")}</small></button>`).join("")}
- </div><button class="rsMatchToolV1" style="margin-top:9px;width:100%" id="rsMMNoPlayerV1">Continuar sin jugador</button>`;
+
+ if(rs){
+   sub.innerHTML=`<h3>${title} RAMÓN SICART · ¿Jugador?</h3>
+     <div class="rsMatchPlayersV1">
+       ${players.map(p=>`<button class="rsMatchPlayerV1" data-rs-mm-player="${Number(p.number)}"><b>#${Number(p.number)}</b> ${esc(p.name)}<small>${esc(p.position||"")}</small></button>`).join("")}
+     </div>
+     <button class="rsMatchToolV1" style="margin-top:9px;width:100%" id="rsMMNoPlayerV1">Continuar sin jugador</button>`;
+   sub.querySelectorAll("[data-rs-mm-player]").forEach(b=>b.addEventListener("click",()=>commit(type,true,Number(b.dataset.rsMmPlayer))));
+   $("rsMMNoPlayerV1").addEventListener("click",()=>commit(type,true,null));
+ }else{
+   /* Rival: NO usamos App.players porque son los jugadores del Ramón Sicart.
+      El rival se registra de forma rápida con dorsal y, opcionalmente, nombre. */
+   const quickNums=Array.from({length:25},(_,i)=>i+1);
+   sub.innerHTML=`<h3>${title} RIVAL · ¿Jugador?</h3>
+     <div style="font-size:11px;color:#8da0b5;margin:0 0 8px">Introduce el dorsal del rival o toca un número. No hace falta crear su plantilla.</div>
+     <div class="rsRivalNumberV1" style="display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;margin-bottom:9px">
+       ${quickNums.map(n=>`<button type="button" class="rsMatchPlayerV1 rsRivalNumBtnV1" data-rival-num="${n}" style="padding:8px 4px"><b>#${n}</b></button>`).join("")}
+     </div>
+     <div style="display:flex;gap:7px;align-items:center;margin-bottom:7px">
+       <input id="rsMMRivalNumberV1" type="number" min="0" max="99" inputmode="numeric" placeholder="Dorsal" style="flex:1;min-width:0;padding:10px;border-radius:8px;border:1px solid #29435d;background:#0b1118;color:#fff;font-weight:800">
+       <input id="rsMMRivalNameV1" type="text" maxlength="40" placeholder="Nombre (opcional)" style="flex:2;min-width:0;padding:10px;border-radius:8px;border:1px solid #29435d;background:#0b1118;color:#fff">
+     </div>
+     <button class="rsMatchToolV1" style="width:100%" id="rsMMRivalOkV1">Registrar evento rival</button>
+     <button class="rsMatchToolV1" style="margin-top:7px;width:100%" id="rsMMNoPlayerV1">Continuar sin jugador</button>`;
+   const numInput=$("rsMMRivalNumberV1"), nameInput=$("rsMMRivalNameV1");
+   sub.querySelectorAll("[data-rival-num]").forEach(b=>b.addEventListener("click",()=>{numInput.value=b.dataset.rivalNum;numInput.focus()}));
+   $("rsMMRivalOkV1").addEventListener("click",()=>{
+     const n=numInput.value.trim();
+     if(n===""){toast("Introduce o selecciona el dorsal del rival");return}
+     commit(type,false,Number(n),nameInput.value.trim());
+   });
+   $("rsMMNoPlayerV1").addEventListener("click",()=>commit(type,false,null,""));
+ }
  sub.style.display="block";
- sub.querySelectorAll("[data-rs-mm-player]").forEach(b=>b.addEventListener("click",()=>commit(type,rs,Number(b.dataset.rsMmPlayer))));
- $("rsMMNoPlayerV1").addEventListener("click",()=>commit(type,rs,null));
  sub.scrollIntoView({behavior:"smooth",block:"nearest"});
 }
-function commit(type,rs,num){
+function commit(type,rs,num,rivalName){
  const m=typeof activeMatch==="function"?activeMatch():null;if(!m)return;
  const rsSide=sideOfRS(m), evSide=rs?rsSide:(rsSide==="home"?"away":"home");
- let p= num!=null ? (App.players||[]).find(x=>Number(x.number)===num) : null;
- const ev={id:Date.now(),type,team:evSide,minute:minute(),playerNumber:num,playerName:p?.name||(rs?"Ramón Sicart":"Jugador rival")};
+ /* IMPORTANTE: para rival NO buscamos el dorsal en App.players. Esa lista es
+    exclusivamente la plantilla del Ramón Sicart. */
+ let p=rs&&num!=null ? (App.players||[]).find(x=>Number(x.number)===num) : null;
+ const rivalLabel=(rivalName&&String(rivalName).trim())?String(rivalName).trim():(num!=null?`Jugador #${num}`:"Jugador rival");
+ const ev={id:Date.now(),type,team:evSide,minute:minute(),playerNumber:num,playerName:p?.name||(rs?"Jugador Ramón Sicart":rivalLabel)};
+ if(!rs&&num!=null){ev.rivalNumber=num;ev.rivalPlayerNumber=num;ev.rivalPlayerName=rivalLabel;}
  if(type==="goal"){
    if(evSide==="home")Live.homeScore=(Number(Live.homeScore)||0)+1;else Live.awayScore=(Number(Live.awayScore)||0)+1;
    ev.score=`${Live.homeScore}-${Live.awayScore}`;
@@ -5661,8 +5795,21 @@ $("rsMatchModeBtnV1")?.addEventListener("click",open);
 $("rsMatchCloseV1")?.addEventListener("click",close);
 $("rsMMGoalRSV1")?.addEventListener("click",()=>commitQuick("goal",true));
 $("rsMMGoalRivalV1")?.addEventListener("click",()=>commitQuick("goal",false));
-$("rsMMYellowV1")?.addEventListener("click",()=>commitQuick("yellow",true));
-$("rsMMRedV1")?.addEventListener("click",()=>commitQuick("red",true));
+function chooseCardTeam(type){
+ const title=type==="yellow"?"🟨 AMARILLA":"🟥 ROJA";
+ sub.innerHTML=`<h3>${title} · ¿De qué equipo?</h3>
+   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+     <button type="button" class="rsMatchActionV1 goal" id="rsMMCardRSV1">🟡<br>RAMÓN SICART</button>
+     <button type="button" class="rsMatchActionV1 rival" id="rsMMCardRivalV1">🟡<br>RIVAL</button>
+   </div>
+   <button type="button" class="rsMatchToolV1" style="margin-top:10px;width:100%" id="rsMMCardNoPlayerV1">Continuar sin jugador</button>`;
+ sub.style.display="block";
+ $("rsMMCardRSV1").addEventListener("click",()=>commitQuick(type,true));
+ $("rsMMCardRivalV1").addEventListener("click",()=>commitQuick(type,false));
+ $("rsMMCardNoPlayerV1").addEventListener("click",()=>commit(type,false,null,"Jugador rival"));
+}
+$("rsMMYellowV1")?.addEventListener("click",()=>chooseCardTeam("yellow"));
+$("rsMMRedV1")?.addEventListener("click",()=>chooseCardTeam("red"));
 $("rsMMChangeV1")?.addEventListener("click",change);
 $("rsMMStartV1")?.addEventListener("click",()=>{
  try{
@@ -5688,9 +5835,6 @@ if(typeof oldUnlock==="function"){
 }
 })();
 </script>
-</body>
-</html>
-
 
 <!-- V32 — PARTIDOS PROFESIONALES: ESCUDO ARRIBA + NOMBRE ABAJO / TIPOGRAFÍA GRANDE -->
 <style id="v32-professional-matches">
@@ -8460,8 +8604,8 @@ setTimeout(hide,150);setTimeout(hide,600);setTimeout(hide,1200);})();
  window.rsGoHomeV62=goHome;
 }})();
 </script>
-</body>
-</html>
+
+
 
 <style id="rs-bottom-nav-v11-css">
 #rsBottomNavV11{
@@ -9883,3 +10027,5 @@ body{padding-bottom:0!important}
 })();
 </script>
 
+</body>
+</html>
