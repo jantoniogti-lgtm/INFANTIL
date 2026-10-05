@@ -9333,3 +9333,126 @@ body{padding-bottom:0!important}
 })();
 </script>
 
+
+
+<style id="rs-classification-public-sync-v2-css">
+/* La clasificación pública usa los mismos datos editados en el administrador. */
+#rsClassificationNativeV25 tbody tr td{transition:none}
+</style>
+
+<script id="rs-classification-public-sync-v2-js">
+(function(){
+  "use strict";
+
+  function getApp(){
+    try{return typeof App!=="undefined"?App:null}catch(e){return null}
+  }
+  function num(v){
+    var n=Number(v);
+    return Number.isFinite(n)&&n>=0?Math.floor(n):0;
+  }
+  function esc(v){
+    return String(v==null?"":v).replace(/[&<>"']/g,function(m){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m];
+    });
+  }
+  function logo(t){
+    return t && (t.logo||t.crest||t.image||"");
+  }
+  function values(){
+    var a=getApp();
+    if(!a || !Array.isArray(a.teams))return [];
+    var store=a.adminClassification||{};
+    return a.teams.map(function(t){
+      var r=store[String(t.id)]||{};
+      return {
+        team:t,
+        pj:num(r.pj),pg:num(r.pg),pe:num(r.pe),pp:num(r.pp),
+        gf:num(r.gf),gc:num(r.gc)
+      };
+    }).sort(function(x,y){
+      return (y.pg*3+y.pe)-(x.pg*3+x.pe) ||
+             ((y.gf-y.gc)-(x.gf-x.gc)) ||
+             (y.gf-x.gf) ||
+             (y.pg-x.pg) ||
+             String(x.team.name||"").localeCompare(String(y.team.name||""),"es");
+    });
+  }
+
+  function renderPublicFromAdmin(){
+    var table=document.querySelector("#rsClassificationNativeV25 table");
+    if(!table)return false;
+    var body=table.querySelector("tbody");
+    if(!body)return false;
+
+    var rows=values();
+    if(!rows.length)return false;
+
+    body.innerHTML=rows.map(function(x,i){
+      var t=x.team,r=x;
+      var l=logo(t);
+      return '<tr>'+
+        '<td>'+(i+1)+'</td>'+
+        '<td><div class="rs-team-cell">'+
+          (l?'<img src="'+esc(l)+'" alt="">':'<span class="crestFallback">⚽</span>')+
+          '<span>'+esc(t.name||"Equipo")+'</span>'+
+        '</div></td>'+
+        '<td>'+((r.pg*3+r.pe).toFixed(2).replace(".","."))+'</td>'+
+        '<td>'+r.pj+'</td>'+
+        '<td>'+r.pg+'</td>'+
+        '<td>'+r.pe+'</td>'+
+        '<td>'+r.pp+'</td>'+
+        '<td>'+r.gf+'</td>'+
+        '<td>'+r.gc+'</td>'+
+        '<td><div class="rs-last-dots"></div></td>'+
+      '</tr>';
+    }).join("");
+
+    return true;
+  }
+
+  /* Espera a que la clasificación pública original exista y después
+     sustituye exclusivamente sus filas por los datos del administrador. */
+  function sync(){
+    try{renderPublicFromAdmin()}catch(e){console.error("Clasificación pública:",e)}
+  }
+
+  var oldAll=window.renderAll;
+  if(typeof oldAll==="function"){
+    window.renderAll=function(){
+      var r=oldAll.apply(this,arguments);
+      setTimeout(sync,0);
+      setTimeout(sync,100);
+      setTimeout(sync,400);
+      return r;
+    };
+  }
+
+  var oldHome=window.renderHome;
+  if(typeof oldHome==="function"){
+    window.renderHome=function(){
+      var r=oldHome.apply(this,arguments);
+      setTimeout(sync,0);
+      setTimeout(sync,100);
+      setTimeout(sync,400);
+      return r;
+    };
+  }
+
+  /* También cubre la primera creación de la clasificación por los scripts
+     que ya trae el HTML. */
+  var tries=0;
+  var timer=setInterval(function(){
+    sync();
+    tries++;
+    if(tries>20)clearInterval(timer);
+  },500);
+
+  window.rsSyncPublicClassificationV2=sync;
+  setTimeout(sync,100);
+  setTimeout(sync,700);
+  setTimeout(sync,1500);
+  setTimeout(sync,2500);
+})();
+</script>
+
