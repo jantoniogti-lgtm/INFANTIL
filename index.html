@@ -9456,3 +9456,200 @@ body{padding-bottom:0!important}
 })();
 </script>
 
+
+
+<style id="rs-classification-v3-css">
+/* V3: últimos 5 resultados */
+.rsCAFLast5,.rsPublicLast5{
+  display:flex;justify-content:center;align-items:center;gap:5px;
+  min-width:92px;
+}
+.rsCAFResultDot,.rsPublicResultDot{
+  width:18px;height:18px;border-radius:50%;display:inline-flex;
+  align-items:center;justify-content:center;font-size:0;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.16);
+}
+.rsCAFResultDot.win,.rsPublicResultDot.win{background:#20c56a}
+.rsCAFResultDot.draw,.rsPublicResultDot.draw{background:#f39a32}
+.rsCAFResultDot.loss,.rsPublicResultDot.loss{background:#e53935}
+.rsCAFResultDot.win:after,.rsPublicResultDot.win:after{content:"✓";font-size:11px;color:#fff;font-weight:900}
+.rsCAFResultDot.draw:after,.rsPublicResultDot.draw:after{content:"=";font-size:10px;color:#fff;font-weight:900}
+.rsCAFResultDot.loss:after,.rsPublicResultDot.loss:after{content:"×";font-size:11px;color:#fff;font-weight:900}
+</style>
+
+<script id="rs-classification-v3-js">
+(function(){
+  "use strict";
+
+  function A(){try{return typeof App!=="undefined"?App:null}catch(e){return null}}
+  function n(v){var x=Number(v);return Number.isFinite(x)&&x>=0?Math.floor(x):0}
+  function finished(m){return String(m&&m.status||"").toUpperCase()==="FINISHED"}
+  function league(m){return String(m&&m.competition||"").trim().toLowerCase()==="liga"}
+  function score(m){return {h:n(m&&m.homeScore),a:n(m&&m.awayScore)}}
+  function dateKey(m){return String(m&&m.date||"")+" "+String(m&&m.hour||"")}
+  function team(id){
+    var a=A(); return (a&&a.teams||[]).find(function(t){return String(t.id)===String(id)})||null
+  }
+  function esc(v){
+    return String(v==null?"":v).replace(/[&<>"']/g,function(m){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m];
+    });
+  }
+
+  /*
+   * Carga la clasificación manual dentro de App cuando Firebase la devuelve.
+   * El save() original ya la guarda dentro de {app: App, liveMatch: Live}.
+   */
+  function installApplyData(){
+    var fn=window.applyData;
+    if(typeof fn!=="function" || fn.__rsClassV3)return;
+
+    var old=fn;
+    var wrapped=function(data){
+      if(data && data.app && data.app.adminClassification){
+        try{
+          if(typeof App!=="undefined") App.adminClassification=data.app.adminClassification;
+        }catch(e){}
+      }
+      var r=old.apply(this,arguments);
+      setTimeout(syncPublic,0);
+      setTimeout(syncPublic,150);
+      return r;
+    };
+    wrapped.__rsClassV3=true;
+    window.applyData=wrapped;
+  }
+
+  /*
+   * El HTML original define applyData como función global, no siempre como
+   * propiedad de window antes de terminar la carga. Reintentamos hasta que exista.
+   */
+  var installTimer=setInterval(function(){
+    installApplyData();
+    if(window.applyData && window.applyData.__rsClassV3)clearInterval(installTimer);
+  },100);
+
+  function resultsFor(tid){
+    var a=A(); if(!a)return [];
+    return (a.matches||[])
+      .filter(function(m){
+        return finished(m) && league(m) &&
+          (String(m.home)===String(tid)||String(m.away)===String(tid));
+      })
+      .map(function(m){
+        var s=score(m), home=String(m.home)===String(tid);
+        var own=home?s.h:s.a, opp=home?s.a:s.h;
+        return {
+          date:dateKey(m),
+          type:own>opp?"win":own===opp?"draw":"loss"
+        };
+      })
+      .sort(function(x,y){return x.date.localeCompare(y.date)})
+      .slice(-5);
+  }
+
+  function dots(tid, cls){
+    var r=resultsFor(tid);
+    /* De izquierda a derecha: más antiguo -> más reciente. */
+    var html="";
+    for(var i=0;i<5;i++){
+      var x=r[i];
+      html+='<span class="'+cls+' '+(x?x.type:"")+'" title="'+(x?(
+        x.type==="win"?"Victoria":x.type==="draw"?"Empate":"Derrota"
+      ):"Sin resultado")+'"></span>';
+    }
+    return html;
+  }
+
+  function syncPublic(){
+    var a=A();
+    if(!a)return;
+
+    /* La tabla pública V25/V22 puede existir según el ciclo de render. */
+    var body=document.getElementById("rsHomeStandBodyV22");
+    if(body){
+      var rows=(a.teams||[]).slice().map(function(t){
+        var d=(a.adminClassification||{})[String(t.id)]||{};
+        return {
+          team:t,
+          pj:n(d.pj),pg:n(d.pg),pe:n(d.pe),pp:n(d.pp),
+          gf:n(d.gf),gc:n(d.gc),
+          pts:n(d.pg)*3+n(d.pe),
+          dg:n(d.gf)-n(d.gc)
+        };
+      }).sort(function(x,y){
+        return y.pts-x.pts || y.dg-x.dg || y.gf-x.gf || y.pg-x.pg ||
+          String(x.team.name||"").localeCompare(String(y.team.name||""),"es");
+      });
+
+      body.innerHTML=rows.map(function(r,i){
+        var l=r.team&&(r.team.logo||r.team.crest||r.team.image)||"";
+        return '<tr>'+
+          '<td class="posV22">'+(i+1)+'</td>'+
+          '<td><div class="teamV22">'+
+          (l?'<img src="'+esc(l)+'" alt="">':'<span style="width:32px;text-align:center">⚽</span>')+
+          '<b>'+esc(r.team.name||"Equipo")+'</b></div></td>'+
+          '<td class="ptsV22">'+r.pts+'</td>'+
+          '<td>'+r.pj+'</td><td>'+r.pg+'</td><td>'+r.pe+'</td><td>'+r.pp+'</td>'+
+          '<td>'+r.gf+'</td><td>'+r.gc+'</td>'+
+          '<td><div class="rsPublicLast5">'+dots(r.team.id,"rsPublicResultDot")+'</div></td>'+
+          '</tr>';
+      }).join("");
+    }
+
+    var native=document.querySelector("#rsClassificationNativeV25 tbody");
+    if(native){
+      var rows2=(a.teams||[]).slice().map(function(t){
+        var d=(a.adminClassification||{})[String(t.id)]||{};
+        return {team:t,pj:n(d.pj),pg:n(d.pg),pe:n(d.pe),pp:n(d.pp),
+          gf:n(d.gf),gc:n(d.gc),pts:n(d.pg)*3+n(d.pe),dg:n(d.gf)-n(d.gc)};
+      }).sort(function(x,y){
+        return y.pts-x.pts||y.dg-x.dg||y.gf-x.gf||y.pg-x.pg||
+          String(x.team.name||"").localeCompare(String(y.team.name||""),"es");
+      });
+
+      native.innerHTML=rows2.map(function(r,i){
+        var l=r.team&&(r.team.logo||r.team.crest||r.team.image)||"";
+        return '<tr><td>'+(i+1)+'</td><td><div class="rs-team-cell">'+
+          (l?'<img src="'+esc(l)+'" alt="">':'<span class="crestFallback">⚽</span>')+
+          '<span>'+esc(r.team.name||"Equipo")+'</span></div></td>'+
+          '<td>'+r.pts+'</td><td>'+r.pj+'</td><td>'+r.pg+'</td><td>'+r.pe+'</td>'+
+          '<td>'+r.pp+'</td><td>'+r.gf+'</td><td>'+r.gc+'</td>'+
+          '<td><div class="rsPublicLast5">'+dots(r.team.id,"rsPublicResultDot")+'</div></td></tr>';
+      }).join("");
+    }
+  }
+
+  /*
+   * Si la tabla pública se vuelve a crear por renderAll/renderHome,
+   * la volvemos a sincronizar después de que termine el render original.
+   */
+  function wrap(name){
+    var fn=window[name];
+    if(typeof fn!=="function" || fn.__rsClassV3)return;
+    var old=fn;
+    var wrapped=function(){
+      var r=old.apply(this,arguments);
+      setTimeout(syncPublic,0);
+      setTimeout(syncPublic,120);
+      setTimeout(syncPublic,350);
+      return r;
+    };
+    wrapped.__rsClassV3=true;
+    window[name]=wrapped;
+  }
+
+  var wrapTimer=setInterval(function(){
+    wrap("renderAll");
+    wrap("renderHome");
+    if(window.renderAll&&window.renderAll.__rsClassV3 &&
+       window.renderHome&&window.renderHome.__rsClassV3)clearInterval(wrapTimer);
+  },100);
+
+  setTimeout(syncPublic,500);
+  setTimeout(syncPublic,1200);
+  setTimeout(syncPublic,2500);
+  window.rsSyncClassificationV3=syncPublic;
+})();
+</script>
+
