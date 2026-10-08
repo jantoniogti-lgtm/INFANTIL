@@ -10195,6 +10195,11 @@ const orig=window.openAdmin;
 window.openAdmin=function(){openFinal()};
 })();
 </script>
+
+<style id="rs-v65-squad-priority">
+#rsSquadWindowV6{z-index:2147483000!important;}
+#rsSquadWindowV6.open{display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;}
+</style>
 </body>
 
 
@@ -10680,8 +10685,27 @@ body.rsAdminWindowOpenV35 #rsV63TopControls,body.rsAdminModalOpenV2 #rsV63TopCon
         e.preventDefault();e.stopImmediatePropagation();
         var p=btn.getAttribute('data-page');
         if(p==='squad'){
-          closeSquad();
-          try{if(typeof window.rsOpenSquadFixedV63==='function')window.rsOpenSquadFixedV63();else if(typeof window.rsOpenSquadWindowV6==='function')window.rsOpenSquadWindowV6();}catch(err){}
+          /* PLANTILLA: usar SIEMPRE la misma ventana V6 que usaba el menú lateral. */
+          try{
+            var sw=document.getElementById('rsSquadWindowV6');
+            if(sw){
+              sw.classList.remove('rs-v62-closed');
+              sw.style.removeProperty('display');
+              sw.style.removeProperty('visibility');
+              sw.style.removeProperty('opacity');
+              sw.style.removeProperty('pointer-events');
+              sw.classList.add('open');
+              sw.setAttribute('aria-hidden','false');
+              document.body.classList.add('rsSquadWindowOpenV6');
+              document.querySelectorAll('.page').forEach(function(pg){pg.classList.remove('active');pg.style.display='none';});
+              if(typeof window.rsRenderSquadV16==='function') window.rsRenderSquadV16();
+              else if(typeof window.rsRenderSquadV12==='function') window.rsRenderSquadV12();
+              else if(typeof window.renderSquad==='function') window.renderSquad();
+              window.scrollTo(0,0);
+            }else if(typeof window.rsOpenSquadWindowV6==='function'){
+              window.rsOpenSquadWindowV6();
+            }
+          }catch(err){console.error('RS LIVE Plantilla:',err)}
         }else if(p==='matches'){
           closeSquad();showNewPage('matches');
         }else if(p==='live'){
