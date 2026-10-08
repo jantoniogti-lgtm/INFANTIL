@@ -1649,7 +1649,7 @@ main{padding:28px}.hero{display:grid;grid-template-columns:1.35fr .65fr;gap:18px
     <div id="uiTable" class="rsTable"></div>
   </section>
   <section id="uiSquad" class="rsPage">
-    <div class="rsSection"><h2>Plantilla</h2><span id="uiSquadMeta"></span></div>
+    <div class="rsSection"><h2>Plantilla</h2><span id="uiSquadMeta">PLANTILLA OFICIAL · TEMPORADA 2026/27</span></div>
     <div id="uiPlayers" class="rsPlayers"></div>
   </section>
   <section id="uiMatches" class="rsPage">
@@ -8474,7 +8474,7 @@ document.addEventListener('click',function(e){
  var b=e.target.closest&&e.target.closest('[data-page="admin"]');
  if(!b)return;
  e.preventDefault();e.stopImmediatePropagation();
- if(window.rsAdminV35)window.rsAdminV35.open();
+ if(typeof openAccess==='function')openAccess();
 },true);
 })();
 </script>
@@ -10110,8 +10110,265 @@ body{padding-bottom:0!important}
 
 
 </div></div>
+
+<style id="rs-admin-final-redesign">
+#rsAdminWindowV35{position:fixed!important;inset:0!important;z-index:10000!important;background:rgba(5,7,9,.82)!important;backdrop-filter:blur(18px)!important;padding:18px!important;display:none;overflow:auto}
+#rsAdminWindowV35.open{display:flex!important;align-items:center;justify-content:center}
+#rsAdminWindowV35 .v35AdminBox{width:min(1180px,100%)!important;max-height:calc(100vh - 36px)!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;background:#0e1216!important;border:1px solid #303840!important;border-radius:28px!important;box-shadow:0 35px 100px #000c!important}
+#rsAdminWindowV35 .v35AdminTop{padding:20px 22px!important;border-bottom:1px solid #252c33!important;display:flex!important;align-items:center!important;justify-content:space-between!important;background:linear-gradient(135deg,#151a20,#0e1216)!important}
+#rsAdminWindowV35 .v35AdminTop h2{margin:0!important;font-size:21px!important;letter-spacing:.5px!important}
+#rsAdminWindowV35 .v35AdminTop small{color:#89949f!important;font-size:10px!important}
+#rsAdminWindowV35 .v35AdminClose{width:40px!important;height:40px!important;border-radius:12px!important;background:#1a2026!important;border:1px solid #303840!important;color:#fff!important;font-size:23px!important;cursor:pointer!important}
+#rsAdminWindowV35 .v35AdminNav{display:grid!important;grid-template-columns:repeat(7,minmax(100px,1fr))!important;gap:7px!important;padding:10px!important;background:#0a0d10!important;border-bottom:1px solid #252c33!important;overflow-x:auto!important}
+#rsAdminWindowV35 .v35AdminNav button{min-height:54px!important;padding:7px 8px!important;background:#151a20!important;color:#89949f!important;border:1px solid #2a3138!important;border-radius:13px!important;font-size:9px!important;font-weight:1000!important;white-space:normal!important;cursor:pointer!important}
+#rsAdminWindowV35 .v35AdminNav button.active{background:#ffd21c!important;color:#090b0e!important;border-color:#ffd21c!important;box-shadow:0 7px 22px #ffd21c22!important}
+#rsAdminWindowV35 .v35AdminContent{overflow:auto!important;padding:18px!important;min-height:0!important}
+#rsAdminWindowV35 #adminPanel{display:block!important}
+#rsAdminWindowV35 #adminPanel>.sectionTitle{display:flex!important;justify-content:space-between!important;align-items:end!important;margin:0 0 14px!important;padding:0 2px!important}
+#rsAdminWindowV35 #adminPanel>.sectionTitle h2{font-size:22px!important;margin:0!important}
+#rsAdminWindowV35 #adminPanel>.sectionTitle p{font-size:10px!important;color:#89949f!important;margin:0!important}
+#rsAdminWindowV35 .adminGrid{display:block!important}
+#rsAdminWindowV35 .v35AdminSection{display:none!important;background:#12171c!important;border:1px solid #2b333b!important;border-radius:20px!important;padding:18px!important;margin:0 0 14px!important;box-shadow:none!important}
+#rsAdminWindowV35 .v35AdminSection.v35Visible{display:block!important}
+#rsAdminWindowV35 .v35AdminSection h2{font-size:15px!important;margin:0 0 12px!important}
+#rsAdminWindowV35 .v35AdminSection .btn{border-radius:11px!important}
+#rsAdminWindowV35 .adminItem{background:#0b0f13!important;border:1px solid #252c33!important;border-radius:13px!important;padding:10px!important;margin-top:7px!important}
+#rsAdminWindowV35 input,#rsAdminWindowV35 select,#rsAdminWindowV35 textarea{background:#090c0f!important;color:#f5f7f8!important;border:1px solid #303840!important;border-radius:10px!important}
+#rsAdminWindowV35 label{color:#8e99a3!important}
+#rsAdminWindowV35 .toolbar,#rsAdminWindowV35 .eventBtns{gap:8px!important}
+#rsAdminWindowV35 .toolbar button,#rsAdminWindowV35 .eventBtns button{border-radius:11px!important}
+#rsAdminWindowV35 .minuteBox{background:#0a0d10!important;border:1px solid #2b333b!important;border-radius:14px!important}
+@media(max-width:800px){#rsAdminWindowV35{padding:0!important;align-items:stretch!important}#rsAdminWindowV35 .v35AdminBox{max-height:100vh!important;height:100vh!important;border-radius:0!important}#rsAdminWindowV35 .v35AdminNav{grid-template-columns:repeat(7,110px)!important}#rsAdminWindowV35 .v35AdminContent{padding:12px!important}}
+</style>
+<script id="rs-admin-final-controller">
+(function(){
+'use strict';
+function A(id){return document.getElementById(id)}
+function classify(card){
+ const id=(card.id||'').toLowerCase(), txt=(card.textContent||'').toLowerCase();
+ if(card.querySelector('#adminLiveState')||card.querySelector('#startBtn')) return 'control';
+ if(card.querySelector('#adminPlayers')) return 'players';
+ if(card.querySelector('#adminTeams')) return 'teams';
+ if(card.querySelector('#adminLineupV10')||id==='adminlineupv10'||txt.includes('alineación del partido activo')) return 'lineup';
+ if(card.querySelector('#matchHome')||card.querySelector('#createMatchBtn')) return 'create';
+ if(card.querySelector('#adminMatches')) return 'calendar';
+ return 'calendar';
+}
+const labels={control:'🎮 CENTRO DE CONTROL',players:'👥 GESTIÓN PLANTILLAS',teams:'🛡️ EQUIPOS Y ESCUDOS',matches:'⚽ PARTIDOS TEMPORADA',calendar:'📅 CALENDARIO CREADO',create:'＋ CREAR PARTIDO',lineup:'👕 ALINEACIÓN PARTIDO ACTIVO'};
+function prepareFinal(){
+ const panel=A('adminPanel'), content=A('rsAdminContentV35'); if(!panel||!content)return;
+ if(panel.parentElement!==content)content.appendChild(panel);
+ panel.querySelectorAll('.adminGrid>.adminCard').forEach(c=>{c.classList.remove('v35AdminSection','v35Visible');c.classList.add('v35AdminSection');c.dataset.rsSection=classify(c)});
+}
+function nav(){
+ const n=document.querySelector('#rsAdminWindowV35 .v35AdminNav'); if(!n)return;
+ n.innerHTML=Object.entries(labels).map(([k,v])=>`<button type="button" data-section="${k}">${v}</button>`).join('');
+ n.querySelectorAll('button').forEach(b=>b.onclick=()=>show(b.dataset.section));
+}
+function show(sec){
+ prepareFinal(); nav();
+ const panel=A('adminPanel'); if(!panel)return;
+ panel.querySelectorAll('.v35AdminSection').forEach(c=>c.classList.toggle('v35Visible',c.dataset.rsSection===sec));
+ document.querySelectorAll('#rsAdminWindowV35 .v35AdminNav button').forEach(b=>b.classList.toggle('active',b.dataset.section===sec));
+ const title=panel.querySelector('.sectionTitle h2'); const p=panel.querySelector('.sectionTitle p');
+ if(title)title.textContent=labels[sec].replace(/^\S+\s/,'');
+ if(p)p.textContent=sec==='control'?'Directo y eventos':sec==='players'?'Jugadores y dorsales':sec==='teams'?'Rivales y escudos':sec==='create'?'Nuevo partido':sec==='calendar'?'Historial de partidos':sec==='lineup'?'XI y formación':'Gestión de temporada';
+ try{if(sec==='players'&&window.renderAdminPlayers)window.renderAdminPlayers();}catch(e){}
+ try{if(sec==='teams'&&window.renderTeams)window.renderTeams();}catch(e){}
+ try{if((sec==='calendar'||sec==='matches')&&window.renderMatches)window.renderMatches();}catch(e){}
+ try{if(sec==='control'&&window.renderAdminLive)window.renderAdminLive();}catch(e){}
+ try{if(sec==='lineup'&&window.renderLineupChecks)window.renderLineupChecks();}catch(e){}
+}
+function openFinal(){
+ const w=A('rsAdminWindowV35'); if(!w)return;
+ prepareFinal(); nav(); w.classList.add('open');w.setAttribute('aria-hidden','false');document.body.classList.add('rsAdminWindowOpenV35');show('control');
+}
+window.rsAdminFinal={open:openFinal,show};
+const oldBuild=window.rsAdminV35;
+setTimeout(()=>{prepareFinal();nav();},1200);
+/* The admin must always pass through the existing PIN modal. */
+window.addEventListener('rs-open-admin',()=>{if(typeof openAccess==='function')openAccess()});
+/* New UI admin button */
+document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('#uiOpenAdmin')){e.preventDefault();e.stopPropagation();if(typeof openAccess==='function')openAccess();}},true);
+/* Once unlocked, replace the generic old admin opening with the redesigned window. */
+const orig=window.openAdmin;
+window.openAdmin=function(){openFinal()};
+})();
+</script>
 </body>
 
+
+
+<style id="rs-final-polish-v2">
+/* === RS LIVE · POLISH FINAL === */
+#rsNewUI .rsNext{
+  min-height:0!important;
+  padding:22px 24px 20px!important;
+  border-radius:26px!important;
+  justify-content:flex-start!important;
+  box-shadow:0 18px 45px rgba(0,0,0,.20);
+}
+#rsNewUI .rsNext .rsTag{
+  display:flex!important;
+  align-items:center;
+  gap:8px;
+  font-size:10px!important;
+  letter-spacing:1.8px!important;
+  margin-bottom:18px;
+}
+#rsNewUI .rsNext .rsTag:before{
+  content:"";
+  width:7px;height:7px;border-radius:50%;
+  background:#111;display:inline-block;
+}
+#rsNewUI .rsNext .rsMatch{
+  flex:0 0 auto;
+  margin:0 0 20px;
+  gap:14px!important;
+}
+#rsNewUI .rsNext .rsClub b{
+  font-size:13px!important;
+  line-height:1.2;
+  max-width:180px;
+  margin:9px auto 0;
+}
+#rsNewUI .rsNext .rsVs{
+  width:34px;height:34px;
+  border-radius:50%;
+  background:#111;color:#ffd21c;
+  display:grid;place-items:center;
+  font-size:10px!important;
+  flex:0 0 34px;
+}
+#rsNewUI .rsNext .rsCrest{
+  width:76px!important;height:76px!important;
+  border-radius:20px!important;
+  border:2px solid rgba(17,17,17,.12);
+  box-shadow:0 8px 18px rgba(0,0,0,.16);
+}
+#rsNewUI .rsNext .rsMeta{
+  border-top:1px solid rgba(17,17,17,.18);
+  padding-top:14px;
+  display:grid!important;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+  text-align:left!important;
+  font-size:10px!important;
+  font-weight:900!important;
+}
+#rsNewUI .rsNext .rsMeta:before{
+  content:"FECHA · HORA";
+  display:block;
+  grid-column:1;
+  grid-row:1;
+  font-size:7px;
+  letter-spacing:1.2px;
+  opacity:.55;
+  margin-bottom:-5px;
+}
+#rsNewUI .rsNext .rsMeta span{
+  grid-column:2;
+  grid-row:1 / span 2;
+  align-self:center;
+  text-align:right;
+  margin:0!important;
+  padding-left:8px;
+  border-left:1px solid rgba(17,17,17,.15);
+  font-size:10px!important;
+  font-weight:800!important;
+}
+#rsNewUI .rsNext .rsMeta{
+  line-height:1.45;
+}
+
+/* Plantilla: el botón inferior abre exactamente la misma ventana de plantilla
+   que el menú lateral, por lo que ambas entradas usan la misma vista. */
+#rsNewUI .rsNavBtn[data-page="squad"]{
+  position:relative;
+}
+#rsNewUI .rsNavBtn[data-page="squad"] span{
+  font-size:18px;
+}
+
+/* Evitar que la plantilla nueva pueda quedar visualmente distinta si se abre
+   por otra llamada: la igualamos al diseño oficial V6. */
+#rsNewUI #uiSquad{
+  padding-bottom:24px;
+}
+#rsNewUI #uiSquad .rsSection{
+  margin-top:6px;
+}
+#rsNewUI #uiSquad .rsPlayer{
+  background:linear-gradient(145deg,#171a18,#090b0a)!important;
+  border:1px solid #30352f!important;
+  border-radius:19px!important;
+  padding:0!important;
+  overflow:hidden;
+  text-align:left!important;
+}
+#rsNewUI #uiSquad .rsPlayer .rsAvatar{
+  width:100%!important;height:165px!important;
+  border-radius:0!important;
+  margin:0!important;
+  background:linear-gradient(180deg,#121614,#090b0a)!important;
+  display:flex!important;
+  align-items:flex-end!important;
+  justify-content:center!important;
+}
+#rsNewUI #uiSquad .rsPlayer .rsAvatar img{
+  border-radius:0!important;
+  object-fit:contain!important;
+}
+#rsNewUI #uiSquad .rsPlayer .rsNum{
+  position:absolute;
+  margin:10px;
+  z-index:2;
+  background:#ffd21c;
+  color:#111;
+  border-radius:10px;
+  min-width:38px;height:38px;
+  display:grid;place-items:center;
+  font-size:17px;
+}
+#rsNewUI #uiSquad .rsPlayer{
+  position:relative;
+}
+#rsNewUI #uiSquad .rsPlayer>b,
+#rsNewUI #uiSquad .rsPlayer>small,
+#rsNewUI #uiSquad .rsPlayer>.rsChips{
+  display:block;
+  margin-left:13px;margin-right:13px;
+}
+#rsNewUI #uiSquad .rsPlayer>b{
+  margin-top:13px;
+  font-size:14px;
+  text-transform:uppercase;
+}
+#rsNewUI #uiSquad .rsPlayer>small{
+  margin-top:4px;
+  color:#ffd21c;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  font-size:9px;
+  font-weight:900;
+}
+#rsNewUI #uiSquad .rsChips{
+  margin-top:11px;
+  margin-bottom:14px;
+}
+@media(max-width:700px){
+  #rsNewUI .rsNext{padding:20px 18px 18px!important}
+  #rsNewUI .rsNext .rsCrest{width:68px!important;height:68px!important}
+  #rsNewUI .rsNext .rsClub b{font-size:11px!important;max-width:125px}
+  #rsNewUI .rsNext .rsMatch{gap:9px!important}
+  #rsNewUI .rsNext .rsVs{width:30px;height:30px;flex-basis:30px}
+  #rsNewUI .rsNext .rsMeta{grid-template-columns:1fr 1fr}
+}
+@media(max-width:420px){
+  #rsNewUI .rsNext .rsClub b{max-width:105px;font-size:10px!important}
+  #rsNewUI .rsNext .rsMeta{font-size:9px!important}
+}
+</style>
 
 <script id="rs-new-ui-runtime">
 (function(){
@@ -10126,7 +10383,7 @@ body{padding-bottom:0!important}
     window.scrollTo({top:0,behavior:"smooth"});
     render();
   }
-  btns.forEach(b=>b.addEventListener("click",()=>go(b.dataset.page)));
+  btns.forEach(b=>b.addEventListener("click",()=>{    if(b.dataset.page==="squad"){      try{ if(typeof window.rsOpenSquadWindowV6==="function"){ window.rsOpenSquadWindowV6(); return; } }catch(e){ console.error(e); }    }    go(b.dataset.page);  }));
   $("uiOpenAdmin").onclick=()=>{try{ if(typeof openAccess==="function") openAccess(); else if(window.rsAdminV35?.access) window.rsAdminV35.access(); }catch(e){console.error(e)}};
 
   function tm(id){try{return typeof team==="function"?team(id):(App.teams||[]).find(t=>String(t.id)===String(id))||{name:"Rival",logo:""} }catch(e){return {name:"Rival",logo:""}}}
@@ -10175,9 +10432,34 @@ body{padding-bottom:0!important}
     $("uiTable").innerHTML=`<div class="rsTr rsTh"><span>#</span><span>Equipo</span><span>PJ</span><span>GF</span><span>GC</span><span>PTS</span></div>`+teams.map((x,i)=>`<div class="rsTr"><span class="rsPos">${i+1}</span><span><b>${esc(x.t.name)}</b></span><span>${x.pj}</span><span>${x.gf}</span><span>${x.gc}</span><span><b>${x.pts}</b></span></div>`).join("");
   }
   function renderPlayers(){
-    const ps=(App.players||[]).slice().sort((a,b)=>Number(a.number||0)-Number(b.number||0));
+    const ps=(App.players||[]).slice().sort((a,b)=>Number(a.number||a.dorsal||0)-Number(b.number||b.dorsal||0));
     $("uiSquadMeta").textContent=`${ps.length} jugadores · S15 26/27`;
-    $("uiPlayers").innerHTML=ps.length?ps.map(p=>{const initials=(p.name||"?").slice(0,2).toUpperCase();return `<article class="rsPlayer"><div class="rsNum">${esc(p.number||"—")}</div><div class="rsAvatar">${p.photo?`<img src="${esc(p.photo)}">`:initials}</div><b>${esc(p.name)}${p.surname?" "+esc(p.surname):""}</b><small>${p.captain?"Capitán · ":""}${esc(p.position||"Jugador")}</small><div class="rsChips"><span class="rsChip">${Number(p.goals||0)} GOLES</span><span class="rsChip">${Number(p.appearances||0)} PJ</span>${Number(p.yellow||0)?`<span class="rsChip">🟨 ${p.yellow}</span>`:""}${Number(p.red||0)?`<span class="rsChip">🟥 ${p.red}</span>`:""}</div></article>`}).join(""):`<div class="rsAdminHint">La plantilla se cargará desde Firebase.</div>`;
+    $("uiPlayers").innerHTML=ps.length?ps.map(p=>{
+      const name=p.name||p.nombre||"Jugador";
+      const number=p.number??p.dorsal??"—";
+      const position=p.position||p.posicion||"Jugador";
+      const photo=p.photo||p.foto||p.image||p.imagen||p.photoUrl||"";
+      const captain=!!(p.captain||p.capitan||p.isCaptain);
+      const goals=Number(p.goals??p.goles??0);
+      const yellow=Number(p.yellow??p.amarillas??0);
+      const red=Number(p.red??p.rojas??0);
+      const apps=Number(p.appearances??p.partidos??p.PJ??p.matches??0);
+      return `<article class="rsPlayer">
+        <div class="rsAvatar ${photo?"":"noPhoto"}">
+          ${photo?`<img src="${esc(photo)}" alt="${esc(name)}" loading="lazy">`:""}
+        </div>
+        <div class="rsNum">${esc(number)}</div>
+        ${captain?`<span style="position:absolute;right:10px;top:10px;background:#c52236;color:#fff;border-radius:9px;padding:7px 9px;font-size:8px;font-weight:1000">CAPITÁN</span>`:""}
+        <b>${esc(name)}</b>
+        <small>${esc(position)}</small>
+        <div class="rsChips">
+          <span class="rsChip">${goals} GOLES</span>
+          <span class="rsChip">${apps} PJ</span>
+          ${yellow?`<span class="rsChip">🟨 ${yellow}</span>`:""}
+          ${red?`<span class="rsChip">🟥 ${red}</span>`:""}
+        </div>
+      </article>`;
+    }).join(""):`<div class="rsAdminHint">La plantilla se cargará desde Firebase.</div>`;
   }
   function renderMatches(){
     const ms=(App.matches||[]).slice().sort((a,b)=>String(a.date||"").localeCompare(String(b.date||""))||String(a.hour||"").localeCompare(String(b.hour||"")));
@@ -10205,4 +10487,221 @@ body{padding-bottom:0!important}
 })();
 </script>
 
+
+<style id="rs-v63-ui-fix-css">
+/* V63 — navegación limpia + controles superiores */
+#sideNavV14,#sideOverlayV14,#mainNav{display:none!important}
+body{padding-left:0!important}
+#rsNewUI .rsTop{padding-right:86px!important}
+#rsV63TopControls{
+ position:fixed!important;right:14px!important;top:14px!important;z-index:2147483647!important;
+ display:flex!important;flex-direction:column!important;gap:7px!important;
+}
+#rsV63TopControls button{
+ width:42px!important;height:42px!important;border-radius:13px!important;
+ border:1px solid rgba(255,210,28,.55)!important;background:rgba(17,21,26,.96)!important;
+ color:#ffd21c!important;display:grid!important;place-items:center!important;
+ font-size:19px!important;cursor:pointer!important;box-shadow:0 8px 24px rgba(0,0,0,.45)!important;
+ backdrop-filter:blur(14px)!important;transition:.18s ease!important;
+}
+#rsV63TopControls button:hover{transform:translateY(-1px);background:#ffd21c!important;color:#090b0e!important}
+#rsV63TopControls button:active{transform:scale(.94)!important}
+#rsV63TopControls .rsV63Mode{font-size:18px!important}
+body.rsAdminWindowOpenV35 #rsV63TopControls,body.rsAdminModalOpenV2 #rsV63TopControls{display:none!important}
+@media(max-width:600px){
+ #rsNewUI .rsTop{padding-left:16px!important;padding-right:68px!important;height:68px!important}
+ #rsV63TopControls{right:10px!important;top:10px!important;gap:6px!important}
+ #rsV63TopControls button{width:38px!important;height:38px!important;border-radius:11px!important;font-size:17px!important}
+}
+/* La navegación pública queda exclusivamente abajo */
+#rsNewUI .rsContent{padding-bottom:96px!important}
+</style>
+<script id="rs-v63-ui-fix-js">
+(function(){
+ 'use strict';
+ function $(id){return document.getElementById(id)}
+ function hideLegacyNav(){
+   ['sideNavV14','sideOverlayV14','mainNav'].forEach(function(id){var e=$(id);if(e)e.style.setProperty('display','none','important')});
+   var side=document.querySelector('.sidebar');if(side)side.style.setProperty('display','none','important');
+ }
+ function closeLegacyOverlays(){
+   var mw=$('rsMatchesWindowV4');
+   if(mw){mw.classList.remove('open');mw.classList.add('rs-v62-closed');mw.setAttribute('aria-hidden','true');mw.style.setProperty('display','none','important');}
+ }
+ /* Fix plantilla: V62 añadía una clase/estilo de cierre que la función de apertura anterior no eliminaba. */
+ function openSquadFixed(){
+   try{
+     var w=$('rsSquadWindowV6');
+     if(w){
+       w.classList.remove('rs-v62-closed');
+       w.style.removeProperty('display');w.style.removeProperty('visibility');w.style.removeProperty('opacity');w.style.removeProperty('pointer-events');
+       w.classList.add('open');w.setAttribute('aria-hidden','false');
+       document.body.classList.add('rsSquadWindowOpenV6');
+       document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');p.style.display='none'});
+       window.scrollTo(0,0);
+       try{if(typeof window.renderSquad==='function')window.renderSquad();}catch(e){}
+       return true;
+     }
+   }catch(e){console.error('RS plantilla',e)}
+   try{if(typeof window.rsOpenSquadWindowV6==='function'){window.rsOpenSquadWindowV6();return true}}catch(e){}
+   return false;
+ }
+ function closeSquadFixed(){
+   var w=$('rsSquadWindowV6');if(!w)return;
+   w.classList.remove('open');w.classList.add('rs-v62-closed');w.setAttribute('aria-hidden','true');
+   w.style.setProperty('display','none','important');w.style.setProperty('visibility','hidden','important');w.style.setProperty('opacity','0','important');w.style.setProperty('pointer-events','none','important');
+   document.body.classList.remove('rsSquadWindowOpenV6');
+ }
+ function buildControls(){
+   if($('rsV63TopControls'))return;
+   var box=document.createElement('div');box.id='rsV63TopControls';box.innerHTML=
+    '<button type="button" id="rsV63Admin" aria-label="Administrador" title="Administrador">⚙</button>'+
+    '<button type="button" id="rsV63Mode" class="rsV63Mode" aria-label="Modo partido" title="Modo partido">🎮</button>';
+   document.body.appendChild(box);
+   $('rsV63Admin').addEventListener('click',function(e){e.preventDefault();e.stopPropagation();try{if(typeof openAccess==='function')openAccess();else if(window.rsAdminV35?.access)window.rsAdminV35.access()}catch(err){console.error(err)}});
+   $('rsV63Mode').addEventListener('click',function(e){
+     e.preventDefault();e.stopPropagation();
+     try{
+       var b=$('rsMatchModeBtnV1');
+       if(b){b.click();return}
+       var fn=window.rsMatchModeOpenV1;
+       if(typeof fn==='function')fn();
+     }catch(err){console.error('Modo partido',err)}
+   });
+ }
+ function rebuildBottom(){
+   var old=$('rsV45BottomNav');if(old)old.remove();
+   document.querySelectorAll('#rsBottomNavV34').forEach(function(n){n.remove()});
+   var n=document.createElement('nav');n.id='rsV63BottomNav';
+   n.innerHTML='<button data-p="home"><span>⌂</span><b>INICIO</b></button><button data-p="matches"><span>⚽</span><b>PARTIDOS</b></button><button data-p="squad"><span>👥</span><b>PLANTILLA</b></button>';
+   n.style.cssText='position:fixed;left:50%;bottom:max(8px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:2147483646;width:min(620px,calc(100vw - 18px));height:66px;padding:6px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:rgba(12,15,19,.97);border:1px solid rgba(255,210,28,.45);border-radius:20px;box-shadow:0 14px 40px rgba(0,0,0,.58);backdrop-filter:blur(16px)';
+   n.querySelectorAll('button').forEach(function(b){
+     b.style.cssText='border:1px solid rgba(255,255,255,.07);border-radius:14px;background:#151a20;color:#dce2e7;font-weight:900;font-size:10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0';
+     b.querySelector('span').style.cssText='font-size:20px;line-height:20px';
+     b.addEventListener('click',function(e){
+       e.preventDefault();
+       var p=b.dataset.p;
+       if(p==='squad'){closeLegacyOverlays();openSquadFixed();setActive('squad');}
+       else if(p==='matches'){closeSquadFixed();try{if(typeof window.openMatchesV2==='function')window.openMatchesV2();else if(typeof window.navigateV1==='function')window.navigateV1('matches')}catch(err){console.error(err)}}
+       else {closeSquadFixed();try{if(typeof window.navigateV1==='function')window.navigateV1('home');}catch(err){};document.querySelectorAll('.page').forEach(function(x){x.classList.toggle('active',x.id==='home');x.style.display=x.id==='home'?'':'none'})}
+       updateActive(p);
+     });
+   });
+   document.body.appendChild(n);updateActive('home');
+   function setActive(p){updateActive(p)}
+   function updateActive(p){n.querySelectorAll('button').forEach(function(x){var on=x.dataset.p===p;x.style.background=on?'linear-gradient(135deg,#ffd21c,#ffb000)':'#151a20';x.style.color=on?'#090b0e':'#dce2e7'})}
+ }
+ hideLegacyNav();buildControls();rebuildBottom();
+ setTimeout(function(){hideLegacyNav();buildControls();},300);
+ setTimeout(function(){hideLegacyNav();},1000);
+ /* Si otro código vuelve a abrir el menú lateral, se vuelve a ocultar. */
+ new MutationObserver(hideLegacyNav).observe(document.body,{subtree:true,childList:true});
+ window.rsOpenSquadFixedV63=openSquadFixed;
+})();
+</script>
+
+<style id="rs-v64-clean-navigation">
+/* V64 — una sola navegación inferior. Se elimina por completo el menú lateral heredado. */
+.mobileMenuBtnV14,
+.sideMenuV14,
+.sideOverlayV14,
+#mainNav,
+#rsBottomNavV11,
+#rsV63BottomNav{display:none!important}
+/* El menú inferior ORIGINAL es el único visible. */
+.rsBottom{
+  position:fixed!important;
+  left:50%!important;
+  bottom:max(8px,env(safe-area-inset-bottom))!important;
+  transform:translateX(-50%)!important;
+  width:min(680px,calc(100vw - 18px))!important;
+  z-index:2147483646!important;
+  display:grid!important;
+  grid-template-columns:repeat(5,1fr)!important;
+  gap:6px!important;
+  padding:6px!important;
+  background:rgba(12,15,19,.97)!important;
+  border:1px solid rgba(255,210,28,.45)!important;
+  border-radius:20px!important;
+  box-shadow:0 14px 40px rgba(0,0,0,.58)!important;
+  backdrop-filter:blur(16px)!important;
+}
+.rsBottom .rsNavBtn{
+  min-height:54px!important;
+  border:1px solid rgba(255,255,255,.07)!important;
+  border-radius:14px!important;
+  background:#151a20!important;
+  color:#dce2e7!important;
+  font-weight:900!important;
+  font-size:9px!important;
+  cursor:pointer!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:3px!important;
+}
+.rsBottom .rsNavBtn span{font-size:19px!important;line-height:19px!important;margin:0!important}
+.rsBottom .rsNavBtn.active{background:linear-gradient(135deg,#ffd21c,#ffb000)!important;color:#090b0e!important}
+@media(max-width:560px){
+  .rsBottom{width:calc(100vw - 12px)!important;bottom:max(5px,env(safe-area-inset-bottom))!important;border-radius:18px!important}
+  .rsBottom .rsNavBtn{min-height:52px!important;font-size:8px!important}
+  .rsBottom .rsNavBtn span{font-size:18px!important}
+}
+</style>
+<script id="rs-v64-clean-navigation-js">
+(function(){
+  'use strict';
+  function hideLegacy(){
+    ['mobileMenuBtnV14','sideMenuV14','sideOverlayV14','mainNav','rsBottomNavV11','rsV63BottomNav'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.style.setProperty('display','none','important');
+    });
+  }
+  function closeSquad(){
+    var w=document.getElementById('rsSquadWindowV6');
+    if(w){w.classList.remove('open');w.setAttribute('aria-hidden','true');w.style.setProperty('display','none','important');}
+    document.body.classList.remove('rsSquadWindowOpenV6');
+  }
+  function showNewPage(page){
+    var pages=document.querySelectorAll('#rsNewUI .rsPage');
+    if(!pages.length) return;
+    pages.forEach(function(p){p.classList.toggle('active',p.id==='ui'+page.charAt(0).toUpperCase()+page.slice(1));});
+    try{if(typeof window.rsNewUIRender==='function')window.rsNewUIRender();}catch(e){}
+    window.scrollTo(0,0);
+  }
+  function bind(){
+    hideLegacy();
+    var nav=document.querySelector('.rsBottom');
+    if(!nav) return;
+    nav.querySelectorAll('.rsNavBtn').forEach(function(btn){
+      if(btn.dataset.rsV64Bound==='1')return;
+      btn.dataset.rsV64Bound='1';
+      btn.addEventListener('click',function(e){
+        e.preventDefault();e.stopImmediatePropagation();
+        var p=btn.getAttribute('data-page');
+        if(p==='squad'){
+          closeSquad();
+          try{if(typeof window.rsOpenSquadFixedV63==='function')window.rsOpenSquadFixedV63();else if(typeof window.rsOpenSquadWindowV6==='function')window.rsOpenSquadWindowV6();}catch(err){}
+        }else if(p==='matches'){
+          closeSquad();showNewPage('matches');
+        }else if(p==='live'){
+          closeSquad();showNewPage('live');
+          var el=document.getElementById('uiLive');if(el)el.scrollIntoView({block:'start'});
+        }else if(p==='admin'){
+          closeSquad();
+          try{if(typeof openAccess==='function')openAccess();}catch(err){}
+        }else{
+          closeSquad();showNewPage('home');
+        }
+        nav.querySelectorAll('.rsNavBtn').forEach(function(x){x.classList.toggle('active',x===btn);});
+      },true);
+    });
+  }
+  hideLegacy();
+  var old=document.getElementById('rsV63BottomNav');if(old)old.remove();
+  bind();
+  setTimeout(bind,250);setTimeout(bind,800);setTimeout(bind,1500);
+  new MutationObserver(function(){hideLegacy();bind();}).observe(document.body,{subtree:true,childList:true});
+})();
+</script>
 </html>
