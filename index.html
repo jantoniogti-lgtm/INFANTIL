@@ -10407,6 +10407,66 @@ setTimeout(boot69,500);setTimeout(boot69,1200);setTimeout(boot69,2500);
 })();
 </script>
 
+
+<!-- RS LIVE V71: robust match-mode clock, MM:SS -->
+<style id="rs-v71-clock-style">
+#rsMatchOverlayV1 #rsMMMinuteV1{font-variant-numeric:tabular-nums;letter-spacing:.04em;min-width:5ch;display:inline-block}
+</style>
+<script id="rs-v71-clock-fix">
+(function(){
+  const $ = id => document.getElementById(id);
+  function totalSeconds(){
+    const L=window.Live||{};
+    if(L.state==='FINISHED') return 80*60;
+    if(L.state==='HALFTIME') return Math.max(0,Math.min(80*60,Number(L.pausedSeconds||0)));
+    if((L.state==='FIRST_HALF'||L.state==='SECOND_HALF')&&L.startTimestamp){
+      return Math.max(0,Math.min(80*60,Math.floor((Date.now()-Number(L.startTimestamp))/1000)));
+    }
+    return Math.max(0,Math.min(80*60,Number(L.pausedSeconds||Number(L.manualMinute||0)*60||0)));
+  }
+  function fmt(sec){sec=Math.max(0,Math.floor(sec));return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');}
+  function paint(){
+    const L=window.Live;if(!L)return;
+    const clock=$('rsMMMinuteV1');if(clock)clock.textContent=fmt(totalSeconds());
+    const score=$('rsMMScoreV1');if(score)score.textContent=Number(L.homeScore||0)+' - '+Number(L.awayScore||0);
+    const state=L.state||'PREMATCH',b=$('rsMMStartV1');
+    if(b){
+      if(state==='HALFTIME') b.innerHTML=L.half===2?'▶<br>CONTINUAR 2ª PARTE':'▶<br>INICIAR 2ª PARTE';
+      else if(state==='FIRST_HALF'||state==='SECOND_HALF') b.innerHTML='Ⅱ<br>DESCANSO';
+      else b.innerHTML='▶<br>INICIAR PARTIDO';
+    }
+  }
+  document.addEventListener('click',function(e){
+    const b=e.target.closest('#rsMMStartV1');if(!b)return;
+    e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+    const L=window.Live;if(!L)return;
+    try{
+      if(typeof window.activeMatch==='function'&&!window.activeMatch()){
+        if(typeof window.toast==='function')window.toast('Selecciona o activa un partido antes de iniciar');
+        return;
+      }
+      const now=Date.now();
+      if(L.state==='FIRST_HALF'){
+        L.pausedSeconds=totalSeconds();L.startTimestamp=null;L.state='HALFTIME';L.half=1;
+      } else if(L.state==='SECOND_HALF') {
+        L.pausedSeconds=totalSeconds();L.startTimestamp=null;L.state='HALFTIME';L.half=2;
+      } else if(L.state==='HALFTIME') {
+        L.startTimestamp=now-Math.max(0,Number(L.pausedSeconds||0))*1000;
+        L.state='SECOND_HALF';L.half=2;
+      } else {
+        L.half=1;L.state='FIRST_HALF';L.pausedSeconds=0;L.manualMinute=0;L.startTimestamp=now;
+      }
+      if(typeof window.save==='function')window.save().catch?.(err=>console.error('Guardar reloj',err));
+      if(typeof window.renderAll==='function')window.renderAll();
+      if(typeof window.rsMatchModeRenderV69==='function')window.rsMatchModeRenderV69();
+      paint();
+    }catch(err){console.error('RS LIVE reloj V71',err);}
+  },true);
+  setInterval(paint,200);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',paint);else paint();
+})();
+</script>
+
 </body>
 
 
