@@ -10323,6 +10323,90 @@ setTimeout(boot69,500);setTimeout(boot69,1200);setTimeout(boot69,2500);
 })();
 </script>
 
+
+<style id="rs-v70-layout-fix">
+/* Barra inferior compacta: no cubre el contenido y nunca muestra Admin abajo */
+#rsNewUI .rsBottom{
+ position:fixed!important;left:50%!important;bottom:max(6px,env(safe-area-inset-bottom))!important;
+ transform:translateX(-50%)!important;width:min(520px,calc(100vw - 20px))!important;
+ padding:4px!important;gap:4px!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;
+ border-radius:15px!important;z-index:10000!important;box-sizing:border-box!important;
+}
+#rsNewUI .rsBottom .rsNavBtn{min-width:0!important;min-height:43px!important;height:43px!important;padding:4px 2px!important;border-radius:10px!important;font-size:9px!important;line-height:1.05!important;}
+#rsNewUI .rsBottom .rsNavBtn span{font-size:15px!important;line-height:16px!important;margin:0 0 2px!important;}
+#rsNewUI .rsBottom .rsNavBtn[data-page="admin"]{display:none!important}
+#rsNewUI .rsContent{padding-bottom:82px!important}
+#rsNewUI .rsPage{padding-bottom:24px!important}
+#rsSquadWindowV6{z-index:9990!important}
+#rsSquadWindowV6 .rsSquadBodyV6{padding-bottom:82px!important}
+/* Admin: una sola ventana, cabecera/pestañas fijas y un solo panel desplazable */
+#rsAdminWindowV35{position:fixed!important;inset:8px!important;z-index:2147483000!important;box-sizing:border-box!important;}
+#rsAdminWindowV35 .v35AdminBox{height:100%!important;max-height:100%!important;min-height:0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;box-sizing:border-box!important;}
+#rsAdminWindowV35 .v35AdminTop{flex:0 0 auto!important;position:relative!important;}
+#rsAdminWindowV35 .v35AdminNav{flex:0 0 auto!important;display:flex!important;flex-wrap:nowrap!important;overflow-x:auto!important;overflow-y:hidden!important;max-width:100%!important;scrollbar-width:thin!important;gap:5px!important;}
+#rsAdminWindowV35 .v35AdminNav button{flex:0 0 auto!important;white-space:nowrap!important;min-height:40px!important;font-size:10px!important;padding:8px 10px!important;}
+#rsAdminWindowV35 .v35AdminContent,#rsAdminContentV35{flex:1 1 auto!important;min-height:0!important;height:auto!important;max-height:none!important;overflow-y:auto!important;overflow-x:hidden!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior:contain!important;}
+#rsAdminWindowV35 #adminPanel{min-height:0!important;max-height:none!important;overflow:visible!important;}
+#rsAdminWindowV35 .adminGrid{min-height:0!important;}
+@media(max-width:600px){
+ #rsNewUI .rsBottom{width:calc(100vw - 16px)!important;bottom:max(5px,env(safe-area-inset-bottom))!important}
+ #rsNewUI .rsBottom .rsNavBtn{height:41px!important;min-height:41px!important;font-size:8px!important}
+ #rsAdminWindowV35{inset:4px!important}
+ #rsAdminWindowV35 .v35AdminTop{padding:10px!important}
+}
+</style>
+<script id="rs-v70-functional-fix">
+(function(){'use strict';
+ const $=id=>document.getElementById(id);
+ function fixNav(){
+   const nav=document.querySelector('#rsNewUI .rsBottom');
+   if(nav){const admin=nav.querySelector('[data-page="admin"]');if(admin)admin.style.setProperty('display','none','important');nav.style.setProperty('grid-template-columns','repeat(4,minmax(0,1fr))','important');}
+ }
+ function adminOpen(){
+   try{
+     if(window.rsAdminFinal&&typeof window.rsAdminFinal.open==='function'){window.rsAdminFinal.open();return true;}
+     if(window.rsAdminV35&&typeof window.rsAdminV35.open==='function'){window.rsAdminV35.open();return true;}
+     const b=$('rsV68Admin');if(b){b.click();return true;}
+     const u=$('uiOpenAdmin');if(u&&typeof window.rsAdminV35?.open==='function'){window.rsAdminV35.open();return true;}
+   }catch(e){console.error('RS admin open',e)}
+   return false;
+ }
+ // Rebind the visible administrator entry points to the one real access flow.
+ document.addEventListener('click',function(e){
+   const b=e.target.closest('#uiOpenAdmin,#rsV68Admin,[data-rs-open-admin]');if(!b)return;
+   e.preventDefault();e.stopImmediatePropagation();
+   if(!adminOpen()){const access=$('rsAdminAccessV2');if(access){access.classList.add('open');access.setAttribute('aria-hidden','false');document.body.classList.add('rsAdminModalOpenV2');const p=$('rsAdminPinV2');if(p){p.value='';setTimeout(()=>p.focus(),40)}}}
+ },true);
+ // Fix Match Mode timer: use the actual first-half/halftime/second-half/finish functions.
+ document.addEventListener('click',function(e){
+   const b=e.target.closest('#rsMMStartV1');if(!b)return;
+   e.preventDefault();e.stopImmediatePropagation();
+   try{
+     if(!window.Live){return}
+     if(Live.state==='FIRST_HALF'){if(typeof window.halftime==='function')window.halftime();else {Live.pausedSeconds=typeof window.currentSeconds==='function'?window.currentSeconds():2400;Live.startTimestamp=null;Live.state='HALFTIME';if(typeof window.save==='function')window.save();}}
+     else if(Live.state==='HALFTIME'){if(typeof window.secondHalf==='function')window.secondHalf();else {Live.half=2;Live.state='SECOND_HALF';Live.startTimestamp=Date.now()-2400000;if(typeof window.save==='function')window.save();}}
+     else if(Live.state==='SECOND_HALF'){if(typeof window.halftime==='function')window.halftime();else {Live.startTimestamp=null;Live.state='HALFTIME';if(typeof window.save==='function')window.save();}}
+     else {if(typeof window.startMatch==='function')window.startMatch();else {const hidden=$('startBtn');if(hidden)hidden.click();}}
+     if(typeof window.renderAll==='function')window.renderAll();
+     if(typeof window.rsMatchModeRenderV69==='function')window.rsMatchModeRenderV69();
+   }catch(err){console.error('RS Match Mode clock',err)}
+ },true);
+ // Keep the clock visibly updating inside the match overlay even when only the overlay is open.
+ setInterval(function(){
+   const overlay=$('rsMatchOverlayV1');if(!overlay||!overlay.classList.contains('open'))return;
+   try{
+     const min=typeof window.displayMinute==='function'?window.displayMinute():Number(window.Live?.manualMinute||0);
+     const el=$('rsMMMinuteV1');if(el)el.textContent=min+"'";
+     const score=$('rsMMScoreV1');if(score&&window.Live)score.textContent=Number(Live.homeScore||0)+' - '+Number(Live.awayScore||0);
+     const state=window.Live?.state||'PREMATCH';const btn=$('rsMMStartV1');if(btn)btn.innerHTML=state==='HALFTIME'?'▶<br>INICIAR 2ª PARTE':(['FIRST_HALF','SECOND_HALF'].includes(state)?'⏸<br>DESCANSO':'▶<br>INICIAR PARTIDO');
+   }catch(e){}
+ },500);
+ function boot(){fixNav();}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+ setTimeout(boot,250);setTimeout(boot,900);setTimeout(boot,2000);
+})();
+</script>
+
 </body>
 
 
