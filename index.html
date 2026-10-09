@@ -10443,56 +10443,20 @@ document.addEventListener('click',function(e){
 </style>
 <script id="rs-v71-clock-fix">
 (function(){
-  const $ = id => document.getElementById(id);
-  function totalSeconds(){
-    const L=window.Live||{};
-    if(L.state==='FINISHED') return 80*60;
-    if(L.state==='HALFTIME') return Math.max(0,Math.min(80*60,Number(L.pausedSeconds||0)));
-    if((L.state==='FIRST_HALF'||L.state==='SECOND_HALF')&&L.startTimestamp){
-      return Math.max(0,Math.min(80*60,Math.floor((Date.now()-Number(L.startTimestamp))/1000)));
-    }
-    return Math.max(0,Math.min(80*60,Number(L.pausedSeconds||Number(L.manualMinute||0)*60||0)));
-  }
-  function fmt(sec){sec=Math.max(0,Math.floor(sec));return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');}
-  function paint(){
-    const L=window.Live;if(!L)return;
-    const clock=$('rsMMMinuteV1');if(clock)clock.textContent=fmt(totalSeconds());
-    const score=$('rsMMScoreV1');if(score)score.textContent=Number(L.homeScore||0)+' - '+Number(L.awayScore||0);
-    const state=L.state||'PREMATCH',b=$('rsMMStartV1');
-    if(b){
-      if(state==='HALFTIME') b.innerHTML=L.half===2?'▶<br>CONTINUAR 2ª PARTE':'▶<br>INICIAR 2ª PARTE';
-      else if(state==='FIRST_HALF'||state==='SECOND_HALF') b.innerHTML='Ⅱ<br>DESCANSO';
-      else b.innerHTML='▶<br>INICIAR PARTIDO';
-    }
-  }
-  document.addEventListener('click',function(e){
-    const b=e.target.closest('#rsMMStartV1');if(!b)return;
-    e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
-    const L=window.Live;if(!L)return;
-    try{
-      if(typeof window.activeMatch==='function'&&!window.activeMatch()){
-        if(typeof window.toast==='function')window.toast('Selecciona o activa un partido antes de iniciar');
-        return;
-      }
-      const now=Date.now();
-      if(L.state==='FIRST_HALF'){
-        L.pausedSeconds=totalSeconds();L.startTimestamp=null;L.state='HALFTIME';L.half=1;
-      } else if(L.state==='SECOND_HALF') {
-        L.pausedSeconds=totalSeconds();L.startTimestamp=null;L.state='HALFTIME';L.half=2;
-      } else if(L.state==='HALFTIME') {
-        L.startTimestamp=now-Math.max(0,Number(L.pausedSeconds||0))*1000;
-        L.state='SECOND_HALF';L.half=2;
-      } else {
-        L.half=1;L.state='FIRST_HALF';L.pausedSeconds=0;L.manualMinute=0;L.startTimestamp=now;
-      }
-      if(typeof window.save==='function')window.save().catch?.(err=>console.error('Guardar reloj',err));
-      if(typeof window.renderAll==='function')window.renderAll();
-      if(typeof window.rsMatchModeRenderV69==='function')window.rsMatchModeRenderV69();
-      paint();
-    }catch(err){console.error('RS LIVE reloj V71',err);}
-  },true);
-  setInterval(paint,200);
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',paint);else paint();
+ const $=id=>document.getElementById(id);
+ const live=()=>window.Live;
+ function elapsed(){const L=live();if(!L)return 0; if(L.state==='FINISHED')return 4800; if(L.state==='FIRST_HALF'||L.state==='SECOND_HALF'){if(L.startTimestamp)return Math.max(0,Math.floor((Date.now()-Number(L.startTimestamp))/1000));} return Math.max(0,Number(L.pausedSeconds||Number(L.manualMinute||0)*60||0));}
+ function fmt(sec){sec=Math.max(0,Math.floor(sec));return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');}
+ function paint(){const L=live();if(!L)return;const c=$('rsMMMinuteV1');if(c)c.textContent=fmt(elapsed());const score=$('rsMMScoreV1');if(score)score.textContent=Number(L.homeScore||0)+' - '+Number(L.awayScore||0);const b=$('rsMMStartV1');if(b){if(L.state==='HALFTIME')b.innerHTML='▶<br>SEGUNDA PARTE';else if(L.state==='PAUSED')b.innerHTML='▶<br>REANUDAR';else if(L.state==='FIRST_HALF'||L.state==='SECOND_HALF')b.innerHTML='Ⅱ<br>PAUSAR';else if(L.state==='FINISHED')b.innerHTML='✓<br>FINALIZADO';else b.innerHTML='▶<br>INICIAR PARTIDO';}const p=$('rsMMPauseV73');if(p)p.disabled=!['FIRST_HALF','SECOND_HALF'].includes(L.state);const r=$('rsMMResumeV73');if(r)r.disabled=!['PAUSED','HALFTIME'].includes(L.state);const sh=$('rsMMSecondV73');if(sh)sh.disabled=!(L.state==='HALFTIME'||(L.state==='PAUSED'&&Number(L.half||1)===1));}
+ function persist(){try{if(typeof window.save==='function')Promise.resolve(window.save()).catch(e=>console.error(e));if(typeof window.renderAll==='function')window.renderAll();if(typeof window.rsMatchModeRenderV69==='function')window.rsMatchModeRenderV69();}catch(e){console.error('RS LIVE modo partido',e)}paint();}
+ function active(){if(typeof window.activeMatch==='function'&&!window.activeMatch()){if(typeof window.toast==='function')window.toast('Selecciona o activa un partido antes de iniciar');return false;}return true;}
+ function start(){const L=live();if(!L||!active())return;if(L.state==='FIRST_HALF'||L.state==='SECOND_HALF'){L.pausedSeconds=elapsed();L.startTimestamp=null;L.state='PAUSED';}else if(L.state==='PAUSED'){resume();return;}else if(L.state==='HALFTIME'){second();return;}else if(L.state!=='FINISHED'){L.half=1;L.state='FIRST_HALF';L.pausedSeconds=0;L.manualMinute=0;L.startTimestamp=Date.now();}persist();}
+ function pause(){const L=live();if(!L||!['FIRST_HALF','SECOND_HALF'].includes(L.state))return;L.pausedSeconds=elapsed();L.startTimestamp=null;L.state='PAUSED';persist();}
+ function resume(){const L=live();if(!L||!['PAUSED','HALFTIME'].includes(L.state)||!active())return;if(L.state==='HALFTIME'){second();return;}L.state=Number(L.half||1)===2?'SECOND_HALF':'FIRST_HALF';L.startTimestamp=Date.now()-Math.max(0,Number(L.pausedSeconds||0))*1000;persist();}
+ function second(){const L=live();if(!L||!active())return;L.half=2;L.state='SECOND_HALF';L.pausedSeconds=Math.max(2400,Number(L.pausedSeconds||0));L.manualMinute=Math.floor(L.pausedSeconds/60);L.startTimestamp=Date.now()-L.pausedSeconds*1000;persist();}
+ function addControls(){const tools=document.querySelector('#rsMatchOverlayV1 .rsMatchToolsV1');if(!tools)return;const defs=[['rsMMPauseV73','Ⅱ PAUSA',pause],['rsMMSecondV73','▶ SEGUNDA PARTE',second],['rsMMResumeV73','↻ REANUDAR',resume]];defs.forEach(([id,label,fn])=>{let b=$(id);if(!b){b=document.createElement('button');b.id=id;b.type='button';b.className='rsMatchToolV1';b.textContent=label;tools.appendChild(b);b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();fn();});}});}
+ document.addEventListener('click',function(e){const b=e.target.closest('#rsMMStartV1');if(!b)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();start();},true);
+ const oldBoot=()=>{addControls();paint()};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',oldBoot);else oldBoot();setTimeout(oldBoot,250);setTimeout(oldBoot,900);setInterval(()=>{addControls();paint()},200);
 })();
 </script>
 
@@ -11048,6 +11012,14 @@ body.rsAdminWindowOpenV35 #rsV63TopControls,body.rsAdminModalOpenV2 #rsV63TopCon
   new MutationObserver(function(){hideLegacy();bind();}).observe(document.body,{subtree:true,childList:true});
 })();
 </script>
+
+<style id="rs-v73-match-clock-controls">
+#rsMatchOverlayV1 #rsMMMinuteV1{font-size:clamp(48px,10vw,88px)!important;font-weight:1000!important;line-height:1!important;letter-spacing:.04em!important;font-variant-numeric:tabular-nums!important;min-width:5ch;display:inline-block;text-align:center;text-shadow:0 4px 22px rgba(255,210,28,.16)}
+#rsMatchOverlayV1 .rsMatchToolsV1{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important}
+#rsMatchOverlayV1 #rsMMPauseV73,#rsMatchOverlayV1 #rsMMSecondV73,#rsMatchOverlayV1 #rsMMResumeV73{min-height:42px;font-weight:900}
+#rsMatchOverlayV1 .rsMatchToolsV1 button:disabled{opacity:.38;filter:grayscale(1);cursor:not-allowed}
+@media(max-width:520px){#rsMatchOverlayV1 #rsMMMinuteV1{font-size:58px!important}#rsMatchOverlayV1 .rsMatchToolsV1{grid-template-columns:1fr 1fr!important}}
+</style>
 </html>
 
 <style id="rs-v66-clean-final-css">
