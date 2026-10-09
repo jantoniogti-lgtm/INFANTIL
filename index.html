@@ -10378,20 +10378,49 @@ setTimeout(boot69,500);setTimeout(boot69,1200);setTimeout(boot69,2500);
    if(!adminOpen()){const access=$('rsAdminAccessV2');if(access){access.classList.add('open');access.setAttribute('aria-hidden','false');document.body.classList.add('rsAdminModalOpenV2');const p=$('rsAdminPinV2');if(p){p.value='';setTimeout(()=>p.focus(),40)}}}
  },true);
  // Fix Match Mode timer: use the actual first-half/halftime/second-half/finish functions.
- document.addEventListener('click',function(e){
-   const b=e.target.closest('#rsMMStartV1');if(!b)return;
-   e.preventDefault();e.stopImmediatePropagation();
-   try{
-     if(!window.Live){return}
-     if(Live.state==='FIRST_HALF'){if(typeof window.halftime==='function')window.halftime();else {Live.pausedSeconds=typeof window.currentSeconds==='function'?window.currentSeconds():2400;Live.startTimestamp=null;Live.state='HALFTIME';if(typeof window.save==='function')window.save();}}
-     else if(Live.state==='HALFTIME'){if(typeof window.secondHalf==='function')window.secondHalf();else {Live.half=2;Live.state='SECOND_HALF';Live.startTimestamp=Date.now()-2400000;if(typeof window.save==='function')window.save();}}
-     else if(Live.state==='SECOND_HALF'){if(typeof window.halftime==='function')window.halftime();else {Live.startTimestamp=null;Live.state='HALFTIME';if(typeof window.save==='function')window.save();}}
-     else {if(typeof window.startMatch==='function')window.startMatch();else {const hidden=$('startBtn');if(hidden)hidden.click();}}
-     if(typeof window.renderAll==='function')window.renderAll();
-     if(typeof window.rsMatchModeRenderV69==='function')window.rsMatchModeRenderV69();
-   }catch(err){console.error('RS Match Mode clock',err)}
- },true);
- // Keep the clock visibly updating inside the match overlay even when only the overlay is open.
+ /* RS V72: single authoritative Match Mode timer handler. */
+document.addEventListener('click',function(e){
+  const b=e.target.closest&&e.target.closest('#rsMMStartV1');
+  if(!b)return;
+  e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+  const L=window.Live;
+  if(!L){console.error('RS LIVE: Live state unavailable');return;}
+  try{
+    const now=Date.now();
+    const getElapsed=()=>{
+      if((L.state==='FIRST_HALF'||L.state==='SECOND_HALF')&&L.startTimestamp){
+        return Math.max(0,Math.floor((now-Number(L.startTimestamp))/1000));
+      }
+      return Math.max(0,Number(L.pausedSeconds||Number(L.manualMinute||0)*60||0));
+    };
+    if(L.state==='FIRST_HALF'||L.state==='SECOND_HALF'){
+      L.pausedSeconds=getElapsed();
+      L.manualMinute=Math.floor(L.pausedSeconds/60);
+      L.startTimestamp=null;
+      L.state='HALFTIME';
+    }else if(L.state==='HALFTIME'){
+      const base=Math.max(40*60,Number(L.pausedSeconds||0));
+      L.pausedSeconds=base;
+      L.manualMinute=Math.floor(base/60);
+      L.half=2;
+      L.startTimestamp=Date.now()-base*1000;
+      L.state='SECOND_HALF';
+    }else{
+      // Start is independent of optional helper functions which have been
+      // overwritten by older scripts in previous versions.
+      L.half=1;L.state='FIRST_HALF';L.pausedSeconds=0;L.manualMinute=0;L.startTimestamp=Date.now();
+      if(L.homeScore==null)L.homeScore=0;
+      if(L.awayScore==null)L.awayScore=0;
+      if(!Array.isArray(L.events))L.events=[];
+    }
+    const saveResult=typeof window.save==='function'?window.save():null;
+    if(saveResult&&typeof saveResult.catch==='function')saveResult.catch(err=>console.error('RS LIVE save timer:',err));
+    if(typeof window.renderAll==='function')window.renderAll();
+    if(typeof window.rsMatchModeRenderV69==='function')window.rsMatchModeRenderV69();
+    paint();
+  }catch(err){console.error('RS LIVE V72 match timer:',err);}
+},true);
+// Keep the clock visibly updating inside the match overlay even when only the overlay is open.
  setInterval(function(){
    const overlay=$('rsMatchOverlayV1');if(!overlay||!overlay.classList.contains('open'))return;
    try{
@@ -10467,6 +10496,30 @@ setTimeout(boot69,500);setTimeout(boot69,1200);setTimeout(boot69,2500);
 })();
 </script>
 
+
+<script id="rs-v72-match-mode-final-guard">
+(function(){
+ const $=id=>document.getElementById(id);
+ function tick(){
+   const L=window.Live;if(!L)return;
+   let sec=0;
+   if(L.state==='FINISHED')sec=80*60;
+   else if(L.state==='HALFTIME')sec=Math.max(0,Number(L.pausedSeconds||0));
+   else if((L.state==='FIRST_HALF'||L.state==='SECOND_HALF')&&L.startTimestamp)sec=Math.max(0,Math.floor((Date.now()-Number(L.startTimestamp))/1000));
+   else sec=Math.max(0,Number(L.pausedSeconds||Number(L.manualMinute||0)*60||0));
+   sec=Math.min(80*60,sec);
+   const clock=$('rsMMMinuteV1');if(clock)clock.textContent=String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
+   const score=$('rsMMScoreV1');if(score)score.textContent=Number(L.homeScore||0)+' - '+Number(L.awayScore||0);
+   const btn=$('rsMMStartV1');if(btn){
+     if(L.state==='HALFTIME')btn.innerHTML='▶<br>INICIAR 2ª PARTE';
+     else if(L.state==='FIRST_HALF'||L.state==='SECOND_HALF')btn.innerHTML='Ⅱ<br>DESCANSO';
+     else btn.innerHTML='▶<br>INICIAR PARTIDO';
+   }
+ }
+ setInterval(tick,200);
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',tick);else tick();
+})();
+</script>
 </body>
 
 
