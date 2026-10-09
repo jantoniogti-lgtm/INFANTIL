@@ -10242,6 +10242,87 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 setTimeout(boot,300);setTimeout(boot,1000);setTimeout(boot,2000);
 })();
 </script>
+
+<!-- RS LIVE V69 — FINAL CORRECTIONS -->
+<style id="rs-v69-fixes-css">
+/* Bottom navigation must remain visible above the squad window. */
+#rsNewUI .rsBottom{z-index:2147483647!important;position:fixed!important;bottom:14px!important;}
+#rsSquadWindowV6{z-index:2147483646!important;padding-bottom:105px!important;}
+#rsSquadWindowV6 .rsSquadWindowBody,#rsSquadWindowV6 .rsSquadGrid{padding-bottom:100px!important;}
+/* Match detail modal */
+#rsV69DetailModal{position:fixed;inset:0;z-index:2147483647;background:rgba(3,7,12,.82);backdrop-filter:blur(10px);display:none;padding:18px 10px 95px;overflow:auto}
+#rsV69DetailModal.open{display:block}
+.rsV69DetailBox{width:min(760px,100%);margin:0 auto;background:#10151b;border:1px solid #303943;border-radius:24px;box-shadow:0 25px 80px #000b;overflow:hidden;color:#f5f7f8}
+.rsV69DetailHead{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#151b21;border-bottom:1px solid #2d353e}
+.rsV69DetailHead h2{margin:0;color:#ffd21c;font-size:18px}.rsV69DetailClose{width:40px;height:40px;border-radius:12px;border:1px solid #39424d;background:#0b1015;color:#fff;font-size:22px}
+.rsV69Score{display:grid;grid-template-columns:1fr 110px 1fr;align-items:center;gap:10px;padding:22px 16px;background:linear-gradient(135deg,#151a1f,#0b0f13);text-align:center}.rsV69Team{display:grid;justify-items:center;gap:8px;font-weight:1000;font-size:12px}.rsV69Team img{width:58px;height:58px;object-fit:contain;background:#fff;border-radius:16px;padding:4px}.rsV69ScoreNum{font-size:34px;font-weight:1000}.rsV69Meta{padding:14px 16px;border-bottom:1px solid #28313a;color:#aeb8c3;font-size:11px;display:grid;gap:6px}.rsV69Section{padding:14px 16px}.rsV69Section h3{margin:0 0 10px;color:#ffd21c;font-size:11px;letter-spacing:1px}.rsV69Event{display:grid;grid-template-columns:38px 30px 30px 1fr auto;align-items:center;gap:7px;padding:9px;border:1px solid #27313a;background:#0b1117;border-radius:12px;margin-bottom:7px}.rsV69Event .crest{width:28px;height:28px;object-fit:contain;background:#fff;border-radius:7px;padding:2px}.rsV69Event .type{font-size:17px;text-align:center}.rsV69Event .min{font-weight:1000;color:#ffd21c;font-size:10px}.rsV69Event .name{font-size:10px;font-weight:900}.rsV69Empty{padding:12px;border-radius:10px;background:#0b1117;color:#788694;font-size:10px}
+.rsGame .rsDetailsBtn{margin-top:9px;width:100%;border:1px solid #3a434d;background:#171e25;color:#ffd21c;border-radius:10px;padding:9px;font-size:10px;font-weight:1000;cursor:pointer}
+/* Admin PIN and admin window always sit above every other layer. */
+#rsAdminAccessV2{z-index:2147483647!important}.rsAdminAccessV2.open{display:flex!important}
+#rsAdminWindowV35{z-index:2147483646!important}
+</style>
+<script id="rs-v69-fixes-js">
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const esc69=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+function tm69(id){try{return typeof team==='function'?team(id):(App.teams||[]).find(t=>String(t.id)===String(id))||{name:'Rival',logo:''}}catch(e){return {name:'Rival',logo:''}}}
+function logo69(t){return t?.logo||t?.crest||''}
+function eventTeam69(e,m){return String(e?.team||'').toLowerCase()==='away'?tm69(m.away):tm69(m.home)}
+function eventIcon69(e){const t=String(e?.type||'').toLowerCase();return t==='goal'?'⚽':t==='yellow'?'🟨':t==='red'?'🟥':t==='change'?'🔄':'•'}
+function events69(m){
+ let ev=Array.isArray(m?.events)?m.events.slice():[];
+ if(String(m?.id)===String(App.activeMatch)&&Array.isArray(Live?.events)&&Live.events.length) ev=Live.events.slice();
+ return ev.sort((a,b)=>Number(a.minute||0)-Number(b.minute||0)||Number(a.id||0)-Number(b.id||0));
+}
+function score69(m,ev){
+ let h=Number(m?.homeScore||0),a=Number(m?.awayScore||0); const goals=ev.filter(e=>String(e.type).toLowerCase()==='goal');
+ const scored=goals.map(e=>String(e.score||'').match(/^(\d+)\s*-\s*(\d+)$/)).filter(Boolean); if(!h&&!a&&scored.length){h=+scored.at(-1)[1];a=+scored.at(-1)[2]}
+ return [h,a];
+}
+function openDetail69(id){
+ const m=(App.matches||[]).find(x=>String(x.id)===String(id)); if(!m)return;
+ let modal=$('rsV69DetailModal'); if(!modal){modal=document.createElement('div');modal.id='rsV69DetailModal';modal.innerHTML='<div class="rsV69DetailBox"><div class="rsV69DetailHead"><h2>DETALLES DEL PARTIDO</h2><button class="rsV69DetailClose" id="rsV69DetailClose">×</button></div><div id="rsV69DetailBody"></div></div>';document.body.appendChild(modal);$('rsV69DetailClose').onclick=()=>modal.classList.remove('open');modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});}
+ const h=tm69(m.home),a=tm69(m.away),ev=events69(m),sc=score69(m,ev);
+ const rows=ev.length?ev.map(e=>{const t=eventTeam69(e,m),lg=logo69(t);let name=e.playerName||e.playerInName||e.player||'Evento';if(e.type==='change'&&e.playerOutName)name+=((' por '+e.playerOutName));return `<div class="rsV69Event"><span class="min">${Number(e.minute||0)}'</span>${lg?`<img class="crest" src="${esc69(lg)}">`:'<span></span>'}<span class="type">${eventIcon69(e)}</span><span class="name">${esc69(name)}</span><b>${esc69(e.score||'')}</b></div>`}).join(''):'<div class="rsV69Empty">No hay eventos registrados.</div>';
+ $('rsV69DetailBody').innerHTML=`<div class="rsV69Score"><div class="rsV69Team">${logo69(h)?`<img src="${esc69(logo69(h))}">`:''}<span>${esc69(h.name)}</span></div><div class="rsV69ScoreNum">${sc[0]} – ${sc[1]}</div><div class="rsV69Team">${logo69(a)?`<img src="${esc69(logo69(a))}">`:''}<span>${esc69(a.name)}</span></div></div><div class="rsV69Meta"><div>📅 ${esc69(typeof formatDate==='function'?formatDate(m.date):m.date||'')} · ${esc69(m.hour||'')}</div><div>🏆 ${esc69(m.competition||'Liga')} · ${esc69(m.field||'')}</div>${m.jornada?`<div>Jornada ${esc69(m.jornada)}</div>`:''}</div><div class="rsV69Section"><h3>EVENTOS DEL PARTIDO</h3>${rows}</div>`;
+ modal.classList.add('open');modal.scrollTop=0;
+}
+window.rsV69OpenDetail=openDetail69;
+function patchMatchCards(){
+ const old=window.rsNewUIRender;
+ if(typeof old!=='function')return;
+ window.rsNewUIRender=function(){old();document.querySelectorAll('#rsNewUI .rsGame').forEach(card=>{if(card.querySelector('.rsDetailsBtn'))return;const txt=card.querySelector('.rsGameTop')?.innerText||'';const ms=App.matches||[];const m=ms.find(x=>{const date=(typeof formatDate==='function'?formatDate(x.date):x.date||'')+' · '+(x.hour||'');return txt.includes(date)});if(m&&m.status==='FINISHED'){const b=document.createElement('button');b.className='rsDetailsBtn';b.type='button';b.textContent='👁 VER DETALLES DEL PARTIDO';b.onclick=e=>{e.preventDefault();e.stopPropagation();openDetail69(m.id)};card.appendChild(b)}})};
+ setTimeout(window.rsNewUIRender,0);
+}
+patchMatchCards();
+/* Mode partido: add a real reset control and render team crests on every event. */
+function patchMode(){
+ const tools=document.querySelector('#rsMatchOverlayV1 .rsMatchToolsV1');
+ if(tools&&!$('rsMMResetV69')){const b=document.createElement('button');b.className='rsMatchToolV1';b.id='rsMMResetV69';b.textContent='↺ REINICIAR PARTIDO';tools.appendChild(b);b.onclick=()=>{if(typeof resetLive==='function'){resetLive(true);setTimeout(()=>{if(typeof window.rsMatchModeRenderV69==='function')window.rsMatchModeRenderV69()},100)}}}
+ const oldRender=window.rsMatchModeRenderV69;
+}
+function renderModeEvents69(){
+ const box=$('rsMMEventsV1');if(!box)return;const m=typeof activeMatch==='function'?activeMatch():null;if(!m)return;const ev=(Live.events||[]).slice().sort((a,b)=>Number(b.minute||0)-Number(a.minute||0)).slice(0,8);box.innerHTML=ev.length?ev.map(e=>{const t=eventTeam69(e,m),lg=logo69(t);return `<div class="rsMatchEventV1"><span class="min">${Number(e.minute||0)}'</span>${lg?`<img src="${esc69(lg)}" style="width:22px;height:22px;object-fit:contain;background:#fff;border-radius:5px;padding:2px">`:''}<span class="ico">${eventIcon69(e)}</span><span>${esc69(e.playerName||e.playerInName||'Evento')}${e.rivalNumber!=null?` <small>#${esc69(e.rivalNumber)}</small>`:''}${e.type==='change'&&e.playerOutName?` <small>por ${esc69(e.playerOutName)}</small>`:''}</span><b style="margin-left:auto">${esc69(e.score||'')}</b></div>`}).join(''):'<div style="color:#8da0b5;font-size:11px">Todavía no hay eventos.</div>';
+}
+window.rsMatchModeRenderV69=renderModeEvents69;
+/* Re-render event list frequently while match mode is open. */
+setInterval(()=>{if($('rsMatchOverlayV1')?.classList.contains('open'))renderModeEvents69()},700);
+/* Administrator: use one clean PIN flow, then open the final real admin window. */
+function openAdmin69(){
+ const panel=$('adminPanel'); if(panel&&panel.style.display!=='none'){if(window.rsAdminFinal?.open){window.rsAdminFinal.open();return}if(window.rsAdminV35?.open){window.rsAdminV35.open();return}}
+ const modal=$('rsAdminAccessV2');if(!modal)return;modal.classList.add('open');modal.setAttribute('aria-hidden','false');document.body.classList.add('rsAdminModalOpenV2');const pin=$('rsAdminPinV2');if(pin){pin.value='';setTimeout(()=>pin.focus(),50)}
+}
+function acceptAdmin69(){const pin=$('rsAdminPinV2'),err=$('rsAdminErrorV2'),value=String(pin?.value||'');if(typeof PIN==='undefined'||value!==String(PIN)){if(err)err.textContent='Código incorrecto';return}try{if(typeof unlock==='function')unlock()}catch(e){}const modal=$('rsAdminAccessV2');modal?.classList.remove('open');modal?.setAttribute('aria-hidden','true');document.body.classList.remove('rsAdminModalOpenV2');setTimeout(()=>{try{if(window.rsAdminFinal?.open)window.rsAdminFinal.open();else if(window.rsAdminV35?.open)window.rsAdminV35.open();}catch(e){console.error(e)}},80)}
+function bindAdmin69(){const a=$('rsV68Admin');if(a)a.onclick=e=>{e.preventDefault();e.stopImmediatePropagation();openAdmin69()};const u=$('uiOpenAdmin');if(u)u.onclick=e=>{e.preventDefault();e.stopImmediatePropagation();openAdmin69()};const ok=$('rsAdminAcceptV2');if(ok){ok.onclick=e=>{e.preventDefault();e.stopImmediatePropagation();acceptAdmin69()}}const pin=$('rsAdminPinV2');if(pin)pin.onkeydown=e=>{if(e.key==='Enter')acceptAdmin69()};}
+/* Ensure the bottom nav remains usable when the squad window is open. */
+function keepBottom(){const n=document.querySelector('#rsNewUI .rsBottom');if(n){n.style.setProperty('z-index','2147483647','important');n.style.setProperty('display','grid','important');n.style.setProperty('visibility','visible','important');n.style.setProperty('pointer-events','auto','important')}}
+function boot69(){patchMode();bindAdmin69();keepBottom();patchMatchCards();}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot69);else boot69();
+setTimeout(boot69,500);setTimeout(boot69,1200);setTimeout(boot69,2500);
+})();
+</script>
+
 </body>
 
 
